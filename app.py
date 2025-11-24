@@ -6,6 +6,56 @@ import plotly.graph_objects as go
 from scipy.stats import poisson
 
 # ==============================================================================
+# 0. SISTEMA DE LOGIN (BLOQUEIO DE ACESSO)
+# ==============================================================================
+def check_password():
+    """Retorna True se o usuário logar corretamente."""
+    
+    # Configuração da página de login (Layout simples)
+    if "password_correct" not in st.session_state:
+        st.session_state["password_correct"] = False
+
+    def password_entered():
+        """Verifica se o usuário e senha batem com o cadastrado nos Secrets."""
+        if "passwords" in st.secrets:
+            user = st.session_state["username"]
+            password = st.session_state["password"]
+            
+            if user in st.secrets["passwords"] and \
+               password == st.secrets["passwords"][user]:
+                st.session_state["password_correct"] = True
+                del st.session_state["password"] # Segurança: remove senha da memória
+                del st.session_state["username"]
+            else:
+                st.session_state["password_correct"] = False
+        else:
+            # Modo de segurança: Se não tiver secrets configurado, bloqueia ou avisa
+            st.error("Erro de configuração: Senhas não encontradas no servidor.")
+
+    if st.session_state["password_correct"]:
+        return True
+
+    # --- TELA DE LOGIN ---
+    st.set_page_config(page_title="Login FutPrevisão", layout="centered", page_icon="🔒")
+    
+    st.title("🔒 Acesso Restrito")
+    st.markdown("### FutPrevisão Pro")
+    st.info("Este aplicativo é exclusivo para membros autorizados.")
+    
+    st.text_input("Usuário", key="username")
+    st.text_input("Senha", type="password", key="password")
+    st.button("Entrar", on_click=password_entered)
+
+    if "password_correct" in st.session_state and not st.session_state["password_correct"] and "username" in st.session_state:
+        st.error("😕 Usuário ou senha incorretos.")
+        
+    return False
+
+# SE O LOGIN FALHAR, O CÓDIGO PARA AQUI.
+if not check_password():
+    st.stop()
+
+# ==============================================================================
 # 1. BANCO DE DADOS COMPLETO (6 LIGAS - DADOS REAIS)
 # ==============================================================================
 
@@ -313,4 +363,5 @@ if st.button("Gerar Previsões de Linhas", use_container_width=True):
     with gc2:
         st.markdown("**Linhas de Gols (Jogo Completo):**")
         st.write(f"Over 1.5: **{pred['goals']['game_probs']['line_1_5']}%**")
+
         st.write(f"Over 2.5: **{pred['goals']['game_probs']['line_2_5']}%**")
