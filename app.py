@@ -169,37 +169,51 @@ BACKUP_DATA = {
 @st.cache_data(ttl=0) 
 def load_data():
     data = {"teams": {}, "referees": {}, "error": None}
+    
+    # --- CARREGA TIMES ---
     try:
-        # Tenta carregar do CSV primeiro
-        df_teams = pd.read_csv("dados_times.csv")
-        if len(df_teams.columns) < 2: df_teams = pd.read_csv("dados_times.csv", sep=";")
-        
+        # Tenta ler com vírgula ou ponto e vírgula
+        try:
+            df_teams = pd.read_csv("dados_times.csv")
+            if len(df_teams.columns) < 2: df_teams = pd.read_csv("dados_times.csv", sep=";")
+        except:
+            df_teams = pd.read_csv("dados_times.csv", sep=";")
+
         csv_dict = {}
         for _, row in df_teams.iterrows():
-            g_for = row['GolsFeitos'] if 'GolsFeitos' in df_teams.columns else 1.2
-            g_against = row['GolsSofridos'] if 'GolsSofridos' in df_teams.columns else 1.2
+            # Função auxiliar para limpar números (troca vírgula por ponto)
+            def clean_float(val):
+                if isinstance(val, str): return float(val.replace(',', '.'))
+                return float(val)
+
+            # Lê Gols (com proteção se não existir a coluna)
+            g_for = clean_float(row.get('GolsFeitos', 1.2))
+            g_against = clean_float(row.get('GolsSofridos', 1.2))
             
             csv_dict[row['Time']] = {
-                "yellow": row['CartoesAmarelos'],
-                "red": row['CartoesVermelhos'],
-                "fouls": row['Faltas'],
-                "corners": row['Escanteios'],
+                "yellow": clean_float(row['CartoesAmarelos']),
+                "red": clean_float(row['CartoesVermelhos']),
+                "fouls": clean_float(row['Faltas']),
+                "corners": clean_float(row['Escanteios']),
                 "g_for": g_for,
                 "g_against": g_against
             }
         data["teams"] = csv_dict
     except Exception as e:
-        # Se falhar, usa o BACKUP
         data["teams"] = BACKUP_DATA
         data["error"] = f"Usando Backup. Erro: {str(e)}"
 
+    # --- CARREGA ÁRBITROS ---
     try:
         df_refs = pd.read_csv("arbitros.csv")
         if len(df_refs.columns) < 2: df_refs = pd.read_csv("arbitros.csv", sep=";")
+        
         for _, row in df_refs.iterrows():
-            data["referees"][row['Nome']] = row['Fator']
-    except:
-        pass
+            # Limpeza do fator do árbitro também
+            fator_str = str(row['Fator']).replace(',', '.')
+            data["referees"][row['Nome']] = float(fator_str)
+    except Exception as e:
+        print(f"Erro lendo árbitros: {e}")
 
     return data
 
@@ -426,4 +440,5 @@ if st.button("🎲 Gerar Previsões", use_container_width=True):
             st.write(f"Over 2.5 Gols: **{pred['goals']['game_probs']['line_2_5']}%**")
     else:
         st.error("Erro: Time não encontrado.")
+
 
