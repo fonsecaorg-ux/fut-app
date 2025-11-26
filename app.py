@@ -358,9 +358,12 @@ with c3:
         if manual_profile == "Rigoroso (Cartoeiro)": final_ref_factor = 1.20
         elif manual_profile == "Leniente (Deixa Jogar)": final_ref_factor = 0.80
     else:
-        final_ref_factor = REFEREES_DATA[selected_ref]
-        if final_ref_factor > 1.0: st.caption(f"ℹ️ Juiz Rigoroso detectado.")
-        elif final_ref_factor < 1.0: st.caption(f"ℹ️ Juiz Leniente detectado.")
+        if final_ref_factor > 1.0: 
+            st.info(f"🔴 **{selected_ref}** é Rigoroso (Aumenta cartões).")
+        elif final_ref_factor < 1.0: 
+            st.info(f"🟢 **{selected_ref}** é Leniente (Diminui cartões).")
+        else:
+            st.info(f"⚪ **{selected_ref}** é Normal (Padrão da Liga).")
 
 with c4:
     st.markdown("### 🏆 Contexto")
@@ -423,3 +426,4 @@ if st.button("🎲 Gerar Previsões", use_container_width=True):
             st.write(f"Over 2.5 Gols: **{pred['goals']['game_probs']['line_2_5']}%**")
     else:
         st.error("Erro: Time não encontrado.")
+
