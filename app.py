@@ -1,49 +1,45 @@
 import streamlit as st
 import pandas as pd
+import re
 import numpy as np
 import plotly.graph_objects as go
 from scipy.stats import poisson
-import extra_streamlit_components as stx # Biblioteca de Cookies
-import time
+import hmac
 
 # ==============================================================================
-# 0. SISTEMA DE LOGIN COM COOKIES (LOGIN PERSISTENTE)
+# 0. SISTEMA DE LOGIN (SEGURANÇA)
 # ==============================================================================
 def check_password():
-    st.set_page_config(page_title="FutPrevisão Pro", layout="wide", page_icon="⚽")
-    
-    # Gerenciador de Cookies
-    cookie_manager = stx.CookieManager()
-    
-    # Verifica se já existe um cookie válido (usuário já logou antes)
-    cookie_value = cookie_manager.get(cookie="futprevisao_access")
-    
-    if cookie_value == "granted":
+    if "password_correct" not in st.session_state:
+        st.session_state["password_correct"] = False
+
+    def password_entered():
+        if "passwords" in st.secrets:
+            user = st.session_state["username"]
+            password = st.session_state["password"]
+            if user in st.secrets["passwords"] and password == st.secrets["passwords"][user]:
+                st.session_state["password_correct"] = True
+                del st.session_state["password"]
+                del st.session_state["username"]
+            else:
+                st.session_state["password_correct"] = False
+        else:
+            st.error("Erro: Senhas não configuradas.")
+
+    if st.session_state["password_correct"]:
         return True
 
-    # Se não tem cookie, mostra tela de login
+    st.set_page_config(page_title="Login FutPrevisão", layout="centered", page_icon="🔒")
     st.title("🔒 Acesso Restrito")
     st.info("Faça login para acessar as previsões.")
+    st.text_input("Usuário", key="username")
+    st.text_input("Senha", type="password", key="password")
+    st.button("Entrar", on_click=password_entered)
     
-    user = st.text_input("Usuário")
-    password = st.text_input("Senha", type="password")
-    
-    if st.button("Entrar"):
-        if "passwords" in st.secrets:
-            if user in st.secrets["passwords"] and password == st.secrets["passwords"][user]:
-                # SENHA CORRETA: Cria o cookie que dura 1 dia
-                cookie_manager.set("futprevisao_access", "granted", key="set_access")
-                st.success("Login realizado! Recarregando...")
-                time.sleep(1) # Espera gravar o cookie
-                st.rerun() # Recarrega a página para entrar
-            else:
-                st.error("😕 Usuário ou senha incorretos.")
-        else:
-            st.error("Erro de configuração no servidor.")
-            
+    if "password_correct" in st.session_state and not st.session_state["password_correct"] and "username" in st.session_state:
+        st.error("😕 Usuário ou senha incorretos.")
     return False
 
-# Se o login não for validado pelo cookie ou senha, para aqui.
 if not check_password():
     st.stop()
 
@@ -59,8 +55,6 @@ BACKUP_DATA = {
 @st.cache_data(ttl=0) 
 def load_data():
     data = {"teams": {}, "referees": {}, "error": None}
-    
-    # CARREGA TIMES
     try:
         try:
             df_teams = pd.read_csv("dados_times.csv")
@@ -87,7 +81,6 @@ def load_data():
         data["teams"] = BACKUP_DATA
         data["error"] = f"Usando Backup: {str(e)}"
 
-    # CARREGA ÁRBITROS
     try:
         df_refs = pd.read_csv("arbitros.csv")
         if len(df_refs.columns) < 2: df_refs = pd.read_csv("arbitros.csv", sep=";")
@@ -103,7 +96,7 @@ RAW_STATS_DATA = DB["teams"]
 REFEREES_DATA = DB["referees"]
 
 # ==============================================================================
-# 2. MOTOR DE CÁLCULO
+# 2. MOTOR DE CÁLCULO CIENTÍFICO (Validado por 4 IAs)
 # ==============================================================================
 class StatsEngine:
     def __init__(self):
@@ -129,6 +122,18 @@ class StatsEngine:
         else:
             return {"corners": 5.0, "cards": 2.2, "fouls": 12.5, "goals_for": 1.2, "goals_against": 1.2}
 
+    # --- NOVA FUNÇÃO TENSION FACTOR (OPÇÃO B) ---
+    def compute_tension_factor(self, match_fouls):
+        """
+        Calcula o tension_factor de forma contínua e científica.
+        Base global: 24.0 faltas.
+        Cap: 1.30 (para evitar exageros).
+        Piso: 0.85 (para jogos muito limpos).
+        """
+        baseline = 24.0
+        factor = match_fouls / baseline
+        return max(0.85, min(factor, 1.30))
+
     def predict_match_full(self, home, away, ref_factor, match_multiplier):
         h_stats = self.get_team_averages(home)
         a_stats = self.get_team_averages(away)
@@ -138,11 +143,9 @@ class StatsEngine:
         exp_corners_a = a_stats['corners'] * 0.85 * match_multiplier
         exp_corners_total = exp_corners_h + exp_corners_a
 
-        # Cartões
+        # Cartões (NOVA LÓGICA CIENTÍFICA)
         match_fouls = h_stats['fouls'] + a_stats['fouls']
-        tension_factor = 1.0
-        if match_fouls > 28: tension_factor = 1.25
-        elif match_fouls > 25: tension_factor = 1.15
+        tension_factor = self.compute_tension_factor(match_fouls)
         
         exp_cards_h = h_stats['cards'] * tension_factor * ref_factor
         exp_cards_a = a_stats['cards'] * tension_factor * ref_factor
@@ -157,7 +160,7 @@ class StatsEngine:
         prob_away_score = 1 - poisson.pmf(0, lambda_away)
         prob_btts = prob_home_score * prob_away_score * 100
 
-        # --- NOVO: RADAR DE ESCANTEIOS TOTAIS ---
+        # Radar de Escanteios
         corners_radar = {}
         for line in [7.5, 8.5, 9.5, 10.5, 11.5, 12.5]:
             corners_radar[f"Over {line}"] = self.calculate_poisson_prob(line, exp_corners_total)
@@ -165,7 +168,7 @@ class StatsEngine:
         return {
             "corners": {
                 "total_expected": round(exp_corners_total, 2),
-                "radar": corners_radar, # Nova saída
+                "radar": corners_radar,
                 "home": {
                     "line_3_5": self.calculate_poisson_prob(3.5, exp_corners_h),
                     "line_4_5": self.calculate_poisson_prob(4.5, exp_corners_h)
@@ -177,6 +180,7 @@ class StatsEngine:
             },
             "cards": {
                 "total_expected": round(exp_cards_total, 2),
+                "tension_debug": round(tension_factor, 2), # Para auditar se quiser
                 "game_probs": {
                     "line_3_5": self.calculate_poisson_prob(3.5, exp_cards_total),
                     "line_4_5": self.calculate_poisson_prob(4.5, exp_cards_total)
@@ -203,17 +207,15 @@ class StatsEngine:
 # ==============================================================================
 # 3. INTERFACE
 # ==============================================================================
-# O set_page_config foi movido para dentro do check_password para evitar erro de duplicação
+st.set_page_config(page_title="FutPrevisão Pro", layout="wide", page_icon="⚽")
 
 col_logo, col_logout = st.columns([4, 1])
 with col_logo:
     st.title("FutPrevisão Pro 🚀")
-    st.caption("Versão 2.5 | Cookies + Radar de Escanteios")
+    st.caption("Versão 2.6 | Algoritmo Validado por IA")
 with col_logout:
-    if st.button("Sair / Logout"):
-        # Apaga o cookie para sair
-        cookie_manager = stx.CookieManager()
-        cookie_manager.delete("futprevisao_access")
+    if st.button("Sair"):
+        st.session_state["password_correct"] = False
         st.rerun()
 
 st.markdown("---")
@@ -264,39 +266,28 @@ if st.button("🎲 Gerar Previsões", use_container_width=True):
     if home_team in engine.stats_data:
         pred = engine.predict_match_full(home_team, away_team, final_ref_factor, match_multiplier)
         
-        # --- ESCANTEIOS (NOVO RADAR) ---
+        # ESCANTEIOS
         st.subheader("🚩 Escanteios")
-        
-        # Tabela de Probabilidades Totais (Radar)
         st.markdown("##### 📡 Radar de Escanteios (Total do Jogo)")
         radar = pred['corners']['radar']
         cols = st.columns(6)
-        # Mostra as linhas de 7.5 a 12.5 lado a lado
-        keys = list(radar.keys())
-        for i, col in enumerate(cols):
-            line_name = keys[i]
-            prob = radar[line_name]
-            # Destaca se for > 70%
-            if prob >= 70:
-                col.metric(line_name, f"{prob}%", delta="Alta")
-            else:
-                col.metric(line_name, f"{prob}%")
+        for i, (line_name, prob) in enumerate(radar.items()):
+            if prob >= 70: cols[i].metric(line_name, f"{prob}%", delta="Alta")
+            else: cols[i].metric(line_name, f"{prob}%")
         
         st.divider()
         
-        # Previsões Individuais (Mantidas)
         ec1, ec2, ec3 = st.columns(3)
         with ec1:
             st.markdown(f"**{home_team}**")
             st.write(f"Over 3.5: **{pred['corners']['home']['line_3_5']}%**")
             st.write(f"Over 4.5: **{pred['corners']['home']['line_4_5']}%**")
         with ec2:
-            st.metric("Média Esperada", pred['corners']['total_expected'])
+            st.metric("Total Esperado", pred['corners']['total_expected'])
         with ec3:
             st.markdown(f"**{away_team}**")
             st.write(f"Over 3.5: **{pred['corners']['away']['line_3_5']}%**")
             st.write(f"Over 4.5: **{pred['corners']['away']['line_4_5']}%**")
-        
         st.markdown("---")
 
         # CARTÕES
@@ -308,13 +299,14 @@ if st.button("🎲 Gerar Previsões", use_container_width=True):
             st.write(f"Over 2.5: **{pred['cards']['home']['line_2_5']}%**")
         with cc2:
             st.metric("Total Esperado", pred['cards']['total_expected'])
+            # Mostra o fator de tensão para auditoria (opcional, mostra transparência)
+            st.caption(f"Fator de Tensão Aplicado: {pred['cards']['tension_debug']}x")
             st.write(f"Jogo Over 3.5: **{pred['cards']['game_probs']['line_3_5']}%**")
             st.write(f"Jogo Over 4.5: **{pred['cards']['game_probs']['line_4_5']}%**")
         with cc3:
             st.markdown(f"**{away_team}**")
             st.write(f"Over 1.5: **{pred['cards']['away']['line_1_5']}%**")
             st.write(f"Over 2.5: **{pred['cards']['away']['line_2_5']}%**")
-        
         st.markdown("---")
 
         # GOLS
