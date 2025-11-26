@@ -371,6 +371,18 @@ else:
 
 st.markdown("---")
 
+# ... código do seletor de árbitro ...
+
+# NOVO: Seletor de Contexto do Jogo
+match_type = st.radio("🏆 Tipo de Competição / Contexto:", 
+                      ["Liga Normal (Pontos Corridos)", "Champions / Clássico / Decisivo"],
+                      horizontal=True)
+
+match_multiplier = 1.0
+if match_type == "Champions / Clássico / Decisivo":
+    match_multiplier = 0.85 # Reduz 15% o volume esperado (Jogo mais estudado)
+    st.info("ℹ️ Modo Elite Ativado: O robô aplicou um redutor de 15% nas métricas devido ao equilíbrio do jogo.")
+
 if st.button("🎲 Gerar Previsões", use_container_width=True):
     # Verifica se o time existe no banco atual (CSV ou Backup)
     if home_team in engine.stats_data:
@@ -420,3 +432,4 @@ if st.button("🎲 Gerar Previsões", use_container_width=True):
             st.write(f"Over 2.5 Gols: **{pred['goals']['game_probs']['line_2_5']}%**")
     else:
         st.error("Erro: Time não encontrado no banco de dados.")
+
