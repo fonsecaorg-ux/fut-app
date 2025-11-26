@@ -4,253 +4,136 @@ import re
 import numpy as np
 import plotly.graph_objects as go
 from scipy.stats import poisson
+import hmac
 
 # ==============================================================================
-# 0. SISTEMA DE LOGIN (BLOQUEIO DE ACESSO)
+# 0. SISTEMA DE LOGIN
 # ==============================================================================
 def check_password():
-    """Retorna True se o usuário logar corretamente."""
-    
-    # Configuração da página de login (Layout simples)
     if "password_correct" not in st.session_state:
         st.session_state["password_correct"] = False
 
     def password_entered():
-        """Verifica se o usuário e senha batem com o cadastrado nos Secrets."""
         if "passwords" in st.secrets:
             user = st.session_state["username"]
             password = st.session_state["password"]
-            
-            if user in st.secrets["passwords"] and \
-               password == st.secrets["passwords"][user]:
+            if user in st.secrets["passwords"] and password == st.secrets["passwords"][user]:
                 st.session_state["password_correct"] = True
-                del st.session_state["password"] # Segurança: remove senha da memória
+                del st.session_state["password"]
                 del st.session_state["username"]
             else:
                 st.session_state["password_correct"] = False
         else:
-            # Modo de segurança: Se não tiver secrets configurado, bloqueia ou avisa
-            st.error("Erro de configuração: Senhas não encontradas no servidor.")
+            st.error("Erro: Senhas não configuradas.")
 
     if st.session_state["password_correct"]:
         return True
 
-    # --- TELA DE LOGIN ---
     st.set_page_config(page_title="Login FutPrevisão", layout="centered", page_icon="🔒")
-    
     st.title("🔒 Acesso Restrito")
-    st.markdown("### FutPrevisão Pro")
-    st.info("Este aplicativo é exclusivo para membros autorizados.")
-    
+    st.info("Faça login para acessar as previsões.")
     st.text_input("Usuário", key="username")
     st.text_input("Senha", type="password", key="password")
     st.button("Entrar", on_click=password_entered)
-
+    
     if "password_correct" in st.session_state and not st.session_state["password_correct"] and "username" in st.session_state:
         st.error("😕 Usuário ou senha incorretos.")
-        
     return False
 
-# SE O LOGIN FALHAR, O CÓDIGO PARA AQUI.
 if not check_password():
     st.stop()
 
 # ==============================================================================
-# 1. BANCO DE DADOS COMPLETO (6 LIGAS - DADOS REAIS)
+# 1. CARREGAMENTO DE DADOS (TIMES E ÁRBITROS)
 # ==============================================================================
+@st.cache_data(ttl=600)
+def load_data():
+    data = {"teams": {}, "referees": {}}
+    
+    # Carrega Times
+    try:
+        df_teams = pd.read_csv("dados_times.csv")
+        for _, row in df_teams.iterrows():
+            data["teams"][row['Time']] = {
+                "yellow": row['CartoesAmarelos'],
+                "red": row['CartoesVermelhos'],
+                "fouls": row['Faltas'],
+                "corners": row['Escanteios'],
+                "g_for": row['GolsFeitos'],
+                "g_against": row['GolsSofridos']
+            }
+    except Exception:
+        pass # Se der erro, fica vazio e avisa na interface
 
-RAW_STATS_DATA = {
-    # --- 1. PREMIER LEAGUE 🏴󠁧󠁢󠁥󠁮󠁧󠁿 ---
-    "Arsenal": {"yellow": 1.00, "red": 0.00, "fouls": 10.45, "corners": 7.5},
-    "Aston Villa": {"yellow": 1.73, "red": 0.00, "fouls": 9.55, "corners": 5.8},
-    "Bournemouth": {"yellow": 2.45, "red": 0.00, "fouls": 13.09, "corners": 5.1},
-    "Brentford": {"yellow": 2.09, "red": 0.00, "fouls": 11.45, "corners": 4.5},
-    "Brighton": {"yellow": 2.55, "red": 0.00, "fouls": 12.36, "corners": 5.2},
-    "Burnley": {"yellow": 1.64, "red": 0.00, "fouls": 9.91, "corners": 3.8},
-    "Chelsea": {"yellow": 2.09, "red": 0.27, "fouls": 11.55, "corners": 6.4},
-    "Crystal Palace": {"yellow": 1.73, "red": 0.00, "fouls": 10.36, "corners": 4.4},
-    "Everton": {"yellow": 2.36, "red": 0.00, "fouls": 10.73, "corners": 4.7},
-    "Fulham": {"yellow": 1.91, "red": 0.00, "fouls": 14.00, "corners": 5.1},
-    "Leeds United": {"yellow": 1.45, "red": 0.00, "fouls": 10.00, "corners": 5.3},
-    "Liverpool": {"yellow": 2.09, "red": 0.00, "fouls": 10.09, "corners": 7.1},
-    "Man City": {"yellow": 1.64, "red": 0.00, "fouls": 9.36, "corners": 8.2},
-    "Man United": {"yellow": 1.27, "red": 0.00, "fouls": 9.36, "corners": 6.0},
-    "Newcastle": {"yellow": 1.27, "red": 0.18, "fouls": 11.82, "corners": 6.5},
-    "Nottm Forest": {"yellow": 1.82, "red": 0.00, "fouls": 10.91, "corners": 4.2},
-    "Sunderland": {"yellow": 1.73, "red": 0.00, "fouls": 9.55, "corners": 4.0},
-    "Tottenham": {"yellow": 2.36, "red": 0.00, "fouls": 11.55, "corners": 6.1},
-    "West Ham": {"yellow": 1.55, "red": 0.00, "fouls": 10.64, "corners": 4.8},
-    "Wolves": {"yellow": 1.82, "red": 0.18, "fouls": 13.45, "corners": 4.1},
+    # Carrega Árbitros
+    try:
+        df_refs = pd.read_csv("arbitros.csv")
+        for _, row in df_refs.iterrows():
+            data["referees"][row['Nome']] = row['Fator']
+    except Exception:
+        pass
 
-    # --- 2. LA LIGA 🇪🇸 ---
-    "Alavés": {"yellow": 2.42, "red": 0.00, "fouls": 15.58, "corners": 4.1},
-    "Athletic Club": {"yellow": 1.75, "red": 0.25, "fouls": 13.42, "corners": 5.6},
-    "Atl Madrid": {"yellow": 2.00, "red": 0.17, "fouls": 11.25, "corners": 5.4},
-    "FC Barcelona": {"yellow": 1.83, "red": 0.17, "fouls": 9.42, "corners": 7.2},
-    "Betis": {"yellow": 1.92, "red": 0.00, "fouls": 9.08, "corners": 5.1},
-    "Celta": {"yellow": 2.08, "red": 0.00, "fouls": 11.92, "corners": 4.8},
-    "Elche": {"yellow": 1.75, "red": 0.00, "fouls": 13.00, "corners": 3.5},
-    "Espanyol": {"yellow": 1.67, "red": 0.00, "fouls": 12.75, "corners": 4.2},
-    "Getafe": {"yellow": 2.50, "red": 0.17, "fouls": 15.42, "corners": 3.8},
-    "Girona": {"yellow": 2.00, "red": 0.42, "fouls": 10.25, "corners": 5.2},
-    "Levante": {"yellow": 2.00, "red": 0.00, "fouls": 12.58, "corners": 4.0},
-    "Mallorca": {"yellow": 2.08, "red": 0.25, "fouls": 11.92, "corners": 3.9},
-    "Osasuna": {"yellow": 2.08, "red": 0.17, "fouls": 12.67, "corners": 4.3},
-    "Oviedo": {"yellow": 2.42, "red": 0.25, "fouls": 11.75, "corners": 3.6},
-    "Vallecano": {"yellow": 2.33, "red": 0.00, "fouls": 13.67, "corners": 4.5},
-    "Real Madrid": {"yellow": 1.92, "red": 0.17, "fouls": 10.17, "corners": 6.9},
-    "Sociedad": {"yellow": 2.33, "red": 0.00, "fouls": 16.17, "corners": 5.7},
-    "Sevilla": {"yellow": 3.42, "red": 0.00, "fouls": 15.92, "corners": 5.3},
-    "Valencia": {"yellow": 1.67, "red": 0.00, "fouls": 12.08, "corners": 4.9},
-    "Villarreal": {"yellow": 2.17, "red": 0.00, "fouls": 11.25, "corners": 5.2},
+    return data
 
-    # --- 3. BRASILEIRÃO 🇧🇷 ---
-    "Flamengo": {"yellow": 2.21, "red": 0.15, "fouls": 14.03, "corners": 6.5},
-    "Palmeiras": {"yellow": 1.88, "red": 0.09, "fouls": 14.12, "corners": 7.1},
-    "São Paulo": {"yellow": 2.59, "red": 0.06, "fouls": 14.41, "corners": 6.0},
-    "Corinthians": {"yellow": 3.00, "red": 0.12, "fouls": 14.09, "corners": 5.2},
-    "Atlético Mineiro": {"yellow": 2.59, "red": 0.21, "fouls": 13.29, "corners": 5.8},
-    "Vitória": {"yellow": 3.09, "red": 0.21, "fouls": 15.12, "corners": 4.2},
-    "Botafogo": {"yellow": 2.44, "red": 0.09, "fouls": 14.59, "corners": 6.3},
-    "Fortaleza": {"yellow": 2.94, "red": 0.26, "fouls": 14.26, "corners": 5.8},
-    "Bahia": {"yellow": 2.24, "red": 0.15, "fouls": 12.00, "corners": 5.0},
-    "Ceará": {"yellow": 2.24, "red": 0.06, "fouls": 14.03, "corners": 4.5},
-    "Cruzeiro": {"yellow": 2.82, "red": 0.15, "fouls": 13.97, "corners": 5.5},
-    "Fluminense": {"yellow": 2.06, "red": 0.09, "fouls": 12.79, "corners": 5.1},
-    "Grêmio": {"yellow": 2.65, "red": 0.15, "fouls": 13.32, "corners": 5.3},
-    "Internacional": {"yellow": 2.35, "red": 0.21, "fouls": 15.26, "corners": 5.6},
-    "Juventude": {"yellow": 3.00, "red": 0.12, "fouls": 15.91, "corners": 4.3},
-    "Mirassol": {"yellow": 2.24, "red": 0.03, "fouls": 12.41, "corners": 4.0},
-    "Bragantino": {"yellow": 2.94, "red": 0.09, "fouls": 14.09, "corners": 5.4},
-    "Santos": {"yellow": 2.71, "red": 0.12, "fouls": 14.21, "corners": 5.0},
-    "Recife": {"yellow": 2.56, "red": 0.09, "fouls": 13.74, "corners": 4.6},
-    "Vasco da Gama": {"yellow": 2.12, "red": 0.15, "fouls": 13.38, "corners": 4.8},
-
-    # --- 4. BUNDESLIGA 🇩🇪 ---
-    "Augsburg": {"yellow": 3.30, "red": 0.00, "fouls": 13.60, "corners": 4.2},
-    "Bayern Munich": {"yellow": 2.50, "red": 0.00, "fouls": 10.40, "corners": 7.5},
-    "Dortmund": {"yellow": 1.60, "red": 0.00, "fouls": 12.30, "corners": 6.8},
-    "Eintracht Frankfurt": {"yellow": 1.80, "red": 0.00, "fouls": 10.20, "corners": 5.5},
-    "Freiburg": {"yellow": 1.70, "red": 0.20, "fouls": 8.90, "corners": 5.0},
-    "Gladbach": {"yellow": 1.80, "red": 0.00, "fouls": 11.90, "corners": 5.1},
-    "Hamburg": {"yellow": 2.40, "red": 0.40, "fouls": 13.50, "corners": 4.5},
-    "Heidenheim": {"yellow": 1.50, "red": 0.00, "fouls": 10.40, "corners": 4.0},
-    "Hoffenheim": {"yellow": 2.10, "red": 0.00, "fouls": 15.10, "corners": 4.8},
-    "Köln": {"yellow": 1.90, "red": 0.00, "fouls": 9.70, "corners": 4.6},
-    "Leverkusen": {"yellow": 2.50, "red": 0.20, "fouls": 9.20, "corners": 6.9},
-    "Mainz 05": {"yellow": 2.60, "red": 0.30, "fouls": 13.30, "corners": 4.3},
-    "RB Leipzig": {"yellow": 1.60, "red": 0.00, "fouls": 10.00, "corners": 6.2},
-    "St. Pauli": {"yellow": 2.00, "red": 0.00, "fouls": 11.80, "corners": 3.9},
-    "Stuttgart": {"yellow": 1.90, "red": 0.00, "fouls": 10.90, "corners": 5.7},
-    "Union Berlin": {"yellow": 2.50, "red": 0.00, "fouls": 14.50, "corners": 4.1},
-    "Werder Bremen": {"yellow": 2.70, "red": 0.00, "fouls": 9.50, "corners": 4.4},
-    "Wolfsburg": {"yellow": 1.70, "red": 0.00, "fouls": 11.30, "corners": 5.0},
-
-    # --- 5. SERIE A ITÁLIA 🇮🇹 ---
-    "Atalanta": {"yellow": 1.55, "red": 0.00, "fouls": 9.91, "corners": 6.1},
-    "Bologna": {"yellow": 2.09, "red": 0.00, "fouls": 15.00, "corners": 4.8},
-    "Cagliari": {"yellow": 2.27, "red": 0.00, "fouls": 15.73, "corners": 4.2},
-    "Como": {"yellow": 2.45, "red": 0.18, "fouls": 16.36, "corners": 3.8},
-    "Cremonese": {"yellow": 2.18, "red": 0.00, "fouls": 11.91, "corners": 3.5},
-    "Fiorentina": {"yellow": 2.36, "red": 0.00, "fouls": 14.64, "corners": 5.5},
-    "Genoa": {"yellow": 2.73, "red": 0.00, "fouls": 15.27, "corners": 3.9},
-    "Hellas Verona": {"yellow": 2.55, "red": 0.00, "fouls": 17.00, "corners": 4.0},
-    "Inter": {"yellow": 1.55, "red": 0.00, "fouls": 14.45, "corners": 6.5},
-    "Juventus": {"yellow": 1.45, "red": 0.00, "fouls": 12.45, "corners": 5.8},
-    "Lazio": {"yellow": 1.45, "red": 0.18, "fouls": 11.00, "corners": 5.2},
-    "Lecce": {"yellow": 1.82, "red": 0.00, "fouls": 12.55, "corners": 4.1},
-    "Milan": {"yellow": 1.45, "red": 0.00, "fouls": 9.91, "corners": 6.0},
-    "Napoli": {"yellow": 1.45, "red": 0.00, "fouls": 13.45, "corners": 6.2},
-    "Parma": {"yellow": 2.00, "red": 0.18, "fouls": 12.00, "corners": 4.3},
-    "Pisa": {"yellow": 1.82, "red": 0.00, "fouls": 13.27, "corners": 3.7},
-    "Roma": {"yellow": 1.91, "red": 0.00, "fouls": 14.36, "corners": 5.4},
-    "Sassuolo": {"yellow": 2.45, "red": 0.00, "fouls": 13.45, "corners": 4.9},
-    "Torino": {"yellow": 1.82, "red": 0.00, "fouls": 13.64, "corners": 4.6},
-    "Udinese": {"yellow": 2.18, "red": 0.00, "fouls": 12.91, "corners": 4.5},
-
-    # --- 6. LIGUE 1 FRANÇA 🇫🇷 ---
-    "Angers": {"yellow": 1.33, "red": 0.00, "fouls": 11.50, "corners": 4.0},
-    "Auxerre": {"yellow": 2.33, "red": 0.33, "fouls": 13.83, "corners": 3.8},
-    "Brest": {"yellow": 1.50, "red": 0.17, "fouls": 12.58, "corners": 5.2},
-    "Le Havre": {"yellow": 1.92, "red": 0.00, "fouls": 14.58, "corners": 3.9},
-    "Lens": {"yellow": 2.25, "red": 0.17, "fouls": 13.00, "corners": 5.5},
-    "Lille": {"yellow": 2.42, "red": 0.00, "fouls": 13.75, "corners": 5.8},
-    "Lorient": {"yellow": 2.33, "red": 0.00, "fouls": 10.50, "corners": 4.3},
-    "Lyon": {"yellow": 2.00, "red": 0.33, "fouls": 14.42, "corners": 5.6},
-    "Marseille": {"yellow": 2.25, "red": 0.00, "fouls": 12.50, "corners": 6.0},
-    "Metz": {"yellow": 1.50, "red": 0.25, "fouls": 11.42, "corners": 3.7},
-    "Monaco": {"yellow": 2.58, "red": 0.17, "fouls": 13.17, "corners": 6.1},
-    "Montpellier": {"yellow": 1.67, "red": 0.00, "fouls": 11.58, "corners": 4.8},
-    "Nice": {"yellow": 2.33, "red": 0.00, "fouls": 12.92, "corners": 5.3},
-    "Paris FC": {"yellow": 2.00, "red": 0.17, "fouls": 11.42, "corners": 3.5},
-    "Paris Saint-Germain": {"yellow": 1.25, "red": 0.00, "fouls": 10.08, "corners": 7.0},
-    "Rennes": {"yellow": 2.00, "red": 0.25, "fouls": 12.58, "corners": 5.7},
-    "Strasbourg": {"yellow": 2.25, "red": 0.25, "fouls": 11.83, "corners": 4.5},
-    "Toulouse": {"yellow": 2.67, "red": 0.00, "fouls": 14.17, "corners": 4.6},
-}
+DB = load_data()
+RAW_STATS_DATA = DB["teams"]
+REFEREES_DATA = DB["referees"]
 
 # ==============================================================================
-# 2. MOTOR DE CÁLCULO ESTATÍSTICO (Poisson)
+# 2. MOTOR DE CÁLCULO
 # ==============================================================================
-
 class StatsEngine:
     def __init__(self):
         self.stats_data = RAW_STATS_DATA
 
     def calculate_poisson_prob(self, line, avg):
-        """Calcula probabilidade de OVER X (ex: Over 3.5 é > 3.5)"""
         if avg == 0: return 0.0
-        # Poisson CDF calcula P(X <= k). Queremos P(X > line).
-        # Como 'line' é float (ex: 3.5), pegamos o piso (3) para o CDF.
-        # P(X > 3.5) é igual a 1 - P(X <= 3)
         k = int(line) 
         prob = 1 - poisson.cdf(k, avg)
         return round(prob * 100, 1)
 
     def get_team_averages(self, team):
-        # Busca dados do dicionário ou usa média conservadora se não achar
         if team in self.stats_data:
             data = self.stats_data[team]
-            # Ajuste de Risco para Cartões: Vermelho vale 2.0x Amarelo para fins de pontos
-            avg_cards = data['yellow'] + (data['red'] * 2.0)
+            avg_cards = data['yellow'] + (data['red'] * 2.5)
             return {
                 "corners": data['corners'],
                 "cards": avg_cards,
                 "fouls": data['fouls'],
-                # Gols estimados com base na força ofensiva implícita (xG simulado)
-                "goals_for": 1.5 if data['corners'] > 6 else 1.1, 
-                "goals_against": 1.3 if data['fouls'] > 13 else 1.0
+                "goals_for": data['g_for'],
+                "goals_against": data['g_against']
             }
         else:
             return {"corners": 5.0, "cards": 2.2, "fouls": 12.5, "goals_for": 1.2, "goals_against": 1.2}
 
-    def predict_match_full(self, home, away):
+    def predict_match_full(self, home, away, ref_factor):
         h_stats = self.get_team_averages(home)
         a_stats = self.get_team_averages(away)
 
-        # --- PREVISÃO DE ESCANTEIOS ---
-        # Fator Casa: Times mandantes costumam ter ~10% mais volume de jogo
+        # Escanteios
         exp_corners_h = h_stats['corners'] * 1.10
-        exp_corners_a = a_stats['corners'] * 0.90 # Visitante levemente recuado
-        
+        exp_corners_a = a_stats['corners'] * 0.85
         exp_corners_total = exp_corners_h + exp_corners_a
 
-        # --- PREVISÃO DE CARTÕES ---
-        # Fator Tensão: Se a soma de faltas for alta (>26), a arbitragem tende a perder o controle
+        # Cartões
         match_fouls = h_stats['fouls'] + a_stats['fouls']
         tension_factor = 1.0
         if match_fouls > 28: tension_factor = 1.25
         elif match_fouls > 25: tension_factor = 1.15
         
-        exp_cards_h = h_stats['cards'] * tension_factor
-        exp_cards_a = a_stats['cards'] * tension_factor
+        # Aplica o fator do árbitro (vindo do CSV ou do manual)
+        exp_cards_h = h_stats['cards'] * tension_factor * ref_factor
+        exp_cards_a = a_stats['cards'] * tension_factor * ref_factor
         exp_cards_total = exp_cards_h + exp_cards_a
 
-        # --- PREVISÃO DE GOLS ---
-        # Modelo simplificado: (Ataque A + Defesa B) / 2
-        exp_goals_h = (h_stats['goals_for'] + a_stats['goals_against']) / 2
-        exp_goals_a = (a_stats['goals_for'] + h_stats['goals_against']) / 2
-        exp_goals_total = exp_goals_h + exp_goals_a
+        # Gols
+        lambda_home = (h_stats['goals_for'] + a_stats['goals_against']) / 2
+        lambda_away = (a_stats['goals_for'] + h_stats['goals_against']) / 2
+        exp_goals_total = lambda_home + lambda_away
+        
+        prob_home_score = 1 - poisson.pmf(0, lambda_home)
+        prob_away_score = 1 - poisson.pmf(0, lambda_away)
+        prob_btts = prob_home_score * prob_away_score * 100
 
         return {
             "corners": {
@@ -281,6 +164,7 @@ class StatsEngine:
             },
             "goals": {
                 "total_expected": round(exp_goals_total, 2),
+                "prob_btts": round(prob_btts, 1),
                 "game_probs": {
                     "line_1_5": self.calculate_poisson_prob(1.5, exp_goals_total),
                     "line_2_5": self.calculate_poisson_prob(2.5, exp_goals_total)
@@ -289,79 +173,115 @@ class StatsEngine:
         }
 
 # ==============================================================================
-# 3. INTERFACE (CONGELADA CONFORME SOLICITADO)
+# 3. INTERFACE
 # ==============================================================================
+st.set_page_config(page_title="FutPrevisão Pro", layout="wide", page_icon="⚽")
 
-st.set_page_config(page_title="FutPrevisão Pro", layout="wide")
-st.title("FutPrevisão Pro")
-st.subheader("Preditor de Linhas: Escanteios, Cartões e Gols")
+col_logo, col_logout = st.columns([4, 1])
+with col_logo:
+    st.title("FutPrevisão Pro 🚀")
+    st.caption("Versão 2.0 | Dados Reais de Árbitros")
+with col_logout:
+    if st.button("Sair"):
+        st.session_state["password_correct"] = False
+        st.rerun()
 st.markdown("---")
 
 engine = StatsEngine()
-# Ordena a lista de times para facilitar a busca
-all_teams = sorted(list(engine.stats_data.keys()))
 
-# Seletores de Time
-c1, c2, c3 = st.columns([1, 0.2, 1])
+# Seletor de Times
+if engine.stats_data:
+    all_teams = sorted(list(engine.stats_data.keys()))
+else:
+    all_teams = ["Erro no CSV de Times"]
+
+c1, c2 = st.columns([1, 1])
 with c1:
-    # Padrão: Chelsea (para validar com seu PDF anterior, mas agora com dados corrigidos)
-    home_team = st.selectbox("Mandante (Casa)", all_teams, index=all_teams.index("Chelsea") if "Chelsea" in all_teams else 0)
-with c3:
-    # Padrão: Getafe
-    away_team = st.selectbox("Visitante (Fora)", all_teams, index=all_teams.index("Getafe") if "Getafe" in all_teams else 1)
+    home_team = st.selectbox("Mandante (Casa)", all_teams, index=0)
+with c2:
+    away_team = st.selectbox("Visitante (Fora)", all_teams, index=1)
 
-if st.button("Gerar Previsões de Linhas", use_container_width=True):
-    pred = engine.predict_match_full(home_team, away_team)
-    
-    # --- SEÇÃO 1: ESCANTEIOS ---
-    st.subheader("Escanteios (Corners)")
-    ec1, ec2, ec3 = st.columns(3)
-    
-    with ec1:
-        st.markdown(f"**{home_team} (Individual)**")
-        st.write(f"Over 3.5: **{pred['corners']['home']['line_3_5']}%**")
-        st.write(f"Over 4.5: **{pred['corners']['home']['line_4_5']}%**")
-        
-    with ec2:
-        st.metric("Total Esperado (Jogo)", pred['corners']['total_expected'])
-        
-    with ec3:
-        st.markdown(f"**{away_team} (Individual)**")
-        st.write(f"Over 3.5: **{pred['corners']['away']['line_3_5']}%**")
-        st.write(f"Over 4.5: **{pred['corners']['away']['line_4_5']}%**")
-        
-    st.markdown("---")
+st.write("")
 
-    # --- SEÇÃO 2: CARTÕES ---
-    st.subheader("Cartões (Cards)")
-    cc1, cc2, cc3 = st.columns(3)
+# --- SELETOR DE ÁRBITRO HÍBRIDO ---
+st.markdown("### 👮 Arbitragem")
+if REFEREES_DATA:
+    ref_options = ["Outro / Não está na lista"] + sorted(list(REFEREES_DATA.keys()))
+else:
+    ref_options = ["Outro / Não está na lista"]
+
+selected_ref = st.selectbox("Selecione o Árbitro da Partida:", ref_options)
+
+# Lógica de Decisão do Fator
+final_ref_factor = 1.0
+
+if selected_ref == "Outro / Não está na lista":
+    # Se não achou o nome, mostra o seletor manual antigo
+    manual_profile = st.selectbox("Defina o Perfil Manualmente:", 
+                                  ["Normal (Padrão)", "Rigoroso (Cartoeiro)", "Leniente (Deixa Jogar)"])
+    if manual_profile == "Rigoroso (Cartoeiro)": final_ref_factor = 1.20
+    elif manual_profile == "Leniente (Deixa Jogar)": final_ref_factor = 0.80
+    else: final_ref_factor = 1.0
+else:
+    # Se achou o nome, usa o fator do CSV e mostra pro usuário
+    factor_from_csv = REFEREES_DATA[selected_ref]
+    final_ref_factor = factor_from_csv
     
-    with cc1:
-        st.markdown(f"**{home_team} (Individual)**")
-        st.write(f"Over 1.5: **{pred['cards']['home']['line_1_5']}%**")
-        st.write(f"Over 2.5: **{pred['cards']['home']['line_2_5']}%**")
+    # Feedback visual
+    if factor_from_csv > 1.0:
+        st.info(f"ℹ️ **{selected_ref}** é considerado Rigoroso (Fator {factor_from_csv}).")
+    elif factor_from_csv < 1.0:
+        st.info(f"ℹ️ **{selected_ref}** é considerado Leniente (Fator {factor_from_csv}).")
+    else:
+        st.success(f"ℹ️ **{selected_ref}** tem estatística Normal.")
+
+st.markdown("---")
+
+if st.button("🎲 Gerar Previsões", use_container_width=True):
+    if home_team in engine.stats_data:
+        pred = engine.predict_match_full(home_team, away_team, final_ref_factor)
         
-    with cc2:
-        st.metric("Total Esperado (Jogo)", pred['cards']['total_expected'])
-        st.write(f"Over 3.5 Total: **{pred['cards']['game_probs']['line_3_5']}%**")
-        st.write(f"Over 4.5 Total: **{pred['cards']['game_probs']['line_4_5']}%**")
-        
-    with cc3:
-        st.markdown(f"**{away_team} (Individual)**")
-        st.write(f"Over 1.5: **{pred['cards']['away']['line_1_5']}%**")
-        st.write(f"Over 2.5: **{pred['cards']['away']['line_2_5']}%**")
+        # ESCANTEIOS
+        st.subheader("🚩 Escanteios")
+        ec1, ec2, ec3 = st.columns(3)
+        with ec1:
+            st.markdown(f"**{home_team}**")
+            st.write(f"Over 3.5: **{pred['corners']['home']['line_3_5']}%**")
+            st.write(f"Over 4.5: **{pred['corners']['home']['line_4_5']}%**")
+        with ec2:
+            st.metric("Total Esperado", pred['corners']['total_expected'])
+        with ec3:
+            st.markdown(f"**{away_team}**")
+            st.write(f"Over 3.5: **{pred['corners']['away']['line_3_5']}%**")
+            st.write(f"Over 4.5: **{pred['corners']['away']['line_4_5']}%**")
+        st.markdown("---")
 
-    st.markdown("---")
+        # CARTÕES
+        st.subheader("🟨 Cartões")
+        cc1, cc2, cc3 = st.columns(3)
+        with cc1:
+            st.markdown(f"**{home_team}**")
+            st.write(f"Over 1.5: **{pred['cards']['home']['line_1_5']}%**")
+            st.write(f"Over 2.5: **{pred['cards']['home']['line_2_5']}%**")
+        with cc2:
+            st.metric("Total Esperado", pred['cards']['total_expected'])
+            st.write(f"Jogo Over 3.5: **{pred['cards']['game_probs']['line_3_5']}%**")
+            st.write(f"Jogo Over 4.5: **{pred['cards']['game_probs']['line_4_5']}%**")
+        with cc3:
+            st.markdown(f"**{away_team}**")
+            st.write(f"Over 1.5: **{pred['cards']['away']['line_1_5']}%**")
+            st.write(f"Over 2.5: **{pred['cards']['away']['line_2_5']}%**")
+        st.markdown("---")
 
-    # --- SEÇÃO 3: GOLS ---
-    st.subheader("Gols (Goals)")
-    gc1, gc2 = st.columns(2)
-    
-    with gc1:
-        st.metric("Gols Esperados (xG Total)", pred['goals']['total_expected'])
-    
-    with gc2:
-        st.markdown("**Linhas de Gols (Jogo Completo):**")
-        st.write(f"Over 1.5: **{pred['goals']['game_probs']['line_1_5']}%**")
-
-        st.write(f"Over 2.5: **{pred['goals']['game_probs']['line_2_5']}%**")
+        # GOLS
+        st.subheader("⚽ Gols")
+        gc1, gc2, gc3 = st.columns(3)
+        with gc1:
+            st.metric("xG Total", pred['goals']['total_expected'])
+        with gc2:
+            st.metric("Ambas Marcam", f"{pred['goals']['prob_btts']}%")
+        with gc3:
+            st.write(f"Over 1.5 Gols: **{pred['goals']['game_probs']['line_1_5']}%**")
+            st.write(f"Over 2.5 Gols: **{pred['goals']['game_probs']['line_2_5']}%**")
+    else:
+        st.error("Erro: Time não encontrado.")
