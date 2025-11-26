@@ -44,9 +44,9 @@ if not check_password():
     st.stop()
 
 # ==============================================================================
-# 1. DADOS DE BACKUP (SEGURANÇA)
+# 1. CARREGAMENTO DE DADOS
 # ==============================================================================
-# Se o CSV falhar, o app usa estes dados para não cair.
+# DADOS DE BACKUP (Caso CSV falhe)
 BACKUP_DATA = {
     "Arsenal": {"yellow": 1.00, "red": 0.00, "fouls": 10.45, "corners": 7.5, "g_for": 2.3, "g_against": 0.8},
     "Aston Villa": {"yellow": 1.73, "red": 0.00, "fouls": 9.55, "corners": 5.8, "g_for": 1.9, "g_against": 1.4},
@@ -166,26 +166,16 @@ BACKUP_DATA = {
     "Toulouse": {"yellow": 2.67, "red": 0.00, "fouls": 14.17, "corners": 4.6, "g_for": 1.2, "g_against": 1.5}
 }
 
-# ==============================================================================
-# 2. CARREGAMENTO DE DADOS (TENTA CSV, USA BACKUP SE FALHAR)
-# ==============================================================================
 @st.cache_data(ttl=0) 
 def load_data():
     data = {"teams": {}, "referees": {}, "error": None}
-    
-    # --- TENTA CARREGAR CSV (TIMES) ---
     try:
-        try:
-            df_teams = pd.read_csv("dados_times.csv")
-            if len(df_teams.columns) < 2:
-                df_teams = pd.read_csv("dados_times.csv", sep=";")
-        except:
-            df_teams = pd.read_csv("dados_times.csv", sep=";")
-
-        # Cria dicionário do CSV
+        # Tenta carregar do CSV primeiro
+        df_teams = pd.read_csv("dados_times.csv")
+        if len(df_teams.columns) < 2: df_teams = pd.read_csv("dados_times.csv", sep=";")
+        
         csv_dict = {}
         for _, row in df_teams.iterrows():
-            # Garante que Gols existem (se não, usa padrão)
             g_for = row['GolsFeitos'] if 'GolsFeitos' in df_teams.columns else 1.2
             g_against = row['GolsSofridos'] if 'GolsSofridos' in df_teams.columns else 1.2
             
@@ -197,21 +187,19 @@ def load_data():
                 "g_for": g_for,
                 "g_against": g_against
             }
-        data["teams"] = csv_dict # Sucesso! Usa o CSV.
-        
+        data["teams"] = csv_dict
     except Exception as e:
-        # FALHOU O CSV? USA O BACKUP (HARDCODED)
+        # Se falhar, usa o BACKUP
         data["teams"] = BACKUP_DATA
-        data["error"] = "Usando dados de backup (CSV falhou ou não encontrado)."
+        data["error"] = f"Usando Backup. Erro: {str(e)}"
 
-    # --- TENTA CARREGAR ÁRBITROS ---
     try:
         df_refs = pd.read_csv("arbitros.csv")
         if len(df_refs.columns) < 2: df_refs = pd.read_csv("arbitros.csv", sep=";")
         for _, row in df_refs.iterrows():
             data["referees"][row['Nome']] = row['Fator']
     except:
-        pass # Se falhar arbitro, fica sem lista (usa manual)
+        pass
 
     return data
 
@@ -220,7 +208,7 @@ RAW_STATS_DATA = DB["teams"]
 REFEREES_DATA = DB["referees"]
 
 # ==============================================================================
-# 3. MOTOR DE CÁLCULO (Poisson)
+# 2. MOTOR DE CÁLCULO
 # ==============================================================================
 class StatsEngine:
     def __init__(self):
@@ -233,11 +221,10 @@ class StatsEngine:
         return round(prob * 100, 1)
 
     def get_team_averages(self, team):
-        # Tenta pegar do dicionário carregado (CSV ou Backup)
         if team in self.stats_data:
             data = self.stats_data[team]
             avg_cards = data['yellow'] + (data['red'] * 2.5)
-            # Se veio do Backup, já tem g_for. Se veio de CSV antigo, garante default.
+            # Garante que pega g_for do dicionário (seja backup ou csv)
             g_for = data.get('g_for', 1.2)
             g_against = data.get('g_against', 1.2)
             
@@ -255,7 +242,7 @@ class StatsEngine:
         h_stats = self.get_team_averages(home)
         a_stats = self.get_team_averages(away)
 
-        # Escanteios
+        # Escanteios (Com Fator Champions)
         exp_corners_h = h_stats['corners'] * 1.10 * match_multiplier
         exp_corners_a = a_stats['corners'] * 0.85 * match_multiplier
         exp_corners_total = exp_corners_h + exp_corners_a
@@ -263,16 +250,16 @@ class StatsEngine:
         # Cartões
         match_fouls = h_stats['fouls'] + a_stats['fouls']
         tension_factor = 1.0
-        if match_fouls > 28: tension_factor = 1.25 
+        if match_fouls > 28: tension_factor = 1.25
         elif match_fouls > 25: tension_factor = 1.15
         
         exp_cards_h = h_stats['cards'] * tension_factor * ref_factor
         exp_cards_a = a_stats['cards'] * tension_factor * ref_factor
         exp_cards_total = exp_cards_h + exp_cards_a
 
-        # Gols
-        lambda_home = (h_stats['goals_for'] + a_stats['goals_against']) / 2 * match_multiplier
-        lambda_away = (a_stats['goals_for'] + h_stats['goals_against']) / 2 * match_multiplier
+        # Gols (Com Fator Champions)
+        lambda_home = ((h_stats['goals_for'] + a_stats['goals_against']) / 2) * match_multiplier
+        lambda_away = ((a_stats['goals_for'] + h_stats['goals_against']) / 2) * match_multiplier
         exp_goals_total = lambda_home + lambda_away
         
         prob_home_score = 1 - poisson.pmf(0, lambda_home)
@@ -317,31 +304,33 @@ class StatsEngine:
         }
 
 # ==============================================================================
-# 3. INTERFACE (MANTIDA)
+# 3. INTERFACE
 # ==============================================================================
 st.set_page_config(page_title="FutPrevisão Pro", layout="wide", page_icon="⚽")
 
 col_logo, col_logout = st.columns([4, 1])
 with col_logo:
     st.title("FutPrevisão Pro 🚀")
-    st.caption("Versão 2.0 Beta | Inteligência Artificial")
+    st.caption("Versão 2.1 (Final) | Inteligência Artificial")
 with col_logout:
     if st.button("Sair"):
         st.session_state["password_correct"] = False
         st.rerun()
 st.markdown("---")
 
-# Se houve erro silencioso, avisa discretamente
+# Aviso se estiver usando Backup
 if DB.get("error"):
-    st.toast(f"Aviso: {DB['error']}", icon="⚠️")
+    st.warning(f"⚠️ Modo de Segurança Ativo: {DB['error']}")
 
 engine = StatsEngine()
-all_teams = sorted(list(engine.stats_data.keys()))
+if engine.stats_data:
+    all_teams = sorted(list(engine.stats_data.keys()))
+else:
+    all_teams = ["Erro Crítico: Sem Dados"]
 
 # Seletores
 c1, c2 = st.columns([1, 1])
 with c1:
-    # Index seguro
     idx_h = all_teams.index("Chelsea") if "Chelsea" in all_teams else 0
     home_team = st.selectbox("Mandante (Casa)", all_teams, index=idx_h)
 with c2:
@@ -349,44 +338,46 @@ with c2:
     away_team = st.selectbox("Visitante (Fora)", all_teams, index=idx_a)
 
 st.write("")
-st.markdown("### 👮 Arbitragem")
-if REFEREES_DATA:
-    ref_options = ["Outro / Não está na lista"] + sorted(list(REFEREES_DATA.keys()))
-else:
-    ref_options = ["Outro / Não está na lista"]
 
-selected_ref = st.selectbox("Selecione o Árbitro da Partida:", ref_options)
+# Configurações Avançadas
+c3, c4 = st.columns([1, 1])
 
-final_ref_factor = 1.0
-if selected_ref == "Outro / Não está na lista":
-    manual_profile = st.selectbox("Defina o Perfil Manualmente:", 
-                                  ["Normal (Padrão)", "Rigoroso (Cartoeiro)", "Leniente (Deixa Jogar)"])
-    if manual_profile == "Rigoroso (Cartoeiro)": final_ref_factor = 1.20
-    elif manual_profile == "Leniente (Deixa Jogar)": final_ref_factor = 0.80
-else:
-    final_ref_factor = REFEREES_DATA[selected_ref]
-    if final_ref_factor > 1.0: st.info(f"ℹ️ **{selected_ref}** é Rigoroso.")
-    elif final_ref_factor < 1.0: st.info(f"ℹ️ **{selected_ref}** é Leniente.")
-    else: st.success(f"ℹ️ **{selected_ref}** é Normal.")
+with c3:
+    st.markdown("### 👮 Arbitragem")
+    if REFEREES_DATA:
+        ref_options = ["Outro / Não está na lista"] + sorted(list(REFEREES_DATA.keys()))
+    else:
+        ref_options = ["Outro / Não está na lista"]
+    
+    selected_ref = st.selectbox("Selecione o Árbitro:", ref_options)
+    
+    final_ref_factor = 1.0
+    if selected_ref == "Outro / Não está na lista":
+        manual_profile = st.selectbox("Perfil Manual:", 
+                                      ["Normal (Padrão)", "Rigoroso (Cartoeiro)", "Leniente (Deixa Jogar)"])
+        if manual_profile == "Rigoroso (Cartoeiro)": final_ref_factor = 1.20
+        elif manual_profile == "Leniente (Deixa Jogar)": final_ref_factor = 0.80
+    else:
+        final_ref_factor = REFEREES_DATA[selected_ref]
+        if final_ref_factor > 1.0: st.caption(f"ℹ️ Juiz Rigoroso detectado.")
+        elif final_ref_factor < 1.0: st.caption(f"ℹ️ Juiz Leniente detectado.")
+
+with c4:
+    st.markdown("### 🏆 Contexto")
+    match_type = st.radio("Tipo de Jogo:", 
+                          ["Liga Normal (Pontos Corridos)", "Champions / Clássico / Decisivo"],
+                          horizontal=False)
+    match_multiplier = 1.0
+    if match_type == "Champions / Clássico / Decisivo":
+        match_multiplier = 0.85
+        st.caption("ℹ️ Modo Elite: Redutor de 15% aplicado.")
 
 st.markdown("---")
 
-# ... código do seletor de árbitro ...
-
-# NOVO: Seletor de Contexto do Jogo
-match_type = st.radio("🏆 Tipo de Competição / Contexto:", 
-                      ["Liga Normal (Pontos Corridos)", "Champions / Clássico / Decisivo"],
-                      horizontal=True)
-
-match_multiplier = 1.0
-if match_type == "Champions / Clássico / Decisivo":
-    match_multiplier = 0.85 # Reduz 15% o volume esperado (Jogo mais estudado)
-    st.info("ℹ️ Modo Elite Ativado: O robô aplicou um redutor de 15% nas métricas devido ao equilíbrio do jogo.")
-
 if st.button("🎲 Gerar Previsões", use_container_width=True):
-    # Verifica se o time existe no banco atual (CSV ou Backup)
     if home_team in engine.stats_data:
-        pred = engine.predict_match_full(home_team, away_team, final_ref_factor)
+        # Passa TODOS os argumentos (times, juiz e contexto)
+        pred = engine.predict_match_full(home_team, away_team, final_ref_factor, match_multiplier)
         
         # ESCANTEIOS
         st.subheader("🚩 Escanteios")
@@ -431,6 +422,4 @@ if st.button("🎲 Gerar Previsões", use_container_width=True):
             st.write(f"Over 1.5 Gols: **{pred['goals']['game_probs']['line_1_5']}%**")
             st.write(f"Over 2.5 Gols: **{pred['goals']['game_probs']['line_2_5']}%**")
     else:
-        st.error("Erro: Time não encontrado no banco de dados.")
-
-
+        st.error("Erro: Time não encontrado.")
