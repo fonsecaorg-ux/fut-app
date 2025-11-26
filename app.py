@@ -251,19 +251,19 @@ class StatsEngine:
         else:
             return {"corners": 5.0, "cards": 2.2, "fouls": 12.5, "goals_for": 1.2, "goals_against": 1.2}
 
-    def predict_match_full(self, home, away, ref_factor):
+    def predict_match_full(self, home, away, ref_factor, match_multiplier):
         h_stats = self.get_team_averages(home)
         a_stats = self.get_team_averages(away)
 
         # Escanteios
-        exp_corners_h = h_stats['corners'] * 1.10
-        exp_corners_a = a_stats['corners'] * 0.85
+        exp_corners_h = h_stats['corners'] * 1.10 * match_multiplier
+        exp_corners_a = a_stats['corners'] * 0.85 * match_multiplier
         exp_corners_total = exp_corners_h + exp_corners_a
 
         # Cartões
         match_fouls = h_stats['fouls'] + a_stats['fouls']
         tension_factor = 1.0
-        if match_fouls > 28: tension_factor = 1.25
+        if match_fouls > 28: tension_factor = 1.25 
         elif match_fouls > 25: tension_factor = 1.15
         
         exp_cards_h = h_stats['cards'] * tension_factor * ref_factor
@@ -271,8 +271,8 @@ class StatsEngine:
         exp_cards_total = exp_cards_h + exp_cards_a
 
         # Gols
-        lambda_home = (h_stats['goals_for'] + a_stats['goals_against']) / 2
-        lambda_away = (a_stats['goals_for'] + h_stats['goals_against']) / 2
+        lambda_home = (h_stats['goals_for'] + a_stats['goals_against']) / 2 * match_multiplier
+        lambda_away = (a_stats['goals_for'] + h_stats['goals_against']) / 2 * match_multiplier
         exp_goals_total = lambda_home + lambda_away
         
         prob_home_score = 1 - poisson.pmf(0, lambda_home)
@@ -432,4 +432,5 @@ if st.button("🎲 Gerar Previsões", use_container_width=True):
             st.write(f"Over 2.5 Gols: **{pred['goals']['game_probs']['line_2_5']}%**")
     else:
         st.error("Erro: Time não encontrado no banco de dados.")
+
 
