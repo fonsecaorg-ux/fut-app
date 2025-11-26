@@ -44,34 +44,54 @@ if not check_password():
     st.stop()
 
 # ==============================================================================
-# 1. CARREGAMENTO DE DADOS (TIMES E ÁRBITROS)
+# 1. CARREGAMENTO DE DADOS (BLINDADO)
 # ==============================================================================
-@st.cache_data(ttl=600)
+@st.cache_data(ttl=0) # Desliga cache para forçar leitura nova
 def load_data():
-    data = {"teams": {}, "referees": {}}
+    data = {"teams": {}, "referees": {}, "error": None}
     
-    # Carrega Times
+    # --- CARREGA TIMES ---
     try:
-        df_teams = pd.read_csv("dados_times.csv")
+        # Tenta ler com vírgula (padrão)
+        try:
+            df_teams = pd.read_csv("dados_times.csv")
+            # Teste se leu errado (tudo numa coluna só)
+            if len(df_teams.columns) < 2:
+                df_teams = pd.read_csv("dados_times.csv", sep=";")
+        except:
+            # Tenta forçar ponto e vírgula
+            df_teams = pd.read_csv("dados_times.csv", sep=";")
+
+        # Verifica se as colunas existem (Correção do KeyError)
+        required_cols = ['Time', 'CartoesAmarelos', 'CartoesVermelhos', 'Faltas', 'Escanteios']
+        # Se faltar Gols, preenche com padrão
+        if 'GolsFeitos' not in df_teams.columns:
+            df_teams['GolsFeitos'] = 1.2
+            df_teams['GolsSofridos'] = 1.2
+            
         for _, row in df_teams.iterrows():
             data["teams"][row['Time']] = {
                 "yellow": row['CartoesAmarelos'],
                 "red": row['CartoesVermelhos'],
                 "fouls": row['Faltas'],
                 "corners": row['Escanteios'],
-                "g_for": row['GolsFeitos'],
-                "g_against": row['GolsSofridos']
+                "g_for": row.get('GolsFeitos', 1.2),
+                "g_against": row.get('GolsSofridos', 1.2)
             }
-    except Exception:
-        pass # Se der erro, fica vazio e avisa na interface
+    except Exception as e:
+        data["error"] = f"Erro nos Times: {str(e)}"
 
-    # Carrega Árbitros
+    # --- CARREGA ÁRBITROS ---
     try:
         df_refs = pd.read_csv("arbitros.csv")
+        if len(df_refs.columns) < 2: # Teste de separador
+             df_refs = pd.read_csv("arbitros.csv", sep=";")
+             
         for _, row in df_refs.iterrows():
             data["referees"][row['Nome']] = row['Fator']
-    except Exception:
-        pass
+    except Exception as e:
+        # Não trava o app se falhar o arbitro
+        print(f"Aviso: Erro nos árbitros: {e}")
 
     return data
 
@@ -121,7 +141,6 @@ class StatsEngine:
         if match_fouls > 28: tension_factor = 1.25
         elif match_fouls > 25: tension_factor = 1.15
         
-        # Aplica o fator do árbitro (vindo do CSV ou do manual)
         exp_cards_h = h_stats['cards'] * tension_factor * ref_factor
         exp_cards_a = a_stats['cards'] * tension_factor * ref_factor
         exp_cards_total = exp_cards_h + exp_cards_a
@@ -180,30 +199,35 @@ st.set_page_config(page_title="FutPrevisão Pro", layout="wide", page_icon="⚽"
 col_logo, col_logout = st.columns([4, 1])
 with col_logo:
     st.title("FutPrevisão Pro 🚀")
-    st.caption("Versão 2.0 | Dados Reais de Árbitros")
+    st.caption("Versão 2.0 Beta | Inteligência Artificial")
 with col_logout:
     if st.button("Sair"):
         st.session_state["password_correct"] = False
         st.rerun()
 st.markdown("---")
 
-engine = StatsEngine()
+# DIAGNÓSTICO DE ERRO (SE HOUVER)
+if DB.get("error"):
+    st.error(f"⚠️ Problema no Banco de Dados: {DB['error']}")
+    st.info("O sistema carregou, mas verifique o arquivo CSV no GitHub.")
 
-# Seletor de Times
+engine = StatsEngine()
 if engine.stats_data:
     all_teams = sorted(list(engine.stats_data.keys()))
 else:
-    all_teams = ["Erro no CSV de Times"]
+    all_teams = ["Erro: Nenhum time carregado"]
 
+# Seletores
 c1, c2 = st.columns([1, 1])
 with c1:
-    home_team = st.selectbox("Mandante (Casa)", all_teams, index=0)
+    # Index seguro (evita crash se Chelsea não existir)
+    idx_h = all_teams.index("Chelsea") if "Chelsea" in all_teams else 0
+    home_team = st.selectbox("Mandante (Casa)", all_teams, index=idx_h)
 with c2:
-    away_team = st.selectbox("Visitante (Fora)", all_teams, index=1)
+    idx_a = all_teams.index("Getafe") if "Getafe" in all_teams else 0
+    away_team = st.selectbox("Visitante (Fora)", all_teams, index=idx_a)
 
 st.write("")
-
-# --- SELETOR DE ÁRBITRO HÍBRIDO ---
 st.markdown("### 👮 Arbitragem")
 if REFEREES_DATA:
     ref_options = ["Outro / Não está na lista"] + sorted(list(REFEREES_DATA.keys()))
@@ -212,28 +236,17 @@ else:
 
 selected_ref = st.selectbox("Selecione o Árbitro da Partida:", ref_options)
 
-# Lógica de Decisão do Fator
 final_ref_factor = 1.0
-
 if selected_ref == "Outro / Não está na lista":
-    # Se não achou o nome, mostra o seletor manual antigo
     manual_profile = st.selectbox("Defina o Perfil Manualmente:", 
                                   ["Normal (Padrão)", "Rigoroso (Cartoeiro)", "Leniente (Deixa Jogar)"])
     if manual_profile == "Rigoroso (Cartoeiro)": final_ref_factor = 1.20
     elif manual_profile == "Leniente (Deixa Jogar)": final_ref_factor = 0.80
-    else: final_ref_factor = 1.0
 else:
-    # Se achou o nome, usa o fator do CSV e mostra pro usuário
-    factor_from_csv = REFEREES_DATA[selected_ref]
-    final_ref_factor = factor_from_csv
-    
-    # Feedback visual
-    if factor_from_csv > 1.0:
-        st.info(f"ℹ️ **{selected_ref}** é considerado Rigoroso (Fator {factor_from_csv}).")
-    elif factor_from_csv < 1.0:
-        st.info(f"ℹ️ **{selected_ref}** é considerado Leniente (Fator {factor_from_csv}).")
-    else:
-        st.success(f"ℹ️ **{selected_ref}** tem estatística Normal.")
+    final_ref_factor = REFEREES_DATA[selected_ref]
+    if final_ref_factor > 1.0: st.info(f"ℹ️ **{selected_ref}** é Rigoroso.")
+    elif final_ref_factor < 1.0: st.info(f"ℹ️ **{selected_ref}** é Leniente.")
+    else: st.success(f"ℹ️ **{selected_ref}** é Normal.")
 
 st.markdown("---")
 
