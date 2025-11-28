@@ -39,12 +39,14 @@ jobs:
       - name: Executar o Robô (Atualizador.py)
         run: python atualizador.py
 
-      # 5. Salva as mudanças (Git Commit & Push)
-      # Só faz commit se houver mudanças no CSV
+# 5. Salva as mudanças (Com estratégia anti-erro de versão)
       - name: Commit e Push das mudanças
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           git add data_times.csv
+          # Só faz commit se houver mudança
           git commit -m "🤖 Auto-update: Dados atualizados pelo Robô Noturno" || echo "Sem mudanças para comitar"
+          # O CORRETOR DE ERRO: Puxa as tuas mudanças antes de enviar as dele
+          git pull --rebase origin main
           git push
