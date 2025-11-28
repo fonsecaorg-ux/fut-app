@@ -3,7 +3,7 @@ name: Robô Noturno - Atualizador de Dados 🤖
 on:
   schedule:
     - cron: '0 10 * * *' # Roda todo dia as 07:00 BRT
-  workflow_dispatch: # Botão manual
+  workflow_dispatch: # Permite rodar manualmente clicando no botão
 
 permissions:
   contents: write
@@ -16,7 +16,7 @@ jobs:
       - name: Checkout do código
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Importante: Baixa todo o histórico para evitar erros de merge
+          fetch-depth: 0 # Baixa todo o histórico para evitar erros
 
       - name: Configurar Python
         uses: actions/setup-python@v4
@@ -28,19 +28,17 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # --- MUDANÇA TÁTICA AQUI ---
-      # Primeiro garantimos que estamos 100% sincronizados com a nuvem
-      - name: Sincronizar com GitHub
+      # --- O SEGREDO ANTI-ERRO ---
+      # Garante que o robô está atualizado com o que você fez manualmente
+      - name: Sincronizar com GitHub (Pull)
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           git pull origin main --rebase || echo "Nada para puxar"
 
-      # Agora sim rodamos o script (sobre a versão mais recente)
       - name: Executar o Robô
         run: python atualizador.py
 
-      # Por fim, salvamos
       - name: Salvar Mudanças
         run: |
           git add data_times.csv
