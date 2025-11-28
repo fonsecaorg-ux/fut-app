@@ -159,6 +159,30 @@ def main():
     total += processar_fbref(df_atual, times_csv)
 
     if total > 0:
+import json # Se já tiver import json lá no topo do arquivo, pode apagar essa linha
+
+# --- LÓGICA DE METADADOS (NOVO) ---
+def carregar_metadados():
+    try:
+        with open("metadados.json", "r", encoding='utf-8') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return None
+
+# Carrega e Exibe na Sidebar
+meta = carregar_metadados()
+
+if meta:
+    st.sidebar.markdown("---") # Uma linha separadora extra fica bonito
+    st.sidebar.caption(f"📅 **Última Atualização:**")
+    st.sidebar.text(meta['ultima_verificacao'])
+    
+    # Se quiser mostrar quantos times mudaram
+    if meta['times_alterados'] > 0:
+        st.sidebar.success(f"⚡ {meta['times_alterados']} times atualizados!")
+    else:
+        st.sidebar.info("✔ Base atualizada.")
+        
         # AQUI TAMBÉM: Salva com o nome certo
         df_atual.to_csv(NOME_ARQUIVO_CSV, index=False)
         print(f"💾 Salvo! {total} times atualizados.")
