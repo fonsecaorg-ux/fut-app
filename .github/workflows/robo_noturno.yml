@@ -1,0 +1,50 @@
+name: Robô Noturno - Atualizador de Dados 🤖
+
+# GATILHOS (Quando o robô acorda?)
+on:
+  schedule:
+    # Cron Job: Roda todos os dias às 10:00 UTC (07:00 Brasil/Portugal Aprox)
+    # Isso garante que os jogos da noite anterior já acabaram.
+    - cron: '0 10 * * *'
+  
+  # Permite rodar manualmente clicando num botão (ótimo para testes)
+  workflow_dispatch:
+
+# PERMISSÕES (Para o robô poder salvar o CSV atualizado)
+permissions:
+  contents: write
+
+jobs:
+  update-data:
+    runs-on: ubuntu-latest # A máquina virtual que o GitHub empresta
+
+    steps:
+      # 1. Baixa o teu código do repositório
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      # 2. Instala o Python
+      - name: Configurar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      # 3. Instala as bibliotecas do requirements.txt
+      - name: Instalar Dependências
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # 4. Roda o teu script de atualização
+      - name: Executar o Robô (Atualizador.py)
+        run: python atualizador.py
+
+      # 5. Salva as mudanças (Git Commit & Push)
+      # Só faz commit se houver mudanças no CSV
+      - name: Commit e Push das mudanças
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add data_times.csv
+          git commit -m "🤖 Auto-update: Dados atualizados pelo Robô Noturno" || echo "Sem mudanças para comitar"
+          git push
