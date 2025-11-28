@@ -1,52 +1,48 @@
 name: Robô Noturno - Atualizador de Dados 🤖
 
-# GATILHOS (Quando o robô acorda?)
 on:
   schedule:
-    # Cron Job: Roda todos os dias às 10:00 UTC (07:00 Brasil/Portugal Aprox)
-    # Isso garante que os jogos da noite anterior já acabaram.
-    - cron: '0 10 * * *'
-  
-  # Permite rodar manualmente clicando num botão (ótimo para testes)
-  workflow_dispatch:
+    - cron: '0 10 * * *' # Roda todo dia as 07:00 BRT
+  workflow_dispatch: # Botão manual
 
-# PERMISSÕES (Para o robô poder salvar o CSV atualizado)
 permissions:
   contents: write
 
 jobs:
   update-data:
-    runs-on: ubuntu-latest # A máquina virtual que o GitHub empresta
+    runs-on: ubuntu-latest
 
     steps:
-      # 1. Baixa o teu código do repositório
       - name: Checkout do código
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Importante: Baixa todo o histórico para evitar erros de merge
 
-      # 2. Instala o Python
       - name: Configurar Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.9'
 
-      # 3. Instala as bibliotecas do requirements.txt
       - name: Instalar Dependências
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # 4. Roda o teu script de atualização
-      - name: Executar o Robô (Atualizador.py)
-        run: python atualizador.py
-
-# 5. Salva as mudanças (Com estratégia anti-erro de versão)
-      - name: Commit e Push das mudanças
+      # --- MUDANÇA TÁTICA AQUI ---
+      # Primeiro garantimos que estamos 100% sincronizados com a nuvem
+      - name: Sincronizar com GitHub
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git pull origin main --rebase || echo "Nada para puxar"
+
+      # Agora sim rodamos o script (sobre a versão mais recente)
+      - name: Executar o Robô
+        run: python atualizador.py
+
+      # Por fim, salvamos
+      - name: Salvar Mudanças
+        run: |
           git add data_times.csv
-          # Só faz commit se houver mudança
-          git commit -m "🤖 Auto-update: Dados atualizados pelo Robô Noturno" || echo "Sem mudanças para comitar"
-          # O CORRETOR DE ERRO: Puxa as tuas mudanças antes de enviar as dele
-          git pull --rebase origin main
-          git push
+          git commit -m "🤖 Auto-update: Dados atualizados" || echo "Sem mudanças"
+          git push origin main
