@@ -1,8 +1,8 @@
 streamlit
 pandas
 requests
-lxml
-html5lib
 beautifulsoup4
+lxml
 plotly
 scipy
+openpyxl
