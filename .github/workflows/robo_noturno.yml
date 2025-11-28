@@ -2,8 +2,8 @@ name: Robô Noturno - Atualizador de Dados 🤖
 
 on:
   schedule:
-    - cron: '0 10 * * *' # Roda todo dia as 07:00 BRT
-  workflow_dispatch: # Botão manual
+    - cron: '0 10 * * *'
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -23,13 +23,12 @@ jobs:
         with:
           python-version: '3.9'
 
-      # --- A CORREÇÃO MÁGICA ESTÁ AQUI ---
-      # Não usamos mais o requirements.txt do Streamlit.
-      # Instalamos apenas o kit básico para o robô funcionar rápido.
-      - name: Instalar Dependências (Modo Turbo)
+      # Instalação robusta das bibliotecas
+      - name: Instalar Dependências
         run: |
           python -m pip install --upgrade pip
-          pip install pandas requests lxml html5lib beautifulsoup4 openpyxl
+          pip install pandas requests beautifulsoup4
+          pip install lxml --force-reinstall
 
       - name: Sincronizar com GitHub (Pull)
         run: |
@@ -42,6 +41,7 @@ jobs:
 
       - name: Salvar Mudanças
         run: |
-          git add data_times.csv
+          # AQUI MUDOU: Agora adicionamos o arquivo com o nome CORRETO
+          git add dados_times.csv
           git commit -m "🤖 Auto-update: Dados atualizados" || echo "Sem mudanças"
           git push origin main
