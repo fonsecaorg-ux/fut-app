@@ -119,13 +119,13 @@ else:
 champions_mode = st.sidebar.checkbox("Modo Champions/Clássico (-15%)", value=False)
 
 # ==============================================================================
-# 3. CÁLCULOS (Lógica Intocada, apenas expondo variáveis individuais)
+# 3. CÁLCULOS
 # ==============================================================================
 def calculate_metrics(home, away, ref_factor, is_champions):
     h_data = teams_data[home]
     a_data = teams_data[away]
     
-    # Escanteios
+    # --- ESCANTEIOS ---
     corn_h = h_data['corners'] * 1.10
     corn_a = a_data['corners'] * 0.85
     
@@ -135,38 +135,41 @@ def calculate_metrics(home, away, ref_factor, is_champions):
         
     total_corners = corn_h + corn_a
         
-    # Cartões
+    # --- CARTÕES (INDIVIDUALIZADO) ---
     tension = (h_data['fouls'] + a_data['fouls']) / 24.0
     tension = max(0.85, min(tension, 1.30))
-    base_cards = h_data['cards'] + a_data['cards']
-    total_cards = base_cards * tension * ref_factor
     
-    # Gols
+    # Calculamos o esperado individualmente aplicando Tensão e Juiz
+    card_h = h_data['cards'] * tension * ref_factor
+    card_a = a_data['cards'] * tension * ref_factor
+    
+    total_cards = card_h + card_a
+    
+    # --- GOLS ---
     avg_l = 1.3
     exp_h = (h_data['goals_f']/avg_l) * (a_data['goals_a']/avg_l) * avg_l
     exp_a = (a_data['goals_f']/avg_l) * (h_data['goals_a']/avg_l) * avg_l
     
     return {
         'total_corners': total_corners,
-        'ind_corn_h': corn_h, # Individual Casa
-        'ind_corn_a': corn_a, # Individual Fora
+        'ind_corn_h': corn_h,
+        'ind_corn_a': corn_a,
         'total_cards': total_cards,
+        'ind_card_h': card_h, # Individual Casa
+        'ind_card_a': card_a, # Individual Fora
         'goals_h': exp_h,
         'goals_a': exp_a,
         'tension': tension
     }
 
-# Função auxiliar para calcular probabilidade "Over" (Mais de X)
+# Função auxiliar para probabilidade
 def prob_over(expectation, line):
-    # Sobrevivência (1 - CDF) do Poisson
-    # Over 7.5 significa P(X >= 8) -> sf(7, mu)
-    # A linha geralmente é .5 (ex: 7.5), então usamos o inteiro 7
     k = int(line) 
     prob = poisson.sf(k, expectation)
     return prob * 100
 
 # ==============================================================================
-# 4. INTERFACE ESTILO PDF
+# 4. INTERFACE
 # ==============================================================================
 st.title(f"📊 {home_team} x {away_team}")
 
@@ -181,63 +184,84 @@ if st.sidebar.button("Gerar Previsões 🚀", type="primary"):
     c3.metric("Tensão", f"{m['tension']:.2f}")
     st.divider()
 
-    # --- SEÇÃO: RADAR DE ESCANTEIOS (IGUAL AO PDF) ---
-    st.subheader("🚩 Radar de Escanteios (Total do Jogo)")
+    # --- SEÇÃO 1: ESCANTEIOS ---
+    st.subheader("🚩 Escanteios (Corners)")
     
-    # Tabela de Linhas de Jogo (7.5 até 12.5)
+    # Radar Total
     cols = st.columns(6)
     lines = [7.5, 8.5, 9.5, 10.5, 11.5, 12.5]
-    
     for i, col in enumerate(cols):
         line = lines[i]
         prob = prob_over(m['total_corners'], line)
-        
-        # Cor condicional (Verde se > 70%, Amarelo > 50%, Vermelho < 50%)
         color = "green" if prob >= 70 else "orange" if prob >= 50 else "red"
-        
         col.markdown(f"**Over {line}**")
         col.markdown(f":{color}[**{prob:.1f}%**]")
 
-    st.markdown("<br>", unsafe_allow_html=True) # Espaço
+    st.markdown("<br>", unsafe_allow_html=True)
 
-    # --- LINHAS INDIVIDUAIS (IGUAL AO PDF) ---
-    st.subheader("📊 Linhas Individuais (Por Time)")
-    
+    # Individuais Escanteios
     col_h, col_m, col_a = st.columns([1, 1, 1])
-    
-    # Time da Casa
     with col_h:
         st.markdown(f"### 🏠 {home_team}")
-        st.write(f"Média Indiv: **{m['ind_corn_h']:.2f}**")
-        # Linhas 2.5 a 5.5
+        st.write(f"Média: **{m['ind_corn_h']:.2f}**")
         for line in [2.5, 3.5, 4.5, 5.5]:
             p = prob_over(m['ind_corn_h'], line)
             st.write(f"Over {line}: **{p:.1f}%**")
 
-    # Time de Fora
     with col_a:
         st.markdown(f"### ✈️ {away_team}")
-        st.write(f"Média Indiv: **{m['ind_corn_a']:.2f}**")
-        # Linhas 2.5 a 5.5
+        st.write(f"Média: **{m['ind_corn_a']:.2f}**")
         for line in [2.5, 3.5, 4.5, 5.5]:
             p = prob_over(m['ind_corn_a'], line)
             st.write(f"Over {line}: **{p:.1f}%**")
 
-    # Comparativo Central
     with col_m:
-        st.markdown("### 🆚 Comparativo")
-        # Gráfico de Barras simples
+        st.markdown("### 🆚 Força (Cantos)")
         fig = go.Figure()
         fig.add_trace(go.Bar(x=[home_team, away_team], y=[m['ind_corn_h'], m['ind_corn_a']], marker_color=['blue', 'red']))
-        fig.update_layout(title="Força de Escanteios", height=250, margin=dict(l=20, r=20, t=30, b=20))
+        fig.update_layout(height=250, margin=dict(l=20, r=20, t=20, b=20))
         st.plotly_chart(fig, use_container_width=True)
 
     st.divider()
 
-    # --- GOLS E PLACAR EXATO ---
+    # --- SEÇÃO 2: CARTÕES (NOVO) ---
+    st.subheader("🟨 Cartões (Cards)")
+    
+    cc_h, cc_m, cc_a = st.columns([1, 1, 1])
+    
+    # Individual Cartões Casa
+    with cc_h:
+        st.markdown(f"### 🏠 {home_team}")
+        st.write(f"Média Esperada: **{m['ind_card_h']:.2f}**")
+        # Linhas típicas de cartões individuais
+        for line in [1.5, 2.5, 3.5]:
+            p = prob_over(m['ind_card_h'], line)
+            # Destaque visual se for alta probabilidade
+            destaque = "green" if p > 60 else "white"
+            st.markdown(f"Over {line}: :{destaque}[**{p:.1f}%**]")
+
+    # Individual Cartões Fora
+    with cc_a:
+        st.markdown(f"### ✈️ {away_team}")
+        st.write(f"Média Esperada: **{m['ind_card_a']:.2f}**")
+        for line in [1.5, 2.5, 3.5]:
+            p = prob_over(m['ind_card_a'], line)
+            destaque = "green" if p > 60 else "white"
+            st.markdown(f"Over {line}: :{destaque}[**{p:.1f}%**]")
+
+    # Comparativo Cartões
+    with cc_m:
+        st.markdown("### 🆚 Disciplina")
+        fig_c = go.Figure()
+        fig_c.add_trace(go.Bar(x=[home_team, away_team], y=[m['ind_card_h'], m['ind_card_a']], marker_color=['gold', 'gold']))
+        fig_c.update_layout(height=250, margin=dict(l=20, r=20, t=20, b=20))
+        st.plotly_chart(fig_c, use_container_width=True)
+
+    st.divider()
+
+    # --- SEÇÃO 3: GOLS ---
     st.subheader("⚽ Probabilidades de Gols")
     
-    # Calcula probabilidades de vitória
     ph = [poisson.pmf(i, m['goals_h']) for i in range(6)]
     pa = [poisson.pmf(i, m['goals_a']) for i in range(6)]
     prob_home = sum([ph[i]*pa[j] for i in range(6) for j in range(6) if i > j]) * 100
