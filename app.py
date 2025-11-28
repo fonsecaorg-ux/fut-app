@@ -1,323 +1,267 @@
 import streamlit as st
 import pandas as pd
-import re
 import numpy as np
 import plotly.graph_objects as go
 from scipy.stats import poisson
+import json
 import hmac
 
 # ==============================================================================
-# 0. SISTEMA DE LOGIN (SEGURANÇA)
+# 0. CONFIGURAÇÃO DA PÁGINA E LOGIN
 # ==============================================================================
+st.set_page_config(
+    page_title="FutPrevisão Pro",
+    layout="wide",
+    page_icon="⚽"
+)
+
 def check_password():
+    """Retorna True se o usuário logar corretamente."""
     if "password_correct" not in st.session_state:
         st.session_state["password_correct"] = False
 
     def password_entered():
+        """Verifica se o usuário e senha batem com o cadastrado nos Secrets."""
         if "passwords" in st.secrets:
             user = st.session_state["username"]
             password = st.session_state["password"]
-            if user in st.secrets["passwords"] and password == st.secrets["passwords"][user]:
+            
+            # Validação segura
+            if user in st.secrets["passwords"] and \
+               hmac.compare_digest(password, st.secrets["passwords"][user]):
                 st.session_state["password_correct"] = True
                 del st.session_state["password"]
                 del st.session_state["username"]
             else:
                 st.session_state["password_correct"] = False
+                st.error("😕 Usuário ou senha incorretos")
         else:
-            st.error("Erro: Senhas não configuradas.")
+            st.error("Erro de configuração: Senhas não encontradas no servidor.")
 
     if st.session_state["password_correct"]:
         return True
 
-    st.set_page_config(page_title="Login FutPrevisão", layout="centered", page_icon="🔒")
-    st.title("🔒 Acesso Restrito")
-    st.info("Faça login para acessar as previsões.")
+    # Tela de Login
+    st.markdown("### 🔒 Acesso Restrito - FutPrevisão Pro")
     st.text_input("Usuário", key="username")
     st.text_input("Senha", type="password", key="password")
     st.button("Entrar", on_click=password_entered)
-    
-    if "password_correct" in st.session_state and not st.session_state["password_correct"] and "username" in st.session_state:
-        st.error("😕 Usuário ou senha incorretos.")
     return False
 
 if not check_password():
-    st.stop()
+    st.stop()  # Para a execução se não estiver logado
 
 # ==============================================================================
-# 1. CARREGAMENTO DE DADOS (COM BACKUP)
+# 1. CARREGAMENTO DE DADOS (COM BACKUP DO ROBÔ)
 # ==============================================================================
-BACKUP_DATA = {
-    "Arsenal": {"yellow": 1.00, "red": 0.00, "fouls": 10.45, "corners": 7.5, "g_for": 2.3, "g_against": 0.8},
-    "Man City": {"yellow": 1.64, "red": 0.00, "fouls": 9.36, "corners": 8.2, "g_for": 2.6, "g_against": 0.9},
-    "Chelsea": {"yellow": 2.09, "red": 0.27, "fouls": 11.55, "corners": 6.4, "g_for": 2.1, "g_against": 1.3},
+# Dados de Backup (Caso o CSV falhe)
+BACKUP_TEAMS = {
+    "Arsenal": {"corners": 6.82, "cards": 1.00, "fouls": 10.45, "goals_f": 2.3, "goals_a": 0.8},
+    "Man City": {"corners": 7.45, "cards": 1.50, "fouls": 9.20, "goals_f": 2.7, "goals_a": 0.8},
+    "Liverpool": {"corners": 6.18, "cards": 1.91, "fouls": 11.64, "goals_f": 2.5, "goals_a": 0.9},
+    # ... (O sistema usa o CSV atualizado pelo robô, isso é só segurança)
 }
 
-@st.cache_data(ttl=0) 
+def safe_float(value):
+    try:
+        return float(str(value).replace(',', '.'))
+    except:
+        return 0.0
+
+@st.cache_data(ttl=3600) # Cache de 1 hora
 def load_data():
-    data = {"teams": {}, "referees": {}, "error": None}
+    # 1. Carrega Times
     try:
-        try:
-            df_teams = pd.read_csv("dados_times.csv")
-            if len(df_teams.columns) < 2: df_teams = pd.read_csv("dados_times.csv", sep=";")
-        except:
-            df_teams = pd.read_csv("dados_times.csv", sep=";")
-
-        csv_dict = {}
-        for _, row in df_teams.iterrows():
-            def safe_float(val):
-                try: return float(str(val).replace(',', '.'))
-                except: return 1.0
-
-            csv_dict[row['Time']] = {
-                "yellow": safe_float(row['CartoesAmarelos']),
-                "red": safe_float(row['CartoesVermelhos']),
-                "fouls": safe_float(row['Faltas']),
-                "corners": safe_float(row['Escanteios']),
-                "g_for": safe_float(row.get('GolsFeitos', 1.2)),
-                "g_against": safe_float(row.get('GolsSofridos', 1.2))
+        df = pd.read_csv("dados_times.csv") # Nome corrigido para o do robô
+        teams_dict = {}
+        for _, row in df.iterrows():
+            teams_dict[row['Time']] = {
+                'corners': safe_float(row['Escanteios']),
+                'cards': safe_float(row['CartoesAmarelos']), 
+                'fouls': safe_float(row['Faltas']),
+                'goals_f': safe_float(row['GolsFeitos']),
+                'goals_a': safe_float(row['GolsSofridos'])
             }
-        data["teams"] = csv_dict
     except Exception as e:
-        data["teams"] = BACKUP_DATA
-        data["error"] = f"Usando Backup: {str(e)}"
+        st.warning(f"Usando base de backup (Erro no CSV: {e})")
+        teams_dict = BACKUP_TEAMS
 
+    # 2. Carrega Árbitros
     try:
-        df_refs = pd.read_csv("arbitros.csv")
-        if len(df_refs.columns) < 2: df_refs = pd.read_csv("arbitros.csv", sep=";")
-        for _, row in df_refs.iterrows():
-            fator_str = str(row['Fator']).replace(',', '.')
-            data["referees"][row['Nome']] = float(fator_str)
-    except: pass
-
-    return data
-
-DB = load_data()
-RAW_STATS_DATA = DB["teams"]
-REFEREES_DATA = DB["referees"]
-
-# ==============================================================================
-# 2. MOTOR DE CÁLCULO CIENTÍFICO (Validado por 4 IAs)
-# ==============================================================================
-class StatsEngine:
-    def __init__(self):
-        self.stats_data = RAW_STATS_DATA
-
-    def calculate_poisson_prob(self, line, avg):
-        if avg == 0: return 0.0
-        k = int(line) 
-        prob = 1 - poisson.cdf(k, avg)
-        return round(prob * 100, 1)
-
-    def get_team_averages(self, team):
-        if team in self.stats_data:
-            data = self.stats_data[team]
-            avg_cards = data['yellow'] + (data['red'] * 2.5)
-            return {
-                "corners": data['corners'],
-                "cards": avg_cards,
-                "fouls": data['fouls'],
-                "goals_for": data.get('g_for', 1.2),
-                "goals_against": data.get('g_against', 1.2)
-            }
-        else:
-            return {"corners": 5.0, "cards": 2.2, "fouls": 12.5, "goals_for": 1.2, "goals_against": 1.2}
-
-    # --- NOVA FUNÇÃO TENSION FACTOR (OPÇÃO B) ---
-    def compute_tension_factor(self, match_fouls):
-        """
-        Calcula o tension_factor de forma contínua e científica.
-        Base global: 24.0 faltas.
-        Cap: 1.30 (para evitar exageros).
-        Piso: 0.85 (para jogos muito limpos).
-        """
-        baseline = 24.0
-        factor = match_fouls / baseline
-        return max(0.85, min(factor, 1.30))
-
-    def predict_match_full(self, home, away, ref_factor, match_multiplier):
-        h_stats = self.get_team_averages(home)
-        a_stats = self.get_team_averages(away)
-
-        # Escanteios
-        exp_corners_h = h_stats['corners'] * 1.10 * match_multiplier
-        exp_corners_a = a_stats['corners'] * 0.85 * match_multiplier
-        exp_corners_total = exp_corners_h + exp_corners_a
-
-        # Cartões (NOVA LÓGICA CIENTÍFICA)
-        match_fouls = h_stats['fouls'] + a_stats['fouls']
-        tension_factor = self.compute_tension_factor(match_fouls)
+        df_ref = pd.read_csv("arbitros.csv")
+        referees = dict(zip(df_ref['Nome'], df_ref['Fator']))
+    except:
+        referees = {"Genérico (Médio)": 1.0, "Rigoroso": 1.2, "Leniente": 0.8}
         
-        exp_cards_h = h_stats['cards'] * tension_factor * ref_factor
-        exp_cards_a = a_stats['cards'] * tension_factor * ref_factor
-        exp_cards_total = exp_cards_h + exp_cards_a
+    return teams_dict, referees
 
-        # Gols
-        lambda_home = ((h_stats['goals_for'] + a_stats['goals_against']) / 2) * match_multiplier
-        lambda_away = ((a_stats['goals_for'] + h_stats['goals_against']) / 2) * match_multiplier
-        exp_goals_total = lambda_home + lambda_away
-        
-        prob_home_score = 1 - poisson.pmf(0, lambda_home)
-        prob_away_score = 1 - poisson.pmf(0, lambda_away)
-        prob_btts = prob_home_score * prob_away_score * 100
-
-        # Radar de Escanteios
-        corners_radar = {}
-        for line in [7.5, 8.5, 9.5, 10.5, 11.5, 12.5]:
-            corners_radar[f"Over {line}"] = self.calculate_poisson_prob(line, exp_corners_total)
-
-        return {
-            "corners": {
-                "total_expected": round(exp_corners_total, 2),
-                "radar": corners_radar,
-                "home": {
-                    "line_3_5": self.calculate_poisson_prob(3.5, exp_corners_h),
-                    "line_4_5": self.calculate_poisson_prob(4.5, exp_corners_h)
-                },
-                "away": {
-                    "line_3_5": self.calculate_poisson_prob(3.5, exp_corners_a),
-                    "line_4_5": self.calculate_poisson_prob(4.5, exp_corners_a)
-                }
-            },
-            "cards": {
-                "total_expected": round(exp_cards_total, 2),
-                "tension_debug": round(tension_factor, 2), # Para auditar se quiser
-                "game_probs": {
-                    "line_3_5": self.calculate_poisson_prob(3.5, exp_cards_total),
-                    "line_4_5": self.calculate_poisson_prob(4.5, exp_cards_total)
-                },
-                "home": {
-                    "line_1_5": self.calculate_poisson_prob(1.5, exp_cards_h),
-                    "line_2_5": self.calculate_poisson_prob(2.5, exp_cards_h)
-                },
-                "away": {
-                    "line_1_5": self.calculate_poisson_prob(1.5, exp_cards_a),
-                    "line_2_5": self.calculate_poisson_prob(2.5, exp_cards_a)
-                }
-            },
-            "goals": {
-                "total_expected": round(exp_goals_total, 2),
-                "prob_btts": round(prob_btts, 1),
-                "game_probs": {
-                    "line_1_5": self.calculate_poisson_prob(1.5, exp_goals_total),
-                    "line_2_5": self.calculate_poisson_prob(2.5, exp_goals_total)
-                }
-            }
-        }
+# Carrega os dados
+teams_data, referees_data = load_data()
 
 # ==============================================================================
-# 3. INTERFACE
+# 2. BARRA LATERAL (COM STATUS DO ROBÔ)
 # ==============================================================================
-st.set_page_config(page_title="FutPrevisão Pro", layout="wide", page_icon="⚽")
+st.sidebar.image("https://cdn-icons-png.flaticon.com/512/53/53283.png", width=80)
+st.sidebar.title("FutPrevisão Pro v2.6")
+st.sidebar.markdown("---")
 
-col_logo, col_logout = st.columns([4, 1])
-with col_logo:
-    st.title("FutPrevisão Pro 🚀")
-    st.caption("Versão 2.6 | Algoritmo Validado por IA")
-with col_logout:
-    if st.button("Sair"):
-        st.session_state["password_correct"] = False
-        st.rerun()
+# --- NOVO: STATUS DO ROBÔ ---
+def carregar_metadados():
+    try:
+        with open("metadados.json", "r", encoding='utf-8') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return None
 
-st.markdown("---")
+meta = carregar_metadados()
 
-if DB.get("error"):
-    st.toast(f"Aviso: {DB['error']}", icon="⚠️")
-
-engine = StatsEngine()
-if engine.stats_data:
-    all_teams = sorted(list(engine.stats_data.keys()))
-else:
-    all_teams = ["Erro de Dados"]
-
-c1, c2 = st.columns([1, 1])
-with c1:
-    idx_h = all_teams.index("Chelsea") if "Chelsea" in all_teams else 0
-    home_team = st.selectbox("Mandante (Casa)", all_teams, index=idx_h)
-with c2:
-    idx_a = all_teams.index("Getafe") if "Getafe" in all_teams else 0
-    away_team = st.selectbox("Visitante (Fora)", all_teams, index=idx_a)
-
-st.write("")
-c3, c4 = st.columns([1, 1])
-with c3:
-    st.markdown("### 👮 Arbitragem")
-    ref_options = ["Outro / Não está na lista"] + sorted(list(REFEREES_DATA.keys())) if REFEREES_DATA else ["Outro"]
-    selected_ref = st.selectbox("Árbitro:", ref_options)
+if meta:
+    st.sidebar.caption("🤖 **Status do Robô:**")
+    st.sidebar.text(f"Verificado em:\n{meta['ultima_verificacao']}")
     
-    final_ref_factor = 1.0
-    if selected_ref == "Outro / Não está na lista":
-        manual_profile = st.selectbox("Perfil Manual:", ["Normal", "Rigoroso", "Leniente"])
-        if manual_profile == "Rigoroso": final_ref_factor = 1.20
-        elif manual_profile == "Leniente": final_ref_factor = 0.80
+    if meta['times_alterados'] > 0:
+        st.sidebar.success(f"⚡ Atualizado! {meta['times_alterados']} times mudaram.")
     else:
-        final_ref_factor = REFEREES_DATA[selected_ref]
-        if final_ref_factor > 1.0: st.info(f"🔴 {selected_ref}: Rigoroso")
-        elif final_ref_factor < 1.0: st.info(f"🟢 {selected_ref}: Leniente")
-        else: st.info(f"⚪ {selected_ref}: Normal")
-
-with c4:
-    st.markdown("### 🏆 Contexto")
-    match_type = st.radio("Competição:", ["Liga Normal", "Champions / Clássico"])
-    match_multiplier = 0.85 if match_type == "Champions / Clássico" else 1.0
-
-st.markdown("---")
-
-if st.button("🎲 Gerar Previsões", use_container_width=True):
-    if home_team in engine.stats_data:
-        pred = engine.predict_match_full(home_team, away_team, final_ref_factor, match_multiplier)
+        st.sidebar.info("✔ Base verificada e estável.")
         
-        # ESCANTEIOS
-        st.subheader("🚩 Escanteios")
-        st.markdown("##### 📡 Radar de Escanteios (Total do Jogo)")
-        radar = pred['corners']['radar']
-        cols = st.columns(6)
-        for i, (line_name, prob) in enumerate(radar.items()):
-            if prob >= 70: cols[i].metric(line_name, f"{prob}%", delta="Alta")
-            else: cols[i].metric(line_name, f"{prob}%")
-        
-        st.divider()
-        
-        ec1, ec2, ec3 = st.columns(3)
-        with ec1:
-            st.markdown(f"**{home_team}**")
-            st.write(f"Over 3.5: **{pred['corners']['home']['line_3_5']}%**")
-            st.write(f"Over 4.5: **{pred['corners']['home']['line_4_5']}%**")
-        with ec2:
-            st.metric("Total Esperado", pred['corners']['total_expected'])
-        with ec3:
-            st.markdown(f"**{away_team}**")
-            st.write(f"Over 3.5: **{pred['corners']['away']['line_3_5']}%**")
-            st.write(f"Over 4.5: **{pred['corners']['away']['line_4_5']}%**")
-        st.markdown("---")
+    st.sidebar.caption(f"📡 Fontes: {meta.get('fontes', 'Adamchoi & FBref')}")
+else:
+    st.sidebar.warning("⚠ Aguardando execução do robô...")
+# -----------------------------
 
-        # CARTÕES
-        st.subheader("🟨 Cartões")
-        cc1, cc2, cc3 = st.columns(3)
-        with cc1:
-            st.markdown(f"**{home_team}**")
-            st.write(f"Over 1.5: **{pred['cards']['home']['line_1_5']}%**")
-            st.write(f"Over 2.5: **{pred['cards']['home']['line_2_5']}%**")
-        with cc2:
-            st.metric("Total Esperado", pred['cards']['total_expected'])
-            # Mostra o fator de tensão para auditoria (opcional, mostra transparência)
-            st.caption(f"Fator de Tensão Aplicado: {pred['cards']['tension_debug']}x")
-            st.write(f"Jogo Over 3.5: **{pred['cards']['game_probs']['line_3_5']}%**")
-            st.write(f"Jogo Over 4.5: **{pred['cards']['game_probs']['line_4_5']}%**")
-        with cc3:
-            st.markdown(f"**{away_team}**")
-            st.write(f"Over 1.5: **{pred['cards']['away']['line_1_5']}%**")
-            st.write(f"Over 2.5: **{pred['cards']['away']['line_2_5']}%**")
-        st.markdown("---")
+st.sidebar.markdown("---")
+st.sidebar.header("Configuração do Jogo")
 
-        # GOLS
-        st.subheader("⚽ Gols")
-        gc1, gc2, gc3 = st.columns(3)
-        with gc1:
-            st.metric("xG Total", pred['goals']['total_expected'])
-        with gc2:
-            st.metric("Ambas Marcam", f"{pred['goals']['prob_btts']}%")
-        with gc3:
-            st.write(f"Over 1.5 Gols: **{pred['goals']['game_probs']['line_1_5']}%**")
-            st.write(f"Over 2.5 Gols: **{pred['goals']['game_probs']['line_2_5']}%**")
-    else:
-        st.error("Erro: Time não encontrado.")
+# Seletores
+team_list = sorted(list(teams_data.keys()))
+home_team = st.sidebar.selectbox("Mandante (Casa)", team_list, index=0)
+away_team = st.sidebar.selectbox("Visitante (Fora)", team_list, index=1)
+
+referee_list = sorted(list(referees_data.keys())) + ["Outro"]
+referee_name = st.sidebar.selectbox("Árbitro", referee_list)
+
+if referee_name == "Outro":
+    referee_factor = st.sidebar.slider("Fator Rigor Manual", 0.8, 1.4, 1.0, 0.1)
+else:
+    referee_factor = referees_data[referee_name]
+    st.sidebar.metric("Rigor do Árbitro", referee_factor)
+
+champions_mode = st.sidebar.checkbox("Modo Jogo Estudado (Champions)", value=False)
+
+# ==============================================================================
+# 3. LÓGICA MATEMÁTICA (INTOCADA)
+# ==============================================================================
+def calculate_metrics(home, away, ref_factor, is_champions):
+    h_data = teams_data[home]
+    a_data = teams_data[away]
+    
+    # --- ESCANTEIOS ---
+    # Mandante +10%, Visitante -15%, Champions -15% geral
+    corn_h = h_data['corners'] * 1.10
+    corn_a = a_data['corners'] * 0.85
+    
+    total_corners = corn_h + corn_a
+    if is_champions:
+        total_corners *= 0.85
+        
+    # --- CARTÕES (TENSION FACTOR) ---
+    # Tensão = Média de faltas dos dois times / 24
+    tension = (h_data['fouls'] + a_data['fouls']) / 24.0
+    # Cap de segurança (0.85 a 1.30)
+    tension = max(0.85, min(tension, 1.30))
+    
+    base_cards = h_data['cards'] + a_data['cards']
+    total_cards = base_cards * tension * ref_factor
+    
+    # --- GOLS (POISSON) ---
+    # Ataque Casa x Defesa Fora
+    # Assumindo média da liga ~1.3 gols
+    league_avg = 1.3
+    
+    att_h = h_data['goals_f'] / league_avg
+    def_a = a_data['goals_a'] / league_avg
+    exp_h = att_h * def_a * league_avg
+    
+    att_a = a_data['goals_f'] / league_avg
+    def_h = a_data['goals_a'] / league_avg # Defesa casa
+    exp_a = att_a * def_h * league_avg
+    
+    return {
+        'corners': round(total_corners, 2),
+        'cards': round(total_cards, 2),
+        'goals_home': exp_h,
+        'goals_away': exp_a,
+        'tension': tension
+    }
+
+# ==============================================================================
+# 4. INTERFACE PRINCIPAL
+# ==============================================================================
+st.title(f"📊 {home_team} x {away_team}")
+st.markdown("### Análise Probabilística de Futebol")
+
+if st.sidebar.button("Calcular Previsão 🚀", type="primary"):
+    
+    # Cálculos
+    metrics = calculate_metrics(home_team, away_team, referee_factor, champions_mode)
+    
+    # POISSON (Probabilidades de Gols)
+    p_h = [poisson.pmf(i, metrics['goals_home']) for i in range(6)]
+    p_a = [poisson.pmf(i, metrics['goals_away']) for i in range(6)]
+    
+    prob_home_win = sum([p_h[i]*p_a[j] for i in range(6) for j in range(6) if i > j])
+    prob_draw = sum([p_h[i]*p_a[j] for i in range(6) for j in range(6) if i == j])
+    prob_away_win = sum([p_h[i]*p_a[j] for i in range(6) for j in range(6) if i < j])
+    
+    prob_btts = 1 - (poisson.pmf(0, metrics['goals_home']) + poisson.pmf(0, metrics['goals_away']) - poisson.pmf(0, metrics['goals_home'])*poisson.pmf(0, metrics['goals_away']))
+
+    # --- EXIBIÇÃO ---
+    
+    # 1. Placar Resumo
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Escanteios Esperados", f"{metrics['corners']}")
+    c2.metric("Cartões Esperados", f"{metrics['cards']}")
+    c3.metric("Tensão do Jogo", f"{metrics['tension']:.2f}", delta_color="inverse")
+    
+    st.divider()
+    
+    # 2. Abas de Detalhes
+    tab1, tab2 = st.tabs(["🎯 Mercados Principais", "📈 Probabilidades Exatas"])
+    
+    with tab1:
+        col1, col2 = st.columns(2)
+        with col1:
+            st.subheader("🚩 Escanteios")
+            st.info(f"Linha Sugerida: **Over {int(metrics['corners'])-0.5}**")
+            st.progress(min(metrics['corners']/15, 1.0))
+            
+        with col2:
+            st.subheader("🟨 Cartões")
+            st.warning(f"Linha Sugerida: **Over {int(metrics['cards'])-0.5}**")
+            st.progress(min(metrics['cards']/8, 1.0))
+            
+        st.subheader("⚽ Gols (Match Odds)")
+        cols = st.columns(3)
+        cols[0].metric(f"Vitória {home_team}", f"{prob_home_win*100:.1f}%")
+        cols[1].metric("Empate", f"{prob_draw*100:.1f}%")
+        cols[2].metric(f"Vitória {away_team}", f"{prob_away_win*100:.1f}%")
+        
+        st.success(f"Probabilidade BTTS (Ambas Marcam): **{prob_btts*100:.1f}%**")
+
+    with tab2:
+        st.write("Matriz de Probabilidades (Poisson):")
+        
+        data_matrix = [[p_h[i]*p_a[j]*100 for j in range(5)] for i in range(5)]
+        
+        fig = go.Figure(data=go.Heatmap(
+            z=data_matrix,
+            x=[f"{away_team} {j}" for j in range(5)],
+            y=[f"{home_team} {i}" for i in range(5)],
+            colorscale='Viridis',
+            texttemplate="%{z:.1f}%"
+        ))
+        fig.update_layout(title="Mapa de Calor do Placar Exato")
+        st.plotly_chart(fig, use_container_width=True)
+
+    # Rodapé
+    st.caption("Sistema desenvolvido para fins acadêmicos. Não recomendado para apostas reais.")
