@@ -3,7 +3,7 @@ name: Robô Noturno - Atualizador de Dados 🤖
 on:
   schedule:
     - cron: '0 10 * * *' # Roda todo dia as 07:00 BRT
-  workflow_dispatch: # Permite rodar manualmente clicando no botão
+  workflow_dispatch: # Botão manual
 
 permissions:
   contents: write
@@ -16,20 +16,21 @@ jobs:
       - name: Checkout do código
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Baixa todo o histórico para evitar erros
+          fetch-depth: 0 
 
       - name: Configurar Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.9'
 
-      - name: Instalar Dependências
+      # --- A CORREÇÃO MÁGICA ESTÁ AQUI ---
+      # Não usamos mais o requirements.txt do Streamlit.
+      # Instalamos apenas o kit básico para o robô funcionar rápido.
+      - name: Instalar Dependências (Modo Turbo)
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install pandas requests lxml html5lib beautifulsoup4 openpyxl
 
-      # --- O SEGREDO ANTI-ERRO ---
-      # Garante que o robô está atualizado com o que você fez manualmente
       - name: Sincronizar com GitHub (Pull)
         run: |
           git config --global user.name 'github-actions[bot]'
