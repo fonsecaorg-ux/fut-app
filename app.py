@@ -80,7 +80,7 @@ teams_data, referees_data = load_data()
 # ==============================================================================
 # 2. BARRA LATERAL
 # ==============================================================================
-st.sidebar.title("FutPrevisão Pro v2.6")
+st.sidebar.title("FutPrevisão Pro v2.7")
 
 # Metadados do Robô
 def carregar_metadados():
@@ -108,6 +108,26 @@ team_list = sorted(list(teams_data.keys()))
 home_team = st.sidebar.selectbox("Mandante", team_list, index=0)
 away_team = st.sidebar.selectbox("Visitante", team_list, index=1)
 
+# --- NOVO: SELETORES DE CONTEXTO ---
+st.sidebar.markdown("---")
+st.sidebar.caption("🧠 **Fator Humano (Contexto)**")
+
+context_options = {
+    "⚪ Neutro (Estatística Pura)": 1.0,
+    "🔥 Must Win (Briga Z4/Título)": 1.15,
+    "❄️ Desmobilizado (Férias)": 0.85,
+    "💪 Super Favorito": 1.25,
+    "🚑 Time Reserva/Crise": 0.80
+}
+
+ctx_h_label = st.sidebar.selectbox(f"Momento: {home_team}", list(context_options.keys()), index=0)
+ctx_a_label = st.sidebar.selectbox(f"Momento: {away_team}", list(context_options.keys()), index=0)
+
+factor_h = context_options[ctx_h_label]
+factor_a = context_options[ctx_a_label]
+# -----------------------------------
+
+st.sidebar.markdown("---")
 referee_list = sorted(list(referees_data.keys())) + ["Outro"]
 ref_name = st.sidebar.selectbox("Árbitro", referee_list)
 if ref_name == "Outro":
@@ -119,15 +139,16 @@ else:
 champions_mode = st.sidebar.checkbox("Modo Champions/Clássico (-15%)", value=False)
 
 # ==============================================================================
-# 3. CÁLCULOS
+# 3. CÁLCULOS (COM FATOR CONTEXTO)
 # ==============================================================================
-def calculate_metrics(home, away, ref_factor, is_champions):
+def calculate_metrics(home, away, ref_factor, is_champions, fact_h, fact_a):
     h_data = teams_data[home]
     a_data = teams_data[away]
     
     # --- ESCANTEIOS ---
-    corn_h = h_data['corners'] * 1.10
-    corn_a = a_data['corners'] * 0.85
+    # Aplica o Fator Contexto na força base
+    corn_h = (h_data['corners'] * 1.10) * fact_h
+    corn_a = (a_data['corners'] * 0.85) * fact_a
     
     if is_champions:
         corn_h *= 0.85
@@ -135,11 +156,16 @@ def calculate_metrics(home, away, ref_factor, is_champions):
         
     total_corners = corn_h + corn_a
         
-    # --- CARTÕES (INDIVIDUALIZADO) ---
-    tension = (h_data['fouls'] + a_data['fouls']) / 24.0
-    tension = max(0.85, min(tension, 1.30))
+    # --- CARTÕES ---
+    # Ajuste de tensão: Jogo Must Win (>1.0) gera mais tensão
+    tension_boost = 1.0
+    if fact_h > 1.0 or fact_a > 1.0:
+        tension_boost = 1.10 # +10% de tensão se alguém precisa ganhar
+        
+    tension = ((h_data['fouls'] + a_data['fouls']) / 24.0) * tension_boost
+    tension = max(0.85, min(tension, 1.40)) # Cap aumentado levemente para 1.40
     
-    # Calculamos o esperado individualmente aplicando Tensão e Juiz
+    # Calculamos o esperado individualmente
     card_h = h_data['cards'] * tension * ref_factor
     card_a = a_data['cards'] * tension * ref_factor
     
@@ -147,16 +173,23 @@ def calculate_metrics(home, away, ref_factor, is_champions):
     
     # --- GOLS ---
     avg_l = 1.3
-    exp_h = (h_data['goals_f']/avg_l) * (a_data['goals_a']/avg_l) * avg_l
-    exp_a = (a_data['goals_f']/avg_l) * (h_data['goals_a']/avg_l) * avg_l
+    # Ataque afetado pelo Fator Contexto (Motivação)
+    att_h = (h_data['goals_f'] * fact_h) / avg_l
+    att_a = (a_data['goals_f'] * fact_a) / avg_l
+    
+    def_h = h_data['goals_a'] / avg_l
+    def_a = a_data['goals_a'] / avg_l
+    
+    exp_h = att_h * def_a * avg_l
+    exp_a = att_a * def_h * avg_l
     
     return {
         'total_corners': total_corners,
         'ind_corn_h': corn_h,
         'ind_corn_a': corn_a,
         'total_cards': total_cards,
-        'ind_card_h': card_h, # Individual Casa
-        'ind_card_a': card_a, # Individual Fora
+        'ind_card_h': card_h,
+        'ind_card_a': card_a,
         'goals_h': exp_h,
         'goals_a': exp_a,
         'tension': tension
@@ -175,13 +208,14 @@ st.title(f"📊 {home_team} x {away_team}")
 
 if st.sidebar.button("Gerar Previsões 🚀", type="primary"):
     
-    m = calculate_metrics(home_team, away_team, ref_factor, champions_mode)
+    # Passamos os novos fatores para o cálculo
+    m = calculate_metrics(home_team, away_team, ref_factor, champions_mode, factor_h, factor_a)
     
     # --- CABEÇALHO RESUMO ---
     c1, c2, c3 = st.columns(3)
     c1.metric("Média Escanteios", f"{m['total_corners']:.2f}")
     c2.metric("Média Cartões", f"{m['total_cards']:.2f}")
-    c3.metric("Tensão", f"{m['tension']:.2f}")
+    c3.metric("Tensão do Jogo", f"{m['tension']:.2f}", delta_color="inverse")
     st.divider()
 
     # --- SEÇÃO 1: ESCANTEIOS ---
@@ -224,23 +258,19 @@ if st.sidebar.button("Gerar Previsões 🚀", type="primary"):
 
     st.divider()
 
-    # --- SEÇÃO 2: CARTÕES (NOVO) ---
+    # --- SEÇÃO 2: CARTÕES ---
     st.subheader("🟨 Cartões (Cards)")
     
     cc_h, cc_m, cc_a = st.columns([1, 1, 1])
     
-    # Individual Cartões Casa
     with cc_h:
         st.markdown(f"### 🏠 {home_team}")
         st.write(f"Média Esperada: **{m['ind_card_h']:.2f}**")
-        # Linhas típicas de cartões individuais
         for line in [1.5, 2.5, 3.5]:
             p = prob_over(m['ind_card_h'], line)
-            # Destaque visual se for alta probabilidade
             destaque = "green" if p > 60 else "white"
             st.markdown(f"Over {line}: :{destaque}[**{p:.1f}%**]")
 
-    # Individual Cartões Fora
     with cc_a:
         st.markdown(f"### ✈️ {away_team}")
         st.write(f"Média Esperada: **{m['ind_card_a']:.2f}**")
@@ -249,7 +279,6 @@ if st.sidebar.button("Gerar Previsões 🚀", type="primary"):
             destaque = "green" if p > 60 else "white"
             st.markdown(f"Over {line}: :{destaque}[**{p:.1f}%**]")
 
-    # Comparativo Cartões
     with cc_m:
         st.markdown("### 🆚 Disciplina")
         fig_c = go.Figure()
