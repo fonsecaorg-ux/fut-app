@@ -119,8 +119,12 @@ away_team = st.sidebar.selectbox("Visitante", team_list, index=1)
 st.sidebar.markdown("---")
 st.sidebar.caption("🧠 **Contexto**")
 context_options = {
-    "⚪ Neutro": 1.0, "🔥 Must Win": 1.15, "❄️ Desmobilizado": 0.85,
-    "💪 Super Favorito": 1.25, "🚑 Crise": 0.80
+    "⚪ Neutro (Meio de Tabela": 1.0,
+    "🔥 Must Win (Z4)": 1.15, # NOVO: Foco na tensão e pressão negativa
+    "🏆 Must Win (Título/Libertadores)": 1.15,      # NOVO: Foco na motivação e pressão positiva
+    "❄️ Desmobilizado (Rebaixado)": 0.85,
+    "💪 Super Favorito": 1.25,
+    "🚑 Crise": 0.80
 }
 ctx_h = st.sidebar.selectbox(f"Momento: {home_team}", list(context_options.keys()), index=0)
 ctx_a = st.sidebar.selectbox(f"Momento: {away_team}", list(context_options.keys()), index=0)
@@ -276,3 +280,4 @@ with tab_scanner:
         )
         
     st.success("💡 Dica: Verifique se algum destes times joga hoje!")
+
