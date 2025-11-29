@@ -50,9 +50,9 @@ def load_data():
     except: referees = {}
     
     # --- AQUI: ADICIONANDO OS GENÉRICOS ---
-    referees['⚠️ (Genérico) Rigoroso'] = 1.25
-    referees['⚠️ (Genérico) Normal'] = 1.00
-    referees['⚠️ (Genérico) Leniente/Conservador'] = 0.80
+    referees['⚠️ Perfil Rigoroso'] = 1.25
+    referees['⚠️ Perfil Normal'] = 1.00
+    referees['⚠️ Perfil Conservador'] = 0.80
     
     return teams_dict, referees
 
@@ -94,7 +94,7 @@ away_team = st.sidebar.selectbox("Visitante", team_list, index=1)
 st.sidebar.markdown("---")
 st.sidebar.caption("🧠 **Contexto**")
 context_options = {
-    "⚪ Neutro": 1.0, "🔥 Must Win": 1.15, "❄️ Desmobilizado": 0.85,
+    "⚪ Neutro - Meio de Tabela": 1.0, "🔥 Must Win - Z4,Título": 1.15, "❄️ Desmobilizado - Rebaixado": 0.85,
     "💪 Super Favorito": 1.25, "🚑 Crise": 0.80
 }
 f_h = context_options[st.sidebar.selectbox(f"Momento: {home_team}", list(context_options.keys()), index=0)]
@@ -194,3 +194,4 @@ if st.sidebar.button("Gerar Previsões 🚀", type="primary"):
         matrix = [[ph[i]*pa[j]*100 for j in range(5)] for i in range(5)]
         fig2 = go.Figure(data=go.Heatmap(z=matrix, x=[f"{away_team} {j}" for j in range(5)], y=[f"{home_team} {i}" for i in range(5)], colorscale='Viridis', texttemplate="%{z:.1f}%"))
         st.plotly_chart(fig2, use_container_width=True)
+
