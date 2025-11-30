@@ -1,186 +1,164 @@
 import pandas as pd
 import requests
+import io
+import time
 import json
 from datetime import datetime
 import pytz
 from difflib import get_close_matches
-import io
 
 # ==============================================================================
-# 1. CONFIGURAÇÕES
+# 1. CONFIGURAÇÕES GERAIS E PROTEÇÃO DE DADOS
 # ==============================================================================
-NOME_ARQUIVO_CSV = "LISTA_COMPLETA_120_TIMES.csv"
+# Nome do arquivo principal (não mudar!)
+NOME_ARQUIVO_CSV = "dados_times.csv" 
 
+# Headers para simular um navegador e evitar bloqueios
 HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-    "Referer": "https://www.adamchoi.co.uk/"
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
 }
 
-# TODAS AS 6 LIGAS
-URLS_API = {
-    "Premier League": "https://www.adamchoi.co.uk/scripts/data/json/scripts/pages/corners/detailed/corners_league_json.php?clflc=abc&league=E0&season=2025/2026",
-    "La Liga": "https://www.adamchoi.co.uk/scripts/data/json/scripts/pages/corners/detailed/corners_league_json.php?clflc=abc&league=SP1&season=2025/2026",
-    "Bundesliga": "https://www.adamchoi.co.uk/scripts/data/json/scripts/pages/corners/detailed/corners_league_json.php?clflc=abc&league=D1&season=2025/2026",
-    "Serie A": "https://www.adamchoi.co.uk/scripts/data/json/scripts/pages/corners/detailed/corners_league_json.php?clflc=abc&league=I1&season=2025/2026",
-    "Ligue 1": "https://www.adamchoi.co.uk/scripts/data/json/scripts/pages/corners/detailed/corners_league_json.php?clflc=abc&league=F1&season=2025/2026",
-    "Brasileirao": "https://www.adamchoi.co.uk/scripts/data/json/scripts/pages/corners/detailed/corners_league_json.php?clflc=abc&league=BR1&season=2025"
-}
+# Fontes de Dados
+URL_ESCANTEIOS_ADAMCHOI = "https://www.adamchoi.co.uk/corners/detailed"
+URLS_CARTOES_FBREF = [
+    "https://fbref.com/en/comps/9/misc/Premier-League-Stats", 
+    "https://fbref.com/en/comps/24/misc/Serie-A-Stats",       
+    "https://fbref.com/en/comps/12/misc/La-Liga-Stats",       
+    "https://fbref.com/en/comps/11/misc/Serie-A-Stats",       
+    "https://fbref.com/en/comps/13/misc/Ligue-1-Stats",       
+    "https://fbref.com/en/comps/20/misc/Bundesliga-Stats"     
+]
 
-MAPA_NOMES = {
-    "Nott'm Forest": "Nottingham Forest",
-    "Atlético Mineiro": "Atletico Mineiro",
-    "Athletic Club": "Athletic Bilbao",
-    "Manchester Utd": "Manchester United",
-    "Tottenham Hotspur": "Tottenham",
-    "West Ham United": "West Ham",
-    "Wolverhampton Wanderers": "Wolves",
-    "Brighton & Hove Albion": "Brighton",
-    "Bayer Leverkusen": "Bayer Leverkusen",
-    "Inter Milan": "Inter",
-    "Milan": "AC Milan",
-    "Paris S-G": "Paris Saint-Germain",
-    "Betis": "Real Betis",
-    "Sporting CP": "Sporting Lisbon",
-    "Atletico Madrid": "Atl Madrid",
-    "Athletico Paranaense": "Athletico-PR",
-    "America MG": "America-MG",
-    "Botafogo RJ": "Botafogo",
-    "Flamengo RJ": "Flamengo"
+# Mapa de Correção de Nomes para o Fuzzy Match
+MAPA_MANUAL = {
+    "Nott'm Forest": "Nottm Forest", "Atlético Mineiro": "Atletico-MG", "Athletic Club": "Ath Bilbao",
+    "Manchester Utd": "Man Utd", "Tottenham Hotspur": "Tottenham", "West Ham United": "West Ham", 
+    "Wolverhampton Wanderers": "Wolves", "Brighton & Hove Albion": "Brighton", 
+    "Bayer Leverkusen": "Bayer 04 Leverkusen", "Inter Milan": "Inter", "Milan": "AC Milan",
+    "Paris S-G": "Paris SG", "Betis": "Real Betis"
 }
 
 # ==============================================================================
 # 2. FUNÇÕES AUXILIARES
 # ==============================================================================
-def limpar_nome(nome):
-    return str(nome).strip()
+def limpar_string(texto):
+    return str(texto).strip()
 
-def encontrar_time_no_csv(nome_site, lista_csv):
-    nome_limpo = limpar_nome(nome_site)
+def encontrar_nome_csv(nome_site, lista_nomes_csv):
+    """Encontra o time no CSV, priorizando o mapa manual e o fuzzy match."""
+    nome_site_clean = limpar_string(nome_site)
     
-    # 1. Mapa Manual
-    if nome_limpo in MAPA_NOMES:
-        alvo = MAPA_NOMES[nome_limpo]
-        match = next((x for x in lista_csv if limpar_nome(x).lower() == alvo.lower()), None)
+    if nome_site_clean in MAPA_MANUAL:
+        target = MAPA_MANUAL[nome_site_clean]
+        match = next((x for x in lista_nomes_csv if limpar_string(x).lower() == target.lower()), None)
         if match: return match
 
-    # 2. Busca Exata
-    for nome_csv in lista_csv:
-        if limpar_nome(nome_csv).lower() == nome_limpo.lower():
+    for nome_csv in lista_nomes_csv:
+        if limpar_string(nome_csv).lower() == nome_site_clean.lower():
             return nome_csv
 
-    # 3. Fuzzy Match
-    matches = get_close_matches(nome_limpo, [limpar_nome(x) for x in lista_csv], n=1, cutoff=0.70)
+    lista_clean = [limpar_string(x) for x in lista_nomes_csv]
+    matches = get_close_matches(nome_site_clean, lista_clean, n=1, cutoff=0.65)
+    
     if matches:
-        return next((x for x in lista_csv if limpar_nome(x) == matches[0]), None)
+        match_clean = matches[0]
+        original = next((x for x in lista_nomes_csv if limpar_string(x) == match_clean), None)
+        return original
     return None
 
-def processar_liga_api(nome_liga, url, df_csv, times_csv):
-    print(f"📡 Conectando API: {nome_liga}...")
-    updates = 0
-    try:
-        resp = requests.get(url, headers=HEADERS)
-        if resp.status_code != 200:
-            print(f"❌ Erro {resp.status_code}")
-            return 0
-        
-        dados_json = resp.json()
-        stats_temp = {}
+# ==============================================================================
+# 3. MÓDULOS DE EXTRAÇÃO
+# ==============================================================================
+def get_adamchoi_corners():
+    """
+    MÓDULO DESATIVADO TEMPORARIAMENTE. 
+    Retorna dados vazios para proteger o CSV da contaminação histórica.
+    """
+    return {}, 0 
 
-        # Função auxiliar para converter vazio em zero (Correção do Erro)
-        def safe_float(val):
-            try:
-                if val == "" or val is None: return 0.0
-                return float(val)
-            except:
-                return 0.0
-
-        for jogo in dados_json:
-            home = limpar_nome(jogo.get('HomeTeam'))
-            away = limpar_nome(jogo.get('AwayTeam'))
+def processar_fbref(df_atual, times_csv):
+    """Processa a atualização de Cartões e Faltas (Módulo Seguro)."""
+    alteracoes = 0
+    for url in URLS_CARTOES_FBREF:
+        try:
+            resp = requests.get(url, headers=HEADERS)
+            if resp.status_code != 200: continue
             
-            for t in [home, away]:
-                if t not in stats_temp:
-                    stats_temp[t] = {
-                        'jogos_casa': 0, 'jogos_fora': 0,
-                        'cantos_casa': 0, 'cantos_fora': 0,
-                        'faltas_casa': 0, 'faltas_fora': 0,
-                        'cartoes_casa': 0, 'cartoes_fora': 0,
-                        'gols_pro_casa': 0, 'gols_sof_casa': 0,
-                        'gols_pro_fora': 0, 'gols_sof_fora': 0
-                    }
-
-            # Acumula Mandante (Usando safe_float)
-            s = stats_temp[home]
-            s['jogos_casa'] += 1
-            s['cantos_casa'] += safe_float(jogo.get('HomeCorners'))
-            s['faltas_casa'] += safe_float(jogo.get('HomeFouls'))
-            s['cartoes_casa'] += safe_float(jogo.get('HomeYellow')) + safe_float(jogo.get('HomeRed'))
-            s['gols_pro_casa'] += safe_float(jogo.get('HomeGoals'))
-            s['gols_sof_casa'] += safe_float(jogo.get('AwayGoals'))
-
-            # Acumula Visitante (Usando safe_float)
-            s = stats_temp[away]
-            s['jogos_fora'] += 1
-            s['cantos_fora'] += safe_float(jogo.get('AwayCorners'))
-            s['faltas_fora'] += safe_float(jogo.get('AwayFouls'))
-            s['cartoes_fora'] += safe_float(jogo.get('AwayYellow')) + safe_float(jogo.get('AwayRed'))
-            s['gols_pro_fora'] += safe_float(jogo.get('AwayGoals'))
-            s['gols_sof_fora'] += safe_float(jogo.get('HomeGoals'))
-
-        # Atualiza CSV
-        for time_site, dados in stats_temp.items():
-            match_csv = encontrar_time_no_csv(time_site, times_csv)
-            if match_csv:
-                idx = df_csv.index[df_csv['Time'] == match_csv].tolist()[0]
+            try: dfs = pd.read_html(io.StringIO(resp.text))
+            except: dfs = pd.read_html(io.StringIO(resp.text), flavor='bs4')
                 
-                # CASA
-                if dados['jogos_casa'] > 0:
-                    df_csv.at[idx, 'Media_Escanteios_Casa'] = round(dados['cantos_casa'] / dados['jogos_casa'], 2)
-                    df_csv.at[idx, 'Media_Faltas_Casa'] = round(dados['faltas_casa'] / dados['jogos_casa'], 2)
-                    df_csv.at[idx, 'Media_Cartoes_Casa'] = round(dados['cartoes_casa'] / dados['jogos_casa'], 2)
-                
-                # FORA
-                if dados['jogos_fora'] > 0:
-                    df_csv.at[idx, 'Media_Escanteios_Fora'] = round(dados['cantos_fora'] / dados['jogos_fora'], 2)
-                    df_csv.at[idx, 'Media_Faltas_Fora'] = round(dados['faltas_fora'] / dados['jogos_fora'], 2)
-                    df_csv.at[idx, 'Media_Cartoes_Fora'] = round(dados['cartoes_fora'] / dados['jogos_fora'], 2)
-                
-                updates += 1
-                
-    except Exception as e:
-        print(f"Erro na liga {nome_liga}: {e}")
-        
-    return updates
+            df_site = pd.DataFrame()
+            for t in dfs:
+                if isinstance(t.columns, pd.MultiIndex):
+                    t.columns = [' '.join(col).strip() for col in t.columns.values]
+                if 'Squad' in t.columns and 'Performance CrdY' in t.columns:
+                    df_site = t; break
+            
+            if df_site.empty: continue
+            for index, row in df_site.iterrows():
+                nome_match = encontrar_nome_csv(row['Squad'], times_csv)
+                if nome_match:
+                    jogos = float(row.get('90s', 1))
+                    if jogos > 0:
+                        n_ama = round(float(row['Performance CrdY']) / jogos, 2); n_ver = round(float(row['Performance CrdR']) / jogos, 2); n_fal = round(float(row['Performance Fls']) / jogos, 2)
+                        idx = df_atual.index[df_atual['Time'] == nome_match].tolist()[0]
+                        if abs(float(df_atual.at[idx, 'Faltas']) - n_fal) > 0.01:
+                            df_atual.at[idx, 'CartoesAmarelos'] = n_ama; df_atual.at[idx, 'CartoesVermelhos'] = n_ver; df_atual.at[idx, 'Faltas'] = n_fal; alteracoes += 1
+            time.sleep(2)
+        except Exception as e: print(f"Erro URL: {e}")
+    return alteracoes
 
 # ==============================================================================
-# 3. MAIN
+# 4. EXECUÇÃO PRINCIPAL
 # ==============================================================================
 def main():
-    print("🚀 Iniciando Robô Global Blindado (6 Ligas)...")
+    print(f"🚀 Iniciando robô para: {NOME_ARQUIVO_CSV}")
+    
     try:
-        df = pd.read_csv(NOME_ARQUIVO_CSV)
-        df.columns = [c.strip() for c in df.columns]
-        times_csv = df['Time'].astype(str).tolist()
-    except:
-        print("❌ Erro: CSV não encontrado.")
+        df_atual = pd.read_csv(NOME_ARQUIVO_CSV)
+        times_csv = df_atual['Time'].astype(str).tolist()
+    except Exception as e:
+        print(f"❌ Erro crítico: Não achei o arquivo {NOME_ARQUIVO_CSV}. {e}")
         return
 
-    total_updates = 0
-    for liga, url in URLS_API.items():
-        total_updates += processar_liga_api(liga, url, df, times_csv)
-        time.sleep(0.5)
+    total = 0
 
-    if total_updates > 0:
-        df.to_csv(NOME_ARQUIVO_CSV, index=False)
-        print(f"\n✅ SUCESSO! {total_updates} times atualizados em todas as ligas.")
+    # 1. ATUALIZAR ESCANTEIOS (Ignorado: Módulo desativado na função acima)
+    dict_cantos, jogos_lidos = get_adamchoi_corners() # Retorna {}, 0
+    
+    # 2. ATUALIZAR CARTÕES/FALTAS (Módulo FBref ativo)
+    total += processar_fbref(df_atual, times_csv)
+
+    # 3. GERAR METADADOS (O Bilhete Falante)
+    try:
+        fuso_brasil = pytz.timezone('America/Sao_Paulo')
+        data_hora = datetime.now(fuso_brasil).strftime("%d/%m/%Y às %H:%M")
         
-        hora = datetime.now(pytz.timezone('America/Sao_Paulo')).strftime("%d/%m/%Y %H:%M")
-        try:
-            with open("metadados.json", "w") as f:
-                json.dump({"ultima_atualizacao": hora, "status": "Global OK"}, f)
-        except: pass
+        # Mensagem de Log customizada
+        msg = f"Controle Manual Ativo. Cartões/Faltas atualizados."
+        if total > 0: msg += f" Salvos {total} times."
+        else: msg += " Nenhuma alteração estatística relevante."
+
+        metadados = {
+            "ultima_verificacao": data_hora,
+            "status": "Controle Manual Ativo", 
+            "log": msg, 
+            "fontes": "FBref (Ativo) / Adamchoi (Protegido)",
+            "times_alterados": total
+        }
+
+        with open("metadados.json", "w", encoding='utf-8') as f:
+            json.dump(metadados, f, ensure_ascii=False, indent=4)
+        print(f"🕒 Metadados salvos. Status: {metadados['status']}")
+    except Exception as e:
+        print(f"⚠️ Erro ao salvar JSON: {e}")
+
+    # 4. Salvar CSV (Commit)
+    if total > 0:
+        df_atual.to_csv(NOME_ARQUIVO_CSV, index=False)
+        print(f"💾 SUCESSO! {total} atualizações salvas no CSV.")
     else:
-        print("\n🤷 Nenhuma atualização necessária.")
+        print("🤷 Nenhuma atualização numérica necessária.")
 
 if __name__ == "__main__":
     main()
