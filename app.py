@@ -1,7 +1,10 @@
+
+
 import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
+import plotly.express as px  # <--- NOVA IMPORTAÇÃO PARA O DASHBOARD
 from scipy.stats import poisson
 import json
 import hmac
@@ -19,6 +22,7 @@ def check_password():
         if "passwords" in st.secrets:
             user = st.session_state["username"]
             password = st.session_state["password"]
+            
             if user in st.secrets["passwords"] and \
                hmac.compare_digest(password, st.secrets["passwords"][user]):
                 st.session_state["password_correct"] = True
@@ -40,7 +44,74 @@ def check_password():
 if not check_password(): st.stop()
 
 # ==============================================================================
-# 1. DADOS
+# 1. FUNÇÃO DO DASHBOARD (NOVA)
+# ==============================================================================
+def render_dashboard():
+    st.title("📊 Dashboard de Performance")
+    st.markdown("---")
+
+    # DADOS SIMULADOS (Baseados no seu dia de hoje - 06/12)
+    # Futuramente você conectará isso ao banco de dados real
+    dados_hoje = [
+        {"Data": "06/12", "Jogo": "Bilbao x Atl. Madrid", "Liga": "La Liga", "Mercado": "Escanteios/Cartões", "Resultado": "Green", "Lucro": 24.09},
+        {"Data": "06/12", "Jogo": "Verona x Atalanta", "Liga": "Série A", "Mercado": "Cartões", "Resultado": "Green (Cashout)", "Lucro": 8.27},
+        {"Data": "06/12", "Jogo": "Nantes x Lens", "Liga": "Ligue 1", "Mercado": "Cartões Individuais", "Resultado": "Red", "Lucro": -5.00},
+        {"Data": "06/12", "Jogo": "Wolfsburg x Union Berlin", "Liga": "Bundesliga", "Mercado": "Escanteios/Cartões", "Resultado": "Red", "Lucro": -5.00},
+        {"Data": "06/12", "Jogo": "Sassuolo x Fiorentina", "Liga": "Série A", "Mercado": "Escanteios Time", "Resultado": "Red", "Lucro": -5.00},
+        {"Data": "06/12", "Jogo": "Betis x Barcelona", "Liga": "La Liga", "Mercado": "Escanteios/Cartões", "Resultado": "Green", "Lucro": 10.00},
+    ]
+    
+    df = pd.DataFrame(dados_hoje)
+
+    # CÁLCULOS (KPIs)
+    total_apostas = len(df)
+    total_greens = len(df[df["Resultado"].str.contains("Green")])
+    win_rate = (total_greens / total_apostas) * 100
+    lucro_total = df["Lucro"].sum()
+
+    # VISUALIZAÇÃO - TOPO
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Total Tips", total_apostas)
+    col2.metric("Assertividade", f"{win_rate:.1f}%")
+    col3.metric("Lucro Hoje", f"R$ {lucro_total:.2f}", delta=f"{lucro_total:.2f}")
+
+    st.markdown("---")
+
+    # GRÁFICOS
+    c1, c2 = st.columns([2, 1])
+    with c1:
+        st.subheader("Performance por Liga")
+        df_liga = df.groupby(["Liga", "Resultado"]).size().reset_index(name="Contagem")
+        fig_liga = px.bar(df_liga, x="Liga", y="Contagem", color="Resultado", 
+                          color_discrete_map={"Green": "#00CC96", "Red": "#EF553B", "Green (Cashout)": "#636EFA"})
+        st.plotly_chart(fig_liga, use_container_width=True)
+    
+    with c2:
+        st.subheader("Distribuição")
+        fig_pizza = px.pie(df, names="Resultado", title="Greens vs Reds", 
+                           color="Resultado",
+                           color_discrete_map={"Green": "#00CC96", "Red": "#EF553B", "Green (Cashout)": "#636EFA"})
+        st.plotly_chart(fig_pizza, use_container_width=True)
+
+    # TABELA
+    st.subheader("📜 Histórico de Entradas")
+    def color_result(val):
+        color = '#d4edda' if 'Green' in val else '#f8d7da' if 'Red' in val else ''
+        return f'background-color: {color}'
+    st.dataframe(df.style.applymap(color_result, subset=['Resultado']), use_container_width=True)
+
+# ==============================================================================
+# 2. MENU DE NAVEGAÇÃO (AQUI ESTÁ A MÁGICA)
+# ==============================================================================
+st.sidebar.header("Navegação")
+pagina = st.sidebar.radio("Ir para:", ["🏠 Previsões do Jogo", "📊 Dashboard de Performance"])
+
+if pagina == "📊 Dashboard de Performance":
+    render_dashboard()
+    st.stop() # <--- ISSO IMPEDE O RESTO DO CÓDIGO DE CARREGAR
+
+# ==============================================================================
+# 3. DADOS E PREVISÕES (CÓDIGO ORIGINAL)
 # ==============================================================================
 BACKUP_TEAMS = {
     "Arsenal": {"corners": 6.82, "cards": 1.00, "fouls": 10.45, "goals_f": 2.3, "goals_a": 0.8},
@@ -73,7 +144,6 @@ def load_data():
     except:
         referees = {}
         
-    # Árbitros Genéricos (No topo da lista)
     referees[' Estilo: Rigoroso (+ Cartões)'] = 1.25
     referees[' Estilo: Normal (Padrão)'] = 1.00
     referees[' Estilo: Conservador (- Cartões)'] = 0.80
@@ -82,9 +152,8 @@ def load_data():
 
 teams_data, referees_data = load_data()
 
-# ==============================================================================
-# 2. BARRA LATERAL
-# ==============================================================================
+# BARRA LATERAL (CONTINUAÇÃO)
+st.sidebar.markdown("---")
 st.sidebar.title("FutPrevisão Pro v2.7")
 
 def carregar_metadados():
@@ -110,7 +179,7 @@ else:
     st.sidebar.warning("⚠ Aguardando robô...")
 
 st.sidebar.markdown("---")
-st.sidebar.header("Configuração")
+st.sidebar.header("Configuração da Partida")
 
 team_list = sorted(list(teams_data.keys()))
 home_team = st.sidebar.selectbox("Mandante", team_list, index=0)
@@ -120,8 +189,8 @@ st.sidebar.markdown("---")
 st.sidebar.caption("🧠 **Contexto**")
 context_options = {
     "⚪ Neutro (Meio de Tabela": 1.0,
-    "🔥 Must Win (Z4)": 1.15, # NOVO: Foco na tensão e pressão negativa
-    "🏆 Must Win (Título/Libertadores)": 1.15,      # NOVO: Foco na motivação e pressão positiva
+    "🔥 Must Win (Z4)": 1.15,
+    "🏆 Must Win (Título/Libertadores)": 1.15,
     "❄️ Desmobilizado (Rebaixado)": 0.85,
     "💪 Super Favorito": 1.25,
     "🚑 Crise": 0.80
@@ -139,9 +208,7 @@ st.sidebar.metric("Rigor", ref_factor)
 
 champions_mode = st.sidebar.checkbox("Modo Champions (-15%)", value=False)
 
-# ==============================================================================
-# 3. CÁLCULOS
-# ==============================================================================
+# CÁLCULOS
 def calculate_metrics(home, away, ref_factor, is_champions, fact_h, fact_a):
     h_data = teams_data[home]
     a_data = teams_data[away]
@@ -149,7 +216,9 @@ def calculate_metrics(home, away, ref_factor, is_champions, fact_h, fact_a):
     # Escanteios
     corn_h = (h_data['corners'] * 1.10) * fact_h
     corn_a = (a_data['corners'] * 0.85) * fact_a
-    if is_champions: corn_h *= 0.85; corn_a *= 0.85
+    if is_champions: 
+        corn_h *= 0.85
+        corn_a *= 0.85
     total_corners = corn_h + corn_a
         
     # Cartões
@@ -172,15 +241,12 @@ def calculate_metrics(home, away, ref_factor, is_champions, fact_h, fact_a):
 
 def prob_over(exp, line): return poisson.sf(int(line), exp) * 100
 
-# ==============================================================================
-# 4. INTERFACE COM ABAS
-# ==============================================================================
+# INTERFACE PRINCIPAL
 st.title("⚽ FutPrevisão Pro")
 
-# Criação das Abas
 tab_analise, tab_scanner = st.tabs(["📊 Análise do Jogo", "🔍 Scanner de Oportunidades"])
 
-# --- ABA 1: ANÁLISE DO JOGO (LAYOUT ANTIGO) ---
+# --- ABA 1: ANÁLISE DO JOGO ---
 with tab_analise:
     st.markdown(f"### {home_team} x {away_team}")
     
@@ -204,33 +270,45 @@ with tab_analise:
 
         col_h, col_m, col_a = st.columns([1, 1, 1])
         with col_h:
-            st.markdown(f"**🏠 {home_team}**"); st.write(f"M: **{m['ind_corn_h']:.2f}**")
+            st.markdown(f"**🏠 {home_team}**")
+            st.write(f"M: **{m['ind_corn_h']:.2f}**")
             for l in [2.5, 3.5, 4.5, 5.5]: st.write(f"+{l}: **{prob_over(m['ind_corn_h'], l):.1f}%**")
         with col_a:
-            st.markdown(f"**✈️ {away_team}**"); st.write(f"M: **{m['ind_corn_a']:.2f}**")
+            st.markdown(f"**✈️ {away_team}**")
+            st.write(f"M: **{m['ind_corn_a']:.2f}**")
             for l in [2.5, 3.5, 4.5, 5.5]: st.write(f"+{l}: **{prob_over(m['ind_corn_a'], l):.1f}%**")
         with col_m:
             fig = go.Figure(data=[go.Bar(x=[home_team, away_team], y=[m['ind_corn_h'], m['ind_corn_a']], marker_color=['blue', 'red'])])
-            fig.update_layout(height=200, margin=dict(l=10, r=10, t=10, b=10)); st.plotly_chart(fig, use_container_width=True)
+            fig.update_layout(height=200, margin=dict(l=10, r=10, t=10, b=10))
+            st.plotly_chart(fig, use_container_width=True)
 
-        st.divider(); st.subheader("🟨 Cartões")
+        st.divider()
+        st.subheader("🟨 Cartões")
         ch, cm, ca = st.columns([1, 1, 1])
         with ch:
-            st.markdown(f"**🏠 {home_team}**"); st.write(f"M: **{m['ind_card_h']:.2f}**")
+            st.markdown(f"**🏠 {home_team}**")
+            st.write(f"M: **{m['ind_card_h']:.2f}**")
             for l in [1.5, 2.5, 3.5]: st.markdown(f"+{l}: **{prob_over(m['ind_card_h'], l):.1f}%**")
         with ca:
-            st.markdown(f"**✈️ {away_team}**"); st.write(f"M: **{m['ind_card_a']:.2f}**")
+            st.markdown(f"**✈️ {away_team}**")
+            st.write(f"M: **{m['ind_card_a']:.2f}**")
             for l in [1.5, 2.5, 3.5]: st.markdown(f"+{l}: **{prob_over(m['ind_card_a'], l):.1f}%**")
         with cm:
             figc = go.Figure(data=[go.Bar(x=[home_team, away_team], y=[m['ind_card_h'], m['ind_card_a']], marker_color=['gold', 'gold'])])
-            figc.update_layout(height=200, margin=dict(l=10, r=10, t=10, b=10)); st.plotly_chart(figc, use_container_width=True)
+            figc.update_layout(height=200, margin=dict(l=10, r=10, t=10, b=10))
+            st.plotly_chart(figc, use_container_width=True)
 
-        st.divider(); st.subheader("⚽ Gols")
-        ph = [poisson.pmf(i, m['goals_h']) for i in range(6)]; pa = [poisson.pmf(i, m['goals_a']) for i in range(6)]
+        st.divider()
+        st.subheader("⚽ Gols")
+        ph = [poisson.pmf(i, m['goals_h']) for i in range(6)]
+        pa = [poisson.pmf(i, m['goals_a']) for i in range(6)]
         prob_h = sum([ph[i]*pa[j] for i in range(6) for j in range(6) if i > j]) * 100
         prob_d = sum([ph[i]*pa[j] for i in range(6) for j in range(6) if i == j]) * 100
         prob_a = sum([ph[i]*pa[j] for i in range(6) for j in range(6) if i < j]) * 100
-        c1, c2, c3 = st.columns(3); c1.metric(home_team, f"{prob_h:.1f}%"); c2.metric("Empate", f"{prob_d:.1f}%"); c3.metric(away_team, f"{prob_a:.1f}%")
+        c1, c2, c3 = st.columns(3)
+        c1.metric(home_team, f"{prob_h:.1f}%")
+        c2.metric("Empate", f"{prob_d:.1f}%")
+        c3.metric(away_team, f"{prob_a:.1f}%")
         
         with st.expander("Placar Exato"):
             matrix = [[ph[i]*pa[j]*100 for j in range(5)] for i in range(5)]
@@ -239,12 +317,11 @@ with tab_analise:
     else:
         st.info("👈 Configure o jogo na barra lateral e clique em 'Gerar Previsões'.")
 
-# --- ABA 2: SCANNER (A SUA IDEIA INTELIGENTE) ---
+# --- ABA 2: SCANNER ---
 with tab_scanner:
     st.subheader("🕵️‍♂️ Scanner de Oportunidades")
     st.markdown("Os melhores times da base de dados para cada mercado.")
     
-    # Prepara os dados para o ranking
     df_rank = pd.DataFrame.from_dict(teams_data, orient='index')
     
     col_s1, col_s2, col_s3 = st.columns(3)
@@ -280,4 +357,3 @@ with tab_scanner:
         )
         
     st.success("💡 Dica: Verifique se algum destes times joga hoje!")
-
