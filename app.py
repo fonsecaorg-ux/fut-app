@@ -84,10 +84,13 @@ def load_data():
     return teams_dict, referees
 
 teams_data, referees_data = load_data()
-team_list_sorted = sorted(list(teams_data.keys()))
 
-# --- LISTA MESTRA DE MERCADOS (Dropdown Gigante) ---
-MERCADOS_LISTA = ["Selecione..."]
+# --- AJUSTE: LISTA DE TIMES COM CAMPO VAZIO NO INÍCIO ---
+team_list_raw = sorted(list(teams_data.keys()))
+team_list_with_empty = [""] + team_list_raw # Adiciona opção vazia para não travar em Alaves
+
+# --- LISTA MESTRA DE MERCADOS ---
+MERCADOS_LISTA = ["Selecione o mercado..."]
 # Escanteios
 for i in [2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5, 10.5, 11.5, 12.5]:
     MERCADOS_LISTA.append(f"Escanteios Mais de {i}")
@@ -99,7 +102,8 @@ for i in [0.5, 1.5, 2.5, 3.5, 4.5]:
     MERCADOS_LISTA.append(f"Gols Mais de {i}")
 # Outros
 MERCADOS_LISTA.append("Ambas Marcam")
-MERCADOS_LISTA.append("Vitória (ML)")
+MERCADOS_LISTA.append("Vitória (ML) Casa")
+MERCADOS_LISTA.append("Vitória (ML) Fora")
 MERCADOS_LISTA.append("Empate")
 
 # ==============================================================================
@@ -129,7 +133,7 @@ def salvar_ticket(ticket_data):
 def render_dashboard():
     st.title("📊 Dashboard & Diário de Apostas")
     
-    # --- CONSTRUTOR DE BILHETE (VISUAL NOVO) ---
+    # --- CONSTRUTOR DE BILHETE ---
     with st.expander("➕ Novo Bilhete (Construtor Completo)", expanded=True):
         
         with st.form("form_bet_builder"):
@@ -155,38 +159,50 @@ def render_dashboard():
             for i in range(qtd_jogos):
                 st.markdown(f"**JOGO {i+1}**")
                 
-                # A. Seleção do Confronto
+                # A. Seleção do Confronto (Agora com lista vazia inicial)
                 col_home, col_x, col_away = st.columns([3, 0.5, 3])
                 with col_home:
-                    mandante = st.selectbox(f"🏠 Mandante {i+1}", team_list_sorted, key=f"home_{i}")
+                    mandante = st.selectbox(f"🏠 Mandante {i+1}", team_list_with_empty, key=f"home_{i}")
                 with col_x:
                     st.markdown("<div style='text-align: center; padding-top: 30px;'>x</div>", unsafe_allow_html=True)
                 with col_away:
-                    visitante = st.selectbox(f"✈️ Visitante {i+1}", team_list_sorted, index=1, key=f"away_{i}")
+                    visitante = st.selectbox(f"✈️ Visitante {i+1}", team_list_with_empty, key=f"away_{i}")
 
-                # B. Seleção das Apostas (Criar Aposta)
+                # B. Seleção das Apostas (Genérico para não travar)
                 # Linha 1 (Obrigatória)
                 c_alvo1, c_mercado1 = st.columns([2, 3])
                 with c_alvo1:
-                    # As opções com bolinhas coloridas que você pediu
-                    opcoes_alvo = [f"🟢 {mandante} (Casa)", f"🔴 {visitante} (Fora)", "⚪ Total do Jogo"]
-                    alvo1 = st.selectbox(f"Aposta 1 - Time/Alvo", opcoes_alvo, key=f"alvo1_{i}")
+                    # FIX: Usamos nomes estáticos para não depender da seleção acima (evita lag)
+                    opcoes_alvo = ["🟢 Mandante (Casa)", "🔴 Visitante (Fora)", "⚪ Total do Jogo"]
+                    alvo1 = st.selectbox(f"Aposta 1 - Alvo", opcoes_alvo, key=f"alvo1_{i}")
                 with c_mercado1:
                     mercado1 = st.selectbox(f"Aposta 1 - Mercado", MERCADOS_LISTA, key=f"merc1_{i}")
                 
-                selecoes_final.append({"Jogo": f"{mandante} x {visitante}", "Alvo": alvo1, "Mercado": mercado1})
+                # Se o usuário selecionou times, salvamos os nomes reais. Se não, salvamos "Indefinido"
+                nome_jogo = f"{mandante} x {visitante}" if mandante and visitante else f"Jogo {i+1}"
+                
+                # Lógica para salvar o nome real do time na aposta (Pós-processamento)
+                nome_alvo_real = alvo1
+                if mandante and "Mandante" in alvo1: nome_alvo_real = f"🟢 {mandante} (Casa)"
+                if visitante and "Visitante" in alvo1: nome_alvo_real = f"🔴 {visitante} (Fora)"
+
+                selecoes_final.append({"Jogo": nome_jogo, "Alvo": nome_alvo_real, "Mercado": mercado1})
 
                 # Linha 2 (Opcional - Checkbox para ativar)
                 usar_segunda = st.checkbox(f"Adicionar 2ª seleção para este jogo? (Criar Aposta)", key=f"check_{i}")
                 if usar_segunda:
                     c_alvo2, c_mercado2 = st.columns([2, 3])
                     with c_alvo2:
-                        opcoes_alvo2 = [f"🟢 {mandante} (Casa)", f"🔴 {visitante} (Fora)", "⚪ Total do Jogo"]
-                        alvo2 = st.selectbox(f"Aposta 2 - Time/Alvo", opcoes_alvo2, key=f"alvo2_{i}")
+                        alvo2 = st.selectbox(f"Aposta 2 - Alvo", opcoes_alvo, key=f"alvo2_{i}")
                     with c_mercado2:
                         mercado2 = st.selectbox(f"Aposta 2 - Mercado", MERCADOS_LISTA, key=f"merc2_{i}")
                     
-                    selecoes_final.append({"Jogo": f"{mandante} x {visitante}", "Alvo": alvo2, "Mercado": mercado2})
+                    # Lógica para salvar nome real
+                    nome_alvo_real_2 = alvo2
+                    if mandante and "Mandante" in alvo2: nome_alvo_real_2 = f"🟢 {mandante} (Casa)"
+                    if visitante and "Visitante" in alvo2: nome_alvo_real_2 = f"🔴 {visitante} (Fora)"
+                    
+                    selecoes_final.append({"Jogo": nome_jogo, "Alvo": nome_alvo_real_2, "Mercado": mercado2})
                 
                 st.markdown("---") # Linha separadora entre jogos
 
@@ -194,6 +210,10 @@ def render_dashboard():
             submitted = st.form_submit_button("💾 Salvar Bilhete no Diário")
             
             if submitted:
+                # Validação básica
+                if lucro_bilhete == 0 and "Green" in resultado_bilhete:
+                    st.warning("⚠️ Atenção: Você marcou Green mas o lucro está R$ 0.00.")
+                
                 # Ajuste de sinal financeiro
                 if "Red" in resultado_bilhete and lucro_bilhete > 0:
                     lucro_bilhete = lucro_bilhete * -1
@@ -285,7 +305,7 @@ if pagina == "📊 Dashboard & Diário":
 # 4. PREVISÕES (CÓDIGO ORIGINAL)
 # ==============================================================================
 st.sidebar.markdown("---")
-st.sidebar.title("FutPrevisão Pro v3.1")
+st.sidebar.title("FutPrevisão Pro v3.2")
 
 def carregar_metadados():
     try:
@@ -306,8 +326,8 @@ st.sidebar.markdown("---")
 st.sidebar.header("Configuração da Partida")
 
 # Usa a lista já carregada lá em cima
-home_team = st.sidebar.selectbox("Mandante", team_list_sorted, index=0)
-away_team = st.sidebar.selectbox("Visitante", team_list_sorted, index=1)
+home_team = st.sidebar.selectbox("Mandante", team_list_raw, index=0)
+away_team = st.sidebar.selectbox("Visitante", team_list_raw, index=1)
 
 st.sidebar.markdown("---")
 st.sidebar.caption("🧠 **Contexto**")
