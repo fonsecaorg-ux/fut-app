@@ -1,4 +1,4 @@
-import streamlit as st
+  import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
@@ -110,7 +110,7 @@ st.markdown("""
         background: #ffebee;
     }
     
-    /* KPIs no Topo */
+    /* KPI Container */
     .kpi-container {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
@@ -176,21 +176,6 @@ st.markdown("""
         border-bottom: 3px solid #667eea;
         padding-bottom: 10px;
     }
-    
-    /* Badges */
-    .badge {
-        display: inline-block;
-        padding: 5px 12px;
-        border-radius: 15px;
-        font-size: 12px;
-        font-weight: 600;
-        margin-right: 8px;
-    }
-    
-    .badge-green { background: #28a745; color: white; }
-    .badge-red { background: #dc3545; color: white; }
-    .badge-yellow { background: #ffc107; color: #333; }
-    .badge-blue { background: #007bff; color: white; }
     
     /* Responsividade */
     @media (max-width: 768px) {
@@ -287,7 +272,7 @@ MERCADOS_LISTA.extend(["Ambas Marcam", "Vitória (ML) Casa", "Vitória (ML) Fora
 # ==============================================================================
 # 2. FUNÇÕES DE GESTÃO (INTACTO)
 # ==============================================================================
-DATA_FILE = "historico_bilhetes_v6.json"  # Nova versão para nova estrutura
+DATA_FILE = "historico_bilhetes_v6.json"
 CONFIG_FILE = "config_banca.json"
 
 def carregar_config():
@@ -323,7 +308,7 @@ def excluir_ticket(id_ticket):
     return False
 
 # ==============================================================================
-# 3. DASHBOARD COM ESTRUTURA DE JOGOS E SELEÇÕES
+# 3. DASHBOARD
 # ==============================================================================
 def render_dashboard():
     st.title("📊 Gestão Profissional de Banca")
@@ -417,8 +402,9 @@ def render_dashboard():
     # === ABAS ===
     tab_add, tab_history, tab_stats = st.tabs(["➕ Novo Bilhete", "📜 Histórico", "📊 Estatísticas"])
     
-    # ============== ABA 1: NOVO BILHETE COM JOGOS E SELEÇÕES ==============
+    # ============== ABA 1: NOVO BILHETE ==============
     with tab_add:
+        # ATENÇÃO: Removemos st.form para permitir interatividade (Adicionar Jogo/Seleção)
         st.markdown('<div class="form-section">', unsafe_allow_html=True)
         st.markdown('<div class="form-section-title">💰 Registrar Novo Bilhete</div>', unsafe_allow_html=True)
         
@@ -432,164 +418,192 @@ def render_dashboard():
             if key not in st.session_state:
                 st.session_state[key] = 1
         
-        with st.form("form_bilhete"):
-            col1, col2, col3 = st.columns(3)
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            data_bilhete = st.date_input("📅 Data", datetime.now(), key="data_bilhete")
             
-            with col1:
-                data_bilhete = st.date_input("📅 Data", datetime.now())
-                
-            with col2:
-                stake = st.number_input("💵 Stake (R$)", min_value=0.0, step=5.0, value=10.0)
-                
-            with col3:
-                odd = st.number_input("📊 Odd Total", min_value=1.00, step=0.01, value=1.50)
+        with col2:
+            stake = st.number_input("💵 Stake (R$)", min_value=0.0, step=5.0, value=10.0, key="stake_bilhete")
             
-            resultado_bilhete = st.selectbox(
-                "🎯 Resultado Final", 
-                ["Green ✅", "Green (Cashout) 💰", "Red ❌", "Reembolso 🔄"]
+        with col3:
+            odd = st.number_input("📊 Odd Total", min_value=1.00, step=0.01, value=1.50, key="odd_bilhete")
+        
+        resultado_bilhete = st.selectbox(
+            "🎯 Resultado Final", 
+            ["Green ✅", "Green (Cashout) 💰", "Red ❌", "Reembolso 🔄"],
+            key="resultado_bilhete"
+        )
+        
+        # Lógica Financeira
+        valor_retornado_manual = 0.0
+        if "Cashout" in resultado_bilhete:
+            valor_retornado_manual = st.number_input(
+                "💰 Valor do Cashout (R$)", 
+                min_value=0.0, 
+                step=5.0,
+                key="cashout_valor"
             )
+        
+        if "Green ✅" in resultado_bilhete:
+            lucro_final = (stake * odd) - stake
+        elif "Red" in resultado_bilhete:
+            lucro_final = -stake
+        elif "Reembolso" in resultado_bilhete:
+            lucro_final = 0.0
+        else:
+            lucro_final = valor_retornado_manual - stake
+        
+        st.info(f"💰 Lucro calculado: **R$ {lucro_final:+.2f}**")
+        
+        st.divider()
+        st.markdown("### 🎲 JOGOS")
+        
+        # Array para armazenar jogos
+        jogos_data = []
+        
+        # Iterar pelos jogos
+        for jogo_idx in range(st.session_state['num_jogos']):
+            st.markdown(f"#### 🎲 JOGO {jogo_idx + 1}")
             
-            # Lógica Financeira
-            valor_retornado_manual = 0.0
-            if "Cashout" in resultado_bilhete:
-                valor_retornado_manual = st.number_input(
-                    "💰 Valor do Cashout (R$)", 
-                    min_value=0.0, 
-                    step=5.0
-                )
-            
-            if "Green ✅" in resultado_bilhete:
-                lucro_final = (stake * odd) - stake
-            elif "Red" in resultado_bilhete:
-                lucro_final = -stake
-            elif "Reembolso" in resultado_bilhete:
-                lucro_final = 0.0
-            else:
-                lucro_final = valor_retornado_manual - stake
-            
-            st.info(f"💰 Lucro calculado: **R$ {lucro_final:+.2f}**")
-            
-            st.divider()
-            st.markdown("### 🎲 JOGOS")
-            
-            # Array para armazenar jogos
-            jogos_data = []
-            
-            # Iterar pelos jogos
-            for jogo_idx in range(st.session_state['num_jogos']):
-                st.markdown(f"#### 🎲 JOGO {jogo_idx + 1}")
+            with st.container(border=True):
+                col_h, col_sep, col_a = st.columns([5, 1, 5])
                 
-                with st.container(border=True):
-                    col_h, col_sep, col_a = st.columns([5, 1, 5])
+                with col_h:
+                    mandante = st.selectbox(
+                        "🏠 Mandante", 
+                        team_list_with_empty, 
+                        key=f"home_{jogo_idx}"
+                    )
                     
-                    with col_h:
-                        mandante = st.selectbox(
-                            "🏠 Mandante", 
-                            team_list_with_empty, 
-                            key=f"home_{jogo_idx}"
+                with col_sep:
+                    st.markdown("<h3 style='text-align: center; padding-top: 20px;'>×</h3>", unsafe_allow_html=True)
+                    
+                with col_a:
+                    visitante = st.selectbox(
+                        "✈️ Visitante", 
+                        team_list_with_empty, 
+                        key=f"away_{jogo_idx}"
+                    )
+                
+                st.markdown("**📋 Seleções deste jogo:**")
+                
+                # Array para seleções deste jogo
+                selecoes_jogo = []
+                
+                # Iterar pelas seleções do jogo
+                num_selecoes_key = f'num_selecoes_jogo_{jogo_idx}'
+                num_selecoes = st.session_state[num_selecoes_key]
+                
+                for sel_idx in range(num_selecoes):
+                    st.markdown(f"*Seleção {sel_idx + 1}:*")
+                    
+                    col_alvo, col_mercado, col_status = st.columns([2, 3, 1])
+                    
+                    with col_alvo:
+                        alvo = st.selectbox(
+                            "🎯 Alvo",
+                            ["🟢 Mandante", "🔴 Visitante", "⚪ Geral"],
+                            key=f"alvo_j{jogo_idx}_s{sel_idx}"
                         )
                         
-                    with col_sep:
-                        st.markdown("<h3 style='text-align: center; padding-top: 20px;'>×</h3>", unsafe_allow_html=True)
-                        
-                    with col_a:
-                        visitante = st.selectbox(
-                            "✈️ Visitante", 
-                            team_list_with_empty, 
-                            key=f"away_{jogo_idx}"
+                    with col_mercado:
+                        mercado = st.selectbox(
+                            "📊 Mercado",
+                            MERCADOS_LISTA,
+                            key=f"mercado_j{jogo_idx}_s{sel_idx}"
                         )
                     
-                    st.markdown("**📋 Seleções deste jogo:**")
+                    with col_status:
+                        st.write("")  # Espaçamento
+                        st.write("")  # Espaçamento
+                        acertou = st.checkbox(
+                            "✅ Acertou",
+                            value=True,
+                            key=f"status_j{jogo_idx}_s{sel_idx}"
+                        )
                     
-                    # Array para seleções deste jogo
-                    selecoes_jogo = []
-                    
-                    # Iterar pelas seleções do jogo
-                    num_selecoes_key = f'num_selecoes_jogo_{jogo_idx}'
-                    num_selecoes = st.session_state[num_selecoes_key]
-                    
-                    for sel_idx in range(num_selecoes):
-                        st.markdown(f"*Seleção {sel_idx + 1}:*")
-                        
-                        col_alvo, col_mercado, col_status = st.columns([2, 3, 1])
-                        
-                        with col_alvo:
-                            alvo = st.selectbox(
-                                "🎯 Alvo",
-                                ["🟢 Mandante", "🔴 Visitante", "⚪ Geral"],
-                                key=f"alvo_j{jogo_idx}_s{sel_idx}"
-                            )
-                            
-                        with col_mercado:
-                            mercado = st.selectbox(
-                                "📊 Mercado",
-                                MERCADOS_LISTA,
-                                key=f"mercado_j{jogo_idx}_s{sel_idx}"
-                            )
-                        
-                        with col_status:
-                            st.write("")  # Espaçamento
-                            st.write("")  # Espaçamento
-                            acertou = st.checkbox(
-                                "✅ Acertou",
-                                value=True,
-                                key=f"status_j{jogo_idx}_s{sel_idx}"
-                            )
-                        
-                        # Determinar ícone
+                    # Determinar ícone
+                    icon = "⚽"
+                    if "Escanteios" in mercado:
+                        icon = "🚩"
+                    elif "Cartões" in mercado:
+                        icon = "🟨"
+                    elif "Gols" in mercado:
                         icon = "⚽"
-                        if "Escanteios" in mercado:
-                            icon = "🚩"
-                        elif "Cartões" in mercado:
-                            icon = "🟨"
-                        elif "Gols" in mercado:
-                            icon = "⚽"
-                        elif "Ambas Marcam" in mercado:
-                            icon = "🎯"
-                        
-                        selecoes_jogo.append({
-                            "Alvo": alvo,
-                            "Mercado": mercado,
-                            "Icon": icon,
-                            "Status": "Acertou" if acertou else "Errou"
-                        })
-                        
-                        if sel_idx < num_selecoes - 1:
-                            st.markdown("---")
+                    elif "Ambas Marcam" in mercado:
+                        icon = "🎯"
                     
-                    # Calcular status do jogo (todas seleções devem acertar)
-                    todas_acertaram = all(sel["Status"] == "Acertou" for sel in selecoes_jogo)
-                    status_jogo = "Green" if todas_acertaram else "Red"
-                    
-                    nome_jogo = f"{mandante} × {visitante}" if mandante and visitante else f"Jogo {jogo_idx + 1}"
-                    
-                    jogos_data.append({
-                        "Mandante": mandante,
-                        "Visitante": visitante,
-                        "Nome": nome_jogo,
-                        "Status_Jogo": status_jogo,
-                        "Selecoes": selecoes_jogo
+                    selecoes_jogo.append({
+                        "Alvo": alvo,
+                        "Mercado": mercado,
+                        "Icon": icon,
+                        "Status": "Acertou" if acertou else "Errou"
                     })
+                    
+                    if sel_idx < num_selecoes - 1:
+                        st.markdown("---")
+                
+                # Calcular status do jogo
+                todas_acertaram = all(sel["Status"] == "Acertou" for sel in selecoes_jogo)
+                status_jogo = "Green" if todas_acertaram else "Red"
+                
+                nome_jogo = f"{mandante} × {visitante}" if mandante and visitante else f"Jogo {jogo_idx + 1}"
+                
+                jogos_data.append({
+                    "Mandante": mandante,
+                    "Visitante": visitante,
+                    "Nome": nome_jogo,
+                    "Status_Jogo": status_jogo,
+                    "Selecoes": selecoes_jogo
+                })
+        
+        st.divider()
+        
+        # Botões de controle
+        col_btn1, col_btn2, col_btn3 = st.columns(3)
+        
+        with col_btn1:
+            if st.button("➕ Adicionar Jogo", disabled=(st.session_state['num_jogos'] >= 5)):
+                if st.session_state['num_jogos'] < 5:
+                    st.session_state['num_jogos'] += 1
+                    st.rerun()
+        
+        with col_btn2:
+            ultimo_jogo = st.session_state['num_jogos'] - 1
+            key_ultimo = f'num_selecoes_jogo_{ultimo_jogo}'
+            num_sel_ultimo = st.session_state[key_ultimo]
             
-            st.divider()
-            
-            # Checklist e Submit
-            col_check, col_btn = st.columns([3, 1])
-            
-            with col_check:
-                checklist = st.checkbox(
-                    "✅ Confirmação: Análise feita e gestão de banca respeitada",
-                    value=False
-                )
-            
-            with col_btn:
-                submit = st.form_submit_button(
-                    "💾 SALVAR",
-                    disabled=not checklist,
-                    use_container_width=True
-                )
-            
-            if submit:
+            if st.button("➕ Adicionar Seleção (último jogo)", disabled=(num_sel_ultimo >= 3)):
+                if num_sel_ultimo < 3:
+                    st.session_state[key_ultimo] += 1
+                    st.rerun()
+        
+        with col_btn3:
+            if st.button("🔄 Resetar"):
+                st.session_state['num_jogos'] = 1
+                for j in range(10):
+                    if f'num_selecoes_jogo_{j}' in st.session_state:
+                        del st.session_state[f'num_selecoes_jogo_{j}']
+                st.rerun()
+        
+        st.caption(f"Jogos: {st.session_state['num_jogos']}/5 | Último jogo: {st.session_state[f'num_selecoes_jogo_{st.session_state['num_jogos']-1}']}/3 seleções")
+        
+        st.divider()
+        
+        # Botão de Salvar Final
+        col_check, col_btn_save = st.columns([3, 1])
+        
+        with col_check:
+            checklist = st.checkbox(
+                "✅ Confirmação: Análise feita e gestão de banca respeitada",
+                value=False,
+                key="checklist_confirmacao"
+            )
+        
+        with col_btn_save:
+            # BOTÃO FORA DE FORMULÁRIO (FUNCIONA!)
+            if st.button("💾 SALVAR BILHETE", type="primary", disabled=not checklist, use_container_width=True):
                 if stake <= 0:
                     st.error("❌ Stake deve ser maior que zero!")
                 elif not any(j['Mandante'] and j['Visitante'] for j in jogos_data):
@@ -609,44 +623,13 @@ def render_dashboard():
                     st.success("✅ Bilhete registrado com sucesso!")
                     st.balloons()
                     
-                    # Resetar session state
+                    # Resetar formulário
                     st.session_state['num_jogos'] = 1
                     for j in range(10):
                         if f'num_selecoes_jogo_{j}' in st.session_state:
                             del st.session_state[f'num_selecoes_jogo_{j}']
                     
                     st.rerun()
-        
-        # Botões FORA do form para adicionar jogos/seleções
-        st.markdown("---")
-        col_btn1, col_btn2, col_btn3 = st.columns(3)
-        
-        with col_btn1:
-            if st.button("➕ Adicionar Jogo", disabled=(st.session_state['num_jogos'] >= 5)):
-                if st.session_state['num_jogos'] < 5:
-                    st.session_state['num_jogos'] += 1
-                    st.rerun()
-        
-        with col_btn2:
-            # Botão para adicionar seleção no ÚLTIMO jogo
-            ultimo_jogo = st.session_state['num_jogos'] - 1
-            key_ultimo = f'num_selecoes_jogo_{ultimo_jogo}'
-            num_sel_ultimo = st.session_state[key_ultimo]
-            
-            if st.button("➕ Adicionar Seleção (último jogo)", disabled=(num_sel_ultimo >= 3)):
-                if num_sel_ultimo < 3:
-                    st.session_state[key_ultimo] += 1
-                    st.rerun()
-        
-        with col_btn3:
-            if st.button("🔄 Resetar Formulário"):
-                st.session_state['num_jogos'] = 1
-                for j in range(10):
-                    if f'num_selecoes_jogo_{j}' in st.session_state:
-                        del st.session_state[f'num_selecoes_jogo_{j}']
-                st.rerun()
-        
-        st.caption(f"Jogos: {st.session_state['num_jogos']}/5 | Último jogo: {st.session_state[f'num_selecoes_jogo_{st.session_state['num_jogos']-1}']}/3 seleções")
         
         st.markdown('</div>', unsafe_allow_html=True)
     
@@ -823,7 +806,7 @@ def render_dashboard():
             st.plotly_chart(fig, use_container_width=True)
 
 # ==============================================================================
-# 4. NAVEGAÇÃO E PREVISÕES (100% INTACTO)
+# 4. NAVEGAÇÃO E PREVISÕES (CÓDIGO ORIGINAL - INTACTO)
 # ==============================================================================
 st.sidebar.markdown("---")
 pagina = st.sidebar.radio("Menu", ["🏠 Previsões IA", "📊 Gestão de Banca"])
