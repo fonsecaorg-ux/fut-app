@@ -1,3 +1,4 @@
+
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -44,181 +45,12 @@ def check_password():
 if not check_password(): st.stop()
 
 # ==============================================================================
-# 1. FUNÇÕES DO DASHBOARD (CARREGAR E SALVAR)
+# 1. CARREGAMENTO DE DADOS (AGORA NO INÍCIO PARA O DASHBOARD USAR)
 # ==============================================================================
-DATA_FILE = "historico_apostas_v2.json"
-
-def carregar_historico():
-    if not os.path.exists(DATA_FILE):
-        return pd.DataFrame()
-    else:
-        with open(DATA_FILE, "r") as f:
-            dados = json.load(f)
-        # Normaliza dados aninhados para tabela plana se necessário
-        return pd.DataFrame(dados)
-
-def salvar_ticket(ticket_data):
-    if os.path.exists(DATA_FILE):
-        with open(DATA_FILE, "r") as f:
-            dados = json.load(f)
-    else:
-        dados = []
-    
-    dados.append(ticket_data)
-    with open(DATA_FILE, "w") as f:
-        json.dump(dados, f)
-
-def render_dashboard():
-    st.title("📊 Dashboard & Diário de Apostas")
-    
-    # --- FORMULÁRIO DE CADASTRO (CONSTRUTOR DE BILHETE) ---
-    with st.expander("➕ Registrar Novo Bilhete (Simples ou Múltipla)", expanded=False):
-        st.caption("Preencha os dados do bilhete e das seleções individuais.")
-        
-        with st.form("form_bilhete"):
-            # 1. Dados Financeiros do Bilhete
-            st.subheader("💰 Dados Financeiros")
-            c1, c2, c3 = st.columns(3)
-            with c1:
-                data_bilhete = st.date_input("Data", datetime.now())
-            with c2:
-                resultado_bilhete = st.selectbox("Resultado Final do Bilhete", ["Green", "Green (Cashout)", "Red"])
-            with c3:
-                lucro_bilhete = st.number_input("Lucro/Prejuízo Total (R$)", min_value=-10000.0, max_value=10000.0, step=1.0, help="Use negativo (-) para Red")
-            
-            # 2. Construtor de Seleções (As pernas da aposta)
-            st.markdown("---")
-            st.subheader("📝 Seleções (Jogos do Bilhete)")
-            st.caption("Adicione até 5 jogos que compõem este bilhete.")
-            
-            qtd_jogos = st.slider("Quantos jogos neste bilhete?", 1, 5, 2)
-            
-            selecoes = []
-            for i in range(qtd_jogos):
-                st.markdown(f"**Jogo {i+1}**")
-                col_a, col_b, col_c = st.columns([2, 1, 2])
-                with col_a:
-                    time_sel = st.text_input(f"Time/Jogo #{i+1}", placeholder="Ex: Barcelona ou Barcelona x Celta")
-                with col_b:
-                    # AQUI ESTÁ A MÁGICA: Identificar Casa/Fora
-                    local_sel = st.selectbox(f"Onde jogou? #{i+1}", ["Casa (Mandante)", "Fora (Visitante)", "Geral (Total do Jogo)"], key=f"loc_{i}")
-                with col_c:
-                    mercado_sel = st.text_input(f"Aposta #{i+1}", placeholder="Ex: +3.5 Escanteios")
-                
-                selecoes.append({"Time": time_sel, "Local": local_sel, "Aposta": mercado_sel})
-                st.divider()
-
-            # Botão de Salvar dentro do Form
-            submitted = st.form_submit_button("💾 Salvar Bilhete no Histórico")
-            
-            if submitted:
-                # Ajuste automático do sinal financeiro
-                if resultado_bilhete == "Red" and lucro_bilhete > 0:
-                    lucro_bilhete = lucro_bilhete * -1
-                
-                novo_ticket = {
-                    "Data": data_bilhete.strftime("%d/%m/%Y"),
-                    "Resultado": resultado_bilhete,
-                    "Lucro": lucro_bilhete,
-                    "Qtd_Jogos": qtd_jogos,
-                    "Selecoes": selecoes, # Salva a lista de jogos dentro do ticket
-                    "Descricao_Resumida": f"{selecoes[0]['Time']}..." # Para exibir na tabela
-                }
-                salvar_ticket(novo_ticket)
-                st.success("Bilhete registrado com sucesso!")
-                st.rerun()
-
-    st.markdown("---")
-
-    # --- CARREGAR DADOS ---
-    df = carregar_historico()
-
-    if df.empty:
-        st.info("Nenhum bilhete registrado. Use o formulário acima para começar seu diário!")
-        return
-
-    # --- MÉTRICAS GERAIS (BASEADAS EM BILHETES) ---
-    total_bilhetes = len(df)
-    total_greens = len(df[df["Resultado"].str.contains("Green")])
-    win_rate = (total_greens / total_bilhetes) * 100
-    lucro_total = df["Lucro"].sum()
-
-    col1, col2, col3 = st.columns(3)
-    col1.metric("Bilhetes Totais", total_bilhetes)
-    col2.metric("Assertividade Geral", f"{win_rate:.1f}%")
-    col3.metric("Lucro Líquido", f"R$ {lucro_total:.2f}", delta=f"{lucro_total:.2f}")
-
-    st.markdown("---")
-
-    # --- ANÁLISE PROFUNDA (CASA vs FORA) ---
-    # Precisamos "explodir" os dados para analisar seleção por seleção
-    st.subheader("🔍 Raio-X das Seleções")
-    
-    # Processamento dos dados para gráficos
-    lista_selecoes = []
-    for index, row in df.iterrows():
-        status_ticket = "Green" if "Green" in row["Resultado"] else "Red"
-        if isinstance(row["Selecoes"], list):
-            for sel in row["Selecoes"]:
-                lista_selecoes.append({
-                    "Local": sel["Local"],
-                    "Status_Ticket": status_ticket, # Assumimos o status do ticket para a seleção (simplificação)
-                    "Contagem": 1
-                })
-    
-    if lista_selecoes:
-        df_sel = pd.DataFrame(lista_selecoes)
-        
-        c1, c2 = st.columns(2)
-        with c1:
-            st.markdown("**Onde você acerta mais?**")
-            # Gráfico: Green/Red por Local (Casa/Fora/Geral)
-            fig_local = px.histogram(df_sel, x="Local", color="Status_Ticket", barmode="group",
-                                     color_discrete_map={"Green": "#00CC96", "Red": "#EF553B"},
-                                     title="Performance: Casa vs Fora vs Geral")
-            st.plotly_chart(fig_local, use_container_width=True)
-            st.caption("Nota: Analisa se o time escolhido jogava em casa ou fora nos bilhetes vitoriosos.")
-        
-        with c2:
-             st.markdown("**Distribuição de Resultados**")
-             fig_pie = px.pie(df, names="Resultado", color="Resultado",
-                              color_discrete_map={"Green": "#00CC96", "Red": "#EF553B", "Green (Cashout)": "#636EFA"})
-             st.plotly_chart(fig_pie, use_container_width=True)
-
-    # --- TABELA DE HISTÓRICO ---
-    st.subheader("📜 Histórico de Bilhetes")
-    
-    # Exibir tabela simplificada
-    df_show = df[["Data", "Descricao_Resumida", "Qtd_Jogos", "Resultado", "Lucro"]].iloc[::-1]
-    
-    def color_result(val):
-        color = '#d4edda' if 'Green' in val else '#f8d7da' if 'Red' in val else ''
-        return f'background-color: {color}'
-    
-    st.dataframe(df_show.style.applymap(color_result, subset=['Resultado']), use_container_width=True)
-    
-    # Expander para ver detalhes brutos se necessário
-    with st.expander("Ver detalhes técnicos (JSON)"):
-        st.json(df.to_dict(orient="records"))
-
-# ==============================================================================
-# 2. MENU DE NAVEGAÇÃO
-# ==============================================================================
-st.sidebar.header("Navegação")
-pagina = st.sidebar.radio("Ir para:", ["🏠 Previsões do Jogo", "📊 Dashboard & Diário"])
-
-if pagina == "📊 Dashboard & Diário":
-    render_dashboard()
-    st.stop() 
-
-# ==============================================================================
-# 3. DADOS E PREVISÕES (CÓDIGO ORIGINAL - MANTIDO IGUAL)
-# ==============================================================================
-# ... (COLE O RESTO DO SEU CÓDIGO AQUI IGUAL AO ANTERIOR: BACKUP_TEAMS, load_data, etc) ...
-# Para facilitar, vou repetir o bloco de dados abaixo para ficar completo
 BACKUP_TEAMS = {
     "Arsenal": {"corners": 6.82, "cards": 1.00, "fouls": 10.45, "goals_f": 2.3, "goals_a": 0.8},
     "Man City": {"corners": 7.45, "cards": 1.50, "fouls": 9.20, "goals_f": 2.7, "goals_a": 0.8},
+    "Barcelona": {"corners": 6.50, "cards": 2.10, "fouls": 11.0, "goals_f": 2.5, "goals_a": 1.0}, # Exemplo
 }
 
 def safe_float(value):
@@ -254,10 +86,201 @@ def load_data():
     return teams_dict, referees
 
 teams_data, referees_data = load_data()
+team_list_sorted = sorted(list(teams_data.keys()))
 
-# BARRA LATERAL
+# ==============================================================================
+# 2. FUNÇÕES DO DASHBOARD (CARREGAR E SALVAR)
+# ==============================================================================
+DATA_FILE = "historico_apostas_v3.json"
+
+# LISTA MESTRA DE MERCADOS (PARA NÃO PRECISAR DIGITAR)
+MERCADOS_PADRAO = []
+for i in np.arange(0.5, 12.5, 1.0):
+    MERCADOS_PADRAO.append(f"Escanteios Mais de {i}")
+for i in np.arange(0.5, 8.5, 1.0):
+    MERCADOS_PADRAO.append(f"Cartões Mais de {i}")
+for i in np.arange(0.5, 5.5, 1.0):
+    MERCADOS_PADRAO.append(f"Gols Mais de {i}")
+MERCADOS_PADRAO.append("Ambas Marcam")
+MERCADOS_PADRAO.append("Vitória (ML)")
+
+def carregar_historico():
+    if not os.path.exists(DATA_FILE):
+        return pd.DataFrame()
+    else:
+        with open(DATA_FILE, "r") as f:
+            dados = json.load(f)
+        return pd.DataFrame(dados)
+
+def salvar_ticket(ticket_data):
+    if os.path.exists(DATA_FILE):
+        with open(DATA_FILE, "r") as f:
+            dados = json.load(f)
+    else:
+        dados = []
+    
+    dados.append(ticket_data)
+    with open(DATA_FILE, "w") as f:
+        json.dump(dados, f)
+
+def render_dashboard():
+    st.title("📊 Dashboard & Diário (Construtor v3.0)")
+    
+    # --- FORMULÁRIO INTELIGENTE ---
+    with st.expander("➕ Registrar Novo Bilhete (Construtor Automático)", expanded=False):
+        
+        with st.form("form_bilhete_smart"):
+            # 1. Dados Financeiros
+            st.subheader("💰 Resumo Financeiro")
+            c1, c2, c3 = st.columns(3)
+            with c1: data_bilhete = st.date_input("Data", datetime.now())
+            with c2: resultado_bilhete = st.selectbox("Resultado", ["Green", "Green (Cashout)", "Red"])
+            with c3: lucro_bilhete = st.number_input("Lucro/Prejuízo (R$)", min_value=-10000.0, max_value=10000.0, step=1.0)
+            
+            st.markdown("---")
+            st.subheader("📝 Seleções dos Jogos")
+            
+            # Limite de 3 jogos conforme pedido
+            qtd_jogos = st.slider("Quantos jogos neste bilhete?", 1, 3, 1)
+            
+            selecoes_final = []
+            
+            for i in range(qtd_jogos):
+                st.markdown(f"#### 🏟️ Jogo {i+1}")
+                
+                # SELEÇÃO DO CONFRONTO
+                col_time_a, col_x, col_time_b = st.columns([3, 0.5, 3])
+                with col_time_a:
+                    mandante = st.selectbox(f"Mandante #{i+1}", team_list_sorted, key=f"home_{i}")
+                with col_x:
+                    st.markdown("<h3 style='text-align: center;'>X</h3>", unsafe_allow_html=True)
+                with col_time_b:
+                    visitante = st.selectbox(f"Visitante #{i+1}", team_list_sorted, index=1, key=f"away_{i}")
+                
+                # OPÇÕES DE APOSTA (ATÉ 2 POR JOGO - CRIAR APOSTA)
+                st.caption(f"O que você apostou em {mandante} x {visitante}?")
+                
+                # Linha 1 de Aposta
+                c_sel1, c_merc1 = st.columns([1.5, 2])
+                with c_sel1:
+                    target1 = st.selectbox(f"Alvo 1 #{i+1}", [f"🟢 {mandante} (Casa)", f"🔴 {visitante} (Fora)", "⚪ Jogo (Geral)"], key=f"t1_{i}")
+                with c_merc1:
+                    market1 = st.selectbox(f"Mercado 1 #{i+1}", MERCADOS_PADRAO, key=f"m1_{i}")
+                
+                selecoes_final.append({"Jogo": f"{mandante} x {visitante}", "Alvo": target1, "Mercado": market1})
+
+                # Linha 2 de Aposta (Opcional)
+                ver_aposta2 = st.checkbox(f"Adicionar 2ª seleção para este jogo?", key=f"chk_{i}")
+                if ver_aposta2:
+                    c_sel2, c_merc2 = st.columns([1.5, 2])
+                    with c_sel2:
+                        target2 = st.selectbox(f"Alvo 2 #{i+1}", [f"🟢 {mandante} (Casa)", f"🔴 {visitante} (Fora)", "⚪ Jogo (Geral)"], key=f"t2_{i}")
+                    with c_merc2:
+                        market2 = st.selectbox(f"Mercado 2 #{i+1}", MERCADOS_PADRAO, key=f"m2_{i}")
+                    
+                    selecoes_final.append({"Jogo": f"{mandante} x {visitante}", "Alvo": target2, "Mercado": market2})
+                
+                st.divider()
+
+            # Botão de Salvar
+            submitted = st.form_submit_button("💾 Salvar Bilhete")
+            
+            if submitted:
+                if resultado_bilhete == "Red" and lucro_bilhete > 0:
+                    lucro_bilhete = lucro_bilhete * -1
+                
+                novo_ticket = {
+                    "Data": data_bilhete.strftime("%d/%m/%Y"),
+                    "Resultado": resultado_bilhete,
+                    "Lucro": lucro_bilhete,
+                    "Qtd_Jogos": qtd_jogos,
+                    "Selecoes": selecoes_final,
+                    "Descricao_Resumida": f"{len(selecoes_final)} seleções"
+                }
+                salvar_ticket(novo_ticket)
+                st.success("Bilhete registrado com sucesso!")
+                st.rerun()
+
+    st.markdown("---")
+
+    # --- VISUALIZAÇÃO DOS DADOS ---
+    df = carregar_historico()
+
+    if df.empty:
+        st.info("Nenhum bilhete registrado. Use o formulário acima.")
+        return
+
+    # KPI GERAIS
+    total_bilhetes = len(df)
+    lucro_total = df["Lucro"].sum()
+    total_greens = len(df[df["Resultado"].str.contains("Green")])
+    win_rate = (total_greens / total_bilhetes) * 100
+
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Bilhetes", total_bilhetes)
+    c2.metric("Assertividade", f"{win_rate:.1f}%")
+    c3.metric("Banca (Lucro)", f"R$ {lucro_total:.2f}", delta=f"{lucro_total:.2f}")
+    
+    st.markdown("---")
+    
+    # ANÁLISE DE MERCADO (ONDE VOCÊ GANHA MAIS?)
+    st.subheader("🔍 Raio-X das Seleções")
+    
+    # Explode as seleções para analisar individualmente
+    lista_analise = []
+    for _, row in df.iterrows():
+        status = "Green" if "Green" in row["Resultado"] else "Red"
+        if isinstance(row["Selecoes"], list):
+            for sel in row["Selecoes"]:
+                # Simplifica o alvo para Casa/Fora/Geral
+                tipo_alvo = "Casa" if "🟢" in sel["Alvo"] else "Fora" if "🔴" in sel["Alvo"] else "Geral"
+                # Simplifica o mercado (ex: Pega só "Escanteios")
+                tipo_mercado = sel["Mercado"].split()[0] 
+                
+                lista_analise.append({
+                    "Tipo": tipo_alvo,
+                    "Mercado": tipo_mercado,
+                    "Status": status
+                })
+    
+    if lista_analise:
+        df_an = pd.DataFrame(lista_analise)
+        
+        c_graf1, c_graf2 = st.columns(2)
+        with c_graf1:
+            st.caption("Performance: Casa vs Fora")
+            fig1 = px.histogram(df_an, x="Tipo", color="Status", barmode="group",
+                                color_discrete_map={"Green": "#00CC96", "Red": "#EF553B"})
+            st.plotly_chart(fig1, use_container_width=True)
+            
+        with c_graf2:
+            st.caption("Performance por Mercado")
+            fig2 = px.histogram(df_an, x="Mercado", color="Status", barmode="group",
+                                color_discrete_map={"Green": "#00CC96", "Red": "#EF553B"})
+            st.plotly_chart(fig2, use_container_width=True)
+
+    # TABELA SIMPLES
+    st.subheader("📜 Histórico Recente")
+    st.dataframe(df[["Data", "Resultado", "Lucro", "Descricao_Resumida"]].iloc[::-1], use_container_width=True)
+
+# ==============================================================================
+# 3. MENU DE NAVEGAÇÃO
+# ==============================================================================
+st.sidebar.header("Navegação")
+pagina = st.sidebar.radio("Ir para:", ["🏠 Previsões do Jogo", "📊 Dashboard & Diário"])
+
+if pagina == "📊 Dashboard & Diário":
+    render_dashboard()
+    st.stop() 
+
+# ==============================================================================
+# 4. PREVISÕES (CÓDIGO ORIGINAL - MANTIDO A LÓGICA)
+# ==============================================================================
+# O código de dados já foi carregado lá em cima (load_data).
+# Aqui fica apenas a interface da previsão.
+
 st.sidebar.markdown("---")
-st.sidebar.title("FutPrevisão Pro v2.9") # Versão 2.9
+st.sidebar.title("FutPrevisão Pro v3.0") # Versão atualizada
 
 def carregar_metadados():
     try:
@@ -270,23 +293,17 @@ if meta:
     st.sidebar.caption("🤖 **Status do Robô:**")
     st.sidebar.text(f"{meta['ultima_verificacao']}")
     
-    if 'log' in meta:
-        st.sidebar.caption("📋 Relatório:")
-        st.sidebar.info(meta['log'])
-    
     if meta['times_alterados'] == 0 and 'log' not in meta:
         st.sidebar.info("✔ Base verificada e estável.")
-        
-    st.sidebar.caption(f"📡 Fontes: {meta.get('fontes', 'Adamchoi & FBref')}")
 else:
     st.sidebar.warning("⚠ Aguardando robô...")
 
 st.sidebar.markdown("---")
 st.sidebar.header("Configuração da Partida")
 
-team_list = sorted(list(teams_data.keys()))
-home_team = st.sidebar.selectbox("Mandante", team_list, index=0)
-away_team = st.sidebar.selectbox("Visitante", team_list, index=1)
+# Usa a lista já carregada
+home_team = st.sidebar.selectbox("Mandante", team_list_sorted, index=0)
+away_team = st.sidebar.selectbox("Visitante", team_list_sorted, index=1)
 
 st.sidebar.markdown("---")
 st.sidebar.caption("🧠 **Contexto**")
