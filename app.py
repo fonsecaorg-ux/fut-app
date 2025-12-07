@@ -1,13 +1,13 @@
-
-
 import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
-import plotly.express as px  # <--- NOVA IMPORTAÇÃO PARA O DASHBOARD
+import plotly.express as px
 from scipy.stats import poisson
 import json
 import hmac
+import os
+from datetime import datetime
 
 # ==============================================================================
 # 0. CONFIGURAÇÃO E LOGIN
@@ -44,24 +44,80 @@ def check_password():
 if not check_password(): st.stop()
 
 # ==============================================================================
-# 1. FUNÇÃO DO DASHBOARD (NOVA)
+# 1. FUNÇÕES DO DASHBOARD (CARREGAR E SALVAR)
 # ==============================================================================
+DATA_FILE = "historico_apostas.json"
+
+def carregar_historico():
+    if not os.path.exists(DATA_FILE):
+        # Cria um arquivo inicial com os dados de hoje como exemplo
+        dados_iniciais = [
+            {"Data": "06/12/2025", "Jogo": "Bilbao x Atl. Madrid", "Liga": "La Liga", "Mercado": "Escanteios/Cartões", "Resultado": "Green", "Lucro": 24.09},
+            {"Data": "06/12/2025", "Jogo": "Verona x Atalanta", "Liga": "Série A", "Mercado": "Cartões", "Resultado": "Green (Cashout)", "Lucro": 8.27},
+            {"Data": "06/12/2025", "Jogo": "Nantes x Lens", "Liga": "Ligue 1", "Mercado": "Cartões Individuais", "Resultado": "Red", "Lucro": -5.00},
+            {"Data": "06/12/2025", "Jogo": "Wolfsburg x Union Berlin", "Liga": "Bundesliga", "Mercado": "Escanteios/Cartões", "Resultado": "Red", "Lucro": -5.00},
+        ]
+        with open(DATA_FILE, "w") as f:
+            json.dump(dados_iniciais, f)
+        return pd.DataFrame(dados_iniciais)
+    else:
+        with open(DATA_FILE, "r") as f:
+            dados = json.load(f)
+        return pd.DataFrame(dados)
+
+def salvar_aposta(nova_aposta):
+    if os.path.exists(DATA_FILE):
+        with open(DATA_FILE, "r") as f:
+            dados = json.load(f)
+    else:
+        dados = []
+    
+    dados.append(nova_aposta)
+    with open(DATA_FILE, "w") as f:
+        json.dump(dados, f)
+
 def render_dashboard():
     st.title("📊 Dashboard de Performance")
+    
+    # --- FORMULÁRIO DE CADASTRO ---
+    with st.expander("➕ Registrar Nova Aposta (Red/Green)", expanded=False):
+        st.caption("Adicione o resultado do seu bilhete aqui:")
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            data_input = st.date_input("Data", datetime.now())
+            jogo_input = st.text_input("Jogo (ex: Flamengo x Vasco)")
+        with c2:
+            liga_input = st.selectbox("Liga", ["Brasileirão", "Premier League", "La Liga", "Bundesliga", "Série A", "Ligue 1", "Outra"])
+            mercado_input = st.selectbox("Mercado", ["Escanteios", "Cartões", "Gols", "Múltipla (Criar Aposta)", "Outro"])
+        with c3:
+            resultado_input = st.radio("Resultado", ["Green", "Green (Cashout)", "Red"], horizontal=True)
+            valor_input = st.number_input("Lucro/Prejuízo (R$)", min_value=-10000.0, max_value=10000.0, step=0.50, help="Use negativo (-) para Red")
+
+        if st.button("💾 Salvar no Histórico"):
+            # Ajuste automático: Se for Red e o usuário colocou valor positivo, converte para negativo
+            if resultado_input == "Red" and valor_input > 0:
+                valor_input = valor_input * -1
+            
+            nova_entrada = {
+                "Data": data_input.strftime("%d/%m/%Y"),
+                "Jogo": jogo_input,
+                "Liga": liga_input,
+                "Mercado": mercado_input,
+                "Resultado": resultado_input,
+                "Lucro": valor_input
+            }
+            salvar_aposta(nova_entrada)
+            st.success("Aposta registrada! Atualizando...")
+            st.rerun()
+
     st.markdown("---")
 
-    # DADOS SIMULADOS (Baseados no seu dia de hoje - 06/12)
-    # Futuramente você conectará isso ao banco de dados real
-    dados_hoje = [
-        {"Data": "06/12", "Jogo": "Bilbao x Atl. Madrid", "Liga": "La Liga", "Mercado": "Escanteios/Cartões", "Resultado": "Green", "Lucro": 24.09},
-        {"Data": "06/12", "Jogo": "Verona x Atalanta", "Liga": "Série A", "Mercado": "Cartões", "Resultado": "Green (Cashout)", "Lucro": 8.27},
-        {"Data": "06/12", "Jogo": "Nantes x Lens", "Liga": "Ligue 1", "Mercado": "Cartões Individuais", "Resultado": "Red", "Lucro": -5.00},
-        {"Data": "06/12", "Jogo": "Wolfsburg x Union Berlin", "Liga": "Bundesliga", "Mercado": "Escanteios/Cartões", "Resultado": "Red", "Lucro": -5.00},
-        {"Data": "06/12", "Jogo": "Sassuolo x Fiorentina", "Liga": "Série A", "Mercado": "Escanteios Time", "Resultado": "Red", "Lucro": -5.00},
-        {"Data": "06/12", "Jogo": "Betis x Barcelona", "Liga": "La Liga", "Mercado": "Escanteios/Cartões", "Resultado": "Green", "Lucro": 10.00},
-    ]
-    
-    df = pd.DataFrame(dados_hoje)
+    # --- CARREGAR DADOS ---
+    df = carregar_historico()
+
+    if df.empty:
+        st.warning("Nenhum dado registrado ainda.")
+        return
 
     # CÁLCULOS (KPIs)
     total_apostas = len(df)
@@ -73,7 +129,7 @@ def render_dashboard():
     col1, col2, col3 = st.columns(3)
     col1.metric("Total Tips", total_apostas)
     col2.metric("Assertividade", f"{win_rate:.1f}%")
-    col3.metric("Lucro Hoje", f"R$ {lucro_total:.2f}", delta=f"{lucro_total:.2f}")
+    col3.metric("Lucro Total", f"R$ {lucro_total:.2f}", delta=f"{lucro_total:.2f}")
 
     st.markdown("---")
 
@@ -81,9 +137,10 @@ def render_dashboard():
     c1, c2 = st.columns([2, 1])
     with c1:
         st.subheader("Performance por Liga")
-        df_liga = df.groupby(["Liga", "Resultado"]).size().reset_index(name="Contagem")
-        fig_liga = px.bar(df_liga, x="Liga", y="Contagem", color="Resultado", 
-                          color_discrete_map={"Green": "#00CC96", "Red": "#EF553B", "Green (Cashout)": "#636EFA"})
+        # Gráfico de Barras Agrupado
+        fig_liga = px.histogram(df, x="Liga", color="Resultado", 
+                                color_discrete_map={"Green": "#00CC96", "Red": "#EF553B", "Green (Cashout)": "#636EFA"},
+                                title="Contagem de Resultados por Liga")
         st.plotly_chart(fig_liga, use_container_width=True)
     
     with c2:
@@ -95,20 +152,24 @@ def render_dashboard():
 
     # TABELA
     st.subheader("📜 Histórico de Entradas")
+    
+    # Ordenar por data (se possível) ou índice reverso para ver os mais recentes primeiro
+    df_show = df.iloc[::-1] 
+    
     def color_result(val):
         color = '#d4edda' if 'Green' in val else '#f8d7da' if 'Red' in val else ''
         return f'background-color: {color}'
-    st.dataframe(df.style.applymap(color_result, subset=['Resultado']), use_container_width=True)
+    st.dataframe(df_show.style.applymap(color_result, subset=['Resultado']), use_container_width=True)
 
 # ==============================================================================
-# 2. MENU DE NAVEGAÇÃO (AQUI ESTÁ A MÁGICA)
+# 2. MENU DE NAVEGAÇÃO
 # ==============================================================================
 st.sidebar.header("Navegação")
 pagina = st.sidebar.radio("Ir para:", ["🏠 Previsões do Jogo", "📊 Dashboard de Performance"])
 
 if pagina == "📊 Dashboard de Performance":
     render_dashboard()
-    st.stop() # <--- ISSO IMPEDE O RESTO DO CÓDIGO DE CARREGAR
+    st.stop() 
 
 # ==============================================================================
 # 3. DADOS E PREVISÕES (CÓDIGO ORIGINAL)
@@ -154,7 +215,7 @@ teams_data, referees_data = load_data()
 
 # BARRA LATERAL (CONTINUAÇÃO)
 st.sidebar.markdown("---")
-st.sidebar.title("FutPrevisão Pro v2.7")
+st.sidebar.title("FutPrevisão Pro v2.8") # Versão atualizada
 
 def carregar_metadados():
     try:
