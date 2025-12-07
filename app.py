@@ -46,69 +46,87 @@ if not check_password(): st.stop()
 # ==============================================================================
 # 1. FUNÇÕES DO DASHBOARD (CARREGAR E SALVAR)
 # ==============================================================================
-DATA_FILE = "historico_apostas.json"
+DATA_FILE = "historico_apostas_v2.json"
 
 def carregar_historico():
     if not os.path.exists(DATA_FILE):
-        # Cria um arquivo inicial com os dados de hoje como exemplo
-        dados_iniciais = [
-            {"Data": "06/12/2025", "Jogo": "Bilbao x Atl. Madrid", "Liga": "La Liga", "Mercado": "Escanteios/Cartões", "Resultado": "Green", "Lucro": 24.09},
-            {"Data": "06/12/2025", "Jogo": "Verona x Atalanta", "Liga": "Série A", "Mercado": "Cartões", "Resultado": "Green (Cashout)", "Lucro": 8.27},
-            {"Data": "06/12/2025", "Jogo": "Nantes x Lens", "Liga": "Ligue 1", "Mercado": "Cartões Individuais", "Resultado": "Red", "Lucro": -5.00},
-            {"Data": "06/12/2025", "Jogo": "Wolfsburg x Union Berlin", "Liga": "Bundesliga", "Mercado": "Escanteios/Cartões", "Resultado": "Red", "Lucro": -5.00},
-        ]
-        with open(DATA_FILE, "w") as f:
-            json.dump(dados_iniciais, f)
-        return pd.DataFrame(dados_iniciais)
+        return pd.DataFrame()
     else:
         with open(DATA_FILE, "r") as f:
             dados = json.load(f)
+        # Normaliza dados aninhados para tabela plana se necessário
         return pd.DataFrame(dados)
 
-def salvar_aposta(nova_aposta):
+def salvar_ticket(ticket_data):
     if os.path.exists(DATA_FILE):
         with open(DATA_FILE, "r") as f:
             dados = json.load(f)
     else:
         dados = []
     
-    dados.append(nova_aposta)
+    dados.append(ticket_data)
     with open(DATA_FILE, "w") as f:
         json.dump(dados, f)
 
 def render_dashboard():
-    st.title("📊 Dashboard de Performance")
+    st.title("📊 Dashboard & Diário de Apostas")
     
-    # --- FORMULÁRIO DE CADASTRO ---
-    with st.expander("➕ Registrar Nova Aposta (Red/Green)", expanded=False):
-        st.caption("Adicione o resultado do seu bilhete aqui:")
-        c1, c2, c3 = st.columns(3)
-        with c1:
-            data_input = st.date_input("Data", datetime.now())
-            jogo_input = st.text_input("Jogo (ex: Flamengo x Vasco)")
-        with c2:
-            liga_input = st.selectbox("Liga", ["Brasileirão", "Premier League", "La Liga", "Bundesliga", "Série A", "Ligue 1", "Outra"])
-            mercado_input = st.selectbox("Mercado", ["Escanteios", "Cartões", "Gols", "Múltipla (Criar Aposta)", "Outro"])
-        with c3:
-            resultado_input = st.radio("Resultado", ["Green", "Green (Cashout)", "Red"], horizontal=True)
-            valor_input = st.number_input("Lucro/Prejuízo (R$)", min_value=-10000.0, max_value=10000.0, step=0.50, help="Use negativo (-) para Red")
-
-        if st.button("💾 Salvar no Histórico"):
-            # Ajuste automático: Se for Red e o usuário colocou valor positivo, converte para negativo
-            if resultado_input == "Red" and valor_input > 0:
-                valor_input = valor_input * -1
+    # --- FORMULÁRIO DE CADASTRO (CONSTRUTOR DE BILHETE) ---
+    with st.expander("➕ Registrar Novo Bilhete (Simples ou Múltipla)", expanded=False):
+        st.caption("Preencha os dados do bilhete e das seleções individuais.")
+        
+        with st.form("form_bilhete"):
+            # 1. Dados Financeiros do Bilhete
+            st.subheader("💰 Dados Financeiros")
+            c1, c2, c3 = st.columns(3)
+            with c1:
+                data_bilhete = st.date_input("Data", datetime.now())
+            with c2:
+                resultado_bilhete = st.selectbox("Resultado Final do Bilhete", ["Green", "Green (Cashout)", "Red"])
+            with c3:
+                lucro_bilhete = st.number_input("Lucro/Prejuízo Total (R$)", min_value=-10000.0, max_value=10000.0, step=1.0, help="Use negativo (-) para Red")
             
-            nova_entrada = {
-                "Data": data_input.strftime("%d/%m/%Y"),
-                "Jogo": jogo_input,
-                "Liga": liga_input,
-                "Mercado": mercado_input,
-                "Resultado": resultado_input,
-                "Lucro": valor_input
-            }
-            salvar_aposta(nova_entrada)
-            st.success("Aposta registrada! Atualizando...")
-            st.rerun()
+            # 2. Construtor de Seleções (As pernas da aposta)
+            st.markdown("---")
+            st.subheader("📝 Seleções (Jogos do Bilhete)")
+            st.caption("Adicione até 5 jogos que compõem este bilhete.")
+            
+            qtd_jogos = st.slider("Quantos jogos neste bilhete?", 1, 5, 2)
+            
+            selecoes = []
+            for i in range(qtd_jogos):
+                st.markdown(f"**Jogo {i+1}**")
+                col_a, col_b, col_c = st.columns([2, 1, 2])
+                with col_a:
+                    time_sel = st.text_input(f"Time/Jogo #{i+1}", placeholder="Ex: Barcelona ou Barcelona x Celta")
+                with col_b:
+                    # AQUI ESTÁ A MÁGICA: Identificar Casa/Fora
+                    local_sel = st.selectbox(f"Onde jogou? #{i+1}", ["Casa (Mandante)", "Fora (Visitante)", "Geral (Total do Jogo)"], key=f"loc_{i}")
+                with col_c:
+                    mercado_sel = st.text_input(f"Aposta #{i+1}", placeholder="Ex: +3.5 Escanteios")
+                
+                selecoes.append({"Time": time_sel, "Local": local_sel, "Aposta": mercado_sel})
+                st.divider()
+
+            # Botão de Salvar dentro do Form
+            submitted = st.form_submit_button("💾 Salvar Bilhete no Histórico")
+            
+            if submitted:
+                # Ajuste automático do sinal financeiro
+                if resultado_bilhete == "Red" and lucro_bilhete > 0:
+                    lucro_bilhete = lucro_bilhete * -1
+                
+                novo_ticket = {
+                    "Data": data_bilhete.strftime("%d/%m/%Y"),
+                    "Resultado": resultado_bilhete,
+                    "Lucro": lucro_bilhete,
+                    "Qtd_Jogos": qtd_jogos,
+                    "Selecoes": selecoes, # Salva a lista de jogos dentro do ticket
+                    "Descricao_Resumida": f"{selecoes[0]['Time']}..." # Para exibir na tabela
+                }
+                salvar_ticket(novo_ticket)
+                st.success("Bilhete registrado com sucesso!")
+                st.rerun()
 
     st.markdown("---")
 
@@ -116,64 +134,88 @@ def render_dashboard():
     df = carregar_historico()
 
     if df.empty:
-        st.warning("Nenhum dado registrado ainda.")
+        st.info("Nenhum bilhete registrado. Use o formulário acima para começar seu diário!")
         return
 
-    # CÁLCULOS (KPIs)
-    total_apostas = len(df)
+    # --- MÉTRICAS GERAIS (BASEADAS EM BILHETES) ---
+    total_bilhetes = len(df)
     total_greens = len(df[df["Resultado"].str.contains("Green")])
-    win_rate = (total_greens / total_apostas) * 100
+    win_rate = (total_greens / total_bilhetes) * 100
     lucro_total = df["Lucro"].sum()
 
-    # VISUALIZAÇÃO - TOPO
     col1, col2, col3 = st.columns(3)
-    col1.metric("Total Tips", total_apostas)
-    col2.metric("Assertividade", f"{win_rate:.1f}%")
-    col3.metric("Lucro Total", f"R$ {lucro_total:.2f}", delta=f"{lucro_total:.2f}")
+    col1.metric("Bilhetes Totais", total_bilhetes)
+    col2.metric("Assertividade Geral", f"{win_rate:.1f}%")
+    col3.metric("Lucro Líquido", f"R$ {lucro_total:.2f}", delta=f"{lucro_total:.2f}")
 
     st.markdown("---")
 
-    # GRÁFICOS
-    c1, c2 = st.columns([2, 1])
-    with c1:
-        st.subheader("Performance por Liga")
-        # Gráfico de Barras Agrupado
-        fig_liga = px.histogram(df, x="Liga", color="Resultado", 
-                                color_discrete_map={"Green": "#00CC96", "Red": "#EF553B", "Green (Cashout)": "#636EFA"},
-                                title="Contagem de Resultados por Liga")
-        st.plotly_chart(fig_liga, use_container_width=True)
+    # --- ANÁLISE PROFUNDA (CASA vs FORA) ---
+    # Precisamos "explodir" os dados para analisar seleção por seleção
+    st.subheader("🔍 Raio-X das Seleções")
     
-    with c2:
-        st.subheader("Distribuição")
-        fig_pizza = px.pie(df, names="Resultado", title="Greens vs Reds", 
-                           color="Resultado",
-                           color_discrete_map={"Green": "#00CC96", "Red": "#EF553B", "Green (Cashout)": "#636EFA"})
-        st.plotly_chart(fig_pizza, use_container_width=True)
+    # Processamento dos dados para gráficos
+    lista_selecoes = []
+    for index, row in df.iterrows():
+        status_ticket = "Green" if "Green" in row["Resultado"] else "Red"
+        if isinstance(row["Selecoes"], list):
+            for sel in row["Selecoes"]:
+                lista_selecoes.append({
+                    "Local": sel["Local"],
+                    "Status_Ticket": status_ticket, # Assumimos o status do ticket para a seleção (simplificação)
+                    "Contagem": 1
+                })
+    
+    if lista_selecoes:
+        df_sel = pd.DataFrame(lista_selecoes)
+        
+        c1, c2 = st.columns(2)
+        with c1:
+            st.markdown("**Onde você acerta mais?**")
+            # Gráfico: Green/Red por Local (Casa/Fora/Geral)
+            fig_local = px.histogram(df_sel, x="Local", color="Status_Ticket", barmode="group",
+                                     color_discrete_map={"Green": "#00CC96", "Red": "#EF553B"},
+                                     title="Performance: Casa vs Fora vs Geral")
+            st.plotly_chart(fig_local, use_container_width=True)
+            st.caption("Nota: Analisa se o time escolhido jogava em casa ou fora nos bilhetes vitoriosos.")
+        
+        with c2:
+             st.markdown("**Distribuição de Resultados**")
+             fig_pie = px.pie(df, names="Resultado", color="Resultado",
+                              color_discrete_map={"Green": "#00CC96", "Red": "#EF553B", "Green (Cashout)": "#636EFA"})
+             st.plotly_chart(fig_pie, use_container_width=True)
 
-    # TABELA
-    st.subheader("📜 Histórico de Entradas")
+    # --- TABELA DE HISTÓRICO ---
+    st.subheader("📜 Histórico de Bilhetes")
     
-    # Ordenar por data (se possível) ou índice reverso para ver os mais recentes primeiro
-    df_show = df.iloc[::-1] 
+    # Exibir tabela simplificada
+    df_show = df[["Data", "Descricao_Resumida", "Qtd_Jogos", "Resultado", "Lucro"]].iloc[::-1]
     
     def color_result(val):
         color = '#d4edda' if 'Green' in val else '#f8d7da' if 'Red' in val else ''
         return f'background-color: {color}'
+    
     st.dataframe(df_show.style.applymap(color_result, subset=['Resultado']), use_container_width=True)
+    
+    # Expander para ver detalhes brutos se necessário
+    with st.expander("Ver detalhes técnicos (JSON)"):
+        st.json(df.to_dict(orient="records"))
 
 # ==============================================================================
 # 2. MENU DE NAVEGAÇÃO
 # ==============================================================================
 st.sidebar.header("Navegação")
-pagina = st.sidebar.radio("Ir para:", ["🏠 Previsões do Jogo", "📊 Dashboard de Performance"])
+pagina = st.sidebar.radio("Ir para:", ["🏠 Previsões do Jogo", "📊 Dashboard & Diário"])
 
-if pagina == "📊 Dashboard de Performance":
+if pagina == "📊 Dashboard & Diário":
     render_dashboard()
     st.stop() 
 
 # ==============================================================================
-# 3. DADOS E PREVISÕES (CÓDIGO ORIGINAL)
+# 3. DADOS E PREVISÕES (CÓDIGO ORIGINAL - MANTIDO IGUAL)
 # ==============================================================================
+# ... (COLE O RESTO DO SEU CÓDIGO AQUI IGUAL AO ANTERIOR: BACKUP_TEAMS, load_data, etc) ...
+# Para facilitar, vou repetir o bloco de dados abaixo para ficar completo
 BACKUP_TEAMS = {
     "Arsenal": {"corners": 6.82, "cards": 1.00, "fouls": 10.45, "goals_f": 2.3, "goals_a": 0.8},
     "Man City": {"corners": 7.45, "cards": 1.50, "fouls": 9.20, "goals_f": 2.7, "goals_a": 0.8},
@@ -213,9 +255,9 @@ def load_data():
 
 teams_data, referees_data = load_data()
 
-# BARRA LATERAL (CONTINUAÇÃO)
+# BARRA LATERAL
 st.sidebar.markdown("---")
-st.sidebar.title("FutPrevisão Pro v2.8") # Versão atualizada
+st.sidebar.title("FutPrevisão Pro v2.9") # Versão 2.9
 
 def carregar_metadados():
     try:
