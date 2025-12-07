@@ -1,4 +1,4 @@
-  import streamlit as st
+import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
@@ -110,7 +110,7 @@ st.markdown("""
         background: #ffebee;
     }
     
-    /* KPI Container */
+    /* KPIs no Topo */
     .kpi-container {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
@@ -176,6 +176,21 @@ st.markdown("""
         border-bottom: 3px solid #667eea;
         padding-bottom: 10px;
     }
+    
+    /* Badges */
+    .badge {
+        display: inline-block;
+        padding: 5px 12px;
+        border-radius: 15px;
+        font-size: 12px;
+        font-weight: 600;
+        margin-right: 8px;
+    }
+    
+    .badge-green { background: #28a745; color: white; }
+    .badge-red { background: #dc3545; color: white; }
+    .badge-yellow { background: #ffc107; color: #333; }
+    .badge-blue { background: #007bff; color: white; }
     
     /* Responsividade */
     @media (max-width: 768px) {
@@ -308,7 +323,7 @@ def excluir_ticket(id_ticket):
     return False
 
 # ==============================================================================
-# 3. DASHBOARD
+# 3. DASHBOARD COM ESTRUTURA DE JOGOS E SELEÇÕES
 # ==============================================================================
 def render_dashboard():
     st.title("📊 Gestão Profissional de Banca")
@@ -404,7 +419,6 @@ def render_dashboard():
     
     # ============== ABA 1: NOVO BILHETE ==============
     with tab_add:
-        # ATENÇÃO: Removemos st.form para permitir interatividade (Adicionar Jogo/Seleção)
         st.markdown('<div class="form-section">', unsafe_allow_html=True)
         st.markdown('<div class="form-section-title">💰 Registrar Novo Bilhete</div>', unsafe_allow_html=True)
         
@@ -412,12 +426,12 @@ def render_dashboard():
         if 'num_jogos' not in st.session_state:
             st.session_state['num_jogos'] = 1
         
-        # Garantir que cada jogo tenha pelo menos 1 seleção
         for j in range(st.session_state['num_jogos']):
             key = f'num_selecoes_jogo_{j}'
             if key not in st.session_state:
                 st.session_state[key] = 1
         
+        # Inputs principais
         col1, col2, col3 = st.columns(3)
         
         with col1:
@@ -435,7 +449,6 @@ def render_dashboard():
             key="resultado_bilhete"
         )
         
-        # Lógica Financeira
         valor_retornado_manual = 0.0
         if "Cashout" in resultado_bilhete:
             valor_retornado_manual = st.number_input(
@@ -459,10 +472,8 @@ def render_dashboard():
         st.divider()
         st.markdown("### 🎲 JOGOS")
         
-        # Array para armazenar jogos
         jogos_data = []
         
-        # Iterar pelos jogos
         for jogo_idx in range(st.session_state['num_jogos']):
             st.markdown(f"#### 🎲 JOGO {jogo_idx + 1}")
             
@@ -488,10 +499,7 @@ def render_dashboard():
                 
                 st.markdown("**📋 Seleções deste jogo:**")
                 
-                # Array para seleções deste jogo
                 selecoes_jogo = []
-                
-                # Iterar pelas seleções do jogo
                 num_selecoes_key = f'num_selecoes_jogo_{jogo_idx}'
                 num_selecoes = st.session_state[num_selecoes_key]
                 
@@ -515,15 +523,14 @@ def render_dashboard():
                         )
                     
                     with col_status:
-                        st.write("")  # Espaçamento
-                        st.write("")  # Espaçamento
+                        st.write("")
+                        st.write("")
                         acertou = st.checkbox(
                             "✅ Acertou",
                             value=True,
                             key=f"status_j{jogo_idx}_s{sel_idx}"
                         )
                     
-                    # Determinar ícone
                     icon = "⚽"
                     if "Escanteios" in mercado:
                         icon = "🚩"
@@ -544,7 +551,6 @@ def render_dashboard():
                     if sel_idx < num_selecoes - 1:
                         st.markdown("---")
                 
-                # Calcular status do jogo
                 todas_acertaram = all(sel["Status"] == "Acertou" for sel in selecoes_jogo)
                 status_jogo = "Green" if todas_acertaram else "Red"
                 
@@ -574,7 +580,7 @@ def render_dashboard():
             key_ultimo = f'num_selecoes_jogo_{ultimo_jogo}'
             num_sel_ultimo = st.session_state[key_ultimo]
             
-            if st.button("➕ Adicionar Seleção (último jogo)", disabled=(num_sel_ultimo >= 3)):
+            if st.button("➕ Adicionar Seleção", disabled=(num_sel_ultimo >= 3)):
                 if num_sel_ultimo < 3:
                     st.session_state[key_ultimo] += 1
                     st.rerun()
@@ -591,7 +597,7 @@ def render_dashboard():
         
         st.divider()
         
-        # Botão de Salvar Final
+        # Botão de Salvar
         col_check, col_btn_save = st.columns([3, 1])
         
         with col_check:
@@ -602,8 +608,7 @@ def render_dashboard():
             )
         
         with col_btn_save:
-            # BOTÃO FORA DE FORMULÁRIO (FUNCIONA!)
-            if st.button("💾 SALVAR BILHETE", type="primary", disabled=not checklist, use_container_width=True):
+            if st.button("💾 SALVAR", type="primary", disabled=not checklist, use_container_width=True):
                 if stake <= 0:
                     st.error("❌ Stake deve ser maior que zero!")
                 elif not any(j['Mandante'] and j['Visitante'] for j in jogos_data):
@@ -620,10 +625,9 @@ def render_dashboard():
                         "Jogos": jogos_data
                     }
                     salvar_ticket(novo_ticket)
-                    st.success("✅ Bilhete registrado com sucesso!")
+                    st.success("✅ Bilhete registrado!")
                     st.balloons()
                     
-                    # Resetar formulário
                     st.session_state['num_jogos'] = 1
                     for j in range(10):
                         if f'num_selecoes_jogo_{j}' in st.session_state:
@@ -640,7 +644,6 @@ def render_dashboard():
         if not tickets:
             st.info("📭 Nenhum bilhete registrado ainda.")
         else:
-            # Filtros
             col_f1, col_f2 = st.columns(2)
             
             with col_f1:
@@ -656,7 +659,6 @@ def render_dashboard():
                     ["Todos", "Hoje", "Esta Semana", "Este Mês"]
                 )
             
-            # Aplicar filtros
             tickets_filtrados = tickets.copy()
             
             if filtro_resultado:
@@ -672,25 +674,18 @@ def render_dashboard():
             st.caption(f"Mostrando {len(tickets_filtrados)} bilhete(s)")
             st.divider()
             
-            # Exibir Cards
             for ticket in tickets_filtrados:
-                # Determinar estilo
                 res = ticket["Resultado"]
                 
                 if "Green" in res and "Cashout" not in res:
-                    card_class = "bet-card-green"
                     status_text = "✅ GANHO"
                 elif "Red" in res:
-                    card_class = "bet-card-red"
                     status_text = "❌ PERDIDO"
                 elif "Cashout" in res:
-                    card_class = "bet-card-cashout"
                     status_text = "💰 CASHOUT"
                 else:
-                    card_class = "bet-card-cashout"
                     status_text = "🔄 REEMBOLSO"
                 
-                # Calcular retorno
                 if ticket['Lucro'] > 0:
                     retorno = ticket['Lucro'] + ticket['Stake']
                 elif "Reembolso" in res:
@@ -698,7 +693,6 @@ def render_dashboard():
                 else:
                     retorno = 0.0
                 
-                # Card Header
                 with st.container(border=True):
                     col_h1, col_h2 = st.columns([3, 1])
                     
@@ -716,53 +710,36 @@ def render_dashboard():
                     
                     st.divider()
                     
-                    # Exibir Jogos e Seleções
                     with st.expander(f"👁️ Ver {len(ticket.get('Jogos', []))} Jogo(s)"):
                         for jogo_idx, jogo in enumerate(ticket.get('Jogos', []), 1):
                             status_jogo = jogo.get('Status_Jogo', 'Red')
-                            status_badge = "game-status-green" if status_jogo == "Green" else "game-status-red"
                             status_icon = "✅" if status_jogo == "Green" else "❌"
                             
-                            st.markdown(f"""
-                            <div class="game-container">
-                                <div class="game-header">
-                                    {status_icon} JOGO {jogo_idx}: {jogo.get('Nome', jogo.get('Mandante', 'Time A'))} × {jogo.get('Visitante', 'Time B')}
-                                    <span class="{status_badge}">{status_jogo.upper()}</span>
-                                </div>
-                            </div>
-                            """, unsafe_allow_html=True)
+                            st.markdown(f"**{status_icon} JOGO {jogo_idx}: {jogo.get('Nome', '')}**")
                             
-                            # Seleções do jogo
-                            for sel_idx, selecao in enumerate(jogo.get('Selecoes', []), 1):
-                                status_sel = selecao.get('Status', 'Errou')
-                                sel_class = "selection-correct" if status_sel == "Acertou" else "selection-wrong"
+                            for sel in jogo.get('Selecoes', []):
+                                status_sel = sel.get('Status', 'Errou')
                                 sel_icon = "✅" if status_sel == "Acertou" else "❌"
                                 
-                                st.markdown(f"""
-                                <div class="selection-item {sel_class}">
-                                    {sel_icon} {selecao.get('Icon', '⚽')} <strong>{selecao.get('Alvo', '')}</strong> - {selecao.get('Mercado', '')}
-                                </div>
-                                """, unsafe_allow_html=True)
+                                st.markdown(f"{sel_icon} {sel.get('Icon', '⚽')} {sel.get('Alvo', '')} - {sel.get('Mercado', '')}")
                             
                             if jogo_idx < len(ticket.get('Jogos', [])):
                                 st.markdown("---")
                         
                         st.divider()
                         
-                        # Botão de excluir
-                        if st.button(f"🗑️ Excluir Bilhete #{ticket.get('id')}", key=f"del_{ticket.get('id')}"):
+                        if st.button(f"🗑️ Excluir #{ticket.get('id')}", key=f"del_{ticket.get('id')}"):
                             if excluir_ticket(ticket.get('id')):
-                                st.success("✅ Bilhete excluído!")
+                                st.success("✅ Excluído!")
                                 st.rerun()
     
     # ============== ABA 3: ESTATÍSTICAS ==============
     with tab_stats:
         if not tickets:
-            st.info("📊 Sem dados para análise.")
+            st.info("📊 Sem dados.")
         else:
             st.markdown("### 📈 Análise Avançada")
             
-            # Métricas
             col1, col2, col3, col4 = st.columns(4)
             col1.metric("Total Bilhetes", len(tickets))
             col2.metric("Média Stake", f"R$ {np.mean([t['Stake'] for t in tickets]):.2f}")
@@ -770,8 +747,6 @@ def render_dashboard():
             col4.metric("Maior Odd", f"{max([t['Odd'] for t in tickets]):.2f}")
             
             st.divider()
-            
-            # Gráfico de Evolução
             st.subheader("📈 Evolução da Banca")
             
             df_hist = pd.DataFrame(tickets)
@@ -797,16 +772,11 @@ def render_dashboard():
                 annotation_text="Banca Inicial"
             )
             
-            fig.update_layout(
-                xaxis_title="Bilhetes",
-                yaxis_title="Banca (R$)",
-                height=400
-            )
-            
+            fig.update_layout(xaxis_title="Bilhetes", yaxis_title="Banca (R$)", height=400)
             st.plotly_chart(fig, use_container_width=True)
 
 # ==============================================================================
-# 4. NAVEGAÇÃO E PREVISÕES (CÓDIGO ORIGINAL - INTACTO)
+# 4. NAVEGAÇÃO E PREVISÕES (INTACTO)
 # ==============================================================================
 st.sidebar.markdown("---")
 pagina = st.sidebar.radio("Menu", ["🏠 Previsões IA", "📊 Gestão de Banca"])
@@ -815,7 +785,7 @@ if pagina == "📊 Gestão de Banca":
     render_dashboard()
     st.stop()
 
-# CÓDIGO DE PREVISÕES ORIGINAL (INTACTO)
+# CÓDIGO DE PREVISÕES (INTACTO)
 st.sidebar.markdown("---")
 st.sidebar.title("FutPrevisão Pro v5.0")
 
