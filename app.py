@@ -1,591 +1,1012 @@
-# app.py
-"""
-Aplicação única (Flask) que:
-- carrega dados raw da pasta `raw_json/` ou `output/consolidated_football_stats_complete.csv`
-- normaliza e gera agregações para o Dashboard
-- serve API /analytics e página HTML em /
-- fornece endpoint POST /run-etl para forçar reprocessamento
 
-Como usar:
-1) pip install flask pandas python-dateutil
-2) Coloque seus .json raw em ./raw_json/ ou o CSV em ./output/consolidated_football_stats_complete.csv
-3) python app.py
-4) Abrir http://127.0.0.1:5000/ no navegador
-"""
-
-from flask import Flask, jsonify, send_file, request, make_response
-from pathlib import Path
+import streamlit as st
 import pandas as pd
+import numpy as np
+import plotly.graph_objects as go
+import plotly.express as px
+from scipy.stats import poisson
 import json
-from dateutil import parser as dparser
-import datetime
-import traceback
+import hmac
+import os
+from datetime import datetime
+import uuid
 
-app = Flask(__name__, static_folder=None)
+# ==============================================================================
+# 0. CONFIGURAÇÃO E LOGIN (INTACTO)
+# ==============================================================================
+st.set_page_config(page_title="FutPrevisão Pro", layout="wide", page_icon="⚽")
 
-# Config
-RAW_DIR = Path("raw_json")
-OUTPUT_DIR = Path("output")
-OUTPUT_DIR.mkdir(exist_ok=True)
-DASH_JSON_PATH = OUTPUT_DIR / "dashboard_input.json"
-
-# Utility: safe parse date
-def safe_parse_date(v):
-    if pd.isna(v) or v is None:
-        return None
-    try:
-        return pd.to_datetime(v)
-    except Exception:
-        try:
-            return dparser.parse(str(v))
-        except Exception:
-            return None
-
-def load_matches():
-    """
-    Carrega partidas:
-    - Prioridade 1: output/consolidated_football_stats_complete.csv (se existir)
-    - Senão: concatena todos os JSONs de RAW_DIR
-    """
-    csv_path = OUTPUT_DIR / "consolidated_football_stats_complete.csv"
-    if csv_path.exists():
-        try:
-            df = pd.read_csv(csv_path, low_memory=False)
-            if 'date' in df.columns:
-                df['date'] = pd.to_datetime(df['date'], errors='coerce')
-            return df
-        except Exception as e:
-            print("Erro ao ler CSV consolidado:", e)
-    # fallback: ler todos jsons na pasta raw_json
-    frames = []
-    if not RAW_DIR.exists():
-        print("Pasta raw_json/ não encontrada. Crie e coloque seus JSONs lá.")
-        return pd.DataFrame()
-    for p in RAW_DIR.glob("*.json"):
-        try:
-            j = json.loads(p.read_text(encoding="utf-8"))
-            # se o JSON for um objeto com key 'teams' ou 'matches', tentamos extrair os matches
-            if isinstance(j, dict):
-                # tentativas comuns de estrutura
-                if 'teams' in j and isinstance(j['teams'], list):
-                    # alguns arquivos tem times com 'allMatches' -> explodir
-                    for t in j['teams']:
-                        if isinstance(t, dict) and 'allMatches' in t and isinstance(t['allMatches'], list):
-                            for m in t['allMatches']:
-                                # attach teamName maybe
-                                frames.append(pd.json_normalize(m))
-                        elif isinstance(t, dict) and 'matches' in t:
-                            for m in t['matches']:
-                                frames.append(pd.json_normalize(m))
-                elif 'matches' in j and isinstance(j['matches'], list):
-                    for m in j['matches']:
-                        frames.append(pd.json_normalize(m))
-                else:
-                    # se for lista
-                    # tenta tratar j como lista de partidas
-                    for k,v in j.items():
-                        pass
-                    if isinstance(j, list):
-                        for item in j:
-                            frames.append(pd.json_normalize(item))
-                    else:
-                        # caso: JSON é um objeto com keys não padrão -> tentar extrair arrays
-                        for key, val in j.items():
-                            if isinstance(val, list):
-                                for item in val:
-                                    if isinstance(item, dict):
-                                        frames.append(pd.json_normalize(item))
-            elif isinstance(j, list):
-                for item in j:
-                    frames.append(pd.json_normalize(item))
-        except Exception as e:
-            print(f"Falha ao ler {p.name}: {e}")
-    if not frames:
-        return pd.DataFrame()
-    try:
-        df = pd.concat(frames, ignore_index=True, sort=False)
-        # normalize common date fields
-        if 'date' in df.columns:
-            df['date'] = pd.to_datetime(df['date'], errors='coerce')
-        # try to derive timestamp if present
-        if 'timestamp' in df.columns:
-            # some timestamps are milliseconds as string
-            def try_ts(x):
-                try:
-                    if pd.isna(x):
-                        return None
-                    xi = int(x)
-                    # check length -> if > 10 likely ms
-                    if xi > 1_000_000_0000:
-                        return pd.to_datetime(xi, unit='ms')
-                    else:
-                        return pd.to_datetime(xi, unit='s')
-                except Exception:
-                    return None
-            df['ts_date'] = df['timestamp'].apply(try_ts)
-            if df['date'].isna().any():
-                df['date'] = df['date'].fillna(df['ts_date'])
-        return df
-    except Exception as e:
-        print("Erro concat JSONs:", e)
-        return pd.DataFrame()
-
-def normalize_matches(df):
-    """
-    Garante que as colunas existam e sejam coerentes.
-    Retorna DataFrame com colunas básicas normalizadas.
-    """
-    if df is None or df.empty:
-        return df
-    # copy
-    df = df.copy()
-    # normalizar data
-    if 'date' in df.columns:
-        df['date'] = pd.to_datetime(df['date'], errors='coerce')
-    else:
-        df['date'] = pd.NaT
-    # try to fill missing from 'matchDate' or 'fixtureDate'
-    for alt in ['matchDate','fixtureDate','kickoff','kickoff_time']:
-        if df['date'].isna().any() and alt in df.columns:
-            df['date'] = df['date'].fillna(pd.to_datetime(df[alt], errors='coerce'))
-    # teams
-    if 'homeTeam' in df.columns:
-        df['home_team'] = df['homeTeam']
-    elif 'home' in df.columns:
-        df['home_team'] = df['home']
-    else:
-        df['home_team'] = df.get('home_team', df.get('home_team_name', None))
-    if 'awayTeam' in df.columns:
-        df['away_team'] = df['awayTeam']
-    elif 'away' in df.columns:
-        df['away_team'] = df['away']
-    else:
-        df['away_team'] = df.get('away_team', df.get('away_team_name', None))
-    # goals / corners / cards / shots / possession / fouls
-    numeric_map = {
-        'homeGoals': 'home_goals', 'awayGoals': 'away_goals',
-        'homeCorners':'home_corners','awayCorners':'away_corners',
-        'homeCards':'home_cards','awayCards':'away_cards',
-        'homeShots':'home_shots','awayShots':'away_shots',
-        'homePossession':'home_possession','awayPossession':'away_possession',
-        'homeFouls':'home_fouls','awayFouls':'away_fouls',
-        'home_offsides':'home_offsides','away_offsides':'away_offsides'
-    }
-    for src, dst in numeric_map.items():
-        if src in df.columns:
-            df[dst] = pd.to_numeric(df[src], errors='coerce')
-        elif dst in df.columns:
-            df[dst] = pd.to_numeric(df[dst], errors='coerce')
-        else:
-            df[dst] = 0
-    # competition
-    if 'league' in df.columns:
-        df['competition'] = df['league']
-    elif 'competition' in df.columns:
-        df['competition'] = df['competition']
-    else:
-        # try slug/name
-        df['competition'] = df.get('leagueName', df.get('competition_name', None))
-    # match id
-    if 'id' in df.columns:
-        df['match_id'] = df['id']
-    elif 'matchId' in df.columns:
-        df['match_id'] = df['matchId']
-    else:
-        df['match_id'] = df.index.astype(str)
-    # timestamp ms
-    if 'timestamp' in df.columns:
-        df['timestamp_ms'] = pd.to_numeric(df['timestamp'], errors='coerce')
-    else:
-        df['timestamp_ms'] = None
-    # ensure date exists (fallback to timestamp)
-    if df['date'].isna().any() and df['timestamp_ms'].notna().any():
-        def ts_to_date(x):
-            try:
-                if pd.isna(x): return pd.NaT
-                xi = int(x)
-                if xi > 1_000_000_0000:
-                    return pd.to_datetime(xi, unit='ms')
-                else:
-                    return pd.to_datetime(xi, unit='s')
-            except:
-                return pd.NaT
-        df['date'] = df['date'].fillna(df['timestamp_ms'].apply(ts_to_date))
-    # trim team strings
-    df['home_team'] = df['home_team'].apply(lambda x: str(x).strip() if pd.notna(x) else None)
-    df['away_team'] = df['away_team'].apply(lambda x: str(x).strip() if pd.notna(x) else None)
-    return df
-
-def build_aggregates(df_matches, df_tickets=None):
-    """
-    Gera dicionário com agregações úteis para o dashboard.
-    """
-    out = {}
-    if df_matches is None or df_matches.empty:
-        out['ok'] = False
-        out['message'] = "no matches"
-        return out
-    df = df_matches.copy()
-    # ensure date column
-    if 'date' not in df.columns:
-        df['date'] = pd.NaT
-    # daily counts by date
-    df['match_date'] = df['date'].dt.date
-    daily_counts = df.groupby('match_date').agg(matches=('match_id','count')).reset_index()
-    daily_counts['match_date'] = daily_counts['match_date'].astype(str)
-    out['daily_matches'] = daily_counts.to_dict(orient='records')
-
-    # by market - best effort (many raws may not have market)
-    if 'market' in df.columns:
-        by_market = df.groupby('market').agg(matches=('match_id','count')).reset_index()
-        out['by_market'] = by_market.to_dict(orient='records')
-    else:
-        out['by_market'] = []
-
-    # by competition
-    if 'competition' in df.columns:
-        by_comp = df.groupby('competition').agg(matches=('match_id','count')).reset_index()
-        out['by_competition'] = by_comp.sort_values('matches', ascending=False).to_dict(orient='records')
-    else:
-        out['by_competition'] = []
-
-    # heatmap day/hour
-    if df['date'].notna().any():
-        df['dow'] = df['date'].dt.day_name()
-        df['hour'] = df['date'].dt.hour
-        heat = df.groupby(['dow','hour']).size().reset_index(name='count')
-        out['heatmap'] = heat.to_dict(orient='records')
-    else:
-        out['heatmap'] = []
-
-    # basic team-level aggregates (corners and goals averages)
-    team_stats = []
-    if 'home_team' in df.columns:
-        homes = df.groupby('home_team').agg(
-            home_matches=('match_id','count'),
-            avg_home_corners=('home_corners','mean'),
-            avg_home_goals=('home_goals','mean')
-        ).reset_index().rename(columns={'home_team':'team'})
-        aways = df.groupby('away_team').agg(
-            away_matches=('match_id','count'),
-            avg_away_corners=('away_corners','mean'),
-            avg_away_goals=('away_goals','mean')
-        ).reset_index().rename(columns={'away_team':'team'})
-        merged = pd.merge(homes, aways, on='team', how='outer').fillna(0)
-        merged['total_matches'] = merged['home_matches'] + merged['away_matches']
-        team_stats = merged.sort_values('total_matches', ascending=False).head(50).to_dict(orient='records')
-    out['team_stats'] = team_stats
-
-    # If tickets provided -> daily pnl and summary
-    if df_tickets is not None and not df_tickets.empty:
-        dt = df_tickets.copy()
-        dt['date'] = pd.to_datetime(dt['date'], errors='coerce')
-        daily = dt.groupby(dt['date'].dt.date).agg(
-            profit=('profit','sum'),
-            stake=('stake','sum'),
-            count=('ticket_id','count')
-        ).reset_index().sort_values('date')
-        daily['cumulative_profit'] = daily['profit'].cumsum()
-        daily['date'] = daily['date'].astype(str)
-        out['daily'] = daily.to_dict(orient='records')
-        total_profit = float(dt['profit'].sum())
-        total_stake = float(dt['stake'].sum()) if 'stake' in dt.columns else 0.0
-        win_rate = float((dt['result']=='Green').mean()) if 'result' in dt.columns else 0.0
-        out['summary'] = {
-            'total_profit': total_profit,
-            'total_stake': total_stake,
-            'roi': (total_profit/total_stake) if total_stake else 0.0,
-            'win_rate': win_rate
-        }
-    else:
-        out['daily'] = []
-        out['summary'] = {'total_profit': 0.0, 'total_stake': 0.0, 'roi': 0.0, 'win_rate': 0.0}
-
-    out['ok'] = True
-    out['generated_at'] = datetime.datetime.utcnow().isoformat() + "Z"
-    return out
-
-def run_etl_and_save():
-    """
-    Executa pipeline completo e grava dashboard_input.json
-    Retorna o dicionário gerado.
-    """
-    try:
-        df_matches = load_matches()
-        if df_matches is None or df_matches.empty:
-            result = {'ok': False, 'message': 'no match files found'}
-            # salvar para inspeção
-            DASH_JSON_PATH.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding='utf-8')
-            return result
-        df_matches = normalize_matches(df_matches)
-        # load tickets if exists
-        tickets_path = OUTPUT_DIR / "tickets.csv"
-        df_tickets = None
-        if tickets_path.exists():
-            try:
-                df_tickets = pd.read_csv(tickets_path)
-            except Exception as e:
-                print("Erro lendo tickets.csv:", e)
-                df_tickets = None
-        analytics = build_aggregates(df_matches, df_tickets)
-        # save file
-        DASH_JSON_PATH.write_text(json.dumps(analytics, ensure_ascii=False, indent=2), encoding='utf-8')
-        print("Saved dashboard JSON to", DASH_JSON_PATH)
-        return analytics
-    except Exception as e:
-        tb = traceback.format_exc()
-        print("ETL failure:", e, tb)
-        err = {'ok': False, 'message': 'etl_error', 'error': str(e)}
-        DASH_JSON_PATH.write_text(json.dumps(err, ensure_ascii=False, indent=2), encoding='utf-8')
-        return err
-
-# run ETL at startup
-print("Starting ETL at startup...")
-startup_result = run_etl_and_save()
-
-@app.route("/analytics", methods=["GET"])
-def analytics():
-    if DASH_JSON_PATH.exists():
-        txt = DASH_JSON_PATH.read_text(encoding='utf-8')
-        try:
-            return make_response(txt, 200, {"Content-Type":"application/json; charset=utf-8"})
-        except Exception:
-            return jsonify({'ok':False,'message':'read_error'})
-    else:
-        return jsonify({'ok':False,'message':'no_dashboard_file'})
-
-@app.route("/run-etl", methods=["POST"])
-def run_etl():
-    # proteção básica: aceita POST sem autenticação (para testes). Em produção adicione auth.
-    res = run_etl_and_save()
-    return jsonify(res)
-
-@app.route("/", methods=["GET"])
-def index():
-    # Serve página HTML com dashboard simples que consome /analytics
-    html = """
-<!doctype html>
-<html lang="pt-BR">
-<head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Dashboard - Gestão de Banca</title>
-<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+# ============== CSS PROFISSIONAL MELHORADO ==============
+st.markdown("""
 <style>
-  :root{
-    --bankGreen:#0B6E4F;
-    --posGreen:#16A34A;
-    --negRed:#E11D48;
-    --bgCard:#F7FAFC;
-    --neutral:#374151;
-  }
-  body{font-family:Inter, system-ui, -apple-system, "Helvetica Neue", Arial; margin:0; padding:16px; background:#ffffff; color:var(--neutral);}
-  .container{max-width:980px;margin:0 auto;}
-  .card{background:#fff;border-radius:10px;padding:16px;box-shadow:0 6px 18px rgba(15,23,42,0.06);margin-bottom:16px;}
-  .kpi{display:flex;gap:12px;}
-  .kpi .item{flex:1;padding:12px;background:var(--bgCard);border-radius:8px;text-align:center;}
-  h1{margin:0 0 8px 0;font-size:28px;color:var(--bankGreen)}
-  .small{font-size:13px;color:#6b7280}
-  .bank-value{font-size:36px;font-weight:700;color:var(--bankGreen)}
-  .muted{color:#6b7280}
-  .btn{display:inline-block;padding:8px 12px;border-radius:8px;background:var(--bankGreen);color:white;text-decoration:none;}
-  footer{margin-top:20px;color:#9CA3AF;font-size:13px}
-  @media (max-width:600px){
-    .kpi{flex-direction:column}
-  }
-</style>
-</head>
-<body>
-  <div class="container">
-    <h1>Gestão Profissional de Banca — Dashboard</h1>
-    <p class="small">Dados derivados de arquivos locais (pasta <code>raw_json/</code> ou arquivo CSV consolidado).</p>
-
-    <div id="main-area">
-      <div class="card" id="card-banca">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div>
-            <div class="small">Banca Atual</div>
-            <div class="bank-value" id="bank-value">R$ 0.00</div>
-            <div class="small" id="bank-trend">↑ 0.00</div>
-          </div>
-          <div style="width:420px;height:160px;">
-            <canvas id="chart-line"></canvas>
-          </div>
-        </div>
-      </div>
-
-      <div class="card kpi">
-        <div class="item">
-          <div class="small">ROI</div>
-          <div id="kpi-roi" style="font-weight:700">0.00%</div>
-        </div>
-        <div class="item">
-          <div class="small">Win rate</div>
-          <div id="kpi-win" style="font-weight:700">0.00%</div>
-        </div>
-        <div class="item">
-          <div class="small">Total Profit</div>
-          <div id="kpi-profit" style="font-weight:700">R$ 0.00</div>
-        </div>
-      </div>
-
-      <div class="card">
-        <h3 style="margin-top:0">Desempenho por Mercado</h3>
-        <div style="width:100%;height:320px;"><canvas id="chart-bars"></canvas></div>
-      </div>
-
-      <div class="card" style="display:flex;gap:12px;flex-wrap:wrap;">
-        <div style="flex:1;min-width:260px">
-          <h3 style="margin-top:0">Por Competição</h3>
-          <div style="width:100%;height:280px;"><canvas id="chart-pie"></canvas></div>
-        </div>
-        <div style="flex:1;min-width:260px">
-          <h3 style="margin-top:0">Heatmap (dia/hora)</h3>
-          <div id="heat" style="max-height:280px;overflow:auto"></div>
-        </div>
-      </div>
-
-      <div class="card">
-        <button id="btn-refresh" class="btn">Atualizar (rodar ETL)</button>
-        <span style="margin-left:12px;color:#6b7280">Clique para forçar reprocessamento (POST /run-etl).</span>
-      </div>
-
-    </div>
-
-    <footer>Gerado por app.py • copie este arquivo e adapte conforme necessário.</footer>
-  </div>
-
-  <!-- Chart.js CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script>
-    async function fetchAnalytics(){
-      try{
-        const r = await fetch('/analytics');
-        if(!r.ok) throw new Error('failed');
-        const data = await r.json();
-        return data;
-      }catch(e){
-        console.error(e);
-        return null;
-      }
+    /* Cards de Bilhetes - Estilo Betano/Bet365 */
+    .bet-card-green {
+        background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+        border-left: 6px solid #28a745;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 15px;
+        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.15);
+        transition: all 0.3s ease;
     }
-
-    function formatMoney(v){
-      return 'R$ ' + Number(v || 0).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+    
+    .bet-card-red {
+        background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+        border-left: 6px solid #dc3545;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 15px;
+        box-shadow: 0 4px 12px rgba(220, 53, 69, 0.15);
+        transition: all 0.3s ease;
     }
-
-    function drawLine(canvas, daily){
-      const ctx = canvas.getContext('2d');
-      const labels = daily.map(d=>d.date || d[0] || '');
-      const data = daily.map(d=> (d.cumulative_profit!==undefined? d.cumulative_profit : d.profit) || 0 );
-      if(window.lineChart) window.lineChart.destroy();
-      window.lineChart = new Chart(ctx, {
-        type:'line',
-        data:{ labels, datasets:[{ label:'Lucro acumulado', data, fill:true, borderColor:'#16A34A', backgroundColor:'rgba(22,163,74,0.12)', tension:0.2 }]},
-        options:{ responsive:true, maintainAspectRatio:false }
-      });
+    
+    .bet-card-cashout {
+        background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+        border-left: 6px solid #ffc107;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 15px;
+        box-shadow: 0 4px 12px rgba(255, 193, 7, 0.15);
+        transition: all 0.3s ease;
     }
-
-    function drawBars(canvas, items){
-      const ctx = canvas.getContext('2d');
-      const labels = items.map(i=>i.market || i.name || '--');
-      const data = items.map(i=> i.profit!==undefined? i.profit : (i.matches || 0));
-      if(window.barChart) window.barChart.destroy();
-      window.barChart = new Chart(ctx, {
-        type:'bar',
-        data:{ labels, datasets:[{ label:'Profit/Matches', data, backgroundColor: labels.map((l,i)=> data[i] >= 0 ? '#16A34A' : '#E11D48') }]},
-        options:{ indexAxis:'x', responsive:true, maintainAspectRatio:false }
-      });
+    
+    .bet-card-green:hover, .bet-card-red:hover, .bet-card-cashout:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
     }
-
-    function drawPie(canvas, items){
-      const ctx = canvas.getContext('2d');
-      const labels = items.map(i=> i.competition || i[0] || i.name || '');
-      const data = items.map(i=> i.matches || 0);
-      if(window.pieChart) window.pieChart.destroy();
-      window.pieChart = new Chart(ctx, {
-        type:'pie',
-        data:{ labels, datasets:[{ data, backgroundColor: labels.map((l,i)=> ['#0B6E4F','#16A34A','#F59E0B','#3B82F6','#A855F7'][i%5]) }]},
-        options:{ responsive:true, maintainAspectRatio:false }
-      });
+    
+    /* Cabeçalho do Card */
+    .bet-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid rgba(0, 0, 0, 0.1);
     }
-
-    function buildHeatmap(container, heat){
-      // heat: [{dow, hour, count}, ...]
-      // build matrix day x hour
-      const days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
-      let map = {};
-      heat.forEach(r=>{
-        const day = r.dow || r[0] || '';
-        const hour = String(r.hour || r[1] || 0);
-        const count = r.count || r[2] || 0;
-        map[day+'_'+hour] = count;
-      });
-      let html = '<table style="width:100%;border-collapse:collapse"><thead><tr><th style="text-align:left">Dia\\Hora</th>';
-      for(let h=0; h<24; h++) html += '<th style="padding:4px;font-size:11px">'+h+'</th>';
-      html += '</tr></thead><tbody>';
-      for(const d of days){
-        html += '<tr><td style="padding:6px 8px;font-weight:600">'+d+'</td>';
-        for(let h=0; h<24; h++){
-          const v = map[d+'_'+String(h)] || 0;
-          const bg = v>0 ? `background: rgba(11,110,79,${Math.min(0.9, 0.08+v/10)})` : '';
-          html += `<td style="padding:4px;text-align:center;${bg}">` + (v||'') + '</td>';
+    
+    .bet-id {
+        font-size: 18px;
+        font-weight: 700;
+        color: #333;
+    }
+    
+    .bet-status-win {
+        background: #28a745;
+        color: white;
+        padding: 6px 16px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    
+    .bet-status-loss {
+        background: #dc3545;
+        color: white;
+        padding: 6px 16px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    
+    .bet-status-cashout {
+        background: #ffc107;
+        color: #333;
+        padding: 6px 16px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    
+    /* Informações Financeiras */
+    .bet-financials {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+    
+    .bet-financial-item {
+        text-align: center;
+        padding: 10px;
+        background: white;
+        border-radius: 8px;
+    }
+    
+    .bet-financial-label {
+        font-size: 11px;
+        color: #666;
+        text-transform: uppercase;
+        margin-bottom: 5px;
+    }
+    
+    .bet-financial-value {
+        font-size: 18px;
+        font-weight: 700;
+        color: #333;
+    }
+    
+    /* Seleções/Jogos */
+    .bet-selection {
+        background: white;
+        padding: 15px;
+        margin: 10px 0;
+        border-radius: 8px;
+        border-left: 4px solid #007bff;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+    
+    .bet-match {
+        font-size: 16px;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .bet-match-icon {
+        font-size: 20px;
+        margin-right: 10px;
+    }
+    
+    .bet-market {
+        font-size: 14px;
+        color: #666;
+        margin-left: 30px;
+    }
+    
+    .bet-target {
+        font-size: 13px;
+        color: #888;
+        margin-left: 30px;
+        font-style: italic;
+    }
+    
+    /* KPIs no Topo */
+    .kpi-container {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 25px;
+        border-radius: 15px;
+        margin-bottom: 25px;
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+    }
+    
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+    }
+    
+    .kpi-item {
+        text-align: center;
+    }
+    
+    .kpi-label {
+        font-size: 13px;
+        opacity: 0.9;
+        margin-bottom: 8px;
+    }
+    
+    .kpi-value {
+        font-size: 28px;
+        font-weight: 700;
+    }
+    
+    .kpi-delta {
+        font-size: 14px;
+        opacity: 0.8;
+        margin-top: 5px;
+    }
+    
+    /* Stop Loss Monitor */
+    .stop-loss-container {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        border: 2px solid #e0e0e0;
+    }
+    
+    .stop-loss-safe {
+        border-left: 6px solid #28a745;
+    }
+    
+    .stop-loss-warning {
+        border-left: 6px solid #ffc107;
+    }
+    
+    .stop-loss-danger {
+        border-left: 6px solid #dc3545;
+    }
+    
+    /* Formulário Estilizado */
+    .form-section {
+        background: #f8f9fa;
+        padding: 25px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+    }
+    
+    .form-section-title {
+        font-size: 20px;
+        font-weight: 700;
+        margin-bottom: 20px;
+        color: #333;
+        border-bottom: 3px solid #667eea;
+        padding-bottom: 10px;
+    }
+    
+    /* Badges e Tags */
+    .badge {
+        display: inline-block;
+        padding: 5px 12px;
+        border-radius: 15px;
+        font-size: 12px;
+        font-weight: 600;
+        margin-right: 8px;
+    }
+    
+    .badge-green { background: #28a745; color: white; }
+    .badge-red { background: #dc3545; color: white; }
+    .badge-yellow { background: #ffc107; color: #333; }
+    .badge-blue { background: #007bff; color: white; }
+    
+    /* Responsividade */
+    @media (max-width: 768px) {
+        .kpi-grid {
+            grid-template-columns: repeat(2, 1fr);
         }
-        html += '</tr>';
-      }
-      html += '</tbody></table>';
-      container.innerHTML = html;
+        .bet-financials {
+            grid-template-columns: repeat(2, 1fr);
+        }
     }
+</style>
+""", unsafe_allow_html=True)
 
-    async function refreshAll(){
-      const data = await fetchAnalytics();
-      if(!data || !data.ok){
-        console.warn("No analytics available", data);
-        return;
-      }
-      const dash = data;
-      // BANK value: we use summary.total_profit as proxy
-      const bankVal = (dash.summary && dash.summary.total_profit) || 0;
-      document.getElementById('bank-value').innerText = formatMoney(bankVal);
-      document.getElementById('kpi-profit').innerText = formatMoney(dash.summary && dash.summary.total_profit || 0);
-      document.getElementById('kpi-roi').innerText = ((dash.summary && dash.summary.roi || 0)*100).toFixed(2) + '%';
-      document.getElementById('kpi-win').innerText = ((dash.summary && dash.summary.win_rate || 0)*100).toFixed(2) + '%';
+def check_password():
+    if "password_correct" not in st.session_state:
+        st.session_state["password_correct"] = False
 
-      // draw line - expects dash.daily array: [{date, profit, cumulative_profit}, ...]
-      drawLine(document.getElementById('chart-line'), dash.daily || []);
+    def password_entered():
+        if "passwords" in st.secrets:
+            user = st.session_state["username"]
+            password = st.session_state["password"]
+            
+            if user in st.secrets["passwords"] and \
+               hmac.compare_digest(password, st.secrets["passwords"][user]):
+                st.session_state["password_correct"] = True
+                del st.session_state["password"]
+                del st.session_state["username"]
+            else:
+                st.session_state["password_correct"] = False
+                st.error("😕 Usuário ou senha incorretos")
+        else:
+            st.error("Erro: Senhas não configuradas.")
 
-      // bars - by_market or fallback empty
-      drawBars(document.getElementById('chart-bars'), dash.by_market || []);
+    if st.session_state["password_correct"]: return True
+    st.markdown("### 🔒 Acesso Restrito - FutPrevisão Pro")
+    st.text_input("Usuário", key="username")
+    st.text_input("Senha", type="password", key="password")
+    st.button("Entrar", on_click=password_entered)
+    return False
 
-      // pie - by_competition
-      drawPie(document.getElementById('chart-pie'), dash.by_competition || []);
+if not check_password(): st.stop()
 
-      // heatmap
-      buildHeatmap(document.getElementById('heat'), dash.heatmap || []);
-    }
+# ==============================================================================
+# 1. CARREGAMENTO DE DADOS (INTACTO)
+# ==============================================================================
+BACKUP_TEAMS = {
+    "Arsenal": {"corners": 6.82, "cards": 1.00, "fouls": 10.45, "goals_f": 2.3, "goals_a": 0.8},
+    "Man City": {"corners": 7.45, "cards": 1.50, "fouls": 9.20, "goals_f": 2.7, "goals_a": 0.8},
+}
 
-    document.getElementById('btn-refresh').addEventListener('click', async ()=>{
-      // call run-etl
-      try{
-        const r = await fetch('/run-etl', {method:'POST'});
-        const j = await r.json();
-        console.log('ETL result', j);
-        await refreshAll();
-        alert('ETL executado. Ver console para detalhes.');
-      }catch(e){
-        console.error(e);
-        alert('Falha ao executar ETL. Veja console.');
-      }
-    });
+def safe_float(value):
+    try: return float(str(value).replace(',', '.'))
+    except: return 0.0
 
-    // initial load
-    refreshAll();
-  </script>
-</body>
-</html>
-    """
-    return html
+@st.cache_data(ttl=3600)
+def load_data():
+    try:
+        df = pd.read_csv("dados_times.csv")
+        teams_dict = {}
+        for _, row in df.iterrows():
+            teams_dict[row['Time']] = {
+                'corners': safe_float(row['Escanteios']),
+                'cards': safe_float(row['CartoesAmarelos']), 
+                'fouls': safe_float(row['Faltas']),
+                'goals_f': safe_float(row['GolsFeitos']),
+                'goals_a': safe_float(row['GolsSofridos'])
+            }
+    except:
+        teams_dict = BACKUP_TEAMS
+    
+    try:
+        df_ref = pd.read_csv("arbitros.csv")
+        referees = dict(zip(df_ref['Nome'], df_ref['Fator']))
+    except:
+        referees = {}
+        
+    referees[' Estilo: Rigoroso (+ Cartões)'] = 1.25
+    referees[' Estilo: Normal (Padrão)'] = 1.00
+    referees[' Estilo: Conservador (- Cartões)'] = 0.80
+        
+    return teams_dict, referees
 
-if __name__ == "__main__":
-    # run dev server
-    app.run(host="0.0.0.0", port=5000, debug=True)
+teams_data, referees_data = load_data()
+team_list_raw = sorted(list(teams_data.keys()))
+team_list_with_empty = [""] + team_list_raw
+
+# LISTA MESTRA DE MERCADOS (INTACTO)
+MERCADOS_LISTA = ["Selecione o mercado..."]
+for i in [2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5, 10.5, 11.5, 12.5]:
+    MERCADOS_LISTA.append(f"Escanteios Mais de {i}")
+for i in [1.5, 2.5, 3.5, 4.5, 5.5, 6.5]:
+    MERCADOS_LISTA.append(f"Cartões Mais de {i}")
+for i in [0.5, 1.5, 2.5, 3.5, 4.5]:
+    MERCADOS_LISTA.append(f"Gols Mais de {i}")
+MERCADOS_LISTA.extend(["Ambas Marcam", "Vitória (ML) Casa", "Vitória (ML) Fora", "Empate", "Dupla Chance"])
+
+# ==============================================================================
+# 2. FUNÇÕES DE GESTÃO (INTACTO)
+# ==============================================================================
+DATA_FILE = "historico_bilhetes_v5.json"
+CONFIG_FILE = "config_banca.json"
+
+def carregar_config():
+    if os.path.exists(CONFIG_FILE):
+        with open(CONFIG_FILE, "r") as f: return json.load(f)
+    return {"banca_inicial": 1000.0, "stop_loss": 50.0}
+
+def salvar_config(cfg):
+    with open(CONFIG_FILE, "w") as f: json.dump(cfg, f)
+
+def carregar_tickets():
+    if not os.path.exists(DATA_FILE): return []
+    with open(DATA_FILE, "r") as f: dados = json.load(f)
+    return sorted(dados, key=lambda x: datetime.strptime(x['Data'], "%d/%m/%Y"), reverse=True)
+
+def salvar_ticket(ticket_data):
+    if os.path.exists(DATA_FILE):
+        with open(DATA_FILE, "r") as f: dados = json.load(f)
+    else: dados = []
+    
+    if "id" not in ticket_data:
+        ticket_data["id"] = str(uuid.uuid4())[:8]
+        
+    dados.append(ticket_data)
+    with open(DATA_FILE, "w") as f: json.dump(dados, f)
+
+def excluir_ticket(id_ticket):
+    if os.path.exists(DATA_FILE):
+        with open(DATA_FILE, "r") as f: dados = json.load(f)
+        novos_dados = [t for t in dados if t.get("id") != id_ticket]
+        with open(DATA_FILE, "w") as f: json.dump(novos_dados, f)
+        return True
+    return False
+
+# ==============================================================================
+# 3. DASHBOARD PROFISSIONAL MELHORADO (ÚNICA PARTE MODIFICADA)
+# ==============================================================================
+def render_dashboard():
+    st.title("📊 Gestão Profissional de Banca")
+    
+    # --- CONFIGURAÇÃO ---
+    cfg = carregar_config()
+    with st.sidebar.expander("⚙️ Configurações da Banca", expanded=False):
+        nova_banca = st.number_input("Banca Inicial (R$)", value=cfg["banca_inicial"], step=50.0)
+        novo_stop = st.number_input("Stop Loss Diário (R$)", value=cfg["stop_loss"], step=10.0)
+        if st.button("💾 Salvar Config"):
+            salvar_config({"banca_inicial": nova_banca, "stop_loss": novo_stop})
+            st.success("✅ Configurações salvas!")
+            st.rerun()
+    
+    # --- CÁLCULOS ---
+    tickets = carregar_tickets()
+    lucro_total = sum(t["Lucro"] for t in tickets)
+    banca_atual = cfg["banca_inicial"] + lucro_total
+    
+    total_stake = sum(t["Stake"] for t in tickets) if tickets else 1
+    roi = (lucro_total / total_stake) * 100 if total_stake > 0 else 0
+    
+    greens = len([t for t in tickets if "Green" in t["Resultado"]])
+    win_rate = (greens / len(tickets)) * 100 if tickets else 0
+    
+    # --- STOP LOSS HOJE ---
+    hoje = datetime.now().strftime("%d/%m/%Y")
+    prejuizo_hoje = sum(t["Lucro"] for t in tickets if t["Data"] == hoje and t["Lucro"] < 0)
+    perda_atual = abs(prejuizo_hoje)
+    pct_perda = min(perda_atual / cfg["stop_loss"], 1.0) if cfg["stop_loss"] > 0 else 0
+    
+    # === HEADER COM KPIs ===
+    st.markdown(f"""
+    <div class="kpi-container">
+        <div class="kpi-grid">
+            <div class="kpi-item">
+                <div class="kpi-label">💰 Banca Atual</div>
+                <div class="kpi-value">R$ {banca_atual:,.2f}</div>
+                <div class="kpi-delta">{"+" if lucro_total >= 0 else ""}R$ {lucro_total:,.2f}</div>
+            </div>
+            <div class="kpi-item">
+                <div class="kpi-label">📈 ROI</div>
+                <div class="kpi-value">{roi:+.1f}%</div>
+                <div class="kpi-delta">{len(tickets)} bilhetes</div>
+            </div>
+            <div class="kpi-item">
+                <div class="kpi-label">✅ Win Rate</div>
+                <div class="kpi-value">{win_rate:.1f}%</div>
+                <div class="kpi-delta">{greens}/{len(tickets)} greens</div>
+            </div>
+            <div class="kpi-item">
+                <div class="kpi-label">💵 Lucro Líquido</div>
+                <div class="kpi-value">{"+" if lucro_total >= 0 else ""}R$ {lucro_total:,.2f}</div>
+                <div class="kpi-delta">Total apostado: R$ {total_stake:,.2f}</div>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # === MONITOR STOP LOSS ===
+    if pct_perda < 0.5:
+        stop_class = "stop-loss-safe"
+        stop_icon = "🟢"
+        stop_msg = "Seguro"
+    elif pct_perda < 0.9:
+        stop_class = "stop-loss-warning"
+        stop_icon = "🟡"
+        stop_msg = "Atenção!"
+    else:
+        stop_class = "stop-loss-danger"
+        stop_icon = "🔴"
+        stop_msg = "PERIGO!"
+    
+    st.markdown(f"""
+    <div class="stop-loss-container {stop_class}">
+        <h3>{stop_icon} Stop Loss Diário - {stop_msg}</h3>
+        <p style="font-size: 18px; margin: 10px 0;">
+            Perdeu <strong>R$ {perda_atual:.2f}</strong> de <strong>R$ {cfg['stop_loss']:.2f}</strong> 
+            ({pct_perda*100:.0f}%)
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.progress(pct_perda)
+    
+    if pct_perda >= 1.0:
+        st.error("🛑 **STOP LOSS ATINGIDO!** Pare de apostar hoje!")
+    
+    st.divider()
+    
+    # === ABAS ===
+    tab_add, tab_history, tab_stats = st.tabs(["➕ Novo Bilhete", "📜 Histórico", "📊 Estatísticas"])
+    
+    # ============== ABA 1: NOVO BILHETE ==============
+    with tab_add:
+        st.markdown('<div class="form-section">', unsafe_allow_html=True)
+        st.markdown('<div class="form-section-title">💰 Registrar Novo Bilhete</div>', unsafe_allow_html=True)
+        
+        with st.form("form_bilhete"):
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                data_bilhete = st.date_input("📅 Data", datetime.now())
+                
+            with col2:
+                stake = st.number_input("💵 Stake (R$)", min_value=0.0, step=5.0, value=10.0)
+                
+            with col3:
+                odd = st.number_input("📊 Odd Total", min_value=1.00, step=0.01, value=1.50)
+            
+            resultado_bilhete = st.selectbox(
+                "🎯 Resultado Final", 
+                ["Green ✅", "Green (Cashout) 💰", "Red ❌", "Reembolso 🔄"]
+            )
+            
+            # Lógica Financeira
+            valor_retornado_manual = 0.0
+            if "Cashout" in resultado_bilhete:
+                valor_retornado_manual = st.number_input(
+                    "💰 Valor do Cashout (R$)", 
+                    min_value=0.0, 
+                    step=5.0
+                )
+            
+            if "Green ✅" in resultado_bilhete:
+                lucro_final = (stake * odd) - stake
+            elif "Red" in resultado_bilhete:
+                lucro_final = -stake
+            elif "Reembolso" in resultado_bilhete:
+                lucro_final = 0.0
+            else:
+                lucro_final = valor_retornado_manual - stake
+            
+            st.info(f"💰 Lucro calculado: **R$ {lucro_final:+.2f}**")
+            
+            st.divider()
+            st.markdown("### 🎯 Seleções (Múltiplas)")
+            
+            qtd_jogos = st.slider("Quantidade de Jogos", 1, 8, 2)
+            selecoes = []
+            
+            for i in range(qtd_jogos):
+                st.markdown(f"**🎲 Jogo {i+1}**")
+                
+                col_h, col_sep, col_a = st.columns([5, 1, 5])
+                
+                with col_h:
+                    mandante = st.selectbox(
+                        "🏠 Mandante", 
+                        team_list_with_empty, 
+                        key=f"home_{i}"
+                    )
+                    
+                with col_sep:
+                    st.markdown("<h3 style='text-align: center; padding-top: 20px;'>×</h3>", unsafe_allow_html=True)
+                    
+                with col_a:
+                    visitante = st.selectbox(
+                        "✈️ Visitante", 
+                        team_list_with_empty, 
+                        key=f"away_{i}"
+                    )
+                
+                col_alvo, col_mercado = st.columns(2)
+                
+                with col_alvo:
+                    alvo = st.selectbox(
+                        "🎯 Alvo",
+                        ["🟢 Mandante", "🔴 Visitante", "⚪ Geral"],
+                        key=f"alvo_{i}"
+                    )
+                    
+                with col_mercado:
+                    mercado = st.selectbox(
+                        "📊 Mercado",
+                        MERCADOS_LISTA,
+                        key=f"mercado_{i}"
+                    )
+                
+                # Determinar ícone
+                icon = "⚽"
+                if "Escanteios" in mercado:
+                    icon = "🚩"
+                elif "Cartões" in mercado:
+                    icon = "🟨"
+                elif "Gols" in mercado:
+                    icon = "⚽"
+                elif "Ambas Marcam" in mercado:
+                    icon = "🎯"
+                
+                nome_jogo = f"{mandante} × {visitante}" if mandante and visitante else f"Jogo {i+1}"
+                
+                selecoes.append({
+                    "Jogo": nome_jogo,
+                    "Alvo": alvo,
+                    "Mercado": mercado,
+                    "Icon": icon
+                })
+                
+                if i < qtd_jogos - 1:
+                    st.markdown("---")
+            
+            st.divider()
+            
+            # Checklist
+            col_check, col_btn = st.columns([3, 1])
+            
+            with col_check:
+                checklist = st.checkbox(
+                    "✅ Confirmação: Análise feita e gestão de banca respeitada",
+                    value=False
+                )
+            
+            with col_btn:
+                submit = st.form_submit_button(
+                    "💾 SALVAR BILHETE",
+                    disabled=not checklist,
+                    use_container_width=True
+                )
+            
+            if submit:
+                if stake <= 0:
+                    st.error("❌ Stake deve ser maior que zero!")
+                elif not any(sel['Mercado'] != "Selecione o mercado..." for sel in selecoes):
+                    st.error("❌ Selecione ao menos um mercado válido!")
+                else:
+                    novo_ticket = {
+                        "Data": data_bilhete.strftime("%d/%m/%Y"),
+                        "Resultado": resultado_bilhete,
+                        "Stake": stake,
+                        "Odd": odd,
+                        "Lucro": lucro_final,
+                        "Selecoes": selecoes
+                    }
+                    salvar_ticket(novo_ticket)
+                    st.success("✅ Bilhete registrado com sucesso!")
+                    st.balloons()
+                    st.rerun()
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    # ============== ABA 2: HISTÓRICO ==============
+    with tab_history:
+        st.markdown("### 📜 Histórico de Bilhetes")
+        
+        if not tickets:
+            st.info("📭 Nenhum bilhete registrado ainda. Adicione seu primeiro bilhete!")
+        else:
+            # Filtros
+            col_f1, col_f2 = st.columns(2)
+            
+            with col_f1:
+                filtro_resultado = st.multiselect(
+                    "Filtrar por Resultado",
+                    ["Green ✅", "Green (Cashout) 💰", "Red ❌", "Reembolso 🔄"],
+                    default=[]
+                )
+            
+            with col_f2:
+                filtro_periodo = st.selectbox(
+                    "Período",
+                    ["Todos", "Hoje", "Esta Semana", "Este Mês"]
+                )
+            
+            # Aplicar filtros
+            tickets_filtrados = tickets.copy()
+            
+            if filtro_resultado:
+                tickets_filtrados = [t for t in tickets_filtrados if t["Resultado"] in filtro_resultado]
+            
+            if filtro_periodo == "Hoje":
+                tickets_filtrados = [t for t in tickets_filtrados if t["Data"] == hoje]
+            elif filtro_periodo == "Esta Semana":
+                # Simplificado: últimos 7 dias
+                tickets_filtrados = tickets_filtrados[:7] if len(tickets_filtrados) > 7 else tickets_filtrados
+            elif filtro_periodo == "Este Mês":
+                # Simplificado: últimos 30 dias
+                tickets_filtrados = tickets_filtrados[:30] if len(tickets_filtrados) > 30 else tickets_filtrados
+            
+            st.caption(f"Mostrando {len(tickets_filtrados)} bilhete(s)")
+            st.divider()
+            
+            # Exibir Cards
+            for ticket in tickets_filtrados:
+                # Determinar estilo
+                res = ticket["Resultado"]
+                
+                if "Green" in res and "Cashout" not in res:
+                    card_class = "bet-card-green"
+                    status_class = "bet-status-win"
+                    status_text = "✅ GANHO"
+                elif "Red" in res:
+                    card_class = "bet-card-red"
+                    status_class = "bet-status-loss"
+                    status_text = "❌ PERDIDO"
+                elif "Cashout" in res:
+                    card_class = "bet-card-cashout"
+                    status_class = "bet-status-cashout"
+                    status_text = "💰 CASHOUT"
+                else:
+                    card_class = "bet-card-cashout"
+                    status_class = "bet-status-cashout"
+                    status_text = "🔄 REEMBOLSO"
+                
+                # Calcular retorno
+                if ticket['Lucro'] > 0:
+                    retorno = ticket['Lucro'] + ticket['Stake']
+                elif "Reembolso" in res:
+                    retorno = ticket['Stake']
+                else:
+                    retorno = 0.0
+                
+                # HTML do Card
+                st.markdown(f"""
+                <div class="{card_class}">
+                    <div class="bet-header">
+                        <div>
+                            <span class="bet-id">#{ticket.get('id', '---')}</span>
+                            <br>
+                            <span style="font-size: 14px; color: #666;">{ticket['Data']}</span>
+                        </div>
+                        <div class="{status_class}">{status_text}</div>
+                    </div>
+                    
+                    <div class="bet-financials">
+                        <div class="bet-financial-item">
+                            <div class="bet-financial-label">Stake</div>
+                            <div class="bet-financial-value">R$ {ticket['Stake']:.2f}</div>
+                        </div>
+                        <div class="bet-financial-item">
+                            <div class="bet-financial-label">Odd</div>
+                            <div class="bet-financial-value">{ticket['Odd']:.2f}x</div>
+                        </div>
+                        <div class="bet-financial-item">
+                            <div class="bet-financial-label">Retorno</div>
+                            <div class="bet-financial-value">R$ {retorno:.2f}</div>
+                        </div>
+                        <div class="bet-financial-item">
+                            <div class="bet-financial-label">Lucro</div>
+                            <div class="bet-financial-value" style="color: {'green' if ticket['Lucro'] > 0 else 'red'};">
+                                {ticket['Lucro']:+.2f}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                # Expander para Seleções
+                with st.expander(f"👁️ Ver {len(ticket['Selecoes'])} Seleção(ões)"):
+                    for idx, sel in enumerate(ticket["Selecoes"], 1):
+                        st.markdown(f"""
+                        <div class="bet-selection">
+                            <div class="bet-match">
+                                <span class="bet-match-icon">{sel.get('Icon', '⚽')}</span>
+                                <span>{sel['Jogo']}</span>
+                            </div>
+                            <div class="bet-market">
+                                <span class="badge badge-blue">{sel['Alvo']}</span>
+                                {sel['Mercado']}
+                            </div>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    
+                    st.divider()
+                    
+                    # Botão de excluir
+                    if st.button(f"🗑️ Excluir Bilhete #{ticket.get('id')}", key=f"del_{ticket.get('id')}"):
+                        if excluir_ticket(ticket.get('id')):
+                            st.success("✅ Bilhete excluído!")
+                            st.rerun()
+                        else:
+                            st.error("❌ Erro ao excluir.")
+    
+    # ============== ABA 3: ESTATÍSTICAS ==============
+    with tab_stats:
+        if not tickets:
+            st.info("📊 Sem dados para análise ainda.")
+        else:
+            st.markdown("### 📈 Análise Avançada")
+            
+            # Métricas resumidas
+            col1, col2, col3, col4 = st.columns(4)
+            
+            col1.metric("Total de Bilhetes", len(tickets))
+            col2.metric("Média de Stake", f"R$ {np.mean([t['Stake'] for t in tickets]):.2f}")
+            col3.metric("Média de Odd", f"{np.mean([t['Odd'] for t in tickets]):.2f}")
+            col4.metric("Maior Odd", f"{max([t['Odd'] for t in tickets]):.2f}")
+            
+            st.divider()
+            
+            # Gráfico de Evolução
+            st.subheader("📈 Evolução da Banca")
+            
+            df_hist = pd.DataFrame(tickets)
+            df_chart = df_hist.iloc[::-1].copy()  # Ordem cronológica
+            df_chart['Lucro_Acumulado'] = df_chart['Lucro'].cumsum() + cfg["banca_inicial"]
+            df_chart['Data_Num'] = range(len(df_chart))
+            
+            fig_evolucao = go.Figure()
+            
+            # Linha da banca
+            fig_evolucao.add_trace(go.Scatter(
+                x=df_chart['Data_Num'],
+                y=df_chart['Lucro_Acumulado'],
+                mode='lines+markers',
+                name='Banca',
+                line=dict(color='#667eea', width=3),
+                marker=dict(size=8),
+                fill='tozeroy',
+                fillcolor='rgba(102, 126, 234, 0.1)'
+            ))
+            
+            # Linha da banca inicial
+            fig_evolucao.add_hline(
+                y=cfg["banca_inicial"],
+                line_dash="dash",
+                line_color="gray",
+                annotation_text="Banca Inicial"
+            )
+            
+            fig_evolucao.update_layout(
+                title="Crescimento da Banca ao Longo do Tempo",
+                xaxis_title="Bilhetes",
+                yaxis_title="Banca (R$)",
+                height=400,
+                hovermode='x unified'
+            )
+            
+            st.plotly_chart(fig_evolucao, use_container_width=True)
+            
+            st.divider()
+            
+            # Gráfico de Pizza - Distribuição de Resultados
+            col_pizza, col_barras = st.columns(2)
+            
+            with col_pizza:
+                st.subheader("🥧 Distribuição de Resultados")
+                
+                contagem_resultados = {}
+                for t in tickets:
+                    res = t["Resultado"]
+                    contagem_resultados[res] = contagem_resultados.get(res, 0) + 1
+                
+                fig_pizza = go.Figure(data=[go.Pie(
+                    labels=list(contagem_resultados.keys()),
+                    values=list(contagem_resultados.values()),
+                    hole=0.4,
+                    marker=dict(colors=['#28a745', '#ffc107', '#dc3545', '#6c757d'])
+                )])
+                
+                fig_pizza.update_layout(height=350)
+                st.plotly_chart(fig_pizza, use_container_width=True)
+            
+            with col_barras:
+                st.subheader("📊 Lucro por Mês")
+                
+                # Simplificado: mostrar últimos 30 dias
+                df_chart['Mes'] = pd.to_datetime(df_chart['Data'], format="%d/%m/%Y").dt.strftime("%m/%Y")
+                lucro_por_mes = df_chart.groupby('Mes')['Lucro'].sum().reset_index()
+                
+                fig_barras = go.Figure(data=[go.Bar(
+                    x=lucro_por_mes['Mes'],
+                    y=lucro_por_mes['Lucro'],
+                    marker=dict(
+                        color=lucro_por_mes['Lucro'],
+                        colorscale=['red', 'yellow', 'green'],
+                        showscale=False
+                    )
+                )])
+                
+                fig_barras.update_layout(
+                    height=350,
+                    xaxis_title="Mês",
+                    yaxis_title="Lucro (R$)"
+                )
+                
+                st.plotly_chart(fig_barras, use_container_width=True)
+
+# ==============================================================================
+# 4. NAVEGAÇÃO E PREVISÕES (100% INTACTO - CÓDIGO ORIGINAL)
+# ==============================================================================
+st.sidebar.markdown("---")
+pagina = st.sidebar.radio("Menu", ["🏠 Previsões IA", "📊 Gestão de Banca"])
+
+if pagina == "📊 Gestão de Banca":
+    render_dashboard()
+    st.stop()
+
+# --- PREVISÕES (CÓDIGO 100% ORIGINAL - INTACTO) ---
+st.sidebar.markdown("---")
+st.sidebar.title("FutPrevisão Pro v5.0")
+
+def carregar_metadados():
+    try:
+        with open("metadados.json", "r", encoding='utf-8') as f: return json.load(f)
+    except: return None
+
+meta = carregar_metadados()
+if meta:
+    st.sidebar.caption("🤖 Status do Robô:")
+    st.sidebar.text(f"{meta['ultima_verificacao']}")
+else: st.sidebar.warning("⚠ Aguardando dados...")
+
+st.sidebar.markdown("---")
+st.sidebar.header("Configuração da Partida")
+
+home_team = st.sidebar.selectbox("Mandante", team_list_raw, index=0)
+away_team = st.sidebar.selectbox("Visitante", team_list_raw, index=1)
+
+st.sidebar.caption("🧠 Contexto")
+context_options = {
+    "⚪ Neutro": 1.0, "🔥 Must Win (Z4)": 1.15, "🏆 Must Win (Título)": 1.15,
+    "❄️ Desmobilizado": 0.85, "💪 Super Favorito": 1.25, "🚑 Crise": 0.80
+}
+ctx_h = st.sidebar.selectbox(f"Momento: {home_team}", list(context_options.keys()), index=0)
+ctx_a = st.sidebar.selectbox(f"Momento: {away_team}", list(context_options.keys()), index=0)
+f_h = context_options[ctx_h]
+f_a = context_options[ctx_a]
+
+st.sidebar.markdown("---")
+referee_list = sorted(list(referees_data.keys()))
+ref_name = st.sidebar.selectbox("Árbitro", referee_list)
+ref_factor = referees_data[ref_name]
+st.sidebar.metric("Rigor", ref_factor)
+
+champions_mode = st.sidebar.checkbox("Modo Champions (-15%)", value=False)
+
+def calculate_metrics(home, away, ref_factor, is_champions, fact_h, fact_a):
+    h_data = teams_data[home]
+    a_data = teams_data[away]
+    
+    corn_h = (h_data['corners'] * 1.10) * fact_h
+    corn_a = (a_data['corners'] * 0.85) * fact_a
+    if is_champions: corn_h *= 0.85; corn_a *= 0.85
+    total_corners = corn_h + corn_a
+        
+    tension_boost = 1.10 if fact_h > 1.0 or fact_a > 1.0 else 1.0
+    tension = ((h_data['fouls'] + a_data['fouls']) / 24.0) * tension_boost
+    tension = max(0.85, min(tension, 1.40))
+    
+    card_h = h_data['cards'] * tension * ref_factor
+    card_a = a_data['cards'] * tension * ref_factor
+    total_cards = card_h + card_a
+    
+    avg_l = 1.3
+    exp_h = ((h_data['goals_f'] * fact_h)/avg_l) * (a_data['goals_a']/avg_l) * avg_l
+    exp_a = ((a_data['goals_f'] * fact_a)/avg_l) * (h_data['goals_a']/avg_l) * avg_l
+    
+    return {'total_corners': total_corners, 'ind_corn_h': corn_h, 'ind_corn_a': corn_a,
+            'total_cards': total_cards, 'ind_card_h': card_h, 'ind_card_a': card_a,
+            'goals_h': exp_h, 'goals_a': exp_a, 'tension': tension}
+
+def prob_over(exp, line): return poisson.sf(int(line), exp) * 100
+
+st.title("⚽ FutPrevisão Pro")
+tab_analise, tab_scanner = st.tabs(["📊 Análise do Jogo", "🔍 Scanner"])
+
+with tab_analise:
+    st.markdown(f"### {home_team} x {away_team}")
+    if st.sidebar.button("Gerar Previsões 🚀", type="primary"):
+        m = calculate_metrics(home_team, away_team, ref_factor, champions_mode, f_h, f_a)
+        
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Escanteios", f"{m['total_corners']:.2f}")
+        c2.metric("Cartões", f"{m['total_cards']:.2f}")
+        c3.metric("Tensão", f"{m['tension']:.2f}")
+        st.divider()
+
+        st.subheader("🚩 Escanteios")
+        cols = st.columns(6)
+        for i, line in enumerate([7.5, 8.5, 9.5, 10.5, 11.5, 12.5]):
+            p = prob_over(m['total_corners'], line)
+            c = "green" if p >= 70 else "orange" if p >= 50 else "red"
+            cols[i].markdown(f"**+{line}**\n:{c}[**{p:.1f}%**]")
+        
+        c_h, c_m, c_a = st.columns([1,1,1])
+        with c_h:
+            st.write(f"🏠 {home_team}: **{m['ind_corn_h']:.2f}**")
+            for l in [3.5, 4.5, 5.5]: st.write(f"+{l}: **{prob_over(m['ind_corn_h'], l):.1f}%**")
+        with c_a:
+            st.write(f"✈️ {away_team}: **{m['ind_corn_a']:.2f}**")
+            for l in [3.5, 4.5, 5.5]: st.write(f"+{l}: **{prob_over(m['ind_corn_a'], l):.1f}%**")
+        with c_m:
+            fig = go.Figure(data=[go.Bar(x=[home_team, away_team], y=[m['ind_corn_h'], m['ind_corn_a']], marker_color=['blue', 'red'])])
+            fig.update_layout(height=150, margin=dict(l=5, r=5, t=5, b=5))
+            st.plotly_chart(fig, use_container_width=True)
+
+        st.divider()
+        st.subheader("🟨 Cartões")
+        c_h, c_m, c_a = st.columns([1,1,1])
+        with c_h:
+            st.write(f"🏠 {home_team}: **{m['ind_card_h']:.2f}**")
+            for l in [1.5, 2.5, 3.5]: st.markdown(f"+{l}: **{prob_over(m['ind_card_h'], l):.1f}%**")
+        with c_a:
+            st.write(f"✈️ {away_team}: **{m['ind_card_a']:.2f}**")
+            for l in [1.5, 2.5, 3.5]: st.markdown(f"+{l}: **{prob_over(m['ind_card_a'], l):.1f}%**")
+        
+        st.divider()
+        st.subheader("⚽ Gols")
+        ph = [poisson.pmf(i, m['goals_h']) for i in range(6)]
+        pa = [poisson.pmf(i, m['goals_a']) for i in range(6)]
+        prob_h = sum([ph[i]*pa[j] for i in range(6) for j in range(6) if i > j]) * 100
+        prob_d = sum([ph[i]*pa[j] for i in range(6) for j in range(6) if i == j]) * 100
+        prob_a = sum([ph[i]*pa[j] for i in range(6) for j in range(6) if i < j]) * 100
+        c1, c2, c3 = st.columns(3)
+        c1.metric(home_team, f"{prob_h:.1f}%")
+        c2.metric("Empate", f"{prob_d:.1f}%")
+        c3.metric(away_team, f"{prob_a:.1f}%")
+
+with tab_scanner:
+    st.subheader("🕵️‍♂️ Scanner")
+    df_rank = pd.DataFrame.from_dict(teams_data, orient='index')
+    c1, c2 = st.columns(2)
+    with c1:
+        st.markdown("**Cantos**")
+        st.dataframe(df_rank.sort_values('corners', ascending=False)[['corners']].head(10))
+    with c2:
+        st.markdown("**Cartões**")
+        st.dataframe(df_rank.sort_values('cards', ascending=False)[['cards']].head(10))
