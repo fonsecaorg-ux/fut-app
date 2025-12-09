@@ -2,16 +2,16 @@ import streamlit as st
 import pandas as pd
 from scipy.stats import poisson
 import numpy as np
+import re
 
 # Configuração da Página
-st.set_page_config(page_title="EsporteStats PRO V11.5 (Estável)", page_icon="⚽", layout="wide")
+st.set_page_config(page_title="EsporteStats PRO V12", page_icon="⚽", layout="wide")
 
 # --- IMPORTAÇÃO BLINDADA DO DATABASE ---
 try:
-    # A V11.5 já espera todos os dados de cards e logs
     from database import RAW_CORNERS_DATA, RAW_GOALS_DATA, RAW_CARDS_DATA, RAW_FOULS_DATA
 except ImportError:
-    st.error("🚨 ERRO: Arquivo 'database.py' não encontrado.")
+    st.error("🚨 ERRO: Arquivo 'database.py' não encontrado. Verifique se o nome do arquivo está correto e se ele contém todas as variáveis (RAW_CORNERS_DATA, etc.).")
     st.stop()
 
 # ==============================================================================
@@ -27,9 +27,9 @@ def parse_match_logs(raw_text, market_type="corners"):
     if market_type == "corners":
         pattern = r'"(\d{2}-\d{2}-\d{4})".*?"(.*?)"\s*,.*?"(\d+)-(\d+)"\s*,.*?"(.*?)"'
     else:
+        # Regex para GOLS (ex: 04/11/2025: Atlético Mineiro 3-0 EC Bahia)
         pattern = r'(\d{2}[\/-]\d{2}[\/-]\d{4}):\s*(.+?)\s+(\d+)-(\d+)\s+(.+)'
 
-    import re
     for line in lines:
         match = re.search(pattern, line)
         if match:
@@ -66,10 +66,10 @@ def parse_card_summary(raw_text, fouls_dict, league_name):
             except: pass
     return stats
 
-# --- FUNÇÃO DE TENDÊNCIAS (Sistema Histórico) ---
-def analyze_corner_trends(df, team, side):
-    """Gera o relatório de consistência (Trend System) para exibição em expander."""
-    if df.empty: return "Sem dados suficientes."
+# --- FUNÇÃO DE FORMATAÇÃO DE TENDÊNCIA (V12) ---
+def get_trend_stats(df, team, side, line):
+    """Calcula quantos jogos bateram a linha no passado (X de Y)"""
+    if df.empty: return 0, 0
     
     if side == 'Home':
         matches = df[df['HomeTeam'] == team]
@@ -77,23 +77,14 @@ def analyze_corner_trends(df, team, side):
     else:
         matches = df[df['AwayTeam'] == team]
         stats = matches['AwayStats']
-        
-    total_games = len(stats)
-    if total_games == 0: return "Sem jogos registrados."
-
-    report = f"Últimos {total_games} jogos:\n"
     
-    for line in [3.5, 4.5, 5.5, 6.5]:
-        hits = sum(1 for x in stats if x > line)
-        rate = (hits / total_games) * 100
-        
-        if rate >= 60: icon = "✅"
-        elif rate >= 40: icon = "⚠️"
-        else: icon = "❌"
-        
-        report += f"- +{line}: {hits}/{total_games} ({rate:.1f}%) {icon}\n"
-        
-    return report
+    total = len(stats)
+    if total == 0: return 0, 0
+    
+    # Hits são jogos estritamente maiores que a linha
+    hits = sum(1 for x in stats if x > line)
+    
+    return hits, total
 
 # --- MOTORES DE PREVISÃO ---
 class ContextualEngine:
@@ -157,12 +148,12 @@ with st.sidebar:
     if teams:
         h_team = st.selectbox("Mandante", teams)
         a_team = st.selectbox("Visitante", teams, index=1 if len(teams)>1 else 0)
-        btn_calc = st.button("🔥 GERAR ANÁLISE V11.5", type="primary")
+        btn_calc = st.button("🔥 GERAR ANÁLISE V12", type="primary")
     else:
         st.error("Sem dados para esta liga.")
         btn_calc = False
     
-    st.info("ℹ️ Sistema Estável: Poisson + Tendências Históricas (Separadas).")
+    st.info("ℹ️ V12: Poisson + Consistência Histórica.")
 
 if btn_calc:
     st.markdown(f"<h2 style='text-align: center;'>⚔️ {h_team} x {a_team}</h2>", unsafe_allow_html=True)
@@ -179,25 +170,24 @@ if btn_calc:
             st.markdown(f"**Exp. Casa:** {lc_h:.2f} | **Exp. Fora:** {lc_a:.2f}")
             st.markdown("---")
             
-            # --- TENDÊNCIAS HISTÓRICAS (V11.5) ---
-            st.markdown("#### 📊 Tendências Históricas")
-            
-            with st.expander(f"Análise {h_team} (Casa)", expanded=True):
-                st.markdown(analyze_corner_trends(df_corn, h_team, 'Home'))
-            
-            with st.expander(f"Análise {a_team} (Fora)", expanded=True):
-                st.markdown(analyze_corner_trends(df_corn, a_team, 'Away'))
-            
-            st.markdown("---")
-            st.markdown("**Probabilidade Futura (Poisson):**")
-            
-            # Individual Lines
+            # Casa
             for line in [3.5, 4.5]:
-                prob_h = (1 - poisson.cdf(int(line), lc_h)) * 100
-                prob_a = (1 - poisson.cdf(int(line), lc_a)) * 100
+                prob = (1 - poisson.cdf(int(line), lc_h)) * 100
+                hits, total = get_trend_stats(df_corn, h_team, 'Home', line)
+                trend_str = f"({hits} de {total})" if total > 0 else ""
                 
-                st.markdown(f"🏠 **{h_team} +{line}** :{get_color(prob_h)}[**{prob_h:.0f}%**]")
-                st.markdown(f"✈️ **{a_team} +{line}** :{get_color(prob_a)}[**{prob_a:.0f}%**]")
+                st.markdown(f"🏠 **{h_team} +{line}** :{get_color(prob)}[**{prob:.0f}%**] {trend_str}")
+
+            st.markdown("")
+
+            # Fora
+            for line in [3.5, 4.5]:
+                prob = (1 - poisson.cdf(int(line), lc_a)) * 100
+                hits, total = get_trend_stats(df_corn, a_team, 'Away', line)
+                trend_str = f"({hits} de {total})" if total > 0 else ""
+                
+                st.markdown(f"✈️ **{a_team} +{line}** :{get_color(prob)}[**{prob:.0f}%**] {trend_str}")
+
         else:
             st.warning("Sem dados.")
 
@@ -209,11 +199,11 @@ if btn_calc:
             tot_goals = lg_h + lg_a
             btts = (1 - poisson.pmf(0, lg_h)) * (1 - poisson.pmf(0, lg_a)) * 100
             
-            st.success(f"**Exp. Total:** {tot_goals:.2f}")
+            st.markdown(f"**Exp. Total:** {tot_goals:.2f}")
             st.markdown(f"**BTTS:** :{get_color(btts)}[**{btts:.0f}%**]")
             st.markdown("---")
             
-            # Linhas Totais
+            # Total do Jogo
             for line in [1.5, 2.5]:
                 prob = (1 - poisson.cdf(int(line), tot_goals)) * 100
                 st.markdown(f"Total +{line} :{get_color(prob)}[**{prob:.0f}%**]")
@@ -222,21 +212,26 @@ if btn_calc:
             
             # Individuais (Over 0.5)
             p_h_05 = (1 - poisson.cdf(0, lg_h)) * 100
+            hits_h, total_h = get_trend_stats(df_goals, h_team, 'Home', 0.5)
+            trend_str_h = f"({hits_h} de {total_h})" if total_h > 0 else ""
+            st.markdown(f"🏠 **{h_team} +0.5** :{get_color(p_h_05)}[**{p_h_05:.0f}%**] {trend_str_h}")
+
             p_a_05 = (1 - poisson.cdf(0, lg_a)) * 100
-            st.markdown(f"🏠 **{h_team} +0.5** :{get_color(p_h_05)}[**{p_h_05:.0f}%**]")
-            st.markdown(f"✈️ **{a_team} +0.5** :{get_color(p_a_05)}[**{p_a_05:.0f}%**]")
+            hits_a, total_a = get_trend_stats(df_goals, a_team, 'Away', 0.5)
+            trend_str_a = f"({hits_a} de {total_a})" if total_a > 0 else ""
+            st.markdown(f"✈️ **{a_team} +0.5** :{get_color(p_a_05)}[**{p_a_05:.0f}%**] {trend_str_a}")
 
         else:
             st.warning("Sem dados.")
 
-    # --- CARTÕES ---
+    # --- CARTÕES (Não inclui trend X/Y por falta de log) ---
     with col_cards:
         st.subheader("🟨 Cartões")
         if h_team in eng_card.teams and a_team in eng_card.teams:
             lk_h, lk_a, _, _ = eng_card.get_lambdas(h_team, a_team)
             tot_card = lk_h + lk_a
             
-            st.warning(f"**Exp. Total:** {tot_card:.2f}")
+            st.markdown(f"**Exp. Total:** {tot_card:.2f}")
             st.markdown("---")
             
             # Individuais
