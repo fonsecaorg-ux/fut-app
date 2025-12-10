@@ -11,7 +11,7 @@ from datetime import datetime
 # ==============================================================================
 # 0. CONFIGURAÇÃO INICIAL
 # ==============================================================================
-st.set_page_config(page_title="FutPrevisão Pro V2.1", layout="wide", page_icon="⚽")
+st.set_page_config(page_title="FutPrevisão Pro V2.2", layout="wide", page_icon="⚽")
 
 # Tenta importar Plotly
 try:
@@ -70,10 +70,10 @@ def check_login():
 if not check_login(): st.stop()
 
 # ==============================================================================
-# 3. CARREGAMENTO DE DADOS
+# 3. CARREGAMENTO DE DADOS (CSVs e TXTs)
 # ==============================================================================
 
-# --- A. Dados Matemáticos (CSV) ---
+# --- A. Dados Matemáticos (CSV: dados_times.csv e arbitros.csv) ---
 BACKUP_TEAMS = {
     "Arsenal": {"corners": 6.82, "cards": 1.00, "fouls": 10.45, "goals_f": 2.3, "goals_a": 0.8},
     "Man City": {"corners": 7.45, "cards": 1.50, "fouls": 9.20, "goals_f": 2.7, "goals_a": 0.8},
@@ -106,45 +106,82 @@ def load_csv_data():
 @st.cache_data(ttl=3600)
 def load_referees():
     try:
-        # Lê o arquivo de árbitros e cria um dicionário {Nome: Fator}
         df = pd.read_csv("arbitros.csv")
         return dict(zip(df['Nome'], df['Fator']))
     except:
         return {}
 
-# --- B. Dados Históricos (TXT Adam Choi) ---
-ARQUIVOS_ADAM = {
-    "Premier League": "Escanteios Preimier League - codigo fonte.txt",
-    "La Liga": "Escanteios Espanha.txt",
-    "Serie A": "Escanteios Italia.txt",
-    "Bundesliga": "Escanteios Alemanha.txt",
-    "Ligue 1": "Escanteios França.txt",
+# --- B. Dados Históricos (TXT Adam Choi: Escanteios e Cartões) ---
+# Configuração dos nomes dos arquivos
+FILES_CONFIG = {
+    "Premier League": {
+        "corners": "Escanteios Preimier League - codigo fonte.txt",
+        "cards": "Cartoes Premier League - Inglaterra.txt"
+    },
+    "La Liga": {
+        "corners": "Escanteios Espanha.txt",
+        "cards": "Cartoes La Liga - Espanha.txt"
+    },
+    "Serie A": {
+        "corners": "Escanteios Italia.txt",
+        "cards": "Cartoes Serie A - Italia.txt"
+    },
+    "Bundesliga": {
+        "corners": "Escanteios Alemanha.txt",
+        "cards": "Cartoes Bundesliga - Alemanha.txt"
+    },
+    "Ligue 1": {
+        "corners": "Escanteios França.txt",
+        "cards": "Cartoes Ligue 1 - França.txt"
+    }
 }
 
 class AdamChoiLoader:
     def __init__(self):
-        self.data = {}
-        self.load_files()
+        self.data_corners = {}
+        self.data_cards = {}
+        self.load_all_files()
 
-    def load_files(self):
+    def load_all_files(self):
         pasta = Path(__file__).parent
-        for liga, arquivo in ARQUIVOS_ADAM.items():
-            caminho = pasta / arquivo
-            if caminho.exists():
-                try:
-                    with open(caminho, 'r', encoding='utf-8') as f:
+        
+        for liga, files in FILES_CONFIG.items():
+            # 1. Carrega Escanteios
+            try:
+                path_c = pasta / files["corners"]
+                if path_c.exists():
+                    with open(path_c, 'r', encoding='utf-8') as f:
                         raw = f.read().strip()
                         if '{' in raw: raw = raw[raw.find('{'):]
-                        self.data[liga] = json.loads(raw)
-                except: pass
+                        self.data_corners[liga] = json.loads(raw)
+            except: pass
+            
+            # 2. Carrega Cartões
+            try:
+                path_k = pasta / files["cards"]
+                if path_k.exists():
+                    with open(path_k, 'r', encoding='utf-8') as f:
+                        raw = f.read().strip()
+                        if '{' in raw: raw = raw[raw.find('{'):]
+                        self.data_cards[liga] = json.loads(raw)
+            except: pass
 
-    def get_history(self, team, league, key):
-        if league not in self.data: return None
-        for t in self.data[league].get('teams', []):
+    def get_history(self, team, league, market_type, key):
+        """
+        market_type: 'corners' ou 'cards'
+        key: ex 'homeTeamOver35' (corners) ou 'homeCardsOver15' (cards)
+        """
+        source = self.data_corners if market_type == 'corners' else self.data_cards
+        
+        if league not in source: return None
+        
+        # Busca o time na lista
+        for t in source[league].get('teams', []):
             if t['teamName'] == team:
                 stats = t.get(key)
-                if stats and len(stats) >= 3:
-                    return stats[0], stats[1], stats[2] 
+                # Verifica formato [Jogos, Acertos, %, Streak]
+                if stats and isinstance(stats, list) and len(stats) >= 3:
+                    return stats[0], stats[1], stats[2] # Jogos, Acertos, %
         return None
 
 # Inicializa Carregadores
@@ -152,6 +189,7 @@ teams_data = load_csv_data()
 referees_data = load_referees()
 team_list_raw = sorted(list(teams_data.keys()))
 team_list_with_empty = [""] + team_list_raw
+# Instancia o loader (lê tudo ao iniciar)
 history_loader = AdamChoiLoader()
 
 # ==============================================================================
@@ -173,7 +211,6 @@ def calcular_previsao(home, away, f_h, f_a, ref_factor=1.0):
     avg_fouls = (h_data['fouls'] + a_data['fouls']) / 2
     tension = (avg_fouls / 12.0) * tension_boost
     
-    # Aplica o fator do árbitro
     card_h = h_data['cards'] * tension * ref_factor
     card_a = a_data['cards'] * tension * ref_factor
     total_cards = card_h + card_a
@@ -257,15 +294,14 @@ def render_dashboard():
     
     tab_sim, tab_new, tab_hist, tab_grf = st.tabs(["🔮 Simulação IA", "➕ Novo Bilhete", "📜 Histórico", "📈 Gráficos"])
 
-    # --- ABA 1: SIMULAÇÃO (ATUALIZADA) ---
+    # --- ABA 1: SIMULAÇÃO (COMPLETA) ---
     with tab_sim:
         st.markdown("### 🏟️ Análise de Jogo")
         
-        # 1. Seletores Principais
         col_liga, col_arb = st.columns([2, 2])
-        liga_sel = col_liga.selectbox("Liga (para dados históricos)", list(ARQUIVOS_ADAM.keys()))
+        liga_sel = col_liga.selectbox("Liga (para dados históricos)", list(FILES_CONFIG.keys()))
         
-        # --- NOVO: Dropdown de Árbitros (Lê do CSV) ---
+        # Dropdown de Árbitros
         lista_arbitros = sorted(list(referees_data.keys()))
         if not lista_arbitros: lista_arbitros = ["Genérico (Padrão)"]
         
@@ -277,7 +313,6 @@ def render_dashboard():
         home_team = col_h.selectbox("Mandante", team_list_raw, index=0)
         away_team = col_a.selectbox("Visitante", team_list_raw, index=1 if len(team_list_raw) > 1 else 0)
 
-        # 2. Contexto
         st.write("---")
         st.caption("Contexto da Partida")
         
@@ -296,72 +331,79 @@ def render_dashboard():
         factor_a = ctx_map[c_ctx_a]
 
         if st.button("🔮 Gerar Relatório Completo", type="primary"):
-            # Cálculos Matemáticos (Passando o fator do árbitro)
             m = calcular_previsao(home_team, away_team, factor_h, factor_a, ref_factor)
             
             st.divider()
             st.markdown(f"#### 📋 Relatório: {home_team} x {away_team}")
             
-            # --- COLUNAS DE ANÁLISE ---
             col_cantos, col_cartoes = st.columns(2)
             
-            # === BLOCO ESCANTEIOS ===
+            # === ESCANTEIOS (Math + Adam Choi TXT) ===
             with col_cantos:
                 st.info("🚩 **Escanteios**")
                 
-                # NOVO: TOTAIS
+                # Totais
                 st.markdown('<p class="total-header">Totais da Partida</p>', unsafe_allow_html=True)
-                st.write(f"Expectativa Total: **{m['corners']['t']:.2f}**")
+                st.write(f"Expectativa: **{m['corners']['t']:.2f}**")
                 for line in [7.5, 8.5, 9.5]:
                     prob = prob_over(m['corners']['t'], line)
                     st.markdown(f"Mais de {line}: :{get_color(prob)}[**{prob:.0f}%**]")
                 
                 st.markdown("---")
                 
-                # INDIVIDUAIS
+                # Individuais Casa
                 st.markdown(f"**🏠 {home_team}** (Exp: {m['corners']['h']:.2f})")
-                for line, key_adam in [(3.5, 'homeTeamOver35'), (4.5, 'homeTeamOver45'), (5.5, 'homeTeamOver55')]:
-                    prob_math = prob_over(m['corners']['h'], line)
-                    hist_data = history_loader.get_history(home_team, liga_sel, key_adam)
-                    txt_real = f"({hist_data[1]}/{hist_data[0]} - {hist_data[2]})" if hist_data else ""
-                    st.markdown(f"+{line}: :{get_color(prob_math)}[**{prob_math:.0f}%**] {txt_real}")
+                for line, key in [(3.5, 'homeTeamOver35'), (4.5, 'homeTeamOver45'), (5.5, 'homeTeamOver55')]:
+                    pm = prob_over(m['corners']['h'], line)
+                    # Busca histórico no TXT
+                    hist = history_loader.get_history(home_team, liga_sel, 'corners', key)
+                    tr = f"({hist[1]}/{hist[0]} - {hist[2]})" if hist else ""
+                    st.markdown(f"+{line}: :{get_color(pm)}[**{pm:.0f}%**] {tr}")
 
                 st.markdown("")
                 
+                # Individuais Fora
                 st.markdown(f"**✈️ {away_team}** (Exp: {m['corners']['a']:.2f})")
-                for line, key_adam in [(3.5, 'awayTeamOver35'), (4.5, 'awayTeamOver45'), (5.5, 'awayTeamOver55')]:
-                    prob_math = prob_over(m['corners']['a'], line)
-                    hist_data = history_loader.get_history(away_team, liga_sel, key_adam)
-                    txt_real = f"({hist_data[1]}/{hist_data[0]} - {hist_data[2]})" if hist_data else ""
-                    st.markdown(f"+{line}: :{get_color(prob_math)}[**{prob_math:.0f}%**] {txt_real}")
+                for line, key in [(3.5, 'awayTeamOver35'), (4.5, 'awayTeamOver45'), (5.5, 'awayTeamOver55')]:
+                    pm = prob_over(m['corners']['a'], line)
+                    hist = history_loader.get_history(away_team, liga_sel, 'corners', key)
+                    tr = f"({hist[1]}/{hist[0]} - {hist[2]})" if hist else ""
+                    st.markdown(f"+{line}: :{get_color(pm)}[**{pm:.0f}%**] {tr}")
 
-            # === BLOCO CARTÕES ===
+            # === CARTÕES (Math + Adam Choi TXT) ===
             with col_cartoes:
                 st.warning("🟨 **Cartões**")
                 
-                # NOVO: TOTAIS
+                # Totais
                 st.markdown('<p class="total-header">Totais da Partida</p>', unsafe_allow_html=True)
-                st.write(f"Expectativa Total: **{m['cards']['t']:.2f}**")
+                st.write(f"Expectativa: **{m['cards']['t']:.2f}**")
                 for line in [2.5, 3.5, 4.5]:
                     prob = prob_over(m['cards']['t'], line)
                     st.markdown(f"Mais de {line}: :{get_color(prob)}[**{prob:.0f}%**]")
 
                 st.markdown("---")
                 
-                # INDIVIDUAIS
+                # Individuais Casa
                 st.markdown(f"**🏠 {home_team}** (Exp: {m['cards']['h']:.2f})")
-                for line in [1.5, 2.5]:
-                    prob = prob_over(m['cards']['h'], line)
-                    st.markdown(f"+{line}: :{get_color(prob)}[**{prob:.0f}%**]")
+                # Keys Adam Choi para cartões costumam ser homeCardsOverXX
+                for line, key in [(1.5, 'homeCardsOver15'), (2.5, 'homeCardsOver25')]:
+                    pm = prob_over(m['cards']['h'], line)
+                    # Busca histórico no TXT de Cartões
+                    hist = history_loader.get_history(home_team, liga_sel, 'cards', key)
+                    tr = f"({hist[1]}/{hist[0]} - {hist[2]})" if hist else ""
+                    st.markdown(f"+{line}: :{get_color(pm)}[**{pm:.0f}%**] {tr}")
                 
                 st.markdown("")
                 
+                # Individuais Fora
                 st.markdown(f"**✈️ {away_team}** (Exp: {m['cards']['a']:.2f})")
-                for line in [1.5, 2.5]:
-                    prob = prob_over(m['cards']['a'], line)
-                    st.markdown(f"+{line}: :{get_color(prob)}[**{prob:.0f}%**]")
+                for line, key in [(1.5, 'awayCardsOver15'), (2.5, 'awayCardsOver25')]:
+                    pm = prob_over(m['cards']['a'], line)
+                    hist = history_loader.get_history(away_team, liga_sel, 'cards', key)
+                    tr = f"({hist[1]}/{hist[0]} - {hist[2]})" if hist else ""
+                    st.markdown(f"+{line}: :{get_color(pm)}[**{pm:.0f}%**] {tr}")
 
-    # --- ABA NOVO BILHETE (MANTIDA) ---
+    # --- ABA NOVO BILHETE ---
     with tab_new:
         st.markdown("### Registrar Aposta")
         if 'n_games' not in st.session_state: st.session_state['n_games'] = 1
