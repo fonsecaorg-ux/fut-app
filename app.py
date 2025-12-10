@@ -223,7 +223,7 @@ def check_password():
 
     if st.session_state["password_correct"]: return True
     st.markdown("### 🔒 Acesso Restrito - FutPrevisão Pro")
-    st.text_input("Usuário", key="username")
+    st.text_input("diego", key="@Casa612")
     st.text_input("Senha", type="password", key="password")
     st.button("Entrar", on_click=password_entered)
     return False
