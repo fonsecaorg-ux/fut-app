@@ -5,14 +5,15 @@ import json
 import os
 import uuid
 import math
+from pathlib import Path
 from datetime import datetime
 
 # ==============================================================================
 # 0. CONFIGURAÇÃO INICIAL
 # ==============================================================================
-st.set_page_config(page_title="FutPrevisão Pro", layout="wide", page_icon="⚽")
+st.set_page_config(page_title="FutPrevisão Pro V2.0", layout="wide", page_icon="⚽")
 
-# Tenta importar Plotly (Opcional)
+# Tenta importar Plotly
 try:
     import plotly.graph_objects as go
     import plotly.express as px
@@ -21,23 +22,24 @@ except ImportError:
     HAS_PLOTLY = False
 
 # ==============================================================================
-# 1. FUNÇÕES MATEMÁTICAS (SUBSTITUI SCIPY)
+# 1. FUNÇÕES MATEMÁTICAS (POISSON)
 # ==============================================================================
 def poisson_pmf(k, mu):
-    """Calcula probabilidade exata (Probability Mass Function)"""
     return (math.exp(-mu) * (mu ** k)) / math.factorial(k)
 
 def poisson_sf(k, mu):
-    """Calcula probabilidade de ser MAIOR que k (Survival Function)"""
-    # P(X > k) = 1 - P(X <= k)
     cdf = 0
     for i in range(int(k) + 1):
         cdf += poisson_pmf(i, mu)
     return 1 - cdf
 
 def prob_over(exp, line):
-    """Calcula % de chance de ser maior que a linha"""
     return poisson_sf(int(line), exp) * 100
+
+def get_color(prob):
+    if prob >= 70: return "green"
+    if prob >= 50: return "orange"
+    return "red"
 
 # ==============================================================================
 # 2. SEGURANÇA E LOGIN
@@ -68,8 +70,10 @@ def check_login():
 if not check_login(): st.stop()
 
 # ==============================================================================
-# 3. CARREGAMENTO DE DADOS (BLINDADO)
+# 3. CARREGAMENTO DE DADOS (CSV + TXT ADAM CHOI)
 # ==============================================================================
+
+# --- A. Dados Matemáticos (CSV) ---
 BACKUP_TEAMS = {
     "Arsenal": {"corners": 6.82, "cards": 1.00, "fouls": 10.45, "goals_f": 2.3, "goals_a": 0.8},
     "Man City": {"corners": 7.45, "cards": 1.50, "fouls": 9.20, "goals_f": 2.7, "goals_a": 0.8},
@@ -80,58 +84,88 @@ def safe_float(value):
     except: return 0.0
 
 @st.cache_data(ttl=3600)
-def load_data():
+def load_csv_data():
     try:
-        # Tenta ler com diferentes codificações e separadores
-        try:
-            df = pd.read_csv("dados_times.csv", encoding='utf-8')
-        except:
-            df = pd.read_csv("dados_times.csv", encoding='latin1', sep=';') # Tenta formato Excel BR
-
-        teams_dict = {}
-        # Normaliza nomes de colunas (remove espaços)
-        df.columns = [c.strip() for c in df.columns]
+        try: df = pd.read_csv("dados_times.csv", encoding='utf-8')
+        except: df = pd.read_csv("dados_times.csv", encoding='latin1', sep=';')
         
+        teams_dict = {}
+        df.columns = [c.strip() for c in df.columns]
         for _, row in df.iterrows():
-            # Verifica se as colunas existem antes de ler
-            if 'Time' in row and 'Escanteios' in row:
+            if 'Time' in row:
                 teams_dict[row['Time']] = {
-                    'corners': safe_float(row['Escanteios']),
-                    'cards': safe_float(row['CartoesAmarelos']) if 'CartoesAmarelos' in row else 2.0, 
-                    'fouls': safe_float(row['Faltas']) if 'Faltas' in row else 12.0,
-                    'goals_f': safe_float(row['GolsFeitos']) if 'GolsFeitos' in row else 1.5,
-                    'goals_a': safe_float(row['GolsSofridos']) if 'GolsSofridos' in row else 1.0
+                    'corners': safe_float(row.get('Escanteios', 0)),
+                    'cards': safe_float(row.get('CartoesAmarelos', 2.0)), 
+                    'fouls': safe_float(row.get('Faltas', 12.0)),
+                    'goals_f': safe_float(row.get('GolsFeitos', 1.5)),
+                    'goals_a': safe_float(row.get('GolsSofridos', 1.0))
                 }
-    except Exception as e:
-        teams_dict = BACKUP_TEAMS
-    
-    return teams_dict
+        return teams_dict
+    except: return BACKUP_TEAMS
 
-teams_data = load_data()
+# --- B. Dados Históricos (TXT Adam Choi) ---
+ARQUIVOS_ADAM = {
+    "Premier League": "Escanteios Preimier League - codigo fonte.txt",
+    "La Liga": "Escanteios Espanha.txt",
+    "Serie A": "Escanteios Italia.txt",
+    "Bundesliga": "Escanteios Alemanha.txt",
+    "Ligue 1": "Escanteios França.txt",
+}
+
+class AdamChoiLoader:
+    def __init__(self):
+        self.data = {}
+        self.load_files()
+
+    def load_files(self):
+        pasta = Path(__file__).parent
+        for liga, arquivo in ARQUIVOS_ADAM.items():
+            caminho = pasta / arquivo
+            if caminho.exists():
+                try:
+                    with open(caminho, 'r', encoding='utf-8') as f:
+                        raw = f.read().strip()
+                        if '{' in raw: raw = raw[raw.find('{'):]
+                        self.data[liga] = json.loads(raw)
+                except: pass
+
+    def get_history(self, team, league, key):
+        # key ex: 'homeTeamOver35'
+        if league not in self.data: return None
+        for t in self.data[league].get('teams', []):
+            if t['teamName'] == team:
+                stats = t.get(key)
+                if stats and len(stats) >= 3:
+                    # Retorna: (Jogos, Acertos, %)
+                    return stats[0], stats[1], stats[2] 
+        return None
+
+# Inicializa Carregadores
+teams_data = load_csv_data()
 team_list_raw = sorted(list(teams_data.keys()))
 team_list_with_empty = [""] + team_list_raw
-
-# Mercados
-MERCADOS_LISTA = ["Selecione..."]
-MERCADOS_LISTA.extend([f"Cantos > {i}" for i in [7.5, 8.5, 9.5, 10.5, 11.5, 12.5]])
-MERCADOS_LISTA.extend([f"Cartões > {i}" for i in [1.5, 2.5, 3.5, 4.5]])
-MERCADOS_LISTA.extend(["Gols > 0.5", "Gols > 1.5", "Gols > 2.5", "Ambas Marcam", "ML Casa", "ML Fora"])
+history_loader = AdamChoiLoader()
 
 # ==============================================================================
-# 4. LÓGICA DE PREVISÃO
+# 4. LÓGICA DE PREVISÃO (ATUALIZADA)
 # ==============================================================================
 def calcular_previsao(home, away, f_h, f_a):
     h_data = teams_data.get(home, BACKUP_TEAMS["Arsenal"])
     a_data = teams_data.get(away, BACKUP_TEAMS["Man City"])
     
-    # Escanteios
+    # Escanteios (Contextual)
     corn_h = (h_data['corners'] * 1.10) * f_h
     corn_a = (a_data['corners'] * 0.85) * f_a
     total_corners = corn_h + corn_a
     
-    # Cartões (Intensidade)
+    # Cartões (Intensidade + Contexto)
+    # Jogos de Z4 ou Titulo tendem a ter mais cartões (fator boost)
+    tension_boost = 1.0
+    if f_h > 1.05 or f_a > 1.05: tension_boost = 1.15
+    
     avg_fouls = (h_data['fouls'] + a_data['fouls']) / 2
-    tension = avg_fouls / 12.0
+    tension = (avg_fouls / 12.0) * tension_boost
+    
     card_h = h_data['cards'] * tension
     card_a = a_data['cards'] * tension
     total_cards = card_h + card_a
@@ -146,11 +180,6 @@ def calcular_previsao(home, away, f_h, f_a):
         "cards": {"t": total_cards, "h": card_h, "a": card_a},
         "goals": {"h": goals_h, "a": goals_a}
     }
-
-def get_color(prob):
-    if prob >= 70: return "green"
-    if prob >= 50: return "orange"
-    return "red"
 
 # ==============================================================================
 # 5. GESTÃO DE DADOS (JSON)
@@ -188,6 +217,18 @@ def excluir_ticket(id_ticket):
 def render_dashboard():
     st.title("📊 Painel de Controle")
     
+    # CSS Customizado
+    st.markdown("""
+    <style>
+        .bet-card-green { background-color: #d4edda; border-left: 5px solid #28a745; padding: 15px; border-radius: 5px; margin-bottom: 10px; }
+        .bet-card-red { background-color: #f8d7da; border-left: 5px solid #dc3545; padding: 15px; border-radius: 5px; margin-bottom: 10px; }
+        .stat-box { background: #f8f9fa; padding: 10px; border-radius: 8px; margin-bottom: 5px; border: 1px solid #dee2e6; }
+        .stat-label { font-size: 12px; color: #666; }
+        .stat-val { font-weight: bold; font-size: 14px; }
+        .real-data { font-size: 11px; color: #007bff; font-weight: bold; }
+    </style>
+    """, unsafe_allow_html=True)
+    
     cfg = carregar_config()
     with st.sidebar.expander("⚙️ Configurações"):
         nb = st.number_input("Banca Inicial", value=cfg["banca_inicial"])
@@ -205,109 +246,151 @@ def render_dashboard():
     c1.metric("Banca", f"R$ {banca_atual:,.2f}", f"{lucro_total:,.2f}")
     c2.metric("Bilhetes", len(tickets))
     
-    # CSS Custom
-    st.markdown("""
-    <style>
-        .card { padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 5px solid #ccc; background: #f9f9f9; }
-        .win { border-color: #28a745; background: #d4edda; }
-        .loss { border-color: #dc3545; background: #f8d7da; }
-        .cash { border-color: #ffc107; background: #fff3cd; }
-    </style>
-    """, unsafe_allow_html=True)
+    tab_sim, tab_new, tab_hist, tab_grf = st.tabs(["🔮 Simulação IA", "➕ Novo Bilhete", "📜 Histórico", "📈 Gráficos"])
 
-    tab_sim, tab_new, tab_hist, tab_grf = st.tabs(["🔮 Simulação", "➕ Novo Bilhete", "📜 Histórico", "📈 Gráficos"])
-
-    # --- ABA SIMULAÇÃO ---
+    # --- ABA 1: SIMULAÇÃO (ATUALIZADA) ---
     with tab_sim:
-        st.markdown("### 🤖 Previsão IA")
-        col_sel1, col_sel2 = st.columns(2)
-        h_t = col_sel1.selectbox("Mandante", team_list_raw, index=0, key="sim_h")
-        a_t = col_sel2.selectbox("Visitante", team_list_raw, index=1, key="sim_a")
+        st.markdown("### 🏟️ Análise de Jogo")
         
-        with st.expander("Ajustes Avançados"):
-            ctx_h = st.slider("Momento Casa", 0.8, 1.2, 1.0, 0.1)
-            ctx_a = st.slider("Momento Fora", 0.8, 1.2, 1.0, 0.1)
+        # 1. Seletores Principais
+        col_liga, col_arb = st.columns([2, 2])
+        liga_sel = col_liga.selectbox("Liga (para dados históricos)", list(ARQUIVOS_ADAM.keys()))
+        arbitro = col_arb.text_input("Árbitro da Partida")
 
-        if st.button("Calcular Probabilidades", type="primary"):
-            res = calcular_previsao(h_t, a_t, ctx_h, ctx_a)
+        col_h, col_a = st.columns(2)
+        home_team = col_h.selectbox("Mandante", team_list_raw, index=0)
+        away_team = col_a.selectbox("Visitante", team_list_raw, index=1 if len(team_list_raw) > 1 else 0)
+
+        # 2. Contexto (Pedido 1)
+        st.write("---")
+        st.caption("Contexto da Partida (Afeta o cálculo)")
+        
+        ctx_map = {
+            "Neutro (Meio Tabela)": 1.0,
+            "Briga por Título 🏆": 1.15,
+            "Z4 (Rebaixamento) 🔥": 1.10,
+            "Rebaixado (Desmotivado) ❄️": 0.85
+        }
+        
+        cc1, cc2 = st.columns(2)
+        c_ctx_h = cc1.selectbox(f"Contexto {home_team}", list(ctx_map.keys()), index=0)
+        c_ctx_a = cc2.selectbox(f"Contexto {away_team}", list(ctx_map.keys()), index=0)
+        
+        factor_h = ctx_map[c_ctx_h]
+        factor_a = ctx_map[c_ctx_a]
+
+        if st.button("🔮 Gerar Relatório Completo", type="primary"):
+            # Cálculos Matemáticos
+            m = calcular_previsao(home_team, away_team, factor_h, factor_a)
             
-            c_res1, c_res2, c_res3 = st.columns(3)
-            with c_res1:
-                st.info(f"🚩 **Cantos** (Exp: {res['corners']['t']:.2f})")
-                for l in [8.5, 9.5, 10.5]:
-                    p = prob_over(res['corners']['t'], l)
-                    st.write(f"+{l}: :{get_color(p)}[**{p:.1f}%**]")
+            st.divider()
+            st.markdown(f"#### 📋 Relatório: {home_team} x {away_team}")
+            if arbitro: st.caption(f"👮 Árbitro: {arbitro}")
             
-            with c_res2:
-                st.success(f"⚽ **Gols**")
-                p_btts = (1 - poisson_pmf(0, res['goals']['h'])) * (1 - poisson_pmf(0, res['goals']['a'])) * 100
-                st.write(f"Ambas Marcam: :{get_color(p_btts)}[**{p_btts:.1f}%**]")
-                for l in [1.5, 2.5]:
-                    p = prob_over(res['goals']['h'] + res['goals']['a'], l)
-                    st.write(f"+{l}: :{get_color(p)}[**{p:.1f}%**]")
+            # --- COLUNAS DE ANÁLISE ---
+            col_cantos, col_cartoes = st.columns(2)
+            
+            # BLOCO ESCANTEIOS (Pedido 3: Linhas Individuais + Histórico)
+            with col_cantos:
+                st.info("🚩 **Escanteios Individuais**")
+                
+                # --- MANDANTE ---
+                st.markdown(f"**🏠 {home_team}** (Exp. Math: {m['corners']['h']:.2f})")
+                for line, key_adam in [(3.5, 'homeTeamOver35'), (4.5, 'homeTeamOver45'), (5.5, 'homeTeamOver55')]:
+                    # Probabilidade Matemática
+                    prob_math = prob_over(m['corners']['h'], line)
+                    color = get_color(prob_math)
+                    
+                    # Dados Reais (Adam Choi)
+                    hist_data = history_loader.get_history(home_team, liga_sel, key_adam)
+                    if hist_data:
+                        jogos, acertos, pct = hist_data
+                        txt_real = f"({acertos} de {jogos} - {pct})"
+                    else:
+                        txt_real = "(Sem dados históricos)"
+                    
+                    st.markdown(f"+{line}: :{color}[**{prob_math:.0f}%**] {txt_real}")
 
-            with c_res3:
-                st.warning(f"🟨 **Cartões** (Exp: {res['cards']['t']:.2f})")
-                for l in [3.5, 4.5]:
-                    p = prob_over(res['cards']['t'], l)
-                    st.write(f"+{l}: :{get_color(p)}[**{p:.1f}%**]")
+                st.markdown("---")
+                
+                # --- VISITANTE ---
+                st.markdown(f"**✈️ {away_team}** (Exp. Math: {m['corners']['a']:.2f})")
+                for line, key_adam in [(3.5, 'awayTeamOver35'), (4.5, 'awayTeamOver45'), (5.5, 'awayTeamOver55')]:
+                    # Probabilidade Matemática
+                    prob_math = prob_over(m['corners']['a'], line)
+                    color = get_color(prob_math)
+                    
+                    # Dados Reais (Adam Choi) - Usa awayTeamOverXX
+                    hist_data = history_loader.get_history(away_team, liga_sel, key_adam)
+                    if hist_data:
+                        jogos, acertos, pct = hist_data
+                        txt_real = f"({acertos} de {jogos} - {pct})"
+                    else:
+                        txt_real = "(Sem dados históricos)"
+                    
+                    st.markdown(f"+{line}: :{color}[**{prob_math:.0f}%**] {txt_real}")
 
-    # --- ABA NOVO BILHETE ---
+            # BLOCO CARTÕES (Pedido 4: Linhas Individuais)
+            with col_cartoes:
+                st.warning("🟨 **Cartões Individuais**")
+                
+                # --- MANDANTE ---
+                st.markdown(f"**🏠 {home_team}** (Exp: {m['cards']['h']:.2f})")
+                for line in [1.5, 2.5]:
+                    prob = prob_over(m['cards']['h'], line)
+                    cor = get_color(prob)
+                    st.markdown(f"+{line}: :{cor}[**{prob:.0f}%**]")
+                
+                st.markdown("---")
+                
+                # --- VISITANTE ---
+                st.markdown(f"**✈️ {away_team}** (Exp: {m['cards']['a']:.2f})")
+                for line in [1.5, 2.5]:
+                    prob = prob_over(m['cards']['a'], line)
+                    cor = get_color(prob)
+                    st.markdown(f"+{line}: :{cor}[**{prob:.0f}%**]")
+                
+                st.markdown("---")
+                st.caption(f"*Cálculo ajustado pela intensidade ({m['cards']['t']:.2f} total esp.)")
+
+    # --- OUTRAS ABAS (MANTIDAS) ---
     with tab_new:
         st.markdown("### Registrar Aposta")
         if 'n_games' not in st.session_state: st.session_state['n_games'] = 1
         
-        col_d, col_s, col_o = st.columns(3)
-        dt = col_d.date_input("Data")
-        sk = col_s.number_input("Stake", min_value=1.0, value=10.0)
-        od = col_o.number_input("Odd", min_value=1.01, value=1.5)
-        res_opt = st.selectbox("Resultado", ["Green", "Red", "Cashout", "Reembolso"])
+        c_d, c_s, c_o = st.columns(3)
+        dt = c_d.date_input("Data")
+        sk = c_s.number_input("Stake", min_value=1.0, value=10.0)
+        od = c_o.number_input("Odd", min_value=1.01, value=1.5)
+        res_opt = st.selectbox("Resultado", ["Green ✅", "Green (Cashout) 💰", "Red ❌", "Reembolso 🔄"])
         
-        profit = (sk * od - sk) if res_opt == "Green" else (-sk if res_opt == "Red" else 0.0)
-        if res_opt == "Cashout":
-            c_val = st.number_input("Valor Retorno")
-            profit = c_val - sk
-            
+        profit = (sk * od - sk) if "Green" in res_opt else (-sk if "Red" in res_opt else 0.0)
+        if "Cashout" in res_opt: profit = st.number_input("Retorno") - sk
+        
         st.write(f"Lucro: **R$ {profit:.2f}**")
         
         jogos = []
         for i in range(st.session_state['n_games']):
             st.markdown(f"**Jogo {i+1}**")
             c_m, c_v, c_merc = st.columns([2,2,2])
-            jm = c_m.selectbox(f"Mandante {i}", team_list_with_empty, key=f"nm_{i}")
-            jv = c_v.selectbox(f"Visitante {i}", team_list_with_empty, key=f"nv_{i}")
-            jmerc = c_merc.selectbox(f"Mercado {i}", MERCADOS_LISTA, key=f"nmerc_{i}")
+            jm = c_m.selectbox(f"M {i}", team_list_with_empty, key=f"nm_{i}")
+            jv = c_v.selectbox(f"V {i}", team_list_with_empty, key=f"nv_{i}")
+            jmerc = c_merc.text_input(f"Mercado {i}", key=f"nmerc_{i}")
             jogos.append({"Nome": f"{jm} x {jv}", "Selecoes": [{"Mercado": jmerc}]})
         
         c_b1, c_b2 = st.columns(2)
-        if c_b1.button("➕ Jogo"):
-            st.session_state['n_games'] += 1
-            st.rerun()
+        if c_b1.button("➕ Jogo"): st.session_state['n_games'] += 1; st.rerun()
         if c_b2.button("💾 Salvar"):
-            tk = {
-                "id": str(uuid.uuid4())[:8], "Data": dt.strftime("%d/%m/%Y"),
-                "Stake": sk, "Odd": od, "Lucro": profit, "Resultado": res_opt, "Jogos": jogos
-            }
+            tk = {"id": str(uuid.uuid4())[:8], "Data": dt.strftime("%d/%m/%Y"), "Stake": sk, "Odd": od, "Lucro": profit, "Resultado": res_opt, "Jogos": jogos}
             salvar_ticket(tk)
-            st.success("Salvo!")
-            st.session_state['n_games'] = 1
-            st.rerun()
+            st.success("Salvo!"); st.session_state['n_games'] = 1; st.rerun()
 
-    # --- ABA HISTÓRICO ---
     with tab_hist:
         for t in tickets:
-            cls = "win" if "Green" in t["Resultado"] else "loss" if "Red" in t["Resultado"] else "cash"
-            st.markdown(f"""
-            <div class="card {cls}">
-                <b>{t['Data']}</b> | Stake: {t['Stake']} | Lucro: <b>{t['Lucro']:.2f}</b><br>
-                <small>{', '.join([j['Nome'] for j in t['Jogos']])}</small>
-            </div>
-            """, unsafe_allow_html=True)
-            if st.button("🗑️", key=t['id']):
-                excluir_ticket(t['id'])
-                st.rerun()
+            cls = "bet-card-green" if "Green" in t["Resultado"] else "bet-card-red" if "Red" in t["Resultado"] else "bet-card-cashout"
+            st.markdown(f"""<div class="{cls}"><b>{t['Data']}</b> | R$ {t['Lucro']:.2f} | {t['Resultado']}</div>""", unsafe_allow_html=True)
+            if st.button("🗑️", key=t['id']): excluding_ticket(t['id']); st.rerun()
 
-    # --- ABA GRÁFICOS ---
     with tab_grf:
         if HAS_PLOTLY and tickets:
             df = pd.DataFrame(tickets)
@@ -315,8 +398,6 @@ def render_dashboard():
             df = df.sort_values('Data_Dt')
             df['Acumulado'] = df['Lucro'].cumsum()
             st.plotly_chart(px.line(df, x='Data_Dt', y='Acumulado', markers=True), use_container_width=True)
-        else:
-            st.info("Sem dados ou Plotly não instalado.")
 
 if __name__ == "__main__":
     render_dashboard()
