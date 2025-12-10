@@ -1,0 +1,4888 @@
+{
+  "teams": [
+    {
+      "teamName": "Alaves",
+      "allMatches": [
+        {
+          "date": "16/08/2025",
+          "homeTeam": "Alaves",
+          "awayTeam": "Levante",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "22/08/2025",
+          "homeTeam": "Betis",
+          "awayTeam": "Alaves",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "30/08/2025",
+          "homeTeam": "Alaves",
+          "awayTeam": "Ath Madrid",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "13/09/2025",
+          "homeTeam": "Ath Bilbao",
+          "awayTeam": "Alaves",
+          "homeCards": 4,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        },
+        {
+          "date": "20/09/2025",
+          "homeTeam": "Alaves",
+          "awayTeam": "Sevilla",
+          "homeCards": 1,
+          "awayCards": 7,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 8,
+          "totalReds": 0
+        },
+        {
+          "date": "24/09/2025",
+          "homeTeam": "Getafe",
+          "awayTeam": "Alaves",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "27/09/2025",
+          "homeTeam": "Mallorca",
+          "awayTeam": "Alaves",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "05/10/2025",
+          "homeTeam": "Alaves",
+          "awayTeam": "Elche",
+          "homeCards": 3,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 4,
+          "totalReds": 1
+        },
+        {
+          "date": "20/10/2025",
+          "homeTeam": "Alaves",
+          "awayTeam": "Valencia",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "26/10/2025",
+          "homeTeam": "Vallecano",
+          "awayTeam": "Alaves",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "02/11/2025",
+          "homeTeam": "Alaves",
+          "awayTeam": "Espanol",
+          "homeCards": 4,
+          "awayCards": 2,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 1
+        },
+        {
+          "date": "08/11/2025",
+          "homeTeam": "Girona",
+          "awayTeam": "Alaves",
+          "homeCards": 0,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "22/11/2025",
+          "homeTeam": "Alaves",
+          "awayTeam": "Celta",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "29/11/2025",
+          "homeTeam": "Barcelona",
+          "awayTeam": "Alaves",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "06/12/2025",
+          "homeTeam": "Alaves",
+          "awayTeam": "Sociedad",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        8,
+        5,
+        "62.5",
+        0
+      ],
+      "homeCardsOver25": [
+        8,
+        2,
+        "25.0",
+        0
+      ],
+      "homeCardsOver35": [
+        8,
+        1,
+        "12.5",
+        0
+      ],
+      "homeCardsOver45": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        7,
+        7,
+        "100.0",
+        0
+      ],
+      "awayCardsOver25": [
+        7,
+        7,
+        "100.0",
+        0
+      ],
+      "awayCardsOver35": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        15,
+        14,
+        "93.3",
+        0
+      ],
+      "overallOver25": [
+        15,
+        14,
+        "93.3",
+        0
+      ],
+      "overallOver35": [
+        15,
+        12,
+        "80.0",
+        0
+      ],
+      "overallOver45": [
+        15,
+        8,
+        "53.3",
+        0
+      ]
+    },
+    {
+      "teamName": "Ath Bilbao",
+      "allMatches": [
+        {
+          "date": "17/08/2025",
+          "homeTeam": "Ath Bilbao",
+          "awayTeam": "Sevilla",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "25/08/2025",
+          "homeTeam": "Ath Bilbao",
+          "awayTeam": "Vallecano",
+          "homeCards": 0,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "31/08/2025",
+          "homeTeam": "Betis",
+          "awayTeam": "Ath Bilbao",
+          "homeCards": 1,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 5,
+          "totalReds": 1
+        },
+        {
+          "date": "13/09/2025",
+          "homeTeam": "Ath Bilbao",
+          "awayTeam": "Alaves",
+          "homeCards": 4,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        },
+        {
+          "date": "20/09/2025",
+          "homeTeam": "Valencia",
+          "awayTeam": "Ath Bilbao",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 2,
+          "totalReds": 1
+        },
+        {
+          "date": "23/09/2025",
+          "homeTeam": "Ath Bilbao",
+          "awayTeam": "Girona",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "27/09/2025",
+          "homeTeam": "Villarreal",
+          "awayTeam": "Ath Bilbao",
+          "homeCards": 2,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "04/10/2025",
+          "homeTeam": "Ath Bilbao",
+          "awayTeam": "Mallorca",
+          "homeCards": 5,
+          "awayCards": 6,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 11,
+          "totalReds": 1
+        },
+        {
+          "date": "19/10/2025",
+          "homeTeam": "Elche",
+          "awayTeam": "Ath Bilbao",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "25/10/2025",
+          "homeTeam": "Ath Bilbao",
+          "awayTeam": "Getafe",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "01/11/2025",
+          "homeTeam": "Sociedad",
+          "awayTeam": "Ath Bilbao",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "09/11/2025",
+          "homeTeam": "Ath Bilbao",
+          "awayTeam": "Oviedo",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "22/11/2025",
+          "homeTeam": "Barcelona",
+          "awayTeam": "Ath Bilbao",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 2,
+          "totalReds": 1
+        },
+        {
+          "date": "29/11/2025",
+          "homeTeam": "Levante",
+          "awayTeam": "Ath Bilbao",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "03/12/2025",
+          "homeTeam": "Ath Bilbao",
+          "awayTeam": "Real Madrid",
+          "homeCards": 2,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "06/12/2025",
+          "homeTeam": "Ath Bilbao",
+          "awayTeam": "Ath Madrid",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        9,
+        4,
+        "44.4",
+        0
+      ],
+      "homeCardsOver25": [
+        9,
+        3,
+        "33.3",
+        0
+      ],
+      "homeCardsOver35": [
+        9,
+        2,
+        "22.2",
+        0
+      ],
+      "homeCardsOver45": [
+        9,
+        1,
+        "11.1",
+        0
+      ],
+      "awayCardsOver15": [
+        7,
+        5,
+        "71.4",
+        0
+      ],
+      "awayCardsOver25": [
+        7,
+        3,
+        "42.9",
+        0
+      ],
+      "awayCardsOver35": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "awayCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        16,
+        16,
+        "100.0",
+        0
+      ],
+      "overallOver25": [
+        16,
+        9,
+        "56.2",
+        0
+      ],
+      "overallOver35": [
+        16,
+        9,
+        "56.2",
+        0
+      ],
+      "overallOver45": [
+        16,
+        7,
+        "43.8",
+        0
+      ]
+    },
+    {
+      "teamName": "Ath Madrid",
+      "allMatches": [
+        {
+          "date": "17/08/2025",
+          "homeTeam": "Espanol",
+          "awayTeam": "Ath Madrid",
+          "homeCards": 3,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "23/08/2025",
+          "homeTeam": "Ath Madrid",
+          "awayTeam": "Elche",
+          "homeCards": 0,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "30/08/2025",
+          "homeTeam": "Alaves",
+          "awayTeam": "Ath Madrid",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "13/09/2025",
+          "homeTeam": "Ath Madrid",
+          "awayTeam": "Villarreal",
+          "homeCards": 2,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "21/09/2025",
+          "homeTeam": "Mallorca",
+          "awayTeam": "Ath Madrid",
+          "homeCards": 0,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 0,
+          "totalReds": 1
+        },
+        {
+          "date": "24/09/2025",
+          "homeTeam": "Ath Madrid",
+          "awayTeam": "Vallecano",
+          "homeCards": 3,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        },
+        {
+          "date": "27/09/2025",
+          "homeTeam": "Ath Madrid",
+          "awayTeam": "Real Madrid",
+          "homeCards": 5,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 9,
+          "totalReds": 0
+        },
+        {
+          "date": "05/10/2025",
+          "homeTeam": "Celta",
+          "awayTeam": "Ath Madrid",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 4,
+          "totalReds": 1
+        },
+        {
+          "date": "18/10/2025",
+          "homeTeam": "Ath Madrid",
+          "awayTeam": "Osasuna",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "27/10/2025",
+          "homeTeam": "Betis",
+          "awayTeam": "Ath Madrid",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "01/11/2025",
+          "homeTeam": "Ath Madrid",
+          "awayTeam": "Sevilla",
+          "homeCards": 0,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "08/11/2025",
+          "homeTeam": "Ath Madrid",
+          "awayTeam": "Levante",
+          "homeCards": 3,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "23/11/2025",
+          "homeTeam": "Getafe",
+          "awayTeam": "Ath Madrid",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "29/11/2025",
+          "homeTeam": "Ath Madrid",
+          "awayTeam": "Oviedo",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "02/12/2025",
+          "homeTeam": "Barcelona",
+          "awayTeam": "Ath Madrid",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "06/12/2025",
+          "homeTeam": "Ath Bilbao",
+          "awayTeam": "Ath Madrid",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        8,
+        4,
+        "50.0",
+        0
+      ],
+      "homeCardsOver25": [
+        8,
+        3,
+        "37.5",
+        0
+      ],
+      "homeCardsOver35": [
+        8,
+        1,
+        "12.5",
+        0
+      ],
+      "homeCardsOver45": [
+        8,
+        1,
+        "12.5",
+        0
+      ],
+      "awayCardsOver15": [
+        8,
+        5,
+        "62.5",
+        0
+      ],
+      "awayCardsOver25": [
+        8,
+        4,
+        "50.0",
+        0
+      ],
+      "awayCardsOver35": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver45": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        16,
+        14,
+        "87.5",
+        0
+      ],
+      "overallOver25": [
+        16,
+        13,
+        "81.2",
+        0
+      ],
+      "overallOver35": [
+        16,
+        10,
+        "62.5",
+        0
+      ],
+      "overallOver45": [
+        16,
+        7,
+        "43.8",
+        0
+      ]
+    },
+    {
+      "teamName": "Barcelona",
+      "allMatches": [
+        {
+          "date": "16/08/2025",
+          "homeTeam": "Mallorca",
+          "awayTeam": "Barcelona",
+          "homeCards": 4,
+          "awayCards": 1,
+          "homeReds": 2,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 2
+        },
+        {
+          "date": "23/08/2025",
+          "homeTeam": "Levante",
+          "awayTeam": "Barcelona",
+          "homeCards": 3,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "31/08/2025",
+          "homeTeam": "Vallecano",
+          "awayTeam": "Barcelona",
+          "homeCards": 4,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "14/09/2025",
+          "homeTeam": "Barcelona",
+          "awayTeam": "Valencia",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "21/09/2025",
+          "homeTeam": "Barcelona",
+          "awayTeam": "Getafe",
+          "homeCards": 2,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "25/09/2025",
+          "homeTeam": "Oviedo",
+          "awayTeam": "Barcelona",
+          "homeCards": 1,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "28/09/2025",
+          "homeTeam": "Barcelona",
+          "awayTeam": "Sociedad",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "05/10/2025",
+          "homeTeam": "Sevilla",
+          "awayTeam": "Barcelona",
+          "homeCards": 7,
+          "awayCards": 5,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 12,
+          "totalReds": 0
+        },
+        {
+          "date": "18/10/2025",
+          "homeTeam": "Barcelona",
+          "awayTeam": "Girona",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "26/10/2025",
+          "homeTeam": "Real Madrid",
+          "awayTeam": "Barcelona",
+          "homeCards": 5,
+          "awayCards": 5,
+          "homeReds": 1,
+          "awayReds": 1,
+          "totalCards": 10,
+          "totalReds": 2
+        },
+        {
+          "date": "02/11/2025",
+          "homeTeam": "Barcelona",
+          "awayTeam": "Elche",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "09/11/2025",
+          "homeTeam": "Celta",
+          "awayTeam": "Barcelona",
+          "homeCards": 1,
+          "awayCards": 5,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 6,
+          "totalReds": 1
+        },
+        {
+          "date": "22/11/2025",
+          "homeTeam": "Barcelona",
+          "awayTeam": "Ath Bilbao",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 2,
+          "totalReds": 1
+        },
+        {
+          "date": "29/11/2025",
+          "homeTeam": "Barcelona",
+          "awayTeam": "Alaves",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "02/12/2025",
+          "homeTeam": "Barcelona",
+          "awayTeam": "Ath Madrid",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "06/12/2025",
+          "homeTeam": "Betis",
+          "awayTeam": "Barcelona",
+          "homeCards": 5,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        8,
+        2,
+        "25.0",
+        0
+      ],
+      "homeCardsOver25": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver35": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver45": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        8,
+        4,
+        "50.0",
+        0
+      ],
+      "awayCardsOver25": [
+        8,
+        3,
+        "37.5",
+        0
+      ],
+      "awayCardsOver35": [
+        8,
+        3,
+        "37.5",
+        0
+      ],
+      "awayCardsOver45": [
+        8,
+        3,
+        "37.5",
+        0
+      ],
+      "overallOver15": [
+        16,
+        13,
+        "81.2",
+        0
+      ],
+      "overallOver25": [
+        16,
+        11,
+        "68.8",
+        0
+      ],
+      "overallOver35": [
+        16,
+        9,
+        "56.2",
+        0
+      ],
+      "overallOver45": [
+        16,
+        8,
+        "50.0",
+        0
+      ]
+    },
+    {
+      "teamName": "Betis",
+      "allMatches": [
+        {
+          "date": "18/08/2025",
+          "homeTeam": "Elche",
+          "awayTeam": "Betis",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "22/08/2025",
+          "homeTeam": "Betis",
+          "awayTeam": "Alaves",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "27/08/2025",
+          "homeTeam": "Celta",
+          "awayTeam": "Betis",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "31/08/2025",
+          "homeTeam": "Betis",
+          "awayTeam": "Ath Bilbao",
+          "homeCards": 1,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 5,
+          "totalReds": 1
+        },
+        {
+          "date": "14/09/2025",
+          "homeTeam": "Levante",
+          "awayTeam": "Betis",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "19/09/2025",
+          "homeTeam": "Betis",
+          "awayTeam": "Sociedad",
+          "homeCards": 3,
+          "awayCards": 7,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 10,
+          "totalReds": 0
+        },
+        {
+          "date": "28/09/2025",
+          "homeTeam": "Betis",
+          "awayTeam": "Osasuna",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "05/10/2025",
+          "homeTeam": "Espanol",
+          "awayTeam": "Betis",
+          "homeCards": 2,
+          "awayCards": 6,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 8,
+          "totalReds": 0
+        },
+        {
+          "date": "18/10/2025",
+          "homeTeam": "Villarreal",
+          "awayTeam": "Betis",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "27/10/2025",
+          "homeTeam": "Betis",
+          "awayTeam": "Ath Madrid",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "02/11/2025",
+          "homeTeam": "Betis",
+          "awayTeam": "Mallorca",
+          "homeCards": 0,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "09/11/2025",
+          "homeTeam": "Valencia",
+          "awayTeam": "Betis",
+          "homeCards": 3,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "23/11/2025",
+          "homeTeam": "Betis",
+          "awayTeam": "Girona",
+          "homeCards": 3,
+          "awayCards": 4,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 1
+        },
+        {
+          "date": "30/11/2025",
+          "homeTeam": "Sevilla",
+          "awayTeam": "Betis",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 1
+        },
+        {
+          "date": "06/12/2025",
+          "homeTeam": "Betis",
+          "awayTeam": "Barcelona",
+          "homeCards": 5,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        8,
+        5,
+        "62.5",
+        0
+      ],
+      "homeCardsOver25": [
+        8,
+        3,
+        "37.5",
+        0
+      ],
+      "homeCardsOver35": [
+        8,
+        1,
+        "12.5",
+        0
+      ],
+      "homeCardsOver45": [
+        8,
+        1,
+        "12.5",
+        0
+      ],
+      "awayCardsOver15": [
+        7,
+        5,
+        "71.4",
+        0
+      ],
+      "awayCardsOver25": [
+        7,
+        3,
+        "42.9",
+        0
+      ],
+      "awayCardsOver35": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "awayCardsOver45": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "overallOver15": [
+        15,
+        13,
+        "86.7",
+        0
+      ],
+      "overallOver25": [
+        15,
+        12,
+        "80.0",
+        0
+      ],
+      "overallOver35": [
+        15,
+        9,
+        "60.0",
+        0
+      ],
+      "overallOver45": [
+        15,
+        9,
+        "60.0",
+        0
+      ]
+    },
+    {
+      "teamName": "Celta",
+      "allMatches": [
+        {
+          "date": "17/08/2025",
+          "homeTeam": "Celta",
+          "awayTeam": "Getafe",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "23/08/2025",
+          "homeTeam": "Mallorca",
+          "awayTeam": "Celta",
+          "homeCards": 3,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "27/08/2025",
+          "homeTeam": "Celta",
+          "awayTeam": "Betis",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "31/08/2025",
+          "homeTeam": "Celta",
+          "awayTeam": "Villarreal",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "14/09/2025",
+          "homeTeam": "Celta",
+          "awayTeam": "Girona",
+          "homeCards": 0,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "21/09/2025",
+          "homeTeam": "Vallecano",
+          "awayTeam": "Celta",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "28/09/2025",
+          "homeTeam": "Elche",
+          "awayTeam": "Celta",
+          "homeCards": 3,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "05/10/2025",
+          "homeTeam": "Celta",
+          "awayTeam": "Ath Madrid",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 4,
+          "totalReds": 1
+        },
+        {
+          "date": "19/10/2025",
+          "homeTeam": "Celta",
+          "awayTeam": "Sociedad",
+          "homeCards": 4,
+          "awayCards": 3,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 1
+        },
+        {
+          "date": "26/10/2025",
+          "homeTeam": "Osasuna",
+          "awayTeam": "Celta",
+          "homeCards": 3,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        },
+        {
+          "date": "02/11/2025",
+          "homeTeam": "Levante",
+          "awayTeam": "Celta",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 1
+        },
+        {
+          "date": "09/11/2025",
+          "homeTeam": "Celta",
+          "awayTeam": "Barcelona",
+          "homeCards": 1,
+          "awayCards": 5,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 6,
+          "totalReds": 1
+        },
+        {
+          "date": "22/11/2025",
+          "homeTeam": "Alaves",
+          "awayTeam": "Celta",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "30/11/2025",
+          "homeTeam": "Celta",
+          "awayTeam": "Espanol",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "07/12/2025",
+          "homeTeam": "Real Madrid",
+          "awayTeam": "Celta",
+          "homeCards": 6,
+          "awayCards": 1,
+          "homeReds": 3,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 3
+        }
+      ],
+      "homeCardsOver15": [
+        8,
+        2,
+        "25.0",
+        0
+      ],
+      "homeCardsOver25": [
+        8,
+        2,
+        "25.0",
+        0
+      ],
+      "homeCardsOver35": [
+        8,
+        1,
+        "12.5",
+        0
+      ],
+      "homeCardsOver45": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        7,
+        5,
+        "71.4",
+        0
+      ],
+      "awayCardsOver25": [
+        7,
+        4,
+        "57.1",
+        0
+      ],
+      "awayCardsOver35": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "awayCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        15,
+        15,
+        "100.0",
+        0
+      ],
+      "overallOver25": [
+        15,
+        13,
+        "86.7",
+        0
+      ],
+      "overallOver35": [
+        15,
+        10,
+        "66.7",
+        0
+      ],
+      "overallOver45": [
+        15,
+        8,
+        "53.3",
+        0
+      ]
+    },
+    {
+      "teamName": "Elche",
+      "allMatches": [
+        {
+          "date": "18/08/2025",
+          "homeTeam": "Elche",
+          "awayTeam": "Betis",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "23/08/2025",
+          "homeTeam": "Ath Madrid",
+          "awayTeam": "Elche",
+          "homeCards": 0,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "29/08/2025",
+          "homeTeam": "Elche",
+          "awayTeam": "Levante",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "12/09/2025",
+          "homeTeam": "Sevilla",
+          "awayTeam": "Elche",
+          "homeCards": 4,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        },
+        {
+          "date": "21/09/2025",
+          "homeTeam": "Elche",
+          "awayTeam": "Oviedo",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "25/09/2025",
+          "homeTeam": "Osasuna",
+          "awayTeam": "Elche",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "28/09/2025",
+          "homeTeam": "Elche",
+          "awayTeam": "Celta",
+          "homeCards": 3,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "05/10/2025",
+          "homeTeam": "Alaves",
+          "awayTeam": "Elche",
+          "homeCards": 3,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 4,
+          "totalReds": 1
+        },
+        {
+          "date": "19/10/2025",
+          "homeTeam": "Elche",
+          "awayTeam": "Ath Bilbao",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "25/10/2025",
+          "homeTeam": "Espanol",
+          "awayTeam": "Elche",
+          "homeCards": 4,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "02/11/2025",
+          "homeTeam": "Barcelona",
+          "awayTeam": "Elche",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "07/11/2025",
+          "homeTeam": "Elche",
+          "awayTeam": "Sociedad",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "23/11/2025",
+          "homeTeam": "Elche",
+          "awayTeam": "Real Madrid",
+          "homeCards": 4,
+          "awayCards": 0,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 1
+        },
+        {
+          "date": "28/11/2025",
+          "homeTeam": "Getafe",
+          "awayTeam": "Elche",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "07/12/2025",
+          "homeTeam": "Elche",
+          "awayTeam": "Girona",
+          "homeCards": 0,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        8,
+        4,
+        "50.0",
+        0
+      ],
+      "homeCardsOver25": [
+        8,
+        2,
+        "25.0",
+        0
+      ],
+      "homeCardsOver35": [
+        8,
+        1,
+        "12.5",
+        0
+      ],
+      "homeCardsOver45": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        7,
+        5,
+        "71.4",
+        0
+      ],
+      "awayCardsOver25": [
+        7,
+        2,
+        "28.6",
+        0
+      ],
+      "awayCardsOver35": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        15,
+        13,
+        "86.7",
+        0
+      ],
+      "overallOver25": [
+        15,
+        13,
+        "86.7",
+        0
+      ],
+      "overallOver35": [
+        15,
+        10,
+        "66.7",
+        0
+      ],
+      "overallOver45": [
+        15,
+        4,
+        "26.7",
+        0
+      ]
+    },
+    {
+      "teamName": "Espanol",
+      "allMatches": [
+        {
+          "date": "17/08/2025",
+          "homeTeam": "Espanol",
+          "awayTeam": "Ath Madrid",
+          "homeCards": 3,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "24/08/2025",
+          "homeTeam": "Sociedad",
+          "awayTeam": "Espanol",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "31/08/2025",
+          "homeTeam": "Espanol",
+          "awayTeam": "Osasuna",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "15/09/2025",
+          "homeTeam": "Espanol",
+          "awayTeam": "Mallorca",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 1
+        },
+        {
+          "date": "20/09/2025",
+          "homeTeam": "Real Madrid",
+          "awayTeam": "Espanol",
+          "homeCards": 2,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "23/09/2025",
+          "homeTeam": "Espanol",
+          "awayTeam": "Valencia",
+          "homeCards": 1,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "26/09/2025",
+          "homeTeam": "Girona",
+          "awayTeam": "Espanol",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "05/10/2025",
+          "homeTeam": "Espanol",
+          "awayTeam": "Betis",
+          "homeCards": 2,
+          "awayCards": 6,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 8,
+          "totalReds": 0
+        },
+        {
+          "date": "17/10/2025",
+          "homeTeam": "Oviedo",
+          "awayTeam": "Espanol",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "25/10/2025",
+          "homeTeam": "Espanol",
+          "awayTeam": "Elche",
+          "homeCards": 4,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "02/11/2025",
+          "homeTeam": "Alaves",
+          "awayTeam": "Espanol",
+          "homeCards": 4,
+          "awayCards": 2,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 1
+        },
+        {
+          "date": "08/11/2025",
+          "homeTeam": "Espanol",
+          "awayTeam": "Villarreal",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "24/11/2025",
+          "homeTeam": "Espanol",
+          "awayTeam": "Sevilla",
+          "homeCards": 4,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "30/11/2025",
+          "homeTeam": "Celta",
+          "awayTeam": "Espanol",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "07/12/2025",
+          "homeTeam": "Espanol",
+          "awayTeam": "Vallecano",
+          "homeCards": 4,
+          "awayCards": 8,
+          "homeReds": 1,
+          "awayReds": 1,
+          "totalCards": 12,
+          "totalReds": 2
+        }
+      ],
+      "homeCardsOver15": [
+        9,
+        7,
+        "77.8",
+        0
+      ],
+      "homeCardsOver25": [
+        9,
+        4,
+        "44.4",
+        0
+      ],
+      "homeCardsOver35": [
+        9,
+        3,
+        "33.3",
+        0
+      ],
+      "homeCardsOver45": [
+        9,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        6,
+        3,
+        "50.0",
+        0
+      ],
+      "awayCardsOver25": [
+        6,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver35": [
+        6,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver45": [
+        6,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        15,
+        14,
+        "93.3",
+        0
+      ],
+      "overallOver25": [
+        15,
+        12,
+        "80.0",
+        0
+      ],
+      "overallOver35": [
+        15,
+        9,
+        "60.0",
+        0
+      ],
+      "overallOver45": [
+        15,
+        8,
+        "53.3",
+        0
+      ]
+    },
+    {
+      "teamName": "Getafe",
+      "allMatches": [
+        {
+          "date": "17/08/2025",
+          "homeTeam": "Celta",
+          "awayTeam": "Getafe",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "25/08/2025",
+          "homeTeam": "Sevilla",
+          "awayTeam": "Getafe",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "29/08/2025",
+          "homeTeam": "Valencia",
+          "awayTeam": "Getafe",
+          "homeCards": 2,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "13/09/2025",
+          "homeTeam": "Getafe",
+          "awayTeam": "Oviedo",
+          "homeCards": 2,
+          "awayCards": 5,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 7,
+          "totalReds": 1
+        },
+        {
+          "date": "21/09/2025",
+          "homeTeam": "Barcelona",
+          "awayTeam": "Getafe",
+          "homeCards": 2,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "24/09/2025",
+          "homeTeam": "Getafe",
+          "awayTeam": "Alaves",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "27/09/2025",
+          "homeTeam": "Getafe",
+          "awayTeam": "Levante",
+          "homeCards": 4,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        },
+        {
+          "date": "03/10/2025",
+          "homeTeam": "Osasuna",
+          "awayTeam": "Getafe",
+          "homeCards": 1,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "19/10/2025",
+          "homeTeam": "Getafe",
+          "awayTeam": "Real Madrid",
+          "homeCards": 4,
+          "awayCards": 1,
+          "homeReds": 2,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 2
+        },
+        {
+          "date": "25/10/2025",
+          "homeTeam": "Ath Bilbao",
+          "awayTeam": "Getafe",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "31/10/2025",
+          "homeTeam": "Getafe",
+          "awayTeam": "Girona",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "09/11/2025",
+          "homeTeam": "Mallorca",
+          "awayTeam": "Getafe",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "23/11/2025",
+          "homeTeam": "Getafe",
+          "awayTeam": "Ath Madrid",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "28/11/2025",
+          "homeTeam": "Getafe",
+          "awayTeam": "Elche",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "06/12/2025",
+          "homeTeam": "Villarreal",
+          "awayTeam": "Getafe",
+          "homeCards": 2,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 6,
+          "totalReds": 1
+        }
+      ],
+      "homeCardsOver15": [
+        7,
+        6,
+        "85.7",
+        0
+      ],
+      "homeCardsOver25": [
+        7,
+        2,
+        "28.6",
+        0
+      ],
+      "homeCardsOver35": [
+        7,
+        2,
+        "28.6",
+        0
+      ],
+      "homeCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        8,
+        7,
+        "87.5",
+        0
+      ],
+      "awayCardsOver25": [
+        8,
+        4,
+        "50.0",
+        0
+      ],
+      "awayCardsOver35": [
+        8,
+        3,
+        "37.5",
+        0
+      ],
+      "awayCardsOver45": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        15,
+        15,
+        "100.0",
+        0
+      ],
+      "overallOver25": [
+        15,
+        12,
+        "80.0",
+        0
+      ],
+      "overallOver35": [
+        15,
+        12,
+        "80.0",
+        0
+      ],
+      "overallOver45": [
+        15,
+        9,
+        "60.0",
+        0
+      ]
+    },
+    {
+      "teamName": "Girona",
+      "allMatches": [
+        {
+          "date": "15/08/2025",
+          "homeTeam": "Girona",
+          "awayTeam": "Vallecano",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 1
+        },
+        {
+          "date": "24/08/2025",
+          "homeTeam": "Villarreal",
+          "awayTeam": "Girona",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "30/08/2025",
+          "homeTeam": "Girona",
+          "awayTeam": "Sevilla",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "14/09/2025",
+          "homeTeam": "Celta",
+          "awayTeam": "Girona",
+          "homeCards": 0,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "20/09/2025",
+          "homeTeam": "Girona",
+          "awayTeam": "Levante",
+          "homeCards": 4,
+          "awayCards": 3,
+          "homeReds": 2,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 2
+        },
+        {
+          "date": "23/09/2025",
+          "homeTeam": "Ath Bilbao",
+          "awayTeam": "Girona",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "26/09/2025",
+          "homeTeam": "Girona",
+          "awayTeam": "Espanol",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "04/10/2025",
+          "homeTeam": "Girona",
+          "awayTeam": "Valencia",
+          "homeCards": 5,
+          "awayCards": 1,
+          "homeReds": 2,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 2
+        },
+        {
+          "date": "18/10/2025",
+          "homeTeam": "Barcelona",
+          "awayTeam": "Girona",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "25/10/2025",
+          "homeTeam": "Girona",
+          "awayTeam": "Oviedo",
+          "homeCards": 4,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        },
+        {
+          "date": "31/10/2025",
+          "homeTeam": "Getafe",
+          "awayTeam": "Girona",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "08/11/2025",
+          "homeTeam": "Girona",
+          "awayTeam": "Alaves",
+          "homeCards": 0,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "23/11/2025",
+          "homeTeam": "Betis",
+          "awayTeam": "Girona",
+          "homeCards": 3,
+          "awayCards": 4,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 1
+        },
+        {
+          "date": "30/11/2025",
+          "homeTeam": "Girona",
+          "awayTeam": "Real Madrid",
+          "homeCards": 3,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "07/12/2025",
+          "homeTeam": "Elche",
+          "awayTeam": "Girona",
+          "homeCards": 0,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        8,
+        4,
+        "50.0",
+        0
+      ],
+      "homeCardsOver25": [
+        8,
+        4,
+        "50.0",
+        0
+      ],
+      "homeCardsOver35": [
+        8,
+        3,
+        "37.5",
+        0
+      ],
+      "homeCardsOver45": [
+        8,
+        1,
+        "12.5",
+        0
+      ],
+      "awayCardsOver15": [
+        7,
+        6,
+        "85.7",
+        0
+      ],
+      "awayCardsOver25": [
+        7,
+        3,
+        "42.9",
+        0
+      ],
+      "awayCardsOver35": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "awayCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        15,
+        13,
+        "86.7",
+        0
+      ],
+      "overallOver25": [
+        15,
+        10,
+        "66.7",
+        0
+      ],
+      "overallOver35": [
+        15,
+        4,
+        "26.7",
+        0
+      ],
+      "overallOver45": [
+        15,
+        4,
+        "26.7",
+        0
+      ]
+    },
+    {
+      "teamName": "Levante",
+      "allMatches": [
+        {
+          "date": "16/08/2025",
+          "homeTeam": "Alaves",
+          "awayTeam": "Levante",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "23/08/2025",
+          "homeTeam": "Levante",
+          "awayTeam": "Barcelona",
+          "homeCards": 3,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "29/08/2025",
+          "homeTeam": "Elche",
+          "awayTeam": "Levante",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "14/09/2025",
+          "homeTeam": "Levante",
+          "awayTeam": "Betis",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "20/09/2025",
+          "homeTeam": "Girona",
+          "awayTeam": "Levante",
+          "homeCards": 4,
+          "awayCards": 3,
+          "homeReds": 2,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 2
+        },
+        {
+          "date": "23/09/2025",
+          "homeTeam": "Levante",
+          "awayTeam": "Real Madrid",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "27/09/2025",
+          "homeTeam": "Getafe",
+          "awayTeam": "Levante",
+          "homeCards": 4,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        },
+        {
+          "date": "04/10/2025",
+          "homeTeam": "Oviedo",
+          "awayTeam": "Levante",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "19/10/2025",
+          "homeTeam": "Levante",
+          "awayTeam": "Vallecano",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "26/10/2025",
+          "homeTeam": "Mallorca",
+          "awayTeam": "Levante",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "02/11/2025",
+          "homeTeam": "Levante",
+          "awayTeam": "Celta",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 1
+        },
+        {
+          "date": "08/11/2025",
+          "homeTeam": "Ath Madrid",
+          "awayTeam": "Levante",
+          "homeCards": 3,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "21/11/2025",
+          "homeTeam": "Valencia",
+          "awayTeam": "Levante",
+          "homeCards": 4,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        },
+        {
+          "date": "29/11/2025",
+          "homeTeam": "Levante",
+          "awayTeam": "Ath Bilbao",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "08/12/2025",
+          "homeTeam": "Osasuna",
+          "awayTeam": "Levante",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        6,
+        4,
+        "66.7",
+        0
+      ],
+      "homeCardsOver25": [
+        6,
+        3,
+        "50.0",
+        0
+      ],
+      "homeCardsOver35": [
+        6,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver45": [
+        6,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        9,
+        7,
+        "77.8",
+        0
+      ],
+      "awayCardsOver25": [
+        9,
+        3,
+        "33.3",
+        0
+      ],
+      "awayCardsOver35": [
+        9,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver45": [
+        9,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        15,
+        13,
+        "86.7",
+        0
+      ],
+      "overallOver25": [
+        15,
+        12,
+        "80.0",
+        0
+      ],
+      "overallOver35": [
+        15,
+        11,
+        "73.3",
+        0
+      ],
+      "overallOver45": [
+        15,
+        7,
+        "46.7",
+        0
+      ]
+    },
+    {
+      "teamName": "Mallorca",
+      "allMatches": [
+        {
+          "date": "16/08/2025",
+          "homeTeam": "Mallorca",
+          "awayTeam": "Barcelona",
+          "homeCards": 4,
+          "awayCards": 1,
+          "homeReds": 2,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 2
+        },
+        {
+          "date": "23/08/2025",
+          "homeTeam": "Mallorca",
+          "awayTeam": "Celta",
+          "homeCards": 3,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "30/08/2025",
+          "homeTeam": "Real Madrid",
+          "awayTeam": "Mallorca",
+          "homeCards": 2,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "15/09/2025",
+          "homeTeam": "Espanol",
+          "awayTeam": "Mallorca",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 1
+        },
+        {
+          "date": "21/09/2025",
+          "homeTeam": "Mallorca",
+          "awayTeam": "Ath Madrid",
+          "homeCards": 0,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 0,
+          "totalReds": 1
+        },
+        {
+          "date": "24/09/2025",
+          "homeTeam": "Sociedad",
+          "awayTeam": "Mallorca",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "27/09/2025",
+          "homeTeam": "Mallorca",
+          "awayTeam": "Alaves",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "04/10/2025",
+          "homeTeam": "Ath Bilbao",
+          "awayTeam": "Mallorca",
+          "homeCards": 5,
+          "awayCards": 6,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 11,
+          "totalReds": 1
+        },
+        {
+          "date": "18/10/2025",
+          "homeTeam": "Sevilla",
+          "awayTeam": "Mallorca",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "26/10/2025",
+          "homeTeam": "Mallorca",
+          "awayTeam": "Levante",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "02/11/2025",
+          "homeTeam": "Betis",
+          "awayTeam": "Mallorca",
+          "homeCards": 0,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "09/11/2025",
+          "homeTeam": "Mallorca",
+          "awayTeam": "Getafe",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "22/11/2025",
+          "homeTeam": "Villarreal",
+          "awayTeam": "Mallorca",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "29/11/2025",
+          "homeTeam": "Mallorca",
+          "awayTeam": "Osasuna",
+          "homeCards": 3,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        },
+        {
+          "date": "05/12/2025",
+          "homeTeam": "Oviedo",
+          "awayTeam": "Mallorca",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 2,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 2
+        }
+      ],
+      "homeCardsOver15": [
+        7,
+        5,
+        "71.4",
+        0
+      ],
+      "homeCardsOver25": [
+        7,
+        4,
+        "57.1",
+        0
+      ],
+      "homeCardsOver35": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "homeCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        8,
+        4,
+        "50.0",
+        0
+      ],
+      "awayCardsOver25": [
+        8,
+        2,
+        "25.0",
+        0
+      ],
+      "awayCardsOver35": [
+        8,
+        1,
+        "12.5",
+        0
+      ],
+      "awayCardsOver45": [
+        8,
+        1,
+        "12.5",
+        0
+      ],
+      "overallOver15": [
+        15,
+        14,
+        "93.3",
+        0
+      ],
+      "overallOver25": [
+        15,
+        12,
+        "80.0",
+        0
+      ],
+      "overallOver35": [
+        15,
+        8,
+        "53.3",
+        0
+      ],
+      "overallOver45": [
+        15,
+        6,
+        "40.0",
+        0
+      ]
+    },
+    {
+      "teamName": "Osasuna",
+      "allMatches": [
+        {
+          "date": "19/08/2025",
+          "homeTeam": "Real Madrid",
+          "awayTeam": "Osasuna",
+          "homeCards": 1,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 1,
+          "totalReds": 1
+        },
+        {
+          "date": "24/08/2025",
+          "homeTeam": "Osasuna",
+          "awayTeam": "Valencia",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 3,
+          "totalReds": 1
+        },
+        {
+          "date": "31/08/2025",
+          "homeTeam": "Espanol",
+          "awayTeam": "Osasuna",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "14/09/2025",
+          "homeTeam": "Osasuna",
+          "awayTeam": "Vallecano",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "20/09/2025",
+          "homeTeam": "Villarreal",
+          "awayTeam": "Osasuna",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 5,
+          "totalReds": 1
+        },
+        {
+          "date": "25/09/2025",
+          "homeTeam": "Osasuna",
+          "awayTeam": "Elche",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "28/09/2025",
+          "homeTeam": "Betis",
+          "awayTeam": "Osasuna",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "03/10/2025",
+          "homeTeam": "Osasuna",
+          "awayTeam": "Getafe",
+          "homeCards": 1,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "18/10/2025",
+          "homeTeam": "Ath Madrid",
+          "awayTeam": "Osasuna",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "26/10/2025",
+          "homeTeam": "Osasuna",
+          "awayTeam": "Celta",
+          "homeCards": 3,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        },
+        {
+          "date": "03/11/2025",
+          "homeTeam": "Oviedo",
+          "awayTeam": "Osasuna",
+          "homeCards": 3,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "08/11/2025",
+          "homeTeam": "Sevilla",
+          "awayTeam": "Osasuna",
+          "homeCards": 5,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 8,
+          "totalReds": 0
+        },
+        {
+          "date": "22/11/2025",
+          "homeTeam": "Osasuna",
+          "awayTeam": "Sociedad",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 1
+        },
+        {
+          "date": "29/11/2025",
+          "homeTeam": "Mallorca",
+          "awayTeam": "Osasuna",
+          "homeCards": 3,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        },
+        {
+          "date": "08/12/2025",
+          "homeTeam": "Osasuna",
+          "awayTeam": "Levante",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        7,
+        6,
+        "85.7",
+        0
+      ],
+      "homeCardsOver25": [
+        7,
+        3,
+        "42.9",
+        0
+      ],
+      "homeCardsOver35": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        8,
+        5,
+        "62.5",
+        0
+      ],
+      "awayCardsOver25": [
+        8,
+        5,
+        "62.5",
+        0
+      ],
+      "awayCardsOver35": [
+        8,
+        1,
+        "12.5",
+        0
+      ],
+      "awayCardsOver45": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        15,
+        13,
+        "86.7",
+        0
+      ],
+      "overallOver25": [
+        15,
+        13,
+        "86.7",
+        0
+      ],
+      "overallOver35": [
+        15,
+        12,
+        "80.0",
+        0
+      ],
+      "overallOver45": [
+        15,
+        8,
+        "53.3",
+        0
+      ]
+    },
+    {
+      "teamName": "Oviedo",
+      "allMatches": [
+        {
+          "date": "15/08/2025",
+          "homeTeam": "Villarreal",
+          "awayTeam": "Oviedo",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 3,
+          "totalReds": 1
+        },
+        {
+          "date": "24/08/2025",
+          "homeTeam": "Oviedo",
+          "awayTeam": "Real Madrid",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "30/08/2025",
+          "homeTeam": "Oviedo",
+          "awayTeam": "Sociedad",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "13/09/2025",
+          "homeTeam": "Getafe",
+          "awayTeam": "Oviedo",
+          "homeCards": 2,
+          "awayCards": 5,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 7,
+          "totalReds": 1
+        },
+        {
+          "date": "21/09/2025",
+          "homeTeam": "Elche",
+          "awayTeam": "Oviedo",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "25/09/2025",
+          "homeTeam": "Oviedo",
+          "awayTeam": "Barcelona",
+          "homeCards": 1,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "30/09/2025",
+          "homeTeam": "Valencia",
+          "awayTeam": "Oviedo",
+          "homeCards": 1,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 5,
+          "totalReds": 1
+        },
+        {
+          "date": "04/10/2025",
+          "homeTeam": "Oviedo",
+          "awayTeam": "Levante",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "17/10/2025",
+          "homeTeam": "Oviedo",
+          "awayTeam": "Espanol",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "25/10/2025",
+          "homeTeam": "Girona",
+          "awayTeam": "Oviedo",
+          "homeCards": 4,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        },
+        {
+          "date": "03/11/2025",
+          "homeTeam": "Oviedo",
+          "awayTeam": "Osasuna",
+          "homeCards": 3,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "09/11/2025",
+          "homeTeam": "Ath Bilbao",
+          "awayTeam": "Oviedo",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "23/11/2025",
+          "homeTeam": "Oviedo",
+          "awayTeam": "Vallecano",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 1,
+          "awayReds": 1,
+          "totalCards": 3,
+          "totalReds": 2
+        },
+        {
+          "date": "29/11/2025",
+          "homeTeam": "Ath Madrid",
+          "awayTeam": "Oviedo",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "05/12/2025",
+          "homeTeam": "Oviedo",
+          "awayTeam": "Mallorca",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 2,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 2
+        }
+      ],
+      "homeCardsOver15": [
+        8,
+        6,
+        "75.0",
+        0
+      ],
+      "homeCardsOver25": [
+        8,
+        1,
+        "12.5",
+        0
+      ],
+      "homeCardsOver35": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver45": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        7,
+        5,
+        "71.4",
+        0
+      ],
+      "awayCardsOver25": [
+        7,
+        3,
+        "42.9",
+        0
+      ],
+      "awayCardsOver35": [
+        7,
+        2,
+        "28.6",
+        0
+      ],
+      "awayCardsOver45": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "overallOver15": [
+        15,
+        13,
+        "86.7",
+        0
+      ],
+      "overallOver25": [
+        15,
+        12,
+        "80.0",
+        0
+      ],
+      "overallOver35": [
+        15,
+        6,
+        "40.0",
+        0
+      ],
+      "overallOver45": [
+        15,
+        3,
+        "20.0",
+        0
+      ]
+    },
+    {
+      "teamName": "Real Madrid",
+      "allMatches": [
+        {
+          "date": "19/08/2025",
+          "homeTeam": "Real Madrid",
+          "awayTeam": "Osasuna",
+          "homeCards": 1,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 1,
+          "totalReds": 1
+        },
+        {
+          "date": "24/08/2025",
+          "homeTeam": "Oviedo",
+          "awayTeam": "Real Madrid",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "30/08/2025",
+          "homeTeam": "Real Madrid",
+          "awayTeam": "Mallorca",
+          "homeCards": 2,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "13/09/2025",
+          "homeTeam": "Sociedad",
+          "awayTeam": "Real Madrid",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 3,
+          "totalReds": 1
+        },
+        {
+          "date": "20/09/2025",
+          "homeTeam": "Real Madrid",
+          "awayTeam": "Espanol",
+          "homeCards": 2,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "23/09/2025",
+          "homeTeam": "Levante",
+          "awayTeam": "Real Madrid",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "27/09/2025",
+          "homeTeam": "Ath Madrid",
+          "awayTeam": "Real Madrid",
+          "homeCards": 5,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 9,
+          "totalReds": 0
+        },
+        {
+          "date": "04/10/2025",
+          "homeTeam": "Real Madrid",
+          "awayTeam": "Villarreal",
+          "homeCards": 2,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 6,
+          "totalReds": 1
+        },
+        {
+          "date": "19/10/2025",
+          "homeTeam": "Getafe",
+          "awayTeam": "Real Madrid",
+          "homeCards": 4,
+          "awayCards": 1,
+          "homeReds": 2,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 2
+        },
+        {
+          "date": "26/10/2025",
+          "homeTeam": "Real Madrid",
+          "awayTeam": "Barcelona",
+          "homeCards": 5,
+          "awayCards": 5,
+          "homeReds": 1,
+          "awayReds": 1,
+          "totalCards": 10,
+          "totalReds": 2
+        },
+        {
+          "date": "01/11/2025",
+          "homeTeam": "Real Madrid",
+          "awayTeam": "Valencia",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "09/11/2025",
+          "homeTeam": "Vallecano",
+          "awayTeam": "Real Madrid",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "23/11/2025",
+          "homeTeam": "Elche",
+          "awayTeam": "Real Madrid",
+          "homeCards": 4,
+          "awayCards": 0,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 1
+        },
+        {
+          "date": "30/11/2025",
+          "homeTeam": "Girona",
+          "awayTeam": "Real Madrid",
+          "homeCards": 3,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "03/12/2025",
+          "homeTeam": "Ath Bilbao",
+          "awayTeam": "Real Madrid",
+          "homeCards": 2,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "07/12/2025",
+          "homeTeam": "Real Madrid",
+          "awayTeam": "Celta",
+          "homeCards": 6,
+          "awayCards": 1,
+          "homeReds": 3,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 3
+        }
+      ],
+      "homeCardsOver15": [
+        7,
+        5,
+        "71.4",
+        0
+      ],
+      "homeCardsOver25": [
+        7,
+        2,
+        "28.6",
+        0
+      ],
+      "homeCardsOver35": [
+        7,
+        2,
+        "28.6",
+        0
+      ],
+      "homeCardsOver45": [
+        7,
+        2,
+        "28.6",
+        0
+      ],
+      "awayCardsOver15": [
+        9,
+        2,
+        "22.2",
+        0
+      ],
+      "awayCardsOver25": [
+        9,
+        1,
+        "11.1",
+        0
+      ],
+      "awayCardsOver35": [
+        9,
+        1,
+        "11.1",
+        0
+      ],
+      "awayCardsOver45": [
+        9,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        16,
+        15,
+        "93.8",
+        0
+      ],
+      "overallOver25": [
+        16,
+        10,
+        "62.5",
+        0
+      ],
+      "overallOver35": [
+        16,
+        7,
+        "43.8",
+        0
+      ],
+      "overallOver45": [
+        16,
+        6,
+        "37.5",
+        0
+      ]
+    },
+    {
+      "teamName": "Sevilla",
+      "allMatches": [
+        {
+          "date": "17/08/2025",
+          "homeTeam": "Ath Bilbao",
+          "awayTeam": "Sevilla",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "25/08/2025",
+          "homeTeam": "Sevilla",
+          "awayTeam": "Getafe",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "30/08/2025",
+          "homeTeam": "Girona",
+          "awayTeam": "Sevilla",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "12/09/2025",
+          "homeTeam": "Sevilla",
+          "awayTeam": "Elche",
+          "homeCards": 4,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        },
+        {
+          "date": "20/09/2025",
+          "homeTeam": "Alaves",
+          "awayTeam": "Sevilla",
+          "homeCards": 1,
+          "awayCards": 7,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 8,
+          "totalReds": 0
+        },
+        {
+          "date": "23/09/2025",
+          "homeTeam": "Sevilla",
+          "awayTeam": "Villarreal",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "28/09/2025",
+          "homeTeam": "Vallecano",
+          "awayTeam": "Sevilla",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 1
+        },
+        {
+          "date": "05/10/2025",
+          "homeTeam": "Sevilla",
+          "awayTeam": "Barcelona",
+          "homeCards": 7,
+          "awayCards": 5,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 12,
+          "totalReds": 0
+        },
+        {
+          "date": "18/10/2025",
+          "homeTeam": "Sevilla",
+          "awayTeam": "Mallorca",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "24/10/2025",
+          "homeTeam": "Sociedad",
+          "awayTeam": "Sevilla",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "01/11/2025",
+          "homeTeam": "Ath Madrid",
+          "awayTeam": "Sevilla",
+          "homeCards": 0,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "08/11/2025",
+          "homeTeam": "Sevilla",
+          "awayTeam": "Osasuna",
+          "homeCards": 5,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 8,
+          "totalReds": 0
+        },
+        {
+          "date": "24/11/2025",
+          "homeTeam": "Espanol",
+          "awayTeam": "Sevilla",
+          "homeCards": 4,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "30/11/2025",
+          "homeTeam": "Sevilla",
+          "awayTeam": "Betis",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 1
+        },
+        {
+          "date": "07/12/2025",
+          "homeTeam": "Valencia",
+          "awayTeam": "Sevilla",
+          "homeCards": 3,
+          "awayCards": 6,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 9,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        7,
+        7,
+        "100.0",
+        0
+      ],
+      "homeCardsOver25": [
+        7,
+        3,
+        "42.9",
+        0
+      ],
+      "homeCardsOver35": [
+        7,
+        3,
+        "42.9",
+        0
+      ],
+      "homeCardsOver45": [
+        7,
+        2,
+        "28.6",
+        0
+      ],
+      "awayCardsOver15": [
+        8,
+        7,
+        "87.5",
+        0
+      ],
+      "awayCardsOver25": [
+        8,
+        4,
+        "50.0",
+        0
+      ],
+      "awayCardsOver35": [
+        8,
+        2,
+        "25.0",
+        0
+      ],
+      "awayCardsOver45": [
+        8,
+        2,
+        "25.0",
+        0
+      ],
+      "overallOver15": [
+        15,
+        15,
+        "100.0",
+        0
+      ],
+      "overallOver25": [
+        15,
+        13,
+        "86.7",
+        0
+      ],
+      "overallOver35": [
+        15,
+        11,
+        "73.3",
+        0
+      ],
+      "overallOver45": [
+        15,
+        9,
+        "60.0",
+        0
+      ]
+    },
+    {
+      "teamName": "Sociedad",
+      "allMatches": [
+        {
+          "date": "16/08/2025",
+          "homeTeam": "Valencia",
+          "awayTeam": "Sociedad",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "24/08/2025",
+          "homeTeam": "Sociedad",
+          "awayTeam": "Espanol",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "30/08/2025",
+          "homeTeam": "Oviedo",
+          "awayTeam": "Sociedad",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "13/09/2025",
+          "homeTeam": "Sociedad",
+          "awayTeam": "Real Madrid",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 3,
+          "totalReds": 1
+        },
+        {
+          "date": "19/09/2025",
+          "homeTeam": "Betis",
+          "awayTeam": "Sociedad",
+          "homeCards": 3,
+          "awayCards": 7,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 10,
+          "totalReds": 0
+        },
+        {
+          "date": "24/09/2025",
+          "homeTeam": "Sociedad",
+          "awayTeam": "Mallorca",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "28/09/2025",
+          "homeTeam": "Barcelona",
+          "awayTeam": "Sociedad",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "05/10/2025",
+          "homeTeam": "Sociedad",
+          "awayTeam": "Vallecano",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "19/10/2025",
+          "homeTeam": "Celta",
+          "awayTeam": "Sociedad",
+          "homeCards": 4,
+          "awayCards": 3,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 1
+        },
+        {
+          "date": "24/10/2025",
+          "homeTeam": "Sociedad",
+          "awayTeam": "Sevilla",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "01/11/2025",
+          "homeTeam": "Sociedad",
+          "awayTeam": "Ath Bilbao",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "07/11/2025",
+          "homeTeam": "Elche",
+          "awayTeam": "Sociedad",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "22/11/2025",
+          "homeTeam": "Osasuna",
+          "awayTeam": "Sociedad",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 1
+        },
+        {
+          "date": "30/11/2025",
+          "homeTeam": "Sociedad",
+          "awayTeam": "Villarreal",
+          "homeCards": 3,
+          "awayCards": 7,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 10,
+          "totalReds": 0
+        },
+        {
+          "date": "06/12/2025",
+          "homeTeam": "Alaves",
+          "awayTeam": "Sociedad",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        7,
+        5,
+        "71.4",
+        0
+      ],
+      "homeCardsOver25": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "homeCardsOver35": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        8,
+        7,
+        "87.5",
+        0
+      ],
+      "awayCardsOver25": [
+        8,
+        3,
+        "37.5",
+        0
+      ],
+      "awayCardsOver35": [
+        8,
+        1,
+        "12.5",
+        0
+      ],
+      "awayCardsOver45": [
+        8,
+        1,
+        "12.5",
+        0
+      ],
+      "overallOver15": [
+        15,
+        15,
+        "100.0",
+        0
+      ],
+      "overallOver25": [
+        15,
+        15,
+        "100.0",
+        0
+      ],
+      "overallOver35": [
+        15,
+        10,
+        "66.7",
+        0
+      ],
+      "overallOver45": [
+        15,
+        5,
+        "33.3",
+        0
+      ]
+    },
+    {
+      "teamName": "Valencia",
+      "allMatches": [
+        {
+          "date": "16/08/2025",
+          "homeTeam": "Valencia",
+          "awayTeam": "Sociedad",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "24/08/2025",
+          "homeTeam": "Osasuna",
+          "awayTeam": "Valencia",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 3,
+          "totalReds": 1
+        },
+        {
+          "date": "29/08/2025",
+          "homeTeam": "Valencia",
+          "awayTeam": "Getafe",
+          "homeCards": 2,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "14/09/2025",
+          "homeTeam": "Barcelona",
+          "awayTeam": "Valencia",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "20/09/2025",
+          "homeTeam": "Valencia",
+          "awayTeam": "Ath Bilbao",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 2,
+          "totalReds": 1
+        },
+        {
+          "date": "23/09/2025",
+          "homeTeam": "Espanol",
+          "awayTeam": "Valencia",
+          "homeCards": 1,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "30/09/2025",
+          "homeTeam": "Valencia",
+          "awayTeam": "Oviedo",
+          "homeCards": 1,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 5,
+          "totalReds": 1
+        },
+        {
+          "date": "04/10/2025",
+          "homeTeam": "Girona",
+          "awayTeam": "Valencia",
+          "homeCards": 5,
+          "awayCards": 1,
+          "homeReds": 2,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 2
+        },
+        {
+          "date": "20/10/2025",
+          "homeTeam": "Alaves",
+          "awayTeam": "Valencia",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "25/10/2025",
+          "homeTeam": "Valencia",
+          "awayTeam": "Villarreal",
+          "homeCards": 2,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "01/11/2025",
+          "homeTeam": "Real Madrid",
+          "awayTeam": "Valencia",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "09/11/2025",
+          "homeTeam": "Valencia",
+          "awayTeam": "Betis",
+          "homeCards": 3,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "21/11/2025",
+          "homeTeam": "Valencia",
+          "awayTeam": "Levante",
+          "homeCards": 4,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        },
+        {
+          "date": "01/12/2025",
+          "homeTeam": "Vallecano",
+          "awayTeam": "Valencia",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "07/12/2025",
+          "homeTeam": "Valencia",
+          "awayTeam": "Sevilla",
+          "homeCards": 3,
+          "awayCards": 6,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 9,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        8,
+        5,
+        "62.5",
+        0
+      ],
+      "homeCardsOver25": [
+        8,
+        3,
+        "37.5",
+        0
+      ],
+      "homeCardsOver35": [
+        8,
+        1,
+        "12.5",
+        0
+      ],
+      "homeCardsOver45": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        7,
+        2,
+        "28.6",
+        0
+      ],
+      "awayCardsOver25": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "awayCardsOver35": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "awayCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        15,
+        14,
+        "93.3",
+        0
+      ],
+      "overallOver25": [
+        15,
+        10,
+        "66.7",
+        0
+      ],
+      "overallOver35": [
+        15,
+        7,
+        "46.7",
+        0
+      ],
+      "overallOver45": [
+        15,
+        7,
+        "46.7",
+        0
+      ]
+    },
+    {
+      "teamName": "Vallecano",
+      "allMatches": [
+        {
+          "date": "15/08/2025",
+          "homeTeam": "Girona",
+          "awayTeam": "Vallecano",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 1
+        },
+        {
+          "date": "25/08/2025",
+          "homeTeam": "Ath Bilbao",
+          "awayTeam": "Vallecano",
+          "homeCards": 0,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "31/08/2025",
+          "homeTeam": "Vallecano",
+          "awayTeam": "Barcelona",
+          "homeCards": 4,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "14/09/2025",
+          "homeTeam": "Osasuna",
+          "awayTeam": "Vallecano",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "21/09/2025",
+          "homeTeam": "Vallecano",
+          "awayTeam": "Celta",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "24/09/2025",
+          "homeTeam": "Ath Madrid",
+          "awayTeam": "Vallecano",
+          "homeCards": 3,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        },
+        {
+          "date": "28/09/2025",
+          "homeTeam": "Vallecano",
+          "awayTeam": "Sevilla",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 1
+        },
+        {
+          "date": "05/10/2025",
+          "homeTeam": "Sociedad",
+          "awayTeam": "Vallecano",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "19/10/2025",
+          "homeTeam": "Levante",
+          "awayTeam": "Vallecano",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "26/10/2025",
+          "homeTeam": "Vallecano",
+          "awayTeam": "Alaves",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "01/11/2025",
+          "homeTeam": "Villarreal",
+          "awayTeam": "Vallecano",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "09/11/2025",
+          "homeTeam": "Vallecano",
+          "awayTeam": "Real Madrid",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "23/11/2025",
+          "homeTeam": "Oviedo",
+          "awayTeam": "Vallecano",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 1,
+          "awayReds": 1,
+          "totalCards": 3,
+          "totalReds": 2
+        },
+        {
+          "date": "01/12/2025",
+          "homeTeam": "Vallecano",
+          "awayTeam": "Valencia",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "07/12/2025",
+          "homeTeam": "Espanol",
+          "awayTeam": "Vallecano",
+          "homeCards": 4,
+          "awayCards": 8,
+          "homeReds": 1,
+          "awayReds": 1,
+          "totalCards": 12,
+          "totalReds": 2
+        }
+      ],
+      "homeCardsOver15": [
+        6,
+        3,
+        "50.0",
+        0
+      ],
+      "homeCardsOver25": [
+        6,
+        3,
+        "50.0",
+        0
+      ],
+      "homeCardsOver35": [
+        6,
+        1,
+        "16.7",
+        0
+      ],
+      "homeCardsOver45": [
+        6,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        9,
+        6,
+        "66.7",
+        0
+      ],
+      "awayCardsOver25": [
+        9,
+        3,
+        "33.3",
+        0
+      ],
+      "awayCardsOver35": [
+        9,
+        3,
+        "33.3",
+        0
+      ],
+      "awayCardsOver45": [
+        9,
+        1,
+        "11.1",
+        0
+      ],
+      "overallOver15": [
+        15,
+        13,
+        "86.7",
+        0
+      ],
+      "overallOver25": [
+        15,
+        10,
+        "66.7",
+        0
+      ],
+      "overallOver35": [
+        15,
+        8,
+        "53.3",
+        0
+      ],
+      "overallOver45": [
+        15,
+        6,
+        "40.0",
+        0
+      ]
+    },
+    {
+      "teamName": "Villarreal",
+      "allMatches": [
+        {
+          "date": "15/08/2025",
+          "homeTeam": "Villarreal",
+          "awayTeam": "Oviedo",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 3,
+          "totalReds": 1
+        },
+        {
+          "date": "24/08/2025",
+          "homeTeam": "Villarreal",
+          "awayTeam": "Girona",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "31/08/2025",
+          "homeTeam": "Celta",
+          "awayTeam": "Villarreal",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "13/09/2025",
+          "homeTeam": "Ath Madrid",
+          "awayTeam": "Villarreal",
+          "homeCards": 2,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "20/09/2025",
+          "homeTeam": "Villarreal",
+          "awayTeam": "Osasuna",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 5,
+          "totalReds": 1
+        },
+        {
+          "date": "23/09/2025",
+          "homeTeam": "Sevilla",
+          "awayTeam": "Villarreal",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "27/09/2025",
+          "homeTeam": "Villarreal",
+          "awayTeam": "Ath Bilbao",
+          "homeCards": 2,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "04/10/2025",
+          "homeTeam": "Real Madrid",
+          "awayTeam": "Villarreal",
+          "homeCards": 2,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 6,
+          "totalReds": 1
+        },
+        {
+          "date": "18/10/2025",
+          "homeTeam": "Villarreal",
+          "awayTeam": "Betis",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "25/10/2025",
+          "homeTeam": "Valencia",
+          "awayTeam": "Villarreal",
+          "homeCards": 2,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "01/11/2025",
+          "homeTeam": "Villarreal",
+          "awayTeam": "Vallecano",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "08/11/2025",
+          "homeTeam": "Espanol",
+          "awayTeam": "Villarreal",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "22/11/2025",
+          "homeTeam": "Villarreal",
+          "awayTeam": "Mallorca",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "30/11/2025",
+          "homeTeam": "Sociedad",
+          "awayTeam": "Villarreal",
+          "homeCards": 3,
+          "awayCards": 7,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 10,
+          "totalReds": 0
+        },
+        {
+          "date": "06/12/2025",
+          "homeTeam": "Villarreal",
+          "awayTeam": "Getafe",
+          "homeCards": 2,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 6,
+          "totalReds": 1
+        }
+      ],
+      "homeCardsOver15": [
+        8,
+        4,
+        "50.0",
+        0
+      ],
+      "homeCardsOver25": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver35": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver45": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        7,
+        6,
+        "85.7",
+        0
+      ],
+      "awayCardsOver25": [
+        7,
+        5,
+        "71.4",
+        0
+      ],
+      "awayCardsOver35": [
+        7,
+        4,
+        "57.1",
+        0
+      ],
+      "awayCardsOver45": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "overallOver15": [
+        15,
+        15,
+        "100.0",
+        0
+      ],
+      "overallOver25": [
+        15,
+        10,
+        "66.7",
+        0
+      ],
+      "overallOver35": [
+        15,
+        8,
+        "53.3",
+        0
+      ],
+      "overallOver45": [
+        15,
+        7,
+        "46.7",
+        0
+      ]
+    }
+  ]
+}

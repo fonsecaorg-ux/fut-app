@@ -1,0 +1,4624 @@
+{
+  "teams": [
+    {
+      "teamName": "Atalanta",
+      "allMatches": [
+        {
+          "date": "24/08/2025",
+          "homeTeam": "Atalanta",
+          "awayTeam": "Pisa",
+          "homeCards": 2,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "30/08/2025",
+          "homeTeam": "Parma",
+          "awayTeam": "Atalanta",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "14/09/2025",
+          "homeTeam": "Atalanta",
+          "awayTeam": "Lecce",
+          "homeCards": 0,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 0,
+          "totalReds": 0
+        },
+        {
+          "date": "21/09/2025",
+          "homeTeam": "Torino",
+          "awayTeam": "Atalanta",
+          "homeCards": 0,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 0,
+          "totalReds": 0
+        },
+        {
+          "date": "27/09/2025",
+          "homeTeam": "Juventus",
+          "awayTeam": "Atalanta",
+          "homeCards": 0,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 3,
+          "totalReds": 1
+        },
+        {
+          "date": "04/10/2025",
+          "homeTeam": "Atalanta",
+          "awayTeam": "Como",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "19/10/2025",
+          "homeTeam": "Atalanta",
+          "awayTeam": "Lazio",
+          "homeCards": 4,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "25/10/2025",
+          "homeTeam": "Cremonese",
+          "awayTeam": "Atalanta",
+          "homeCards": 3,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "28/10/2025",
+          "homeTeam": "Atalanta",
+          "awayTeam": "Milan",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "01/11/2025",
+          "homeTeam": "Udinese",
+          "awayTeam": "Atalanta",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "09/11/2025",
+          "homeTeam": "Atalanta",
+          "awayTeam": "Sassuolo",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "22/11/2025",
+          "homeTeam": "Napoli",
+          "awayTeam": "Atalanta",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "30/11/2025",
+          "homeTeam": "Atalanta",
+          "awayTeam": "Fiorentina",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "06/12/2025",
+          "homeTeam": "Verona",
+          "awayTeam": "Atalanta",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        7,
+        2,
+        "28.6",
+        0
+      ],
+      "homeCardsOver25": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "homeCardsOver35": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "homeCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        7,
+        4,
+        "57.1",
+        0
+      ],
+      "awayCardsOver25": [
+        7,
+        2,
+        "28.6",
+        0
+      ],
+      "awayCardsOver35": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        14,
+        12,
+        "85.7",
+        0
+      ],
+      "overallOver25": [
+        14,
+        10,
+        "71.4",
+        0
+      ],
+      "overallOver35": [
+        14,
+        7,
+        "50.0",
+        0
+      ],
+      "overallOver45": [
+        14,
+        0,
+        "0.0",
+        0
+      ]
+    },
+    {
+      "teamName": "Bologna",
+      "allMatches": [
+        {
+          "date": "23/08/2025",
+          "homeTeam": "Roma",
+          "awayTeam": "Bologna",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "30/08/2025",
+          "homeTeam": "Bologna",
+          "awayTeam": "Como",
+          "homeCards": 4,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        },
+        {
+          "date": "14/09/2025",
+          "homeTeam": "Milan",
+          "awayTeam": "Bologna",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "20/09/2025",
+          "homeTeam": "Bologna",
+          "awayTeam": "Genoa",
+          "homeCards": 1,
+          "awayCards": 5,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "28/09/2025",
+          "homeTeam": "Lecce",
+          "awayTeam": "Bologna",
+          "homeCards": 4,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "05/10/2025",
+          "homeTeam": "Bologna",
+          "awayTeam": "Pisa",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 1,
+          "totalReds": 1
+        },
+        {
+          "date": "19/10/2025",
+          "homeTeam": "Cagliari",
+          "awayTeam": "Bologna",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "26/10/2025",
+          "homeTeam": "Fiorentina",
+          "awayTeam": "Bologna",
+          "homeCards": 3,
+          "awayCards": 5,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 8,
+          "totalReds": 1
+        },
+        {
+          "date": "29/10/2025",
+          "homeTeam": "Bologna",
+          "awayTeam": "Torino",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "02/11/2025",
+          "homeTeam": "Parma",
+          "awayTeam": "Bologna",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 1
+        },
+        {
+          "date": "09/11/2025",
+          "homeTeam": "Bologna",
+          "awayTeam": "Napoli",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "22/11/2025",
+          "homeTeam": "Udinese",
+          "awayTeam": "Bologna",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "01/12/2025",
+          "homeTeam": "Bologna",
+          "awayTeam": "Cremonese",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "07/12/2025",
+          "homeTeam": "Lazio",
+          "awayTeam": "Bologna",
+          "homeCards": 4,
+          "awayCards": 3,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 1
+        }
+      ],
+      "homeCardsOver15": [
+        6,
+        2,
+        "33.3",
+        0
+      ],
+      "homeCardsOver25": [
+        6,
+        1,
+        "16.7",
+        0
+      ],
+      "homeCardsOver35": [
+        6,
+        1,
+        "16.7",
+        0
+      ],
+      "homeCardsOver45": [
+        6,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        8,
+        6,
+        "75.0",
+        0
+      ],
+      "awayCardsOver25": [
+        8,
+        3,
+        "37.5",
+        0
+      ],
+      "awayCardsOver35": [
+        8,
+        1,
+        "12.5",
+        0
+      ],
+      "awayCardsOver45": [
+        8,
+        1,
+        "12.5",
+        0
+      ],
+      "overallOver15": [
+        14,
+        12,
+        "85.7",
+        0
+      ],
+      "overallOver25": [
+        14,
+        10,
+        "71.4",
+        0
+      ],
+      "overallOver35": [
+        14,
+        10,
+        "71.4",
+        0
+      ],
+      "overallOver45": [
+        14,
+        8,
+        "57.1",
+        0
+      ]
+    },
+    {
+      "teamName": "Cagliari",
+      "allMatches": [
+        {
+          "date": "24/08/2025",
+          "homeTeam": "Cagliari",
+          "awayTeam": "Fiorentina",
+          "homeCards": 4,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "30/08/2025",
+          "homeTeam": "Napoli",
+          "awayTeam": "Cagliari",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "13/09/2025",
+          "homeTeam": "Cagliari",
+          "awayTeam": "Parma",
+          "homeCards": 3,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "19/09/2025",
+          "homeTeam": "Lecce",
+          "awayTeam": "Cagliari",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "27/09/2025",
+          "homeTeam": "Cagliari",
+          "awayTeam": "Inter",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "05/10/2025",
+          "homeTeam": "Udinese",
+          "awayTeam": "Cagliari",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "19/10/2025",
+          "homeTeam": "Cagliari",
+          "awayTeam": "Bologna",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "26/10/2025",
+          "homeTeam": "Verona",
+          "awayTeam": "Cagliari",
+          "homeCards": 3,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        },
+        {
+          "date": "30/10/2025",
+          "homeTeam": "Cagliari",
+          "awayTeam": "Sassuolo",
+          "homeCards": 4,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 8,
+          "totalReds": 0
+        },
+        {
+          "date": "03/11/2025",
+          "homeTeam": "Lazio",
+          "awayTeam": "Cagliari",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "08/11/2025",
+          "homeTeam": "Como",
+          "awayTeam": "Cagliari",
+          "homeCards": 3,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "22/11/2025",
+          "homeTeam": "Cagliari",
+          "awayTeam": "Genoa",
+          "homeCards": 4,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 7,
+          "totalReds": 1
+        },
+        {
+          "date": "29/11/2025",
+          "homeTeam": "Juventus",
+          "awayTeam": "Cagliari",
+          "homeCards": 1,
+          "awayCards": 5,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "07/12/2025",
+          "homeTeam": "Cagliari",
+          "awayTeam": "Roma",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 3,
+          "totalReds": 1
+        }
+      ],
+      "homeCardsOver15": [
+        7,
+        5,
+        "71.4",
+        0
+      ],
+      "homeCardsOver25": [
+        7,
+        4,
+        "57.1",
+        0
+      ],
+      "homeCardsOver35": [
+        7,
+        3,
+        "42.9",
+        0
+      ],
+      "homeCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        7,
+        5,
+        "71.4",
+        0
+      ],
+      "awayCardsOver25": [
+        7,
+        3,
+        "42.9",
+        0
+      ],
+      "awayCardsOver35": [
+        7,
+        2,
+        "28.6",
+        0
+      ],
+      "awayCardsOver45": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "overallOver15": [
+        14,
+        14,
+        "100.0",
+        0
+      ],
+      "overallOver25": [
+        14,
+        12,
+        "85.7",
+        0
+      ],
+      "overallOver35": [
+        14,
+        9,
+        "64.3",
+        0
+      ],
+      "overallOver45": [
+        14,
+        6,
+        "42.9",
+        0
+      ]
+    },
+    {
+      "teamName": "Como",
+      "allMatches": [
+        {
+          "date": "24/08/2025",
+          "homeTeam": "Como",
+          "awayTeam": "Lazio",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "30/08/2025",
+          "homeTeam": "Bologna",
+          "awayTeam": "Como",
+          "homeCards": 4,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        },
+        {
+          "date": "15/09/2025",
+          "homeTeam": "Como",
+          "awayTeam": "Genoa",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 1
+        },
+        {
+          "date": "21/09/2025",
+          "homeTeam": "Fiorentina",
+          "awayTeam": "Como",
+          "homeCards": 4,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        },
+        {
+          "date": "27/09/2025",
+          "homeTeam": "Como",
+          "awayTeam": "Cremonese",
+          "homeCards": 3,
+          "awayCards": 4,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 1
+        },
+        {
+          "date": "04/10/2025",
+          "homeTeam": "Atalanta",
+          "awayTeam": "Como",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "19/10/2025",
+          "homeTeam": "Como",
+          "awayTeam": "Juventus",
+          "homeCards": 3,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "25/10/2025",
+          "homeTeam": "Parma",
+          "awayTeam": "Como",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "29/10/2025",
+          "homeTeam": "Como",
+          "awayTeam": "Verona",
+          "homeCards": 1,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "01/11/2025",
+          "homeTeam": "Napoli",
+          "awayTeam": "Como",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "08/11/2025",
+          "homeTeam": "Como",
+          "awayTeam": "Cagliari",
+          "homeCards": 3,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "24/11/2025",
+          "homeTeam": "Torino",
+          "awayTeam": "Como",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "28/11/2025",
+          "homeTeam": "Como",
+          "awayTeam": "Sassuolo",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "06/12/2025",
+          "homeTeam": "Inter",
+          "awayTeam": "Como",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        7,
+        6,
+        "85.7",
+        0
+      ],
+      "homeCardsOver25": [
+        7,
+        3,
+        "42.9",
+        0
+      ],
+      "homeCardsOver35": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        7,
+        5,
+        "71.4",
+        0
+      ],
+      "awayCardsOver25": [
+        7,
+        3,
+        "42.9",
+        0
+      ],
+      "awayCardsOver35": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        14,
+        12,
+        "85.7",
+        0
+      ],
+      "overallOver25": [
+        14,
+        12,
+        "85.7",
+        0
+      ],
+      "overallOver35": [
+        14,
+        10,
+        "71.4",
+        0
+      ],
+      "overallOver45": [
+        14,
+        6,
+        "42.9",
+        0
+      ]
+    },
+    {
+      "teamName": "Cremonese",
+      "allMatches": [
+        {
+          "date": "23/08/2025",
+          "homeTeam": "Milan",
+          "awayTeam": "Cremonese",
+          "homeCards": 1,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "29/08/2025",
+          "homeTeam": "Cremonese",
+          "awayTeam": "Sassuolo",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "15/09/2025",
+          "homeTeam": "Verona",
+          "awayTeam": "Cremonese",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "21/09/2025",
+          "homeTeam": "Cremonese",
+          "awayTeam": "Parma",
+          "homeCards": 1,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "27/09/2025",
+          "homeTeam": "Como",
+          "awayTeam": "Cremonese",
+          "homeCards": 3,
+          "awayCards": 4,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 1
+        },
+        {
+          "date": "04/10/2025",
+          "homeTeam": "Inter",
+          "awayTeam": "Cremonese",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "20/10/2025",
+          "homeTeam": "Cremonese",
+          "awayTeam": "Udinese",
+          "homeCards": 4,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "25/10/2025",
+          "homeTeam": "Cremonese",
+          "awayTeam": "Atalanta",
+          "homeCards": 3,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "29/10/2025",
+          "homeTeam": "Genoa",
+          "awayTeam": "Cremonese",
+          "homeCards": 3,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "01/11/2025",
+          "homeTeam": "Cremonese",
+          "awayTeam": "Juventus",
+          "homeCards": 1,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "07/11/2025",
+          "homeTeam": "Pisa",
+          "awayTeam": "Cremonese",
+          "homeCards": 4,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "23/11/2025",
+          "homeTeam": "Cremonese",
+          "awayTeam": "Roma",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "01/12/2025",
+          "homeTeam": "Bologna",
+          "awayTeam": "Cremonese",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "07/12/2025",
+          "homeTeam": "Cremonese",
+          "awayTeam": "Lecce",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        7,
+        4,
+        "57.1",
+        0
+      ],
+      "homeCardsOver25": [
+        7,
+        2,
+        "28.6",
+        0
+      ],
+      "homeCardsOver35": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "homeCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        7,
+        4,
+        "57.1",
+        0
+      ],
+      "awayCardsOver25": [
+        7,
+        2,
+        "28.6",
+        0
+      ],
+      "awayCardsOver35": [
+        7,
+        2,
+        "28.6",
+        0
+      ],
+      "awayCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        14,
+        12,
+        "85.7",
+        0
+      ],
+      "overallOver25": [
+        14,
+        10,
+        "71.4",
+        0
+      ],
+      "overallOver35": [
+        14,
+        8,
+        "57.1",
+        0
+      ],
+      "overallOver45": [
+        14,
+        4,
+        "28.6",
+        0
+      ]
+    },
+    {
+      "teamName": "Fiorentina",
+      "allMatches": [
+        {
+          "date": "24/08/2025",
+          "homeTeam": "Cagliari",
+          "awayTeam": "Fiorentina",
+          "homeCards": 4,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "31/08/2025",
+          "homeTeam": "Torino",
+          "awayTeam": "Fiorentina",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "13/09/2025",
+          "homeTeam": "Fiorentina",
+          "awayTeam": "Napoli",
+          "homeCards": 0,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 0,
+          "totalReds": 0
+        },
+        {
+          "date": "21/09/2025",
+          "homeTeam": "Fiorentina",
+          "awayTeam": "Como",
+          "homeCards": 4,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        },
+        {
+          "date": "28/09/2025",
+          "homeTeam": "Pisa",
+          "awayTeam": "Fiorentina",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "05/10/2025",
+          "homeTeam": "Fiorentina",
+          "awayTeam": "Roma",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "19/10/2025",
+          "homeTeam": "Milan",
+          "awayTeam": "Fiorentina",
+          "homeCards": 3,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "26/10/2025",
+          "homeTeam": "Fiorentina",
+          "awayTeam": "Bologna",
+          "homeCards": 3,
+          "awayCards": 5,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 8,
+          "totalReds": 1
+        },
+        {
+          "date": "29/10/2025",
+          "homeTeam": "Inter",
+          "awayTeam": "Fiorentina",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 3,
+          "totalReds": 1
+        },
+        {
+          "date": "02/11/2025",
+          "homeTeam": "Fiorentina",
+          "awayTeam": "Lecce",
+          "homeCards": 4,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "09/11/2025",
+          "homeTeam": "Genoa",
+          "awayTeam": "Fiorentina",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "22/11/2025",
+          "homeTeam": "Fiorentina",
+          "awayTeam": "Juventus",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "30/11/2025",
+          "homeTeam": "Atalanta",
+          "awayTeam": "Fiorentina",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "06/12/2025",
+          "homeTeam": "Sassuolo",
+          "awayTeam": "Fiorentina",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        6,
+        5,
+        "83.3",
+        0
+      ],
+      "homeCardsOver25": [
+        6,
+        3,
+        "50.0",
+        0
+      ],
+      "homeCardsOver35": [
+        6,
+        2,
+        "33.3",
+        0
+      ],
+      "homeCardsOver45": [
+        6,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        8,
+        7,
+        "87.5",
+        0
+      ],
+      "awayCardsOver25": [
+        8,
+        4,
+        "50.0",
+        0
+      ],
+      "awayCardsOver35": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver45": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        14,
+        12,
+        "85.7",
+        0
+      ],
+      "overallOver25": [
+        14,
+        12,
+        "85.7",
+        0
+      ],
+      "overallOver35": [
+        14,
+        11,
+        "78.6",
+        0
+      ],
+      "overallOver45": [
+        14,
+        9,
+        "64.3",
+        0
+      ]
+    },
+    {
+      "teamName": "Genoa",
+      "allMatches": [
+        {
+          "date": "23/08/2025",
+          "homeTeam": "Genoa",
+          "awayTeam": "Lecce",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "31/08/2025",
+          "homeTeam": "Genoa",
+          "awayTeam": "Juventus",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "15/09/2025",
+          "homeTeam": "Como",
+          "awayTeam": "Genoa",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 1
+        },
+        {
+          "date": "20/09/2025",
+          "homeTeam": "Bologna",
+          "awayTeam": "Genoa",
+          "homeCards": 1,
+          "awayCards": 5,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "29/09/2025",
+          "homeTeam": "Genoa",
+          "awayTeam": "Lazio",
+          "homeCards": 5,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "05/10/2025",
+          "homeTeam": "Napoli",
+          "awayTeam": "Genoa",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "19/10/2025",
+          "homeTeam": "Genoa",
+          "awayTeam": "Parma",
+          "homeCards": 2,
+          "awayCards": 5,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 7,
+          "totalReds": 1
+        },
+        {
+          "date": "26/10/2025",
+          "homeTeam": "Torino",
+          "awayTeam": "Genoa",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "29/10/2025",
+          "homeTeam": "Genoa",
+          "awayTeam": "Cremonese",
+          "homeCards": 3,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "03/11/2025",
+          "homeTeam": "Sassuolo",
+          "awayTeam": "Genoa",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "09/11/2025",
+          "homeTeam": "Genoa",
+          "awayTeam": "Fiorentina",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "22/11/2025",
+          "homeTeam": "Cagliari",
+          "awayTeam": "Genoa",
+          "homeCards": 4,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 7,
+          "totalReds": 1
+        },
+        {
+          "date": "29/11/2025",
+          "homeTeam": "Genoa",
+          "awayTeam": "Verona",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "08/12/2025",
+          "homeTeam": "Udinese",
+          "awayTeam": "Genoa",
+          "homeCards": 1,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        7,
+        5,
+        "71.4",
+        0
+      ],
+      "homeCardsOver25": [
+        7,
+        2,
+        "28.6",
+        0
+      ],
+      "homeCardsOver35": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "homeCardsOver45": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "awayCardsOver15": [
+        7,
+        6,
+        "85.7",
+        0
+      ],
+      "awayCardsOver25": [
+        7,
+        4,
+        "57.1",
+        0
+      ],
+      "awayCardsOver35": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "awayCardsOver45": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "overallOver15": [
+        14,
+        13,
+        "92.9",
+        0
+      ],
+      "overallOver25": [
+        14,
+        13,
+        "92.9",
+        0
+      ],
+      "overallOver35": [
+        14,
+        12,
+        "85.7",
+        0
+      ],
+      "overallOver45": [
+        14,
+        6,
+        "42.9",
+        0
+      ]
+    },
+    {
+      "teamName": "Inter",
+      "allMatches": [
+        {
+          "date": "25/08/2025",
+          "homeTeam": "Inter",
+          "awayTeam": "Torino",
+          "homeCards": 0,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 0,
+          "totalReds": 0
+        },
+        {
+          "date": "31/08/2025",
+          "homeTeam": "Inter",
+          "awayTeam": "Udinese",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "13/09/2025",
+          "homeTeam": "Juventus",
+          "awayTeam": "Inter",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "21/09/2025",
+          "homeTeam": "Inter",
+          "awayTeam": "Sassuolo",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "27/09/2025",
+          "homeTeam": "Cagliari",
+          "awayTeam": "Inter",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "04/10/2025",
+          "homeTeam": "Inter",
+          "awayTeam": "Cremonese",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "18/10/2025",
+          "homeTeam": "Roma",
+          "awayTeam": "Inter",
+          "homeCards": 4,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        },
+        {
+          "date": "25/10/2025",
+          "homeTeam": "Napoli",
+          "awayTeam": "Inter",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "29/10/2025",
+          "homeTeam": "Inter",
+          "awayTeam": "Fiorentina",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 3,
+          "totalReds": 1
+        },
+        {
+          "date": "02/11/2025",
+          "homeTeam": "Verona",
+          "awayTeam": "Inter",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "09/11/2025",
+          "homeTeam": "Inter",
+          "awayTeam": "Lazio",
+          "homeCards": 3,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "23/11/2025",
+          "homeTeam": "Inter",
+          "awayTeam": "Milan",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "30/11/2025",
+          "homeTeam": "Pisa",
+          "awayTeam": "Inter",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "06/12/2025",
+          "homeTeam": "Inter",
+          "awayTeam": "Como",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        8,
+        2,
+        "25.0",
+        0
+      ],
+      "homeCardsOver25": [
+        8,
+        1,
+        "12.5",
+        0
+      ],
+      "homeCardsOver35": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver45": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        6,
+        2,
+        "33.3",
+        0
+      ],
+      "awayCardsOver25": [
+        6,
+        1,
+        "16.7",
+        0
+      ],
+      "awayCardsOver35": [
+        6,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver45": [
+        6,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        14,
+        13,
+        "92.9",
+        0
+      ],
+      "overallOver25": [
+        14,
+        11,
+        "78.6",
+        0
+      ],
+      "overallOver35": [
+        14,
+        3,
+        "21.4",
+        0
+      ],
+      "overallOver45": [
+        14,
+        1,
+        "7.1",
+        0
+      ]
+    },
+    {
+      "teamName": "Juventus",
+      "allMatches": [
+        {
+          "date": "24/08/2025",
+          "homeTeam": "Juventus",
+          "awayTeam": "Parma",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 1
+        },
+        {
+          "date": "31/08/2025",
+          "homeTeam": "Genoa",
+          "awayTeam": "Juventus",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "13/09/2025",
+          "homeTeam": "Juventus",
+          "awayTeam": "Inter",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "20/09/2025",
+          "homeTeam": "Verona",
+          "awayTeam": "Juventus",
+          "homeCards": 3,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "27/09/2025",
+          "homeTeam": "Juventus",
+          "awayTeam": "Atalanta",
+          "homeCards": 0,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 3,
+          "totalReds": 1
+        },
+        {
+          "date": "05/10/2025",
+          "homeTeam": "Juventus",
+          "awayTeam": "Milan",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "19/10/2025",
+          "homeTeam": "Como",
+          "awayTeam": "Juventus",
+          "homeCards": 3,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "26/10/2025",
+          "homeTeam": "Lazio",
+          "awayTeam": "Juventus",
+          "homeCards": 2,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "29/10/2025",
+          "homeTeam": "Juventus",
+          "awayTeam": "Udinese",
+          "homeCards": 1,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "01/11/2025",
+          "homeTeam": "Cremonese",
+          "awayTeam": "Juventus",
+          "homeCards": 1,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "08/11/2025",
+          "homeTeam": "Juventus",
+          "awayTeam": "Torino",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "22/11/2025",
+          "homeTeam": "Fiorentina",
+          "awayTeam": "Juventus",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "29/11/2025",
+          "homeTeam": "Juventus",
+          "awayTeam": "Cagliari",
+          "homeCards": 1,
+          "awayCards": 5,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "07/12/2025",
+          "homeTeam": "Napoli",
+          "awayTeam": "Juventus",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        7,
+        2,
+        "28.6",
+        0
+      ],
+      "homeCardsOver25": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver35": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        7,
+        4,
+        "57.1",
+        0
+      ],
+      "awayCardsOver25": [
+        7,
+        3,
+        "42.9",
+        0
+      ],
+      "awayCardsOver35": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "awayCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        14,
+        12,
+        "85.7",
+        0
+      ],
+      "overallOver25": [
+        14,
+        12,
+        "85.7",
+        0
+      ],
+      "overallOver35": [
+        14,
+        7,
+        "50.0",
+        0
+      ],
+      "overallOver45": [
+        14,
+        5,
+        "35.7",
+        0
+      ]
+    },
+    {
+      "teamName": "Lazio",
+      "allMatches": [
+        {
+          "date": "24/08/2025",
+          "homeTeam": "Como",
+          "awayTeam": "Lazio",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "31/08/2025",
+          "homeTeam": "Lazio",
+          "awayTeam": "Verona",
+          "homeCards": 0,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 0,
+          "totalReds": 0
+        },
+        {
+          "date": "14/09/2025",
+          "homeTeam": "Sassuolo",
+          "awayTeam": "Lazio",
+          "homeCards": 6,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 9,
+          "totalReds": 0
+        },
+        {
+          "date": "21/09/2025",
+          "homeTeam": "Lazio",
+          "awayTeam": "Roma",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 2,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 2
+        },
+        {
+          "date": "29/09/2025",
+          "homeTeam": "Genoa",
+          "awayTeam": "Lazio",
+          "homeCards": 5,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "04/10/2025",
+          "homeTeam": "Lazio",
+          "awayTeam": "Torino",
+          "homeCards": 3,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "19/10/2025",
+          "homeTeam": "Atalanta",
+          "awayTeam": "Lazio",
+          "homeCards": 4,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "26/10/2025",
+          "homeTeam": "Lazio",
+          "awayTeam": "Juventus",
+          "homeCards": 2,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "30/10/2025",
+          "homeTeam": "Pisa",
+          "awayTeam": "Lazio",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "03/11/2025",
+          "homeTeam": "Lazio",
+          "awayTeam": "Cagliari",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "09/11/2025",
+          "homeTeam": "Inter",
+          "awayTeam": "Lazio",
+          "homeCards": 3,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "23/11/2025",
+          "homeTeam": "Lazio",
+          "awayTeam": "Lecce",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "29/11/2025",
+          "homeTeam": "Milan",
+          "awayTeam": "Lazio",
+          "homeCards": 3,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "07/12/2025",
+          "homeTeam": "Lazio",
+          "awayTeam": "Bologna",
+          "homeCards": 4,
+          "awayCards": 3,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 1
+        }
+      ],
+      "homeCardsOver15": [
+        7,
+        3,
+        "42.9",
+        0
+      ],
+      "homeCardsOver25": [
+        7,
+        2,
+        "28.6",
+        0
+      ],
+      "homeCardsOver35": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "homeCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        7,
+        4,
+        "57.1",
+        0
+      ],
+      "awayCardsOver25": [
+        7,
+        3,
+        "42.9",
+        0
+      ],
+      "awayCardsOver35": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        14,
+        13,
+        "92.9",
+        0
+      ],
+      "overallOver25": [
+        14,
+        10,
+        "71.4",
+        0
+      ],
+      "overallOver35": [
+        14,
+        10,
+        "71.4",
+        0
+      ],
+      "overallOver45": [
+        14,
+        7,
+        "50.0",
+        0
+      ]
+    },
+    {
+      "teamName": "Lecce",
+      "allMatches": [
+        {
+          "date": "23/08/2025",
+          "homeTeam": "Genoa",
+          "awayTeam": "Lecce",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "29/08/2025",
+          "homeTeam": "Lecce",
+          "awayTeam": "Milan",
+          "homeCards": 1,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "14/09/2025",
+          "homeTeam": "Atalanta",
+          "awayTeam": "Lecce",
+          "homeCards": 0,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 0,
+          "totalReds": 0
+        },
+        {
+          "date": "19/09/2025",
+          "homeTeam": "Lecce",
+          "awayTeam": "Cagliari",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "28/09/2025",
+          "homeTeam": "Lecce",
+          "awayTeam": "Bologna",
+          "homeCards": 4,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "04/10/2025",
+          "homeTeam": "Parma",
+          "awayTeam": "Lecce",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "18/10/2025",
+          "homeTeam": "Lecce",
+          "awayTeam": "Sassuolo",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "25/10/2025",
+          "homeTeam": "Udinese",
+          "awayTeam": "Lecce",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "28/10/2025",
+          "homeTeam": "Lecce",
+          "awayTeam": "Napoli",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "02/11/2025",
+          "homeTeam": "Fiorentina",
+          "awayTeam": "Lecce",
+          "homeCards": 4,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "08/11/2025",
+          "homeTeam": "Lecce",
+          "awayTeam": "Verona",
+          "homeCards": 1,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "23/11/2025",
+          "homeTeam": "Lazio",
+          "awayTeam": "Lecce",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "30/11/2025",
+          "homeTeam": "Lecce",
+          "awayTeam": "Torino",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "07/12/2025",
+          "homeTeam": "Cremonese",
+          "awayTeam": "Lecce",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        7,
+        5,
+        "71.4",
+        0
+      ],
+      "homeCardsOver25": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "homeCardsOver35": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "homeCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        7,
+        4,
+        "57.1",
+        0
+      ],
+      "awayCardsOver25": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "awayCardsOver35": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        14,
+        12,
+        "85.7",
+        0
+      ],
+      "overallOver25": [
+        14,
+        11,
+        "78.6",
+        0
+      ],
+      "overallOver35": [
+        14,
+        8,
+        "57.1",
+        0
+      ],
+      "overallOver45": [
+        14,
+        6,
+        "42.9",
+        0
+      ]
+    },
+    {
+      "teamName": "Milan",
+      "allMatches": [
+        {
+          "date": "23/08/2025",
+          "homeTeam": "Milan",
+          "awayTeam": "Cremonese",
+          "homeCards": 1,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "29/08/2025",
+          "homeTeam": "Lecce",
+          "awayTeam": "Milan",
+          "homeCards": 1,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "14/09/2025",
+          "homeTeam": "Milan",
+          "awayTeam": "Bologna",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "20/09/2025",
+          "homeTeam": "Udinese",
+          "awayTeam": "Milan",
+          "homeCards": 2,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "28/09/2025",
+          "homeTeam": "Milan",
+          "awayTeam": "Napoli",
+          "homeCards": 1,
+          "awayCards": 0,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 1
+        },
+        {
+          "date": "05/10/2025",
+          "homeTeam": "Juventus",
+          "awayTeam": "Milan",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "19/10/2025",
+          "homeTeam": "Milan",
+          "awayTeam": "Fiorentina",
+          "homeCards": 3,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "24/10/2025",
+          "homeTeam": "Milan",
+          "awayTeam": "Pisa",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "28/10/2025",
+          "homeTeam": "Atalanta",
+          "awayTeam": "Milan",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "02/11/2025",
+          "homeTeam": "Milan",
+          "awayTeam": "Roma",
+          "homeCards": 1,
+          "awayCards": 5,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "08/11/2025",
+          "homeTeam": "Parma",
+          "awayTeam": "Milan",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "23/11/2025",
+          "homeTeam": "Inter",
+          "awayTeam": "Milan",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "29/11/2025",
+          "homeTeam": "Milan",
+          "awayTeam": "Lazio",
+          "homeCards": 3,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "08/12/2025",
+          "homeTeam": "Torino",
+          "awayTeam": "Milan",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        7,
+        3,
+        "42.9",
+        0
+      ],
+      "homeCardsOver25": [
+        7,
+        3,
+        "42.9",
+        0
+      ],
+      "homeCardsOver35": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        7,
+        3,
+        "42.9",
+        0
+      ],
+      "awayCardsOver25": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "awayCardsOver35": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        14,
+        12,
+        "85.7",
+        0
+      ],
+      "overallOver25": [
+        14,
+        10,
+        "71.4",
+        0
+      ],
+      "overallOver35": [
+        14,
+        8,
+        "57.1",
+        0
+      ],
+      "overallOver45": [
+        14,
+        5,
+        "35.7",
+        0
+      ]
+    },
+    {
+      "teamName": "Napoli",
+      "allMatches": [
+        {
+          "date": "23/08/2025",
+          "homeTeam": "Sassuolo",
+          "awayTeam": "Napoli",
+          "homeCards": 3,
+          "awayCards": 1,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 1
+        },
+        {
+          "date": "30/08/2025",
+          "homeTeam": "Napoli",
+          "awayTeam": "Cagliari",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "13/09/2025",
+          "homeTeam": "Fiorentina",
+          "awayTeam": "Napoli",
+          "homeCards": 0,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 0,
+          "totalReds": 0
+        },
+        {
+          "date": "22/09/2025",
+          "homeTeam": "Napoli",
+          "awayTeam": "Pisa",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "28/09/2025",
+          "homeTeam": "Milan",
+          "awayTeam": "Napoli",
+          "homeCards": 1,
+          "awayCards": 0,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 1
+        },
+        {
+          "date": "05/10/2025",
+          "homeTeam": "Napoli",
+          "awayTeam": "Genoa",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "18/10/2025",
+          "homeTeam": "Torino",
+          "awayTeam": "Napoli",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "25/10/2025",
+          "homeTeam": "Napoli",
+          "awayTeam": "Inter",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "28/10/2025",
+          "homeTeam": "Lecce",
+          "awayTeam": "Napoli",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "01/11/2025",
+          "homeTeam": "Napoli",
+          "awayTeam": "Como",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "09/11/2025",
+          "homeTeam": "Bologna",
+          "awayTeam": "Napoli",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "22/11/2025",
+          "homeTeam": "Napoli",
+          "awayTeam": "Atalanta",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "30/11/2025",
+          "homeTeam": "Roma",
+          "awayTeam": "Napoli",
+          "homeCards": 4,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        },
+        {
+          "date": "07/12/2025",
+          "homeTeam": "Napoli",
+          "awayTeam": "Juventus",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        7,
+        4,
+        "57.1",
+        0
+      ],
+      "homeCardsOver25": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "homeCardsOver35": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        7,
+        3,
+        "42.9",
+        0
+      ],
+      "awayCardsOver25": [
+        7,
+        2,
+        "28.6",
+        0
+      ],
+      "awayCardsOver35": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        14,
+        12,
+        "85.7",
+        0
+      ],
+      "overallOver25": [
+        14,
+        12,
+        "85.7",
+        0
+      ],
+      "overallOver35": [
+        14,
+        5,
+        "35.7",
+        0
+      ],
+      "overallOver45": [
+        14,
+        2,
+        "14.3",
+        0
+      ]
+    },
+    {
+      "teamName": "Parma",
+      "allMatches": [
+        {
+          "date": "24/08/2025",
+          "homeTeam": "Juventus",
+          "awayTeam": "Parma",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 1
+        },
+        {
+          "date": "30/08/2025",
+          "homeTeam": "Parma",
+          "awayTeam": "Atalanta",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "13/09/2025",
+          "homeTeam": "Cagliari",
+          "awayTeam": "Parma",
+          "homeCards": 3,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "21/09/2025",
+          "homeTeam": "Cremonese",
+          "awayTeam": "Parma",
+          "homeCards": 1,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "29/09/2025",
+          "homeTeam": "Parma",
+          "awayTeam": "Torino",
+          "homeCards": 3,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "04/10/2025",
+          "homeTeam": "Parma",
+          "awayTeam": "Lecce",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "19/10/2025",
+          "homeTeam": "Genoa",
+          "awayTeam": "Parma",
+          "homeCards": 2,
+          "awayCards": 5,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 7,
+          "totalReds": 1
+        },
+        {
+          "date": "25/10/2025",
+          "homeTeam": "Parma",
+          "awayTeam": "Como",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "29/10/2025",
+          "homeTeam": "Roma",
+          "awayTeam": "Parma",
+          "homeCards": 0,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "02/11/2025",
+          "homeTeam": "Parma",
+          "awayTeam": "Bologna",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 1
+        },
+        {
+          "date": "08/11/2025",
+          "homeTeam": "Parma",
+          "awayTeam": "Milan",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "23/11/2025",
+          "homeTeam": "Verona",
+          "awayTeam": "Parma",
+          "homeCards": 4,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        },
+        {
+          "date": "29/11/2025",
+          "homeTeam": "Parma",
+          "awayTeam": "Udinese",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 1,
+          "awayReds": 1,
+          "totalCards": 3,
+          "totalReds": 2
+        },
+        {
+          "date": "08/12/2025",
+          "homeTeam": "Pisa",
+          "awayTeam": "Parma",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 1
+        }
+      ],
+      "homeCardsOver15": [
+        7,
+        3,
+        "42.9",
+        0
+      ],
+      "homeCardsOver25": [
+        7,
+        2,
+        "28.6",
+        0
+      ],
+      "homeCardsOver35": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        7,
+        5,
+        "71.4",
+        0
+      ],
+      "awayCardsOver25": [
+        7,
+        3,
+        "42.9",
+        0
+      ],
+      "awayCardsOver35": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "awayCardsOver45": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "overallOver15": [
+        14,
+        12,
+        "85.7",
+        0
+      ],
+      "overallOver25": [
+        14,
+        11,
+        "78.6",
+        0
+      ],
+      "overallOver35": [
+        14,
+        7,
+        "50.0",
+        0
+      ],
+      "overallOver45": [
+        14,
+        4,
+        "28.6",
+        0
+      ]
+    },
+    {
+      "teamName": "Pisa",
+      "allMatches": [
+        {
+          "date": "24/08/2025",
+          "homeTeam": "Atalanta",
+          "awayTeam": "Pisa",
+          "homeCards": 2,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "30/08/2025",
+          "homeTeam": "Pisa",
+          "awayTeam": "Roma",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "14/09/2025",
+          "homeTeam": "Pisa",
+          "awayTeam": "Udinese",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "22/09/2025",
+          "homeTeam": "Napoli",
+          "awayTeam": "Pisa",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "28/09/2025",
+          "homeTeam": "Pisa",
+          "awayTeam": "Fiorentina",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "05/10/2025",
+          "homeTeam": "Bologna",
+          "awayTeam": "Pisa",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 1,
+          "totalReds": 1
+        },
+        {
+          "date": "18/10/2025",
+          "homeTeam": "Pisa",
+          "awayTeam": "Verona",
+          "homeCards": 4,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "24/10/2025",
+          "homeTeam": "Milan",
+          "awayTeam": "Pisa",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "30/10/2025",
+          "homeTeam": "Pisa",
+          "awayTeam": "Lazio",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "02/11/2025",
+          "homeTeam": "Torino",
+          "awayTeam": "Pisa",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "07/11/2025",
+          "homeTeam": "Pisa",
+          "awayTeam": "Cremonese",
+          "homeCards": 4,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "24/11/2025",
+          "homeTeam": "Sassuolo",
+          "awayTeam": "Pisa",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "30/11/2025",
+          "homeTeam": "Pisa",
+          "awayTeam": "Inter",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "08/12/2025",
+          "homeTeam": "Pisa",
+          "awayTeam": "Parma",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 1
+        }
+      ],
+      "homeCardsOver15": [
+        8,
+        6,
+        "75.0",
+        0
+      ],
+      "homeCardsOver25": [
+        8,
+        2,
+        "25.0",
+        0
+      ],
+      "homeCardsOver35": [
+        8,
+        2,
+        "25.0",
+        0
+      ],
+      "homeCardsOver45": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        6,
+        2,
+        "33.3",
+        0
+      ],
+      "awayCardsOver25": [
+        6,
+        1,
+        "16.7",
+        0
+      ],
+      "awayCardsOver35": [
+        6,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver45": [
+        6,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        14,
+        12,
+        "85.7",
+        0
+      ],
+      "overallOver25": [
+        14,
+        11,
+        "78.6",
+        0
+      ],
+      "overallOver35": [
+        14,
+        5,
+        "35.7",
+        0
+      ],
+      "overallOver45": [
+        14,
+        2,
+        "14.3",
+        0
+      ]
+    },
+    {
+      "teamName": "Roma",
+      "allMatches": [
+        {
+          "date": "23/08/2025",
+          "homeTeam": "Roma",
+          "awayTeam": "Bologna",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "30/08/2025",
+          "homeTeam": "Pisa",
+          "awayTeam": "Roma",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "14/09/2025",
+          "homeTeam": "Roma",
+          "awayTeam": "Torino",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "21/09/2025",
+          "homeTeam": "Lazio",
+          "awayTeam": "Roma",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 2,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 2
+        },
+        {
+          "date": "28/09/2025",
+          "homeTeam": "Roma",
+          "awayTeam": "Verona",
+          "homeCards": 0,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "05/10/2025",
+          "homeTeam": "Fiorentina",
+          "awayTeam": "Roma",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "18/10/2025",
+          "homeTeam": "Roma",
+          "awayTeam": "Inter",
+          "homeCards": 4,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        },
+        {
+          "date": "26/10/2025",
+          "homeTeam": "Sassuolo",
+          "awayTeam": "Roma",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "29/10/2025",
+          "homeTeam": "Roma",
+          "awayTeam": "Parma",
+          "homeCards": 0,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "02/11/2025",
+          "homeTeam": "Milan",
+          "awayTeam": "Roma",
+          "homeCards": 1,
+          "awayCards": 5,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "09/11/2025",
+          "homeTeam": "Roma",
+          "awayTeam": "Udinese",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "23/11/2025",
+          "homeTeam": "Cremonese",
+          "awayTeam": "Roma",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "30/11/2025",
+          "homeTeam": "Roma",
+          "awayTeam": "Napoli",
+          "homeCards": 4,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        },
+        {
+          "date": "07/12/2025",
+          "homeTeam": "Cagliari",
+          "awayTeam": "Roma",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 3,
+          "totalReds": 1
+        }
+      ],
+      "homeCardsOver15": [
+        7,
+        4,
+        "57.1",
+        0
+      ],
+      "homeCardsOver25": [
+        7,
+        2,
+        "28.6",
+        0
+      ],
+      "homeCardsOver35": [
+        7,
+        2,
+        "28.6",
+        0
+      ],
+      "homeCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        7,
+        4,
+        "57.1",
+        0
+      ],
+      "awayCardsOver25": [
+        7,
+        2,
+        "28.6",
+        0
+      ],
+      "awayCardsOver35": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "awayCardsOver45": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "overallOver15": [
+        14,
+        14,
+        "100.0",
+        0
+      ],
+      "overallOver25": [
+        14,
+        12,
+        "85.7",
+        0
+      ],
+      "overallOver35": [
+        14,
+        8,
+        "57.1",
+        0
+      ],
+      "overallOver45": [
+        14,
+        6,
+        "42.9",
+        0
+      ]
+    },
+    {
+      "teamName": "Sassuolo",
+      "allMatches": [
+        {
+          "date": "23/08/2025",
+          "homeTeam": "Sassuolo",
+          "awayTeam": "Napoli",
+          "homeCards": 3,
+          "awayCards": 1,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 1
+        },
+        {
+          "date": "29/08/2025",
+          "homeTeam": "Cremonese",
+          "awayTeam": "Sassuolo",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "14/09/2025",
+          "homeTeam": "Sassuolo",
+          "awayTeam": "Lazio",
+          "homeCards": 6,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 9,
+          "totalReds": 0
+        },
+        {
+          "date": "21/09/2025",
+          "homeTeam": "Inter",
+          "awayTeam": "Sassuolo",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "28/09/2025",
+          "homeTeam": "Sassuolo",
+          "awayTeam": "Udinese",
+          "homeCards": 0,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "03/10/2025",
+          "homeTeam": "Verona",
+          "awayTeam": "Sassuolo",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "18/10/2025",
+          "homeTeam": "Lecce",
+          "awayTeam": "Sassuolo",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "26/10/2025",
+          "homeTeam": "Sassuolo",
+          "awayTeam": "Roma",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "30/10/2025",
+          "homeTeam": "Cagliari",
+          "awayTeam": "Sassuolo",
+          "homeCards": 4,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 8,
+          "totalReds": 0
+        },
+        {
+          "date": "03/11/2025",
+          "homeTeam": "Sassuolo",
+          "awayTeam": "Genoa",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "09/11/2025",
+          "homeTeam": "Atalanta",
+          "awayTeam": "Sassuolo",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "24/11/2025",
+          "homeTeam": "Sassuolo",
+          "awayTeam": "Pisa",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "28/11/2025",
+          "homeTeam": "Como",
+          "awayTeam": "Sassuolo",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "06/12/2025",
+          "homeTeam": "Sassuolo",
+          "awayTeam": "Fiorentina",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        7,
+        5,
+        "71.4",
+        0
+      ],
+      "homeCardsOver25": [
+        7,
+        3,
+        "42.9",
+        0
+      ],
+      "homeCardsOver35": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "homeCardsOver45": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "awayCardsOver15": [
+        7,
+        5,
+        "71.4",
+        0
+      ],
+      "awayCardsOver25": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "awayCardsOver35": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "awayCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        14,
+        14,
+        "100.0",
+        0
+      ],
+      "overallOver25": [
+        14,
+        13,
+        "92.9",
+        0
+      ],
+      "overallOver35": [
+        14,
+        9,
+        "64.3",
+        0
+      ],
+      "overallOver45": [
+        14,
+        4,
+        "28.6",
+        0
+      ]
+    },
+    {
+      "teamName": "Torino",
+      "allMatches": [
+        {
+          "date": "25/08/2025",
+          "homeTeam": "Inter",
+          "awayTeam": "Torino",
+          "homeCards": 0,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 0,
+          "totalReds": 0
+        },
+        {
+          "date": "31/08/2025",
+          "homeTeam": "Torino",
+          "awayTeam": "Fiorentina",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "14/09/2025",
+          "homeTeam": "Roma",
+          "awayTeam": "Torino",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "21/09/2025",
+          "homeTeam": "Torino",
+          "awayTeam": "Atalanta",
+          "homeCards": 0,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 0,
+          "totalReds": 0
+        },
+        {
+          "date": "29/09/2025",
+          "homeTeam": "Parma",
+          "awayTeam": "Torino",
+          "homeCards": 3,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "04/10/2025",
+          "homeTeam": "Lazio",
+          "awayTeam": "Torino",
+          "homeCards": 3,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "18/10/2025",
+          "homeTeam": "Torino",
+          "awayTeam": "Napoli",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "26/10/2025",
+          "homeTeam": "Torino",
+          "awayTeam": "Genoa",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "29/10/2025",
+          "homeTeam": "Bologna",
+          "awayTeam": "Torino",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "02/11/2025",
+          "homeTeam": "Torino",
+          "awayTeam": "Pisa",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "08/11/2025",
+          "homeTeam": "Juventus",
+          "awayTeam": "Torino",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "24/11/2025",
+          "homeTeam": "Torino",
+          "awayTeam": "Como",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "30/11/2025",
+          "homeTeam": "Lecce",
+          "awayTeam": "Torino",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "08/12/2025",
+          "homeTeam": "Torino",
+          "awayTeam": "Milan",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        7,
+        4,
+        "57.1",
+        0
+      ],
+      "homeCardsOver25": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver35": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        7,
+        5,
+        "71.4",
+        0
+      ],
+      "awayCardsOver25": [
+        7,
+        5,
+        "71.4",
+        0
+      ],
+      "awayCardsOver35": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        14,
+        10,
+        "71.4",
+        0
+      ],
+      "overallOver25": [
+        14,
+        10,
+        "71.4",
+        0
+      ],
+      "overallOver35": [
+        14,
+        7,
+        "50.0",
+        0
+      ],
+      "overallOver45": [
+        14,
+        5,
+        "35.7",
+        0
+      ]
+    },
+    {
+      "teamName": "Udinese",
+      "allMatches": [
+        {
+          "date": "25/08/2025",
+          "homeTeam": "Udinese",
+          "awayTeam": "Verona",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "31/08/2025",
+          "homeTeam": "Inter",
+          "awayTeam": "Udinese",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "14/09/2025",
+          "homeTeam": "Pisa",
+          "awayTeam": "Udinese",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "20/09/2025",
+          "homeTeam": "Udinese",
+          "awayTeam": "Milan",
+          "homeCards": 2,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "28/09/2025",
+          "homeTeam": "Sassuolo",
+          "awayTeam": "Udinese",
+          "homeCards": 0,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "05/10/2025",
+          "homeTeam": "Udinese",
+          "awayTeam": "Cagliari",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "20/10/2025",
+          "homeTeam": "Cremonese",
+          "awayTeam": "Udinese",
+          "homeCards": 4,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "25/10/2025",
+          "homeTeam": "Udinese",
+          "awayTeam": "Lecce",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "29/10/2025",
+          "homeTeam": "Juventus",
+          "awayTeam": "Udinese",
+          "homeCards": 1,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "01/11/2025",
+          "homeTeam": "Udinese",
+          "awayTeam": "Atalanta",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "09/11/2025",
+          "homeTeam": "Roma",
+          "awayTeam": "Udinese",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "22/11/2025",
+          "homeTeam": "Udinese",
+          "awayTeam": "Bologna",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "29/11/2025",
+          "homeTeam": "Parma",
+          "awayTeam": "Udinese",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 1,
+          "awayReds": 1,
+          "totalCards": 3,
+          "totalReds": 2
+        },
+        {
+          "date": "08/12/2025",
+          "homeTeam": "Udinese",
+          "awayTeam": "Genoa",
+          "homeCards": 1,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        7,
+        3,
+        "42.9",
+        0
+      ],
+      "homeCardsOver25": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "homeCardsOver35": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        7,
+        6,
+        "85.7",
+        0
+      ],
+      "awayCardsOver25": [
+        7,
+        3,
+        "42.9",
+        0
+      ],
+      "awayCardsOver35": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "awayCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        14,
+        12,
+        "85.7",
+        0
+      ],
+      "overallOver25": [
+        14,
+        11,
+        "78.6",
+        0
+      ],
+      "overallOver35": [
+        14,
+        6,
+        "42.9",
+        0
+      ],
+      "overallOver45": [
+        14,
+        3,
+        "21.4",
+        0
+      ]
+    },
+    {
+      "teamName": "Verona",
+      "allMatches": [
+        {
+          "date": "25/08/2025",
+          "homeTeam": "Udinese",
+          "awayTeam": "Verona",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "31/08/2025",
+          "homeTeam": "Lazio",
+          "awayTeam": "Verona",
+          "homeCards": 0,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 0,
+          "totalReds": 0
+        },
+        {
+          "date": "15/09/2025",
+          "homeTeam": "Verona",
+          "awayTeam": "Cremonese",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "20/09/2025",
+          "homeTeam": "Verona",
+          "awayTeam": "Juventus",
+          "homeCards": 3,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "28/09/2025",
+          "homeTeam": "Roma",
+          "awayTeam": "Verona",
+          "homeCards": 0,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "03/10/2025",
+          "homeTeam": "Verona",
+          "awayTeam": "Sassuolo",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "18/10/2025",
+          "homeTeam": "Pisa",
+          "awayTeam": "Verona",
+          "homeCards": 4,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "26/10/2025",
+          "homeTeam": "Verona",
+          "awayTeam": "Cagliari",
+          "homeCards": 3,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        },
+        {
+          "date": "29/10/2025",
+          "homeTeam": "Como",
+          "awayTeam": "Verona",
+          "homeCards": 1,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "02/11/2025",
+          "homeTeam": "Verona",
+          "awayTeam": "Inter",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "08/11/2025",
+          "homeTeam": "Lecce",
+          "awayTeam": "Verona",
+          "homeCards": 1,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "23/11/2025",
+          "homeTeam": "Verona",
+          "awayTeam": "Parma",
+          "homeCards": 4,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        },
+        {
+          "date": "29/11/2025",
+          "homeTeam": "Genoa",
+          "awayTeam": "Verona",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "06/12/2025",
+          "homeTeam": "Verona",
+          "awayTeam": "Atalanta",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        7,
+        7,
+        "100.0",
+        0
+      ],
+      "homeCardsOver25": [
+        7,
+        3,
+        "42.9",
+        0
+      ],
+      "homeCardsOver35": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "homeCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        7,
+        6,
+        "85.7",
+        0
+      ],
+      "awayCardsOver25": [
+        7,
+        4,
+        "57.1",
+        0
+      ],
+      "awayCardsOver35": [
+        7,
+        3,
+        "42.9",
+        0
+      ],
+      "awayCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        14,
+        13,
+        "92.9",
+        0
+      ],
+      "overallOver25": [
+        14,
+        13,
+        "92.9",
+        0
+      ],
+      "overallOver35": [
+        14,
+        10,
+        "71.4",
+        0
+      ],
+      "overallOver45": [
+        14,
+        7,
+        "50.0",
+        0
+      ]
+    }
+  ]
+}

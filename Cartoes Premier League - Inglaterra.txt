@@ -1,0 +1,4844 @@
+{
+  "teams": [
+    {
+      "teamName": "Arsenal",
+      "allMatches": [
+        {
+          "date": "17/08/2025",
+          "homeTeam": "Man United",
+          "awayTeam": "Arsenal",
+          "homeCards": 1,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "23/08/2025",
+          "homeTeam": "Arsenal",
+          "awayTeam": "Leeds",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "31/08/2025",
+          "homeTeam": "Liverpool",
+          "awayTeam": "Arsenal",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "13/09/2025",
+          "homeTeam": "Arsenal",
+          "awayTeam": "Nott'm Forest",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "21/09/2025",
+          "homeTeam": "Arsenal",
+          "awayTeam": "Man City",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "28/09/2025",
+          "homeTeam": "Newcastle",
+          "awayTeam": "Arsenal",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "04/10/2025",
+          "homeTeam": "Arsenal",
+          "awayTeam": "West Ham",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "18/10/2025",
+          "homeTeam": "Fulham",
+          "awayTeam": "Arsenal",
+          "homeCards": 0,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 0,
+          "totalReds": 0
+        },
+        {
+          "date": "26/10/2025",
+          "homeTeam": "Arsenal",
+          "awayTeam": "Crystal Palace",
+          "homeCards": 0,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 0,
+          "totalReds": 0
+        },
+        {
+          "date": "01/11/2025",
+          "homeTeam": "Burnley",
+          "awayTeam": "Arsenal",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "08/11/2025",
+          "homeTeam": "Sunderland",
+          "awayTeam": "Arsenal",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "23/11/2025",
+          "homeTeam": "Arsenal",
+          "awayTeam": "Tottenham",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "30/11/2025",
+          "homeTeam": "Chelsea",
+          "awayTeam": "Arsenal",
+          "homeCards": 1,
+          "awayCards": 6,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 1
+        },
+        {
+          "date": "03/12/2025",
+          "homeTeam": "Arsenal",
+          "awayTeam": "Brentford",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "06/12/2025",
+          "homeTeam": "Aston Villa",
+          "awayTeam": "Arsenal",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver25": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver35": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        8,
+        4,
+        "50.0",
+        0
+      ],
+      "awayCardsOver25": [
+        8,
+        2,
+        "25.0",
+        0
+      ],
+      "awayCardsOver35": [
+        8,
+        2,
+        "25.0",
+        0
+      ],
+      "awayCardsOver45": [
+        8,
+        1,
+        "12.5",
+        0
+      ],
+      "overallOver15": [
+        15,
+        12,
+        "80.0",
+        0
+      ],
+      "overallOver25": [
+        15,
+        8,
+        "53.3",
+        0
+      ],
+      "overallOver35": [
+        15,
+        4,
+        "26.7",
+        0
+      ],
+      "overallOver45": [
+        15,
+        2,
+        "13.3",
+        0
+      ]
+    },
+    {
+      "teamName": "Aston Villa",
+      "allMatches": [
+        {
+          "date": "16/08/2025",
+          "homeTeam": "Aston Villa",
+          "awayTeam": "Newcastle",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 1
+        },
+        {
+          "date": "23/08/2025",
+          "homeTeam": "Brentford",
+          "awayTeam": "Aston Villa",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "31/08/2025",
+          "homeTeam": "Aston Villa",
+          "awayTeam": "Crystal Palace",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "13/09/2025",
+          "homeTeam": "Everton",
+          "awayTeam": "Aston Villa",
+          "homeCards": 3,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "21/09/2025",
+          "homeTeam": "Sunderland",
+          "awayTeam": "Aston Villa",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 1
+        },
+        {
+          "date": "28/09/2025",
+          "homeTeam": "Aston Villa",
+          "awayTeam": "Fulham",
+          "homeCards": 1,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "05/10/2025",
+          "homeTeam": "Aston Villa",
+          "awayTeam": "Burnley",
+          "homeCards": 3,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "19/10/2025",
+          "homeTeam": "Tottenham",
+          "awayTeam": "Aston Villa",
+          "homeCards": 2,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "26/10/2025",
+          "homeTeam": "Aston Villa",
+          "awayTeam": "Man City",
+          "homeCards": 1,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "01/11/2025",
+          "homeTeam": "Liverpool",
+          "awayTeam": "Aston Villa",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "09/11/2025",
+          "homeTeam": "Aston Villa",
+          "awayTeam": "Bournemouth",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "23/11/2025",
+          "homeTeam": "Leeds",
+          "awayTeam": "Aston Villa",
+          "homeCards": 5,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "30/11/2025",
+          "homeTeam": "Aston Villa",
+          "awayTeam": "Wolves",
+          "homeCards": 0,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "03/12/2025",
+          "homeTeam": "Brighton",
+          "awayTeam": "Aston Villa",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "06/12/2025",
+          "homeTeam": "Aston Villa",
+          "awayTeam": "Arsenal",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        8,
+        3,
+        "37.5",
+        0
+      ],
+      "homeCardsOver25": [
+        8,
+        1,
+        "12.5",
+        0
+      ],
+      "homeCardsOver35": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver45": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        7,
+        4,
+        "57.1",
+        0
+      ],
+      "awayCardsOver25": [
+        7,
+        2,
+        "28.6",
+        0
+      ],
+      "awayCardsOver35": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        15,
+        15,
+        "100.0",
+        0
+      ],
+      "overallOver25": [
+        15,
+        12,
+        "80.0",
+        0
+      ],
+      "overallOver35": [
+        15,
+        10,
+        "66.7",
+        0
+      ],
+      "overallOver45": [
+        15,
+        6,
+        "40.0",
+        0
+      ]
+    },
+    {
+      "teamName": "Bournemouth",
+      "allMatches": [
+        {
+          "date": "15/08/2025",
+          "homeTeam": "Liverpool",
+          "awayTeam": "Bournemouth",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "23/08/2025",
+          "homeTeam": "Bournemouth",
+          "awayTeam": "Wolves",
+          "homeCards": 2,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 6,
+          "totalReds": 1
+        },
+        {
+          "date": "30/08/2025",
+          "homeTeam": "Tottenham",
+          "awayTeam": "Bournemouth",
+          "homeCards": 2,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "13/09/2025",
+          "homeTeam": "Bournemouth",
+          "awayTeam": "Brighton",
+          "homeCards": 4,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 8,
+          "totalReds": 0
+        },
+        {
+          "date": "21/09/2025",
+          "homeTeam": "Bournemouth",
+          "awayTeam": "Newcastle",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "27/09/2025",
+          "homeTeam": "Leeds",
+          "awayTeam": "Bournemouth",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "03/10/2025",
+          "homeTeam": "Bournemouth",
+          "awayTeam": "Fulham",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "18/10/2025",
+          "homeTeam": "Crystal Palace",
+          "awayTeam": "Bournemouth",
+          "homeCards": 1,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "26/10/2025",
+          "homeTeam": "Bournemouth",
+          "awayTeam": "Nott'm Forest",
+          "homeCards": 3,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "02/11/2025",
+          "homeTeam": "Man City",
+          "awayTeam": "Bournemouth",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "09/11/2025",
+          "homeTeam": "Aston Villa",
+          "awayTeam": "Bournemouth",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "22/11/2025",
+          "homeTeam": "Bournemouth",
+          "awayTeam": "West Ham",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "29/11/2025",
+          "homeTeam": "Sunderland",
+          "awayTeam": "Bournemouth",
+          "homeCards": 5,
+          "awayCards": 5,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 10,
+          "totalReds": 1
+        },
+        {
+          "date": "02/12/2025",
+          "homeTeam": "Bournemouth",
+          "awayTeam": "Everton",
+          "homeCards": 3,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "06/12/2025",
+          "homeTeam": "Bournemouth",
+          "awayTeam": "Chelsea",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        8,
+        6,
+        "75.0",
+        0
+      ],
+      "homeCardsOver25": [
+        8,
+        4,
+        "50.0",
+        0
+      ],
+      "homeCardsOver35": [
+        8,
+        1,
+        "12.5",
+        0
+      ],
+      "homeCardsOver45": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        7,
+        7,
+        "100.0",
+        0
+      ],
+      "awayCardsOver25": [
+        7,
+        3,
+        "42.9",
+        0
+      ],
+      "awayCardsOver35": [
+        7,
+        3,
+        "42.9",
+        0
+      ],
+      "awayCardsOver45": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "overallOver15": [
+        15,
+        14,
+        "93.3",
+        0
+      ],
+      "overallOver25": [
+        15,
+        13,
+        "86.7",
+        0
+      ],
+      "overallOver35": [
+        15,
+        11,
+        "73.3",
+        0
+      ],
+      "overallOver45": [
+        15,
+        7,
+        "46.7",
+        0
+      ]
+    },
+    {
+      "teamName": "Brentford",
+      "allMatches": [
+        {
+          "date": "17/08/2025",
+          "homeTeam": "Nott'm Forest",
+          "awayTeam": "Brentford",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "23/08/2025",
+          "homeTeam": "Brentford",
+          "awayTeam": "Aston Villa",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "30/08/2025",
+          "homeTeam": "Sunderland",
+          "awayTeam": "Brentford",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "13/09/2025",
+          "homeTeam": "Brentford",
+          "awayTeam": "Chelsea",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "20/09/2025",
+          "homeTeam": "Fulham",
+          "awayTeam": "Brentford",
+          "homeCards": 4,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "27/09/2025",
+          "homeTeam": "Brentford",
+          "awayTeam": "Man United",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "05/10/2025",
+          "homeTeam": "Brentford",
+          "awayTeam": "Man City",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "20/10/2025",
+          "homeTeam": "West Ham",
+          "awayTeam": "Brentford",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "25/10/2025",
+          "homeTeam": "Brentford",
+          "awayTeam": "Liverpool",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "01/11/2025",
+          "homeTeam": "Crystal Palace",
+          "awayTeam": "Brentford",
+          "homeCards": 0,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "09/11/2025",
+          "homeTeam": "Brentford",
+          "awayTeam": "Newcastle",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "22/11/2025",
+          "homeTeam": "Brighton",
+          "awayTeam": "Brentford",
+          "homeCards": 4,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "29/11/2025",
+          "homeTeam": "Brentford",
+          "awayTeam": "Burnley",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "03/12/2025",
+          "homeTeam": "Arsenal",
+          "awayTeam": "Brentford",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "06/12/2025",
+          "homeTeam": "Tottenham",
+          "awayTeam": "Brentford",
+          "homeCards": 3,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        7,
+        5,
+        "71.4",
+        0
+      ],
+      "homeCardsOver25": [
+        7,
+        3,
+        "42.9",
+        0
+      ],
+      "homeCardsOver35": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        8,
+        5,
+        "62.5",
+        0
+      ],
+      "awayCardsOver25": [
+        8,
+        2,
+        "25.0",
+        0
+      ],
+      "awayCardsOver35": [
+        8,
+        1,
+        "12.5",
+        0
+      ],
+      "awayCardsOver45": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        15,
+        14,
+        "93.3",
+        0
+      ],
+      "overallOver25": [
+        15,
+        12,
+        "80.0",
+        0
+      ],
+      "overallOver35": [
+        15,
+        8,
+        "53.3",
+        0
+      ],
+      "overallOver45": [
+        15,
+        7,
+        "46.7",
+        0
+      ]
+    },
+    {
+      "teamName": "Brighton",
+      "allMatches": [
+        {
+          "date": "16/08/2025",
+          "homeTeam": "Brighton",
+          "awayTeam": "Fulham",
+          "homeCards": 3,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "24/08/2025",
+          "homeTeam": "Everton",
+          "awayTeam": "Brighton",
+          "homeCards": 4,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        },
+        {
+          "date": "31/08/2025",
+          "homeTeam": "Brighton",
+          "awayTeam": "Man City",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "13/09/2025",
+          "homeTeam": "Bournemouth",
+          "awayTeam": "Brighton",
+          "homeCards": 4,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 8,
+          "totalReds": 0
+        },
+        {
+          "date": "20/09/2025",
+          "homeTeam": "Brighton",
+          "awayTeam": "Tottenham",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "27/09/2025",
+          "homeTeam": "Chelsea",
+          "awayTeam": "Brighton",
+          "homeCards": 3,
+          "awayCards": 5,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 8,
+          "totalReds": 1
+        },
+        {
+          "date": "05/10/2025",
+          "homeTeam": "Wolves",
+          "awayTeam": "Brighton",
+          "homeCards": 2,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "18/10/2025",
+          "homeTeam": "Brighton",
+          "awayTeam": "Newcastle",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "25/10/2025",
+          "homeTeam": "Man United",
+          "awayTeam": "Brighton",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "01/11/2025",
+          "homeTeam": "Brighton",
+          "awayTeam": "Leeds",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "09/11/2025",
+          "homeTeam": "Crystal Palace",
+          "awayTeam": "Brighton",
+          "homeCards": 1,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "22/11/2025",
+          "homeTeam": "Brighton",
+          "awayTeam": "Brentford",
+          "homeCards": 4,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "30/11/2025",
+          "homeTeam": "Nott'm Forest",
+          "awayTeam": "Brighton",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "03/12/2025",
+          "homeTeam": "Brighton",
+          "awayTeam": "Aston Villa",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "07/12/2025",
+          "homeTeam": "Brighton",
+          "awayTeam": "West Ham",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        8,
+        5,
+        "62.5",
+        0
+      ],
+      "homeCardsOver25": [
+        8,
+        2,
+        "25.0",
+        0
+      ],
+      "homeCardsOver35": [
+        8,
+        1,
+        "12.5",
+        0
+      ],
+      "homeCardsOver45": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        7,
+        6,
+        "85.7",
+        0
+      ],
+      "awayCardsOver25": [
+        7,
+        5,
+        "71.4",
+        0
+      ],
+      "awayCardsOver35": [
+        7,
+        4,
+        "57.1",
+        0
+      ],
+      "awayCardsOver45": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "overallOver15": [
+        15,
+        12,
+        "80.0",
+        0
+      ],
+      "overallOver25": [
+        15,
+        12,
+        "80.0",
+        0
+      ],
+      "overallOver35": [
+        15,
+        11,
+        "73.3",
+        0
+      ],
+      "overallOver45": [
+        15,
+        7,
+        "46.7",
+        0
+      ]
+    },
+    {
+      "teamName": "Burnley",
+      "allMatches": [
+        {
+          "date": "16/08/2025",
+          "homeTeam": "Tottenham",
+          "awayTeam": "Burnley",
+          "homeCards": 0,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 0,
+          "totalReds": 0
+        },
+        {
+          "date": "23/08/2025",
+          "homeTeam": "Burnley",
+          "awayTeam": "Sunderland",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "30/08/2025",
+          "homeTeam": "Man United",
+          "awayTeam": "Burnley",
+          "homeCards": 1,
+          "awayCards": 5,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "14/09/2025",
+          "homeTeam": "Burnley",
+          "awayTeam": "Liverpool",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "20/09/2025",
+          "homeTeam": "Burnley",
+          "awayTeam": "Nott'm Forest",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "27/09/2025",
+          "homeTeam": "Man City",
+          "awayTeam": "Burnley",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "05/10/2025",
+          "homeTeam": "Aston Villa",
+          "awayTeam": "Burnley",
+          "homeCards": 3,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "18/10/2025",
+          "homeTeam": "Burnley",
+          "awayTeam": "Leeds",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "26/10/2025",
+          "homeTeam": "Wolves",
+          "awayTeam": "Burnley",
+          "homeCards": 1,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "01/11/2025",
+          "homeTeam": "Burnley",
+          "awayTeam": "Arsenal",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "08/11/2025",
+          "homeTeam": "West Ham",
+          "awayTeam": "Burnley",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "22/11/2025",
+          "homeTeam": "Burnley",
+          "awayTeam": "Chelsea",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "29/11/2025",
+          "homeTeam": "Brentford",
+          "awayTeam": "Burnley",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "03/12/2025",
+          "homeTeam": "Burnley",
+          "awayTeam": "Crystal Palace",
+          "homeCards": 0,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 0,
+          "totalReds": 0
+        },
+        {
+          "date": "06/12/2025",
+          "homeTeam": "Newcastle",
+          "awayTeam": "Burnley",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 4,
+          "totalReds": 1
+        }
+      ],
+      "homeCardsOver15": [
+        7,
+        3,
+        "42.9",
+        0
+      ],
+      "homeCardsOver25": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver35": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        8,
+        5,
+        "62.5",
+        0
+      ],
+      "awayCardsOver25": [
+        8,
+        2,
+        "25.0",
+        0
+      ],
+      "awayCardsOver35": [
+        8,
+        1,
+        "12.5",
+        0
+      ],
+      "awayCardsOver45": [
+        8,
+        1,
+        "12.5",
+        0
+      ],
+      "overallOver15": [
+        15,
+        11,
+        "73.3",
+        0
+      ],
+      "overallOver25": [
+        15,
+        8,
+        "53.3",
+        0
+      ],
+      "overallOver35": [
+        15,
+        6,
+        "40.0",
+        0
+      ],
+      "overallOver45": [
+        15,
+        2,
+        "13.3",
+        0
+      ]
+    },
+    {
+      "teamName": "Chelsea",
+      "allMatches": [
+        {
+          "date": "17/08/2025",
+          "homeTeam": "Chelsea",
+          "awayTeam": "Crystal Palace",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "22/08/2025",
+          "homeTeam": "West Ham",
+          "awayTeam": "Chelsea",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "30/08/2025",
+          "homeTeam": "Chelsea",
+          "awayTeam": "Fulham",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "13/09/2025",
+          "homeTeam": "Brentford",
+          "awayTeam": "Chelsea",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "20/09/2025",
+          "homeTeam": "Man United",
+          "awayTeam": "Chelsea",
+          "homeCards": 0,
+          "awayCards": 5,
+          "homeReds": 1,
+          "awayReds": 1,
+          "totalCards": 5,
+          "totalReds": 2
+        },
+        {
+          "date": "27/09/2025",
+          "homeTeam": "Chelsea",
+          "awayTeam": "Brighton",
+          "homeCards": 3,
+          "awayCards": 5,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 8,
+          "totalReds": 1
+        },
+        {
+          "date": "04/10/2025",
+          "homeTeam": "Chelsea",
+          "awayTeam": "Liverpool",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "18/10/2025",
+          "homeTeam": "Nott'm Forest",
+          "awayTeam": "Chelsea",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 4,
+          "totalReds": 1
+        },
+        {
+          "date": "25/10/2025",
+          "homeTeam": "Chelsea",
+          "awayTeam": "Sunderland",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "01/11/2025",
+          "homeTeam": "Tottenham",
+          "awayTeam": "Chelsea",
+          "homeCards": 4,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "08/11/2025",
+          "homeTeam": "Chelsea",
+          "awayTeam": "Wolves",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "22/11/2025",
+          "homeTeam": "Burnley",
+          "awayTeam": "Chelsea",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "30/11/2025",
+          "homeTeam": "Chelsea",
+          "awayTeam": "Arsenal",
+          "homeCards": 1,
+          "awayCards": 6,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 1
+        },
+        {
+          "date": "03/12/2025",
+          "homeTeam": "Leeds",
+          "awayTeam": "Chelsea",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "06/12/2025",
+          "homeTeam": "Bournemouth",
+          "awayTeam": "Chelsea",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        7,
+        3,
+        "42.9",
+        0
+      ],
+      "homeCardsOver25": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "homeCardsOver35": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        8,
+        6,
+        "75.0",
+        0
+      ],
+      "awayCardsOver25": [
+        8,
+        2,
+        "25.0",
+        0
+      ],
+      "awayCardsOver35": [
+        8,
+        1,
+        "12.5",
+        0
+      ],
+      "awayCardsOver45": [
+        8,
+        1,
+        "12.5",
+        0
+      ],
+      "overallOver15": [
+        15,
+        14,
+        "93.3",
+        0
+      ],
+      "overallOver25": [
+        15,
+        10,
+        "66.7",
+        0
+      ],
+      "overallOver35": [
+        15,
+        9,
+        "60.0",
+        0
+      ],
+      "overallOver45": [
+        15,
+        7,
+        "46.7",
+        0
+      ]
+    },
+    {
+      "teamName": "Crystal Palace",
+      "allMatches": [
+        {
+          "date": "17/08/2025",
+          "homeTeam": "Chelsea",
+          "awayTeam": "Crystal Palace",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "24/08/2025",
+          "homeTeam": "Crystal Palace",
+          "awayTeam": "Nott'm Forest",
+          "homeCards": 3,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "31/08/2025",
+          "homeTeam": "Aston Villa",
+          "awayTeam": "Crystal Palace",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "13/09/2025",
+          "homeTeam": "Crystal Palace",
+          "awayTeam": "Sunderland",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "20/09/2025",
+          "homeTeam": "West Ham",
+          "awayTeam": "Crystal Palace",
+          "homeCards": 3,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "27/09/2025",
+          "homeTeam": "Crystal Palace",
+          "awayTeam": "Liverpool",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "05/10/2025",
+          "homeTeam": "Everton",
+          "awayTeam": "Crystal Palace",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "18/10/2025",
+          "homeTeam": "Crystal Palace",
+          "awayTeam": "Bournemouth",
+          "homeCards": 1,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "26/10/2025",
+          "homeTeam": "Arsenal",
+          "awayTeam": "Crystal Palace",
+          "homeCards": 0,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 0,
+          "totalReds": 0
+        },
+        {
+          "date": "01/11/2025",
+          "homeTeam": "Crystal Palace",
+          "awayTeam": "Brentford",
+          "homeCards": 0,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "09/11/2025",
+          "homeTeam": "Crystal Palace",
+          "awayTeam": "Brighton",
+          "homeCards": 1,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "22/11/2025",
+          "homeTeam": "Wolves",
+          "awayTeam": "Crystal Palace",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "30/11/2025",
+          "homeTeam": "Crystal Palace",
+          "awayTeam": "Man United",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "03/12/2025",
+          "homeTeam": "Burnley",
+          "awayTeam": "Crystal Palace",
+          "homeCards": 0,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 0,
+          "totalReds": 0
+        },
+        {
+          "date": "07/12/2025",
+          "homeTeam": "Fulham",
+          "awayTeam": "Crystal Palace",
+          "homeCards": 0,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 0,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        7,
+        2,
+        "28.6",
+        0
+      ],
+      "homeCardsOver25": [
+        7,
+        2,
+        "28.6",
+        0
+      ],
+      "homeCardsOver35": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        8,
+        5,
+        "62.5",
+        0
+      ],
+      "awayCardsOver25": [
+        8,
+        5,
+        "62.5",
+        0
+      ],
+      "awayCardsOver35": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver45": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        15,
+        12,
+        "80.0",
+        0
+      ],
+      "overallOver25": [
+        15,
+        11,
+        "73.3",
+        0
+      ],
+      "overallOver35": [
+        15,
+        10,
+        "66.7",
+        0
+      ],
+      "overallOver45": [
+        15,
+        9,
+        "60.0",
+        0
+      ]
+    },
+    {
+      "teamName": "Everton",
+      "allMatches": [
+        {
+          "date": "18/08/2025",
+          "homeTeam": "Leeds",
+          "awayTeam": "Everton",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "24/08/2025",
+          "homeTeam": "Everton",
+          "awayTeam": "Brighton",
+          "homeCards": 4,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        },
+        {
+          "date": "30/08/2025",
+          "homeTeam": "Wolves",
+          "awayTeam": "Everton",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "13/09/2025",
+          "homeTeam": "Everton",
+          "awayTeam": "Aston Villa",
+          "homeCards": 3,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "20/09/2025",
+          "homeTeam": "Liverpool",
+          "awayTeam": "Everton",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "29/09/2025",
+          "homeTeam": "Everton",
+          "awayTeam": "West Ham",
+          "homeCards": 3,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        },
+        {
+          "date": "05/10/2025",
+          "homeTeam": "Everton",
+          "awayTeam": "Crystal Palace",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "18/10/2025",
+          "homeTeam": "Man City",
+          "awayTeam": "Everton",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "26/10/2025",
+          "homeTeam": "Everton",
+          "awayTeam": "Tottenham",
+          "homeCards": 2,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "03/11/2025",
+          "homeTeam": "Sunderland",
+          "awayTeam": "Everton",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "08/11/2025",
+          "homeTeam": "Everton",
+          "awayTeam": "Fulham",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "24/11/2025",
+          "homeTeam": "Man United",
+          "awayTeam": "Everton",
+          "homeCards": 2,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 2,
+          "totalReds": 1
+        },
+        {
+          "date": "29/11/2025",
+          "homeTeam": "Everton",
+          "awayTeam": "Newcastle",
+          "homeCards": 0,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 0,
+          "totalReds": 0
+        },
+        {
+          "date": "02/12/2025",
+          "homeTeam": "Bournemouth",
+          "awayTeam": "Everton",
+          "homeCards": 3,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "06/12/2025",
+          "homeTeam": "Everton",
+          "awayTeam": "Nott'm Forest",
+          "homeCards": 4,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        8,
+        7,
+        "87.5",
+        0
+      ],
+      "homeCardsOver25": [
+        8,
+        4,
+        "50.0",
+        0
+      ],
+      "homeCardsOver35": [
+        8,
+        2,
+        "25.0",
+        0
+      ],
+      "homeCardsOver45": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        7,
+        5,
+        "71.4",
+        0
+      ],
+      "awayCardsOver25": [
+        7,
+        2,
+        "28.6",
+        0
+      ],
+      "awayCardsOver35": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        15,
+        13,
+        "86.7",
+        0
+      ],
+      "overallOver25": [
+        15,
+        9,
+        "60.0",
+        0
+      ],
+      "overallOver35": [
+        15,
+        9,
+        "60.0",
+        0
+      ],
+      "overallOver45": [
+        15,
+        8,
+        "53.3",
+        0
+      ]
+    },
+    {
+      "teamName": "Fulham",
+      "allMatches": [
+        {
+          "date": "16/08/2025",
+          "homeTeam": "Brighton",
+          "awayTeam": "Fulham",
+          "homeCards": 3,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "24/08/2025",
+          "homeTeam": "Fulham",
+          "awayTeam": "Man United",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "30/08/2025",
+          "homeTeam": "Chelsea",
+          "awayTeam": "Fulham",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "13/09/2025",
+          "homeTeam": "Fulham",
+          "awayTeam": "Leeds",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "20/09/2025",
+          "homeTeam": "Fulham",
+          "awayTeam": "Brentford",
+          "homeCards": 4,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "28/09/2025",
+          "homeTeam": "Aston Villa",
+          "awayTeam": "Fulham",
+          "homeCards": 1,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "03/10/2025",
+          "homeTeam": "Bournemouth",
+          "awayTeam": "Fulham",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "18/10/2025",
+          "homeTeam": "Fulham",
+          "awayTeam": "Arsenal",
+          "homeCards": 0,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 0,
+          "totalReds": 0
+        },
+        {
+          "date": "25/10/2025",
+          "homeTeam": "Newcastle",
+          "awayTeam": "Fulham",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "01/11/2025",
+          "homeTeam": "Fulham",
+          "awayTeam": "Wolves",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 4,
+          "totalReds": 1
+        },
+        {
+          "date": "08/11/2025",
+          "homeTeam": "Everton",
+          "awayTeam": "Fulham",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "22/11/2025",
+          "homeTeam": "Fulham",
+          "awayTeam": "Sunderland",
+          "homeCards": 3,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "29/11/2025",
+          "homeTeam": "Tottenham",
+          "awayTeam": "Fulham",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "02/12/2025",
+          "homeTeam": "Fulham",
+          "awayTeam": "Man City",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "07/12/2025",
+          "homeTeam": "Fulham",
+          "awayTeam": "Crystal Palace",
+          "homeCards": 0,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 0,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        8,
+        2,
+        "25.0",
+        0
+      ],
+      "homeCardsOver25": [
+        8,
+        2,
+        "25.0",
+        0
+      ],
+      "homeCardsOver35": [
+        8,
+        1,
+        "12.5",
+        0
+      ],
+      "homeCardsOver45": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        7,
+        6,
+        "85.7",
+        0
+      ],
+      "awayCardsOver25": [
+        7,
+        2,
+        "28.6",
+        0
+      ],
+      "awayCardsOver35": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "awayCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        15,
+        11,
+        "73.3",
+        0
+      ],
+      "overallOver25": [
+        15,
+        9,
+        "60.0",
+        0
+      ],
+      "overallOver35": [
+        15,
+        8,
+        "53.3",
+        0
+      ],
+      "overallOver45": [
+        15,
+        5,
+        "33.3",
+        0
+      ]
+    },
+    {
+      "teamName": "Leeds",
+      "allMatches": [
+        {
+          "date": "18/08/2025",
+          "homeTeam": "Leeds",
+          "awayTeam": "Everton",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "23/08/2025",
+          "homeTeam": "Arsenal",
+          "awayTeam": "Leeds",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "30/08/2025",
+          "homeTeam": "Leeds",
+          "awayTeam": "Newcastle",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "13/09/2025",
+          "homeTeam": "Fulham",
+          "awayTeam": "Leeds",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "20/09/2025",
+          "homeTeam": "Wolves",
+          "awayTeam": "Leeds",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "27/09/2025",
+          "homeTeam": "Leeds",
+          "awayTeam": "Bournemouth",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "04/10/2025",
+          "homeTeam": "Leeds",
+          "awayTeam": "Tottenham",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "18/10/2025",
+          "homeTeam": "Burnley",
+          "awayTeam": "Leeds",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "24/10/2025",
+          "homeTeam": "Leeds",
+          "awayTeam": "West Ham",
+          "homeCards": 3,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "01/11/2025",
+          "homeTeam": "Brighton",
+          "awayTeam": "Leeds",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "09/11/2025",
+          "homeTeam": "Nott'm Forest",
+          "awayTeam": "Leeds",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "23/11/2025",
+          "homeTeam": "Leeds",
+          "awayTeam": "Aston Villa",
+          "homeCards": 5,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "29/11/2025",
+          "homeTeam": "Man City",
+          "awayTeam": "Leeds",
+          "homeCards": 4,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "03/12/2025",
+          "homeTeam": "Leeds",
+          "awayTeam": "Chelsea",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "06/12/2025",
+          "homeTeam": "Leeds",
+          "awayTeam": "Liverpool",
+          "homeCards": 3,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        8,
+        5,
+        "62.5",
+        0
+      ],
+      "homeCardsOver25": [
+        8,
+        3,
+        "37.5",
+        0
+      ],
+      "homeCardsOver35": [
+        8,
+        1,
+        "12.5",
+        0
+      ],
+      "homeCardsOver45": [
+        8,
+        1,
+        "12.5",
+        0
+      ],
+      "awayCardsOver15": [
+        7,
+        2,
+        "28.6",
+        0
+      ],
+      "awayCardsOver25": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver35": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        15,
+        14,
+        "93.3",
+        0
+      ],
+      "overallOver25": [
+        15,
+        9,
+        "60.0",
+        0
+      ],
+      "overallOver35": [
+        15,
+        6,
+        "40.0",
+        0
+      ],
+      "overallOver45": [
+        15,
+        5,
+        "33.3",
+        0
+      ]
+    },
+    {
+      "teamName": "Liverpool",
+      "allMatches": [
+        {
+          "date": "15/08/2025",
+          "homeTeam": "Liverpool",
+          "awayTeam": "Bournemouth",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "25/08/2025",
+          "homeTeam": "Newcastle",
+          "awayTeam": "Liverpool",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 1
+        },
+        {
+          "date": "31/08/2025",
+          "homeTeam": "Liverpool",
+          "awayTeam": "Arsenal",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "14/09/2025",
+          "homeTeam": "Burnley",
+          "awayTeam": "Liverpool",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "20/09/2025",
+          "homeTeam": "Liverpool",
+          "awayTeam": "Everton",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "27/09/2025",
+          "homeTeam": "Crystal Palace",
+          "awayTeam": "Liverpool",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "04/10/2025",
+          "homeTeam": "Chelsea",
+          "awayTeam": "Liverpool",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "19/10/2025",
+          "homeTeam": "Liverpool",
+          "awayTeam": "Man United",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "25/10/2025",
+          "homeTeam": "Brentford",
+          "awayTeam": "Liverpool",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "01/11/2025",
+          "homeTeam": "Liverpool",
+          "awayTeam": "Aston Villa",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "09/11/2025",
+          "homeTeam": "Man City",
+          "awayTeam": "Liverpool",
+          "homeCards": 2,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "22/11/2025",
+          "homeTeam": "Liverpool",
+          "awayTeam": "Nott'm Forest",
+          "homeCards": 2,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "30/11/2025",
+          "homeTeam": "West Ham",
+          "awayTeam": "Liverpool",
+          "homeCards": 1,
+          "awayCards": 0,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 1
+        },
+        {
+          "date": "03/12/2025",
+          "homeTeam": "Liverpool",
+          "awayTeam": "Sunderland",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "06/12/2025",
+          "homeTeam": "Leeds",
+          "awayTeam": "Liverpool",
+          "homeCards": 3,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        7,
+        4,
+        "57.1",
+        0
+      ],
+      "homeCardsOver25": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver35": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        8,
+        7,
+        "87.5",
+        0
+      ],
+      "awayCardsOver25": [
+        8,
+        4,
+        "50.0",
+        0
+      ],
+      "awayCardsOver35": [
+        8,
+        1,
+        "12.5",
+        0
+      ],
+      "awayCardsOver45": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        15,
+        14,
+        "93.3",
+        0
+      ],
+      "overallOver25": [
+        15,
+        9,
+        "60.0",
+        0
+      ],
+      "overallOver35": [
+        15,
+        8,
+        "53.3",
+        0
+      ],
+      "overallOver45": [
+        15,
+        6,
+        "40.0",
+        0
+      ]
+    },
+    {
+      "teamName": "Man City",
+      "allMatches": [
+        {
+          "date": "16/08/2025",
+          "homeTeam": "Wolves",
+          "awayTeam": "Man City",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "23/08/2025",
+          "homeTeam": "Man City",
+          "awayTeam": "Tottenham",
+          "homeCards": 1,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "31/08/2025",
+          "homeTeam": "Brighton",
+          "awayTeam": "Man City",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "14/09/2025",
+          "homeTeam": "Man City",
+          "awayTeam": "Man United",
+          "homeCards": 0,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 0,
+          "totalReds": 0
+        },
+        {
+          "date": "21/09/2025",
+          "homeTeam": "Arsenal",
+          "awayTeam": "Man City",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "27/09/2025",
+          "homeTeam": "Man City",
+          "awayTeam": "Burnley",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "05/10/2025",
+          "homeTeam": "Brentford",
+          "awayTeam": "Man City",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "18/10/2025",
+          "homeTeam": "Man City",
+          "awayTeam": "Everton",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "26/10/2025",
+          "homeTeam": "Aston Villa",
+          "awayTeam": "Man City",
+          "homeCards": 1,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "02/11/2025",
+          "homeTeam": "Man City",
+          "awayTeam": "Bournemouth",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "09/11/2025",
+          "homeTeam": "Man City",
+          "awayTeam": "Liverpool",
+          "homeCards": 2,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "22/11/2025",
+          "homeTeam": "Newcastle",
+          "awayTeam": "Man City",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "29/11/2025",
+          "homeTeam": "Man City",
+          "awayTeam": "Leeds",
+          "homeCards": 4,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "02/12/2025",
+          "homeTeam": "Fulham",
+          "awayTeam": "Man City",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "06/12/2025",
+          "homeTeam": "Man City",
+          "awayTeam": "Sunderland",
+          "homeCards": 1,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 1,
+          "totalReds": 1
+        }
+      ],
+      "homeCardsOver15": [
+        8,
+        3,
+        "37.5",
+        0
+      ],
+      "homeCardsOver25": [
+        8,
+        1,
+        "12.5",
+        0
+      ],
+      "homeCardsOver35": [
+        8,
+        1,
+        "12.5",
+        0
+      ],
+      "homeCardsOver45": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        7,
+        6,
+        "85.7",
+        0
+      ],
+      "awayCardsOver25": [
+        7,
+        2,
+        "28.6",
+        0
+      ],
+      "awayCardsOver35": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "awayCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        15,
+        12,
+        "80.0",
+        0
+      ],
+      "overallOver25": [
+        15,
+        11,
+        "73.3",
+        0
+      ],
+      "overallOver35": [
+        15,
+        9,
+        "60.0",
+        0
+      ],
+      "overallOver45": [
+        15,
+        5,
+        "33.3",
+        0
+      ]
+    },
+    {
+      "teamName": "Man United",
+      "allMatches": [
+        {
+          "date": "17/08/2025",
+          "homeTeam": "Man United",
+          "awayTeam": "Arsenal",
+          "homeCards": 1,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "24/08/2025",
+          "homeTeam": "Fulham",
+          "awayTeam": "Man United",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "30/08/2025",
+          "homeTeam": "Man United",
+          "awayTeam": "Burnley",
+          "homeCards": 1,
+          "awayCards": 5,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "14/09/2025",
+          "homeTeam": "Man City",
+          "awayTeam": "Man United",
+          "homeCards": 0,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 0,
+          "totalReds": 0
+        },
+        {
+          "date": "20/09/2025",
+          "homeTeam": "Man United",
+          "awayTeam": "Chelsea",
+          "homeCards": 0,
+          "awayCards": 5,
+          "homeReds": 1,
+          "awayReds": 1,
+          "totalCards": 5,
+          "totalReds": 2
+        },
+        {
+          "date": "27/09/2025",
+          "homeTeam": "Brentford",
+          "awayTeam": "Man United",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "04/10/2025",
+          "homeTeam": "Man United",
+          "awayTeam": "Sunderland",
+          "homeCards": 1,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "19/10/2025",
+          "homeTeam": "Liverpool",
+          "awayTeam": "Man United",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "25/10/2025",
+          "homeTeam": "Man United",
+          "awayTeam": "Brighton",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "01/11/2025",
+          "homeTeam": "Nott'm Forest",
+          "awayTeam": "Man United",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "08/11/2025",
+          "homeTeam": "Tottenham",
+          "awayTeam": "Man United",
+          "homeCards": 5,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "24/11/2025",
+          "homeTeam": "Man United",
+          "awayTeam": "Everton",
+          "homeCards": 2,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 2,
+          "totalReds": 1
+        },
+        {
+          "date": "30/11/2025",
+          "homeTeam": "Crystal Palace",
+          "awayTeam": "Man United",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "04/12/2025",
+          "homeTeam": "Man United",
+          "awayTeam": "West Ham",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "08/12/2025",
+          "homeTeam": "Wolves",
+          "awayTeam": "Man United",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        7,
+        3,
+        "42.9",
+        0
+      ],
+      "homeCardsOver25": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver35": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        8,
+        4,
+        "50.0",
+        0
+      ],
+      "awayCardsOver25": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver35": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver45": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        15,
+        14,
+        "93.3",
+        0
+      ],
+      "overallOver25": [
+        15,
+        10,
+        "66.7",
+        0
+      ],
+      "overallOver35": [
+        15,
+        10,
+        "66.7",
+        0
+      ],
+      "overallOver45": [
+        15,
+        7,
+        "46.7",
+        0
+      ]
+    },
+    {
+      "teamName": "Newcastle",
+      "allMatches": [
+        {
+          "date": "16/08/2025",
+          "homeTeam": "Aston Villa",
+          "awayTeam": "Newcastle",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 1
+        },
+        {
+          "date": "25/08/2025",
+          "homeTeam": "Newcastle",
+          "awayTeam": "Liverpool",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 1
+        },
+        {
+          "date": "30/08/2025",
+          "homeTeam": "Leeds",
+          "awayTeam": "Newcastle",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "13/09/2025",
+          "homeTeam": "Newcastle",
+          "awayTeam": "Wolves",
+          "homeCards": 1,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "21/09/2025",
+          "homeTeam": "Bournemouth",
+          "awayTeam": "Newcastle",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "28/09/2025",
+          "homeTeam": "Newcastle",
+          "awayTeam": "Arsenal",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "05/10/2025",
+          "homeTeam": "Newcastle",
+          "awayTeam": "Nott'm Forest",
+          "homeCards": 0,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "18/10/2025",
+          "homeTeam": "Brighton",
+          "awayTeam": "Newcastle",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "25/10/2025",
+          "homeTeam": "Newcastle",
+          "awayTeam": "Fulham",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "02/11/2025",
+          "homeTeam": "West Ham",
+          "awayTeam": "Newcastle",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "09/11/2025",
+          "homeTeam": "Brentford",
+          "awayTeam": "Newcastle",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "22/11/2025",
+          "homeTeam": "Newcastle",
+          "awayTeam": "Man City",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "29/11/2025",
+          "homeTeam": "Everton",
+          "awayTeam": "Newcastle",
+          "homeCards": 0,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 0,
+          "totalReds": 0
+        },
+        {
+          "date": "02/12/2025",
+          "homeTeam": "Newcastle",
+          "awayTeam": "Tottenham",
+          "homeCards": 0,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "06/12/2025",
+          "homeTeam": "Newcastle",
+          "awayTeam": "Burnley",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 4,
+          "totalReds": 1
+        }
+      ],
+      "homeCardsOver15": [
+        8,
+        3,
+        "37.5",
+        0
+      ],
+      "homeCardsOver25": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver35": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver45": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "awayCardsOver25": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver35": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        15,
+        13,
+        "86.7",
+        0
+      ],
+      "overallOver25": [
+        15,
+        10,
+        "66.7",
+        0
+      ],
+      "overallOver35": [
+        15,
+        5,
+        "33.3",
+        0
+      ],
+      "overallOver45": [
+        15,
+        2,
+        "13.3",
+        0
+      ]
+    },
+    {
+      "teamName": "Nott'm Forest",
+      "allMatches": [
+        {
+          "date": "17/08/2025",
+          "homeTeam": "Nott'm Forest",
+          "awayTeam": "Brentford",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "24/08/2025",
+          "homeTeam": "Crystal Palace",
+          "awayTeam": "Nott'm Forest",
+          "homeCards": 3,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "31/08/2025",
+          "homeTeam": "Nott'm Forest",
+          "awayTeam": "West Ham",
+          "homeCards": 0,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 0,
+          "totalReds": 0
+        },
+        {
+          "date": "13/09/2025",
+          "homeTeam": "Arsenal",
+          "awayTeam": "Nott'm Forest",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "20/09/2025",
+          "homeTeam": "Burnley",
+          "awayTeam": "Nott'm Forest",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "27/09/2025",
+          "homeTeam": "Nott'm Forest",
+          "awayTeam": "Sunderland",
+          "homeCards": 4,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "05/10/2025",
+          "homeTeam": "Newcastle",
+          "awayTeam": "Nott'm Forest",
+          "homeCards": 0,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "18/10/2025",
+          "homeTeam": "Nott'm Forest",
+          "awayTeam": "Chelsea",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 4,
+          "totalReds": 1
+        },
+        {
+          "date": "26/10/2025",
+          "homeTeam": "Bournemouth",
+          "awayTeam": "Nott'm Forest",
+          "homeCards": 3,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "01/11/2025",
+          "homeTeam": "Nott'm Forest",
+          "awayTeam": "Man United",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "09/11/2025",
+          "homeTeam": "Nott'm Forest",
+          "awayTeam": "Leeds",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "22/11/2025",
+          "homeTeam": "Liverpool",
+          "awayTeam": "Nott'm Forest",
+          "homeCards": 2,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "30/11/2025",
+          "homeTeam": "Nott'm Forest",
+          "awayTeam": "Brighton",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "03/12/2025",
+          "homeTeam": "Wolves",
+          "awayTeam": "Nott'm Forest",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "06/12/2025",
+          "homeTeam": "Everton",
+          "awayTeam": "Nott'm Forest",
+          "homeCards": 4,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        7,
+        3,
+        "42.9",
+        0
+      ],
+      "homeCardsOver25": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "homeCardsOver35": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "homeCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        8,
+        4,
+        "50.0",
+        0
+      ],
+      "awayCardsOver25": [
+        8,
+        3,
+        "37.5",
+        0
+      ],
+      "awayCardsOver35": [
+        8,
+        1,
+        "12.5",
+        0
+      ],
+      "awayCardsOver45": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        15,
+        13,
+        "86.7",
+        0
+      ],
+      "overallOver25": [
+        15,
+        9,
+        "60.0",
+        0
+      ],
+      "overallOver35": [
+        15,
+        7,
+        "46.7",
+        0
+      ],
+      "overallOver45": [
+        15,
+        3,
+        "20.0",
+        0
+      ]
+    },
+    {
+      "teamName": "Sunderland",
+      "allMatches": [
+        {
+          "date": "16/08/2025",
+          "homeTeam": "Sunderland",
+          "awayTeam": "West Ham",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "23/08/2025",
+          "homeTeam": "Burnley",
+          "awayTeam": "Sunderland",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "30/08/2025",
+          "homeTeam": "Sunderland",
+          "awayTeam": "Brentford",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "13/09/2025",
+          "homeTeam": "Crystal Palace",
+          "awayTeam": "Sunderland",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "21/09/2025",
+          "homeTeam": "Sunderland",
+          "awayTeam": "Aston Villa",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 1
+        },
+        {
+          "date": "27/09/2025",
+          "homeTeam": "Nott'm Forest",
+          "awayTeam": "Sunderland",
+          "homeCards": 4,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "04/10/2025",
+          "homeTeam": "Man United",
+          "awayTeam": "Sunderland",
+          "homeCards": 1,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "18/10/2025",
+          "homeTeam": "Sunderland",
+          "awayTeam": "Wolves",
+          "homeCards": 0,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 0,
+          "totalReds": 0
+        },
+        {
+          "date": "25/10/2025",
+          "homeTeam": "Chelsea",
+          "awayTeam": "Sunderland",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "03/11/2025",
+          "homeTeam": "Sunderland",
+          "awayTeam": "Everton",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "08/11/2025",
+          "homeTeam": "Sunderland",
+          "awayTeam": "Arsenal",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "22/11/2025",
+          "homeTeam": "Fulham",
+          "awayTeam": "Sunderland",
+          "homeCards": 3,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "29/11/2025",
+          "homeTeam": "Sunderland",
+          "awayTeam": "Bournemouth",
+          "homeCards": 5,
+          "awayCards": 5,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 10,
+          "totalReds": 1
+        },
+        {
+          "date": "03/12/2025",
+          "homeTeam": "Liverpool",
+          "awayTeam": "Sunderland",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "06/12/2025",
+          "homeTeam": "Man City",
+          "awayTeam": "Sunderland",
+          "homeCards": 1,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 1,
+          "totalReds": 1
+        }
+      ],
+      "homeCardsOver15": [
+        7,
+        5,
+        "71.4",
+        0
+      ],
+      "homeCardsOver25": [
+        7,
+        3,
+        "42.9",
+        0
+      ],
+      "homeCardsOver35": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "homeCardsOver45": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "awayCardsOver15": [
+        8,
+        3,
+        "37.5",
+        0
+      ],
+      "awayCardsOver25": [
+        8,
+        2,
+        "25.0",
+        0
+      ],
+      "awayCardsOver35": [
+        8,
+        1,
+        "12.5",
+        0
+      ],
+      "awayCardsOver45": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        15,
+        11,
+        "73.3",
+        0
+      ],
+      "overallOver25": [
+        15,
+        8,
+        "53.3",
+        0
+      ],
+      "overallOver35": [
+        15,
+        6,
+        "40.0",
+        0
+      ],
+      "overallOver45": [
+        15,
+        6,
+        "40.0",
+        0
+      ]
+    },
+    {
+      "teamName": "Tottenham",
+      "allMatches": [
+        {
+          "date": "16/08/2025",
+          "homeTeam": "Tottenham",
+          "awayTeam": "Burnley",
+          "homeCards": 0,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 0,
+          "totalReds": 0
+        },
+        {
+          "date": "23/08/2025",
+          "homeTeam": "Man City",
+          "awayTeam": "Tottenham",
+          "homeCards": 1,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "30/08/2025",
+          "homeTeam": "Tottenham",
+          "awayTeam": "Bournemouth",
+          "homeCards": 2,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "13/09/2025",
+          "homeTeam": "West Ham",
+          "awayTeam": "Tottenham",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 1
+        },
+        {
+          "date": "20/09/2025",
+          "homeTeam": "Brighton",
+          "awayTeam": "Tottenham",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "27/09/2025",
+          "homeTeam": "Tottenham",
+          "awayTeam": "Wolves",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "04/10/2025",
+          "homeTeam": "Leeds",
+          "awayTeam": "Tottenham",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "19/10/2025",
+          "homeTeam": "Tottenham",
+          "awayTeam": "Aston Villa",
+          "homeCards": 2,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "26/10/2025",
+          "homeTeam": "Everton",
+          "awayTeam": "Tottenham",
+          "homeCards": 2,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "01/11/2025",
+          "homeTeam": "Tottenham",
+          "awayTeam": "Chelsea",
+          "homeCards": 4,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "08/11/2025",
+          "homeTeam": "Tottenham",
+          "awayTeam": "Man United",
+          "homeCards": 5,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "23/11/2025",
+          "homeTeam": "Arsenal",
+          "awayTeam": "Tottenham",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "29/11/2025",
+          "homeTeam": "Tottenham",
+          "awayTeam": "Fulham",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "02/12/2025",
+          "homeTeam": "Newcastle",
+          "awayTeam": "Tottenham",
+          "homeCards": 0,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "06/12/2025",
+          "homeTeam": "Tottenham",
+          "awayTeam": "Brentford",
+          "homeCards": 3,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        8,
+        7,
+        "87.5",
+        0
+      ],
+      "homeCardsOver25": [
+        8,
+        5,
+        "62.5",
+        0
+      ],
+      "homeCardsOver35": [
+        8,
+        2,
+        "25.0",
+        0
+      ],
+      "homeCardsOver45": [
+        8,
+        1,
+        "12.5",
+        0
+      ],
+      "awayCardsOver15": [
+        7,
+        5,
+        "71.4",
+        0
+      ],
+      "awayCardsOver25": [
+        7,
+        4,
+        "57.1",
+        0
+      ],
+      "awayCardsOver35": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "awayCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        15,
+        13,
+        "86.7",
+        0
+      ],
+      "overallOver25": [
+        15,
+        11,
+        "73.3",
+        0
+      ],
+      "overallOver35": [
+        15,
+        9,
+        "60.0",
+        0
+      ],
+      "overallOver45": [
+        15,
+        8,
+        "53.3",
+        0
+      ]
+    },
+    {
+      "teamName": "West Ham",
+      "allMatches": [
+        {
+          "date": "16/08/2025",
+          "homeTeam": "Sunderland",
+          "awayTeam": "West Ham",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "22/08/2025",
+          "homeTeam": "West Ham",
+          "awayTeam": "Chelsea",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "31/08/2025",
+          "homeTeam": "Nott'm Forest",
+          "awayTeam": "West Ham",
+          "homeCards": 0,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 0,
+          "totalReds": 0
+        },
+        {
+          "date": "13/09/2025",
+          "homeTeam": "West Ham",
+          "awayTeam": "Tottenham",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 1
+        },
+        {
+          "date": "20/09/2025",
+          "homeTeam": "West Ham",
+          "awayTeam": "Crystal Palace",
+          "homeCards": 3,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "29/09/2025",
+          "homeTeam": "Everton",
+          "awayTeam": "West Ham",
+          "homeCards": 3,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        },
+        {
+          "date": "04/10/2025",
+          "homeTeam": "Arsenal",
+          "awayTeam": "West Ham",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "20/10/2025",
+          "homeTeam": "West Ham",
+          "awayTeam": "Brentford",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "24/10/2025",
+          "homeTeam": "Leeds",
+          "awayTeam": "West Ham",
+          "homeCards": 3,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "02/11/2025",
+          "homeTeam": "West Ham",
+          "awayTeam": "Newcastle",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "08/11/2025",
+          "homeTeam": "West Ham",
+          "awayTeam": "Burnley",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "22/11/2025",
+          "homeTeam": "Bournemouth",
+          "awayTeam": "West Ham",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "30/11/2025",
+          "homeTeam": "West Ham",
+          "awayTeam": "Liverpool",
+          "homeCards": 1,
+          "awayCards": 0,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 1
+        },
+        {
+          "date": "04/12/2025",
+          "homeTeam": "Man United",
+          "awayTeam": "West Ham",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "07/12/2025",
+          "homeTeam": "Brighton",
+          "awayTeam": "West Ham",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        7,
+        2,
+        "28.6",
+        0
+      ],
+      "homeCardsOver25": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "homeCardsOver35": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        8,
+        6,
+        "75.0",
+        0
+      ],
+      "awayCardsOver25": [
+        8,
+        2,
+        "25.0",
+        0
+      ],
+      "awayCardsOver35": [
+        8,
+        1,
+        "12.5",
+        0
+      ],
+      "awayCardsOver45": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        15,
+        10,
+        "66.7",
+        0
+      ],
+      "overallOver25": [
+        15,
+        8,
+        "53.3",
+        0
+      ],
+      "overallOver35": [
+        15,
+        7,
+        "46.7",
+        0
+      ],
+      "overallOver45": [
+        15,
+        4,
+        "26.7",
+        0
+      ]
+    },
+    {
+      "teamName": "Wolves",
+      "allMatches": [
+        {
+          "date": "16/08/2025",
+          "homeTeam": "Wolves",
+          "awayTeam": "Man City",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "23/08/2025",
+          "homeTeam": "Bournemouth",
+          "awayTeam": "Wolves",
+          "homeCards": 2,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 6,
+          "totalReds": 1
+        },
+        {
+          "date": "30/08/2025",
+          "homeTeam": "Wolves",
+          "awayTeam": "Everton",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "13/09/2025",
+          "homeTeam": "Newcastle",
+          "awayTeam": "Wolves",
+          "homeCards": 1,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "20/09/2025",
+          "homeTeam": "Wolves",
+          "awayTeam": "Leeds",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "27/09/2025",
+          "homeTeam": "Tottenham",
+          "awayTeam": "Wolves",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "05/10/2025",
+          "homeTeam": "Wolves",
+          "awayTeam": "Brighton",
+          "homeCards": 2,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "18/10/2025",
+          "homeTeam": "Sunderland",
+          "awayTeam": "Wolves",
+          "homeCards": 0,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 0,
+          "totalReds": 0
+        },
+        {
+          "date": "26/10/2025",
+          "homeTeam": "Wolves",
+          "awayTeam": "Burnley",
+          "homeCards": 1,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "01/11/2025",
+          "homeTeam": "Fulham",
+          "awayTeam": "Wolves",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 4,
+          "totalReds": 1
+        },
+        {
+          "date": "08/11/2025",
+          "homeTeam": "Chelsea",
+          "awayTeam": "Wolves",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "22/11/2025",
+          "homeTeam": "Wolves",
+          "awayTeam": "Crystal Palace",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "30/11/2025",
+          "homeTeam": "Aston Villa",
+          "awayTeam": "Wolves",
+          "homeCards": 0,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "03/12/2025",
+          "homeTeam": "Wolves",
+          "awayTeam": "Nott'm Forest",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "08/12/2025",
+          "homeTeam": "Wolves",
+          "awayTeam": "Man United",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        8,
+        4,
+        "50.0",
+        0
+      ],
+      "homeCardsOver25": [
+        8,
+        1,
+        "12.5",
+        0
+      ],
+      "homeCardsOver35": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver45": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        7,
+        6,
+        "85.7",
+        0
+      ],
+      "awayCardsOver25": [
+        7,
+        4,
+        "57.1",
+        0
+      ],
+      "awayCardsOver35": [
+        7,
+        3,
+        "42.9",
+        0
+      ],
+      "awayCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        15,
+        12,
+        "80.0",
+        0
+      ],
+      "overallOver25": [
+        15,
+        11,
+        "73.3",
+        0
+      ],
+      "overallOver35": [
+        15,
+        9,
+        "60.0",
+        0
+      ],
+      "overallOver45": [
+        15,
+        6,
+        "40.0",
+        0
+      ]
+    }
+  ]
+}

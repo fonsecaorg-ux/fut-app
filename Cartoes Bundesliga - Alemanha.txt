@@ -1,0 +1,3964 @@
+{
+  "teams": [
+    {
+      "teamName": "Augsburg",
+      "allMatches": [
+        {
+          "date": "23/08/2025",
+          "homeTeam": "Freiburg",
+          "awayTeam": "Augsburg",
+          "homeCards": 4,
+          "awayCards": 5,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 9,
+          "totalReds": 0
+        },
+        {
+          "date": "30/08/2025",
+          "homeTeam": "Augsburg",
+          "awayTeam": "Bayern Munich",
+          "homeCards": 3,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        },
+        {
+          "date": "14/09/2025",
+          "homeTeam": "St Pauli",
+          "awayTeam": "Augsburg",
+          "homeCards": 1,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "20/09/2025",
+          "homeTeam": "Augsburg",
+          "awayTeam": "Mainz",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 3,
+          "totalReds": 1
+        },
+        {
+          "date": "27/09/2025",
+          "homeTeam": "Heidenheim",
+          "awayTeam": "Augsburg",
+          "homeCards": 1,
+          "awayCards": 6,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        },
+        {
+          "date": "04/10/2025",
+          "homeTeam": "Augsburg",
+          "awayTeam": "Wolfsburg",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "18/10/2025",
+          "homeTeam": "FC Koln",
+          "awayTeam": "Augsburg",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "25/10/2025",
+          "homeTeam": "Augsburg",
+          "awayTeam": "RB Leipzig",
+          "homeCards": 3,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "31/10/2025",
+          "homeTeam": "Augsburg",
+          "awayTeam": "Dortmund",
+          "homeCards": 4,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "09/11/2025",
+          "homeTeam": "Stuttgart",
+          "awayTeam": "Augsburg",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "22/11/2025",
+          "homeTeam": "Augsburg",
+          "awayTeam": "Hamburg",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 1
+        },
+        {
+          "date": "29/11/2025",
+          "homeTeam": "Hoffenheim",
+          "awayTeam": "Augsburg",
+          "homeCards": 1,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "06/12/2025",
+          "homeTeam": "Augsburg",
+          "awayTeam": "Leverkusen",
+          "homeCards": 4,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        7,
+        6,
+        "85.7",
+        0
+      ],
+      "homeCardsOver25": [
+        7,
+        4,
+        "57.1",
+        0
+      ],
+      "homeCardsOver35": [
+        7,
+        2,
+        "28.6",
+        0
+      ],
+      "homeCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        6,
+        5,
+        "83.3",
+        0
+      ],
+      "awayCardsOver25": [
+        6,
+        4,
+        "66.7",
+        0
+      ],
+      "awayCardsOver35": [
+        6,
+        3,
+        "50.0",
+        0
+      ],
+      "awayCardsOver45": [
+        6,
+        2,
+        "33.3",
+        0
+      ],
+      "overallOver15": [
+        13,
+        12,
+        "92.3",
+        0
+      ],
+      "overallOver25": [
+        13,
+        12,
+        "92.3",
+        0
+      ],
+      "overallOver35": [
+        13,
+        10,
+        "76.9",
+        0
+      ],
+      "overallOver45": [
+        13,
+        8,
+        "61.5",
+        0
+      ]
+    },
+    {
+      "teamName": "Bayern Munich",
+      "allMatches": [
+        {
+          "date": "22/08/2025",
+          "homeTeam": "Bayern Munich",
+          "awayTeam": "RB Leipzig",
+          "homeCards": 4,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "30/08/2025",
+          "homeTeam": "Augsburg",
+          "awayTeam": "Bayern Munich",
+          "homeCards": 3,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        },
+        {
+          "date": "13/09/2025",
+          "homeTeam": "Bayern Munich",
+          "awayTeam": "Hamburg",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "20/09/2025",
+          "homeTeam": "Hoffenheim",
+          "awayTeam": "Bayern Munich",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "26/09/2025",
+          "homeTeam": "Bayern Munich",
+          "awayTeam": "Werder Bremen",
+          "homeCards": 2,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "04/10/2025",
+          "homeTeam": "Ein Frankfurt",
+          "awayTeam": "Bayern Munich",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "18/10/2025",
+          "homeTeam": "Bayern Munich",
+          "awayTeam": "Dortmund",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "25/10/2025",
+          "homeTeam": "M'gladbach",
+          "awayTeam": "Bayern Munich",
+          "homeCards": 0,
+          "awayCards": 3,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 1
+        },
+        {
+          "date": "01/11/2025",
+          "homeTeam": "Bayern Munich",
+          "awayTeam": "Leverkusen",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "08/11/2025",
+          "homeTeam": "Union Berlin",
+          "awayTeam": "Bayern Munich",
+          "homeCards": 2,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "22/11/2025",
+          "homeTeam": "Bayern Munich",
+          "awayTeam": "Freiburg",
+          "homeCards": 1,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "29/11/2025",
+          "homeTeam": "Bayern Munich",
+          "awayTeam": "St Pauli",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "06/12/2025",
+          "homeTeam": "Stuttgart",
+          "awayTeam": "Bayern Munich",
+          "homeCards": 2,
+          "awayCards": 4,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 1
+        }
+      ],
+      "homeCardsOver15": [
+        7,
+        3,
+        "42.9",
+        0
+      ],
+      "homeCardsOver25": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "homeCardsOver35": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "homeCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        6,
+        6,
+        "100.0",
+        0
+      ],
+      "awayCardsOver25": [
+        6,
+        4,
+        "66.7",
+        0
+      ],
+      "awayCardsOver35": [
+        6,
+        3,
+        "50.0",
+        0
+      ],
+      "awayCardsOver45": [
+        6,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        13,
+        12,
+        "92.3",
+        0
+      ],
+      "overallOver25": [
+        13,
+        9,
+        "69.2",
+        0
+      ],
+      "overallOver35": [
+        13,
+        6,
+        "46.2",
+        0
+      ],
+      "overallOver45": [
+        13,
+        4,
+        "30.8",
+        0
+      ]
+    },
+    {
+      "teamName": "Dortmund",
+      "allMatches": [
+        {
+          "date": "23/08/2025",
+          "homeTeam": "St Pauli",
+          "awayTeam": "Dortmund",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 5,
+          "totalReds": 1
+        },
+        {
+          "date": "31/08/2025",
+          "homeTeam": "Dortmund",
+          "awayTeam": "Union Berlin",
+          "homeCards": 0,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 0,
+          "totalReds": 0
+        },
+        {
+          "date": "13/09/2025",
+          "homeTeam": "Heidenheim",
+          "awayTeam": "Dortmund",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 1
+        },
+        {
+          "date": "21/09/2025",
+          "homeTeam": "Dortmund",
+          "awayTeam": "Wolfsburg",
+          "homeCards": 1,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "27/09/2025",
+          "homeTeam": "Mainz",
+          "awayTeam": "Dortmund",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 1
+        },
+        {
+          "date": "04/10/2025",
+          "homeTeam": "Dortmund",
+          "awayTeam": "RB Leipzig",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "18/10/2025",
+          "homeTeam": "Bayern Munich",
+          "awayTeam": "Dortmund",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "25/10/2025",
+          "homeTeam": "Dortmund",
+          "awayTeam": "FC Koln",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "31/10/2025",
+          "homeTeam": "Augsburg",
+          "awayTeam": "Dortmund",
+          "homeCards": 4,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "08/11/2025",
+          "homeTeam": "Hamburg",
+          "awayTeam": "Dortmund",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "22/11/2025",
+          "homeTeam": "Dortmund",
+          "awayTeam": "Stuttgart",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "29/11/2025",
+          "homeTeam": "Leverkusen",
+          "awayTeam": "Dortmund",
+          "homeCards": 3,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        },
+        {
+          "date": "07/12/2025",
+          "homeTeam": "Dortmund",
+          "awayTeam": "Hoffenheim",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        6,
+        1,
+        "16.7",
+        0
+      ],
+      "homeCardsOver25": [
+        6,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver35": [
+        6,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver45": [
+        6,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        7,
+        4,
+        "57.1",
+        0
+      ],
+      "awayCardsOver25": [
+        7,
+        4,
+        "57.1",
+        0
+      ],
+      "awayCardsOver35": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "awayCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        13,
+        11,
+        "84.6",
+        0
+      ],
+      "overallOver25": [
+        13,
+        8,
+        "61.5",
+        0
+      ],
+      "overallOver35": [
+        13,
+        7,
+        "53.8",
+        0
+      ],
+      "overallOver45": [
+        13,
+        4,
+        "30.8",
+        0
+      ]
+    },
+    {
+      "teamName": "Ein Frankfurt",
+      "allMatches": [
+        {
+          "date": "23/08/2025",
+          "homeTeam": "Ein Frankfurt",
+          "awayTeam": "Werder Bremen",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "30/08/2025",
+          "homeTeam": "Hoffenheim",
+          "awayTeam": "Ein Frankfurt",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "12/09/2025",
+          "homeTeam": "Leverkusen",
+          "awayTeam": "Ein Frankfurt",
+          "homeCards": 5,
+          "awayCards": 3,
+          "homeReds": 2,
+          "awayReds": 0,
+          "totalCards": 8,
+          "totalReds": 2
+        },
+        {
+          "date": "21/09/2025",
+          "homeTeam": "Ein Frankfurt",
+          "awayTeam": "Union Berlin",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "27/09/2025",
+          "homeTeam": "M'gladbach",
+          "awayTeam": "Ein Frankfurt",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "04/10/2025",
+          "homeTeam": "Ein Frankfurt",
+          "awayTeam": "Bayern Munich",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "19/10/2025",
+          "homeTeam": "Freiburg",
+          "awayTeam": "Ein Frankfurt",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "25/10/2025",
+          "homeTeam": "Ein Frankfurt",
+          "awayTeam": "St Pauli",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "01/11/2025",
+          "homeTeam": "Heidenheim",
+          "awayTeam": "Ein Frankfurt",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "09/11/2025",
+          "homeTeam": "Ein Frankfurt",
+          "awayTeam": "Mainz",
+          "homeCards": 0,
+          "awayCards": 5,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "22/11/2025",
+          "homeTeam": "FC Koln",
+          "awayTeam": "Ein Frankfurt",
+          "homeCards": 0,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 0,
+          "totalReds": 0
+        },
+        {
+          "date": "30/11/2025",
+          "homeTeam": "Ein Frankfurt",
+          "awayTeam": "Wolfsburg",
+          "homeCards": 1,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "06/12/2025",
+          "homeTeam": "RB Leipzig",
+          "awayTeam": "Ein Frankfurt",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        6,
+        1,
+        "16.7",
+        0
+      ],
+      "homeCardsOver25": [
+        6,
+        1,
+        "16.7",
+        0
+      ],
+      "homeCardsOver35": [
+        6,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver45": [
+        6,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        7,
+        6,
+        "85.7",
+        0
+      ],
+      "awayCardsOver25": [
+        7,
+        3,
+        "42.9",
+        0
+      ],
+      "awayCardsOver35": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        13,
+        11,
+        "84.6",
+        0
+      ],
+      "overallOver25": [
+        13,
+        10,
+        "76.9",
+        0
+      ],
+      "overallOver35": [
+        13,
+        7,
+        "53.8",
+        0
+      ],
+      "overallOver45": [
+        13,
+        6,
+        "46.2",
+        0
+      ]
+    },
+    {
+      "teamName": "FC Koln",
+      "allMatches": [
+        {
+          "date": "24/08/2025",
+          "homeTeam": "Mainz",
+          "awayTeam": "FC Koln",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 1
+        },
+        {
+          "date": "31/08/2025",
+          "homeTeam": "FC Koln",
+          "awayTeam": "Freiburg",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "13/09/2025",
+          "homeTeam": "Wolfsburg",
+          "awayTeam": "FC Koln",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "20/09/2025",
+          "homeTeam": "RB Leipzig",
+          "awayTeam": "FC Koln",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "28/09/2025",
+          "homeTeam": "FC Koln",
+          "awayTeam": "Stuttgart",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "03/10/2025",
+          "homeTeam": "Hoffenheim",
+          "awayTeam": "FC Koln",
+          "homeCards": 3,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "18/10/2025",
+          "homeTeam": "FC Koln",
+          "awayTeam": "Augsburg",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "25/10/2025",
+          "homeTeam": "Dortmund",
+          "awayTeam": "FC Koln",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "02/11/2025",
+          "homeTeam": "FC Koln",
+          "awayTeam": "Hamburg",
+          "homeCards": 1,
+          "awayCards": 6,
+          "homeReds": 0,
+          "awayReds": 2,
+          "totalCards": 7,
+          "totalReds": 2
+        },
+        {
+          "date": "08/11/2025",
+          "homeTeam": "M'gladbach",
+          "awayTeam": "FC Koln",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "22/11/2025",
+          "homeTeam": "FC Koln",
+          "awayTeam": "Ein Frankfurt",
+          "homeCards": 0,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 0,
+          "totalReds": 0
+        },
+        {
+          "date": "29/11/2025",
+          "homeTeam": "Werder Bremen",
+          "awayTeam": "FC Koln",
+          "homeCards": 2,
+          "awayCards": 4,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 1
+        },
+        {
+          "date": "06/12/2025",
+          "homeTeam": "FC Koln",
+          "awayTeam": "St Pauli",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        6,
+        3,
+        "50.0",
+        0
+      ],
+      "homeCardsOver25": [
+        6,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver35": [
+        6,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver45": [
+        6,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        7,
+        5,
+        "71.4",
+        0
+      ],
+      "awayCardsOver25": [
+        7,
+        3,
+        "42.9",
+        0
+      ],
+      "awayCardsOver35": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "awayCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        13,
+        11,
+        "84.6",
+        0
+      ],
+      "overallOver25": [
+        13,
+        9,
+        "69.2",
+        0
+      ],
+      "overallOver35": [
+        13,
+        8,
+        "61.5",
+        0
+      ],
+      "overallOver45": [
+        13,
+        4,
+        "30.8",
+        0
+      ]
+    },
+    {
+      "teamName": "Freiburg",
+      "allMatches": [
+        {
+          "date": "23/08/2025",
+          "homeTeam": "Freiburg",
+          "awayTeam": "Augsburg",
+          "homeCards": 4,
+          "awayCards": 5,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 9,
+          "totalReds": 0
+        },
+        {
+          "date": "31/08/2025",
+          "homeTeam": "FC Koln",
+          "awayTeam": "Freiburg",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "13/09/2025",
+          "homeTeam": "Freiburg",
+          "awayTeam": "Stuttgart",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 1
+        },
+        {
+          "date": "20/09/2025",
+          "homeTeam": "Werder Bremen",
+          "awayTeam": "Freiburg",
+          "homeCards": 5,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        },
+        {
+          "date": "28/09/2025",
+          "homeTeam": "Freiburg",
+          "awayTeam": "Hoffenheim",
+          "homeCards": 3,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "05/10/2025",
+          "homeTeam": "M'gladbach",
+          "awayTeam": "Freiburg",
+          "homeCards": 3,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "19/10/2025",
+          "homeTeam": "Freiburg",
+          "awayTeam": "Ein Frankfurt",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "26/10/2025",
+          "homeTeam": "Leverkusen",
+          "awayTeam": "Freiburg",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 3,
+          "totalReds": 1
+        },
+        {
+          "date": "01/11/2025",
+          "homeTeam": "Union Berlin",
+          "awayTeam": "Freiburg",
+          "homeCards": 6,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        },
+        {
+          "date": "09/11/2025",
+          "homeTeam": "Freiburg",
+          "awayTeam": "St Pauli",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "22/11/2025",
+          "homeTeam": "Bayern Munich",
+          "awayTeam": "Freiburg",
+          "homeCards": 1,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "30/11/2025",
+          "homeTeam": "Freiburg",
+          "awayTeam": "Mainz",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 2,
+          "totalReds": 1
+        },
+        {
+          "date": "06/12/2025",
+          "homeTeam": "Heidenheim",
+          "awayTeam": "Freiburg",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        6,
+        4,
+        "66.7",
+        0
+      ],
+      "homeCardsOver25": [
+        6,
+        2,
+        "33.3",
+        0
+      ],
+      "homeCardsOver35": [
+        6,
+        1,
+        "16.7",
+        0
+      ],
+      "homeCardsOver45": [
+        6,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        7,
+        2,
+        "28.6",
+        0
+      ],
+      "awayCardsOver25": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver35": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        13,
+        12,
+        "92.3",
+        0
+      ],
+      "overallOver25": [
+        13,
+        10,
+        "76.9",
+        0
+      ],
+      "overallOver35": [
+        13,
+        7,
+        "53.8",
+        0
+      ],
+      "overallOver45": [
+        13,
+        4,
+        "30.8",
+        0
+      ]
+    },
+    {
+      "teamName": "Hamburg",
+      "allMatches": [
+        {
+          "date": "24/08/2025",
+          "homeTeam": "M'gladbach",
+          "awayTeam": "Hamburg",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "29/08/2025",
+          "homeTeam": "Hamburg",
+          "awayTeam": "St Pauli",
+          "homeCards": 3,
+          "awayCards": 3,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 1
+        },
+        {
+          "date": "13/09/2025",
+          "homeTeam": "Bayern Munich",
+          "awayTeam": "Hamburg",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "20/09/2025",
+          "homeTeam": "Hamburg",
+          "awayTeam": "Heidenheim",
+          "homeCards": 5,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "28/09/2025",
+          "homeTeam": "Union Berlin",
+          "awayTeam": "Hamburg",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 4,
+          "totalReds": 1
+        },
+        {
+          "date": "05/10/2025",
+          "homeTeam": "Hamburg",
+          "awayTeam": "Mainz",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "18/10/2025",
+          "homeTeam": "RB Leipzig",
+          "awayTeam": "Hamburg",
+          "homeCards": 3,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "25/10/2025",
+          "homeTeam": "Hamburg",
+          "awayTeam": "Wolfsburg",
+          "homeCards": 1,
+          "awayCards": 5,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "02/11/2025",
+          "homeTeam": "FC Koln",
+          "awayTeam": "Hamburg",
+          "homeCards": 1,
+          "awayCards": 6,
+          "homeReds": 0,
+          "awayReds": 2,
+          "totalCards": 7,
+          "totalReds": 2
+        },
+        {
+          "date": "08/11/2025",
+          "homeTeam": "Hamburg",
+          "awayTeam": "Dortmund",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "22/11/2025",
+          "homeTeam": "Augsburg",
+          "awayTeam": "Hamburg",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 1
+        },
+        {
+          "date": "30/11/2025",
+          "homeTeam": "Hamburg",
+          "awayTeam": "Stuttgart",
+          "homeCards": 2,
+          "awayCards": 4,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 1
+        },
+        {
+          "date": "07/12/2025",
+          "homeTeam": "Hamburg",
+          "awayTeam": "Werder Bremen",
+          "homeCards": 1,
+          "awayCards": 6,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        7,
+        4,
+        "57.1",
+        0
+      ],
+      "homeCardsOver25": [
+        7,
+        2,
+        "28.6",
+        0
+      ],
+      "homeCardsOver35": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "homeCardsOver45": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "awayCardsOver15": [
+        6,
+        4,
+        "66.7",
+        0
+      ],
+      "awayCardsOver25": [
+        6,
+        2,
+        "33.3",
+        0
+      ],
+      "awayCardsOver35": [
+        6,
+        1,
+        "16.7",
+        0
+      ],
+      "awayCardsOver45": [
+        6,
+        1,
+        "16.7",
+        0
+      ],
+      "overallOver15": [
+        13,
+        13,
+        "100.0",
+        0
+      ],
+      "overallOver25": [
+        13,
+        12,
+        "92.3",
+        0
+      ],
+      "overallOver35": [
+        13,
+        11,
+        "84.6",
+        0
+      ],
+      "overallOver45": [
+        13,
+        8,
+        "61.5",
+        0
+      ]
+    },
+    {
+      "teamName": "Heidenheim",
+      "allMatches": [
+        {
+          "date": "23/08/2025",
+          "homeTeam": "Heidenheim",
+          "awayTeam": "Wolfsburg",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "30/08/2025",
+          "homeTeam": "RB Leipzig",
+          "awayTeam": "Heidenheim",
+          "homeCards": 2,
+          "awayCards": 5,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        },
+        {
+          "date": "13/09/2025",
+          "homeTeam": "Heidenheim",
+          "awayTeam": "Dortmund",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 1
+        },
+        {
+          "date": "20/09/2025",
+          "homeTeam": "Hamburg",
+          "awayTeam": "Heidenheim",
+          "homeCards": 5,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "27/09/2025",
+          "homeTeam": "Heidenheim",
+          "awayTeam": "Augsburg",
+          "homeCards": 1,
+          "awayCards": 6,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        },
+        {
+          "date": "05/10/2025",
+          "homeTeam": "Stuttgart",
+          "awayTeam": "Heidenheim",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "18/10/2025",
+          "homeTeam": "Heidenheim",
+          "awayTeam": "Werder Bremen",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "25/10/2025",
+          "homeTeam": "Hoffenheim",
+          "awayTeam": "Heidenheim",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "01/11/2025",
+          "homeTeam": "Heidenheim",
+          "awayTeam": "Ein Frankfurt",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "08/11/2025",
+          "homeTeam": "Leverkusen",
+          "awayTeam": "Heidenheim",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "22/11/2025",
+          "homeTeam": "Heidenheim",
+          "awayTeam": "M'gladbach",
+          "homeCards": 2,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "29/11/2025",
+          "homeTeam": "Union Berlin",
+          "awayTeam": "Heidenheim",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "06/12/2025",
+          "homeTeam": "Heidenheim",
+          "awayTeam": "Freiburg",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        7,
+        4,
+        "57.1",
+        0
+      ],
+      "homeCardsOver25": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver35": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        6,
+        2,
+        "33.3",
+        0
+      ],
+      "awayCardsOver25": [
+        6,
+        1,
+        "16.7",
+        0
+      ],
+      "awayCardsOver35": [
+        6,
+        1,
+        "16.7",
+        0
+      ],
+      "awayCardsOver45": [
+        6,
+        1,
+        "16.7",
+        0
+      ],
+      "overallOver15": [
+        13,
+        12,
+        "92.3",
+        0
+      ],
+      "overallOver25": [
+        13,
+        8,
+        "61.5",
+        0
+      ],
+      "overallOver35": [
+        13,
+        7,
+        "53.8",
+        0
+      ],
+      "overallOver45": [
+        13,
+        6,
+        "46.2",
+        0
+      ]
+    },
+    {
+      "teamName": "Hoffenheim",
+      "allMatches": [
+        {
+          "date": "23/08/2025",
+          "homeTeam": "Leverkusen",
+          "awayTeam": "Hoffenheim",
+          "homeCards": 0,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "30/08/2025",
+          "homeTeam": "Hoffenheim",
+          "awayTeam": "Ein Frankfurt",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "13/09/2025",
+          "homeTeam": "Union Berlin",
+          "awayTeam": "Hoffenheim",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 1
+        },
+        {
+          "date": "20/09/2025",
+          "homeTeam": "Hoffenheim",
+          "awayTeam": "Bayern Munich",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "28/09/2025",
+          "homeTeam": "Freiburg",
+          "awayTeam": "Hoffenheim",
+          "homeCards": 3,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "03/10/2025",
+          "homeTeam": "Hoffenheim",
+          "awayTeam": "FC Koln",
+          "homeCards": 3,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "19/10/2025",
+          "homeTeam": "St Pauli",
+          "awayTeam": "Hoffenheim",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "25/10/2025",
+          "homeTeam": "Hoffenheim",
+          "awayTeam": "Heidenheim",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "02/11/2025",
+          "homeTeam": "Wolfsburg",
+          "awayTeam": "Hoffenheim",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "08/11/2025",
+          "homeTeam": "Hoffenheim",
+          "awayTeam": "RB Leipzig",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "21/11/2025",
+          "homeTeam": "Mainz",
+          "awayTeam": "Hoffenheim",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 1
+        },
+        {
+          "date": "29/11/2025",
+          "homeTeam": "Hoffenheim",
+          "awayTeam": "Augsburg",
+          "homeCards": 1,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "07/12/2025",
+          "homeTeam": "Dortmund",
+          "awayTeam": "Hoffenheim",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        6,
+        3,
+        "50.0",
+        0
+      ],
+      "homeCardsOver25": [
+        6,
+        2,
+        "33.3",
+        0
+      ],
+      "homeCardsOver35": [
+        6,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver45": [
+        6,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        7,
+        5,
+        "71.4",
+        0
+      ],
+      "awayCardsOver25": [
+        7,
+        2,
+        "28.6",
+        0
+      ],
+      "awayCardsOver35": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "awayCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        13,
+        12,
+        "92.3",
+        0
+      ],
+      "overallOver25": [
+        13,
+        8,
+        "61.5",
+        0
+      ],
+      "overallOver35": [
+        13,
+        7,
+        "53.8",
+        0
+      ],
+      "overallOver45": [
+        13,
+        3,
+        "23.1",
+        0
+      ]
+    },
+    {
+      "teamName": "Leverkusen",
+      "allMatches": [
+        {
+          "date": "23/08/2025",
+          "homeTeam": "Leverkusen",
+          "awayTeam": "Hoffenheim",
+          "homeCards": 0,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "30/08/2025",
+          "homeTeam": "Werder Bremen",
+          "awayTeam": "Leverkusen",
+          "homeCards": 4,
+          "awayCards": 3,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 1
+        },
+        {
+          "date": "12/09/2025",
+          "homeTeam": "Leverkusen",
+          "awayTeam": "Ein Frankfurt",
+          "homeCards": 5,
+          "awayCards": 3,
+          "homeReds": 2,
+          "awayReds": 0,
+          "totalCards": 8,
+          "totalReds": 2
+        },
+        {
+          "date": "21/09/2025",
+          "homeTeam": "Leverkusen",
+          "awayTeam": "M'gladbach",
+          "homeCards": 5,
+          "awayCards": 5,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 10,
+          "totalReds": 0
+        },
+        {
+          "date": "27/09/2025",
+          "homeTeam": "St Pauli",
+          "awayTeam": "Leverkusen",
+          "homeCards": 3,
+          "awayCards": 5,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 8,
+          "totalReds": 0
+        },
+        {
+          "date": "04/10/2025",
+          "homeTeam": "Leverkusen",
+          "awayTeam": "Union Berlin",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "18/10/2025",
+          "homeTeam": "Mainz",
+          "awayTeam": "Leverkusen",
+          "homeCards": 4,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 8,
+          "totalReds": 0
+        },
+        {
+          "date": "26/10/2025",
+          "homeTeam": "Leverkusen",
+          "awayTeam": "Freiburg",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 3,
+          "totalReds": 1
+        },
+        {
+          "date": "01/11/2025",
+          "homeTeam": "Bayern Munich",
+          "awayTeam": "Leverkusen",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "08/11/2025",
+          "homeTeam": "Leverkusen",
+          "awayTeam": "Heidenheim",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "22/11/2025",
+          "homeTeam": "Wolfsburg",
+          "awayTeam": "Leverkusen",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "29/11/2025",
+          "homeTeam": "Leverkusen",
+          "awayTeam": "Dortmund",
+          "homeCards": 3,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        },
+        {
+          "date": "06/12/2025",
+          "homeTeam": "Augsburg",
+          "awayTeam": "Leverkusen",
+          "homeCards": 4,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        7,
+        3,
+        "42.9",
+        0
+      ],
+      "homeCardsOver25": [
+        7,
+        3,
+        "42.9",
+        0
+      ],
+      "homeCardsOver35": [
+        7,
+        2,
+        "28.6",
+        0
+      ],
+      "homeCardsOver45": [
+        7,
+        2,
+        "28.6",
+        0
+      ],
+      "awayCardsOver15": [
+        6,
+        4,
+        "66.7",
+        0
+      ],
+      "awayCardsOver25": [
+        6,
+        4,
+        "66.7",
+        0
+      ],
+      "awayCardsOver35": [
+        6,
+        2,
+        "33.3",
+        0
+      ],
+      "awayCardsOver45": [
+        6,
+        1,
+        "16.7",
+        0
+      ],
+      "overallOver15": [
+        13,
+        12,
+        "92.3",
+        0
+      ],
+      "overallOver25": [
+        13,
+        11,
+        "84.6",
+        0
+      ],
+      "overallOver35": [
+        13,
+        9,
+        "69.2",
+        0
+      ],
+      "overallOver45": [
+        13,
+        7,
+        "53.8",
+        0
+      ]
+    },
+    {
+      "teamName": "M'gladbach",
+      "allMatches": [
+        {
+          "date": "24/08/2025",
+          "homeTeam": "M'gladbach",
+          "awayTeam": "Hamburg",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "30/08/2025",
+          "homeTeam": "Stuttgart",
+          "awayTeam": "M'gladbach",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "14/09/2025",
+          "homeTeam": "M'gladbach",
+          "awayTeam": "Werder Bremen",
+          "homeCards": 1,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "21/09/2025",
+          "homeTeam": "Leverkusen",
+          "awayTeam": "M'gladbach",
+          "homeCards": 5,
+          "awayCards": 5,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 10,
+          "totalReds": 0
+        },
+        {
+          "date": "27/09/2025",
+          "homeTeam": "M'gladbach",
+          "awayTeam": "Ein Frankfurt",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "05/10/2025",
+          "homeTeam": "M'gladbach",
+          "awayTeam": "Freiburg",
+          "homeCards": 3,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "17/10/2025",
+          "homeTeam": "Union Berlin",
+          "awayTeam": "M'gladbach",
+          "homeCards": 5,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 8,
+          "totalReds": 0
+        },
+        {
+          "date": "25/10/2025",
+          "homeTeam": "M'gladbach",
+          "awayTeam": "Bayern Munich",
+          "homeCards": 0,
+          "awayCards": 3,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 1
+        },
+        {
+          "date": "01/11/2025",
+          "homeTeam": "St Pauli",
+          "awayTeam": "M'gladbach",
+          "homeCards": 4,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "08/11/2025",
+          "homeTeam": "M'gladbach",
+          "awayTeam": "FC Koln",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "22/11/2025",
+          "homeTeam": "Heidenheim",
+          "awayTeam": "M'gladbach",
+          "homeCards": 2,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "28/11/2025",
+          "homeTeam": "M'gladbach",
+          "awayTeam": "RB Leipzig",
+          "homeCards": 0,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "05/12/2025",
+          "homeTeam": "Mainz",
+          "awayTeam": "M'gladbach",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        7,
+        3,
+        "42.9",
+        0
+      ],
+      "homeCardsOver25": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "homeCardsOver35": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        6,
+        2,
+        "33.3",
+        0
+      ],
+      "awayCardsOver25": [
+        6,
+        2,
+        "33.3",
+        0
+      ],
+      "awayCardsOver35": [
+        6,
+        1,
+        "16.7",
+        0
+      ],
+      "awayCardsOver45": [
+        6,
+        1,
+        "16.7",
+        0
+      ],
+      "overallOver15": [
+        13,
+        12,
+        "92.3",
+        0
+      ],
+      "overallOver25": [
+        13,
+        11,
+        "84.6",
+        0
+      ],
+      "overallOver35": [
+        13,
+        5,
+        "38.5",
+        0
+      ],
+      "overallOver45": [
+        13,
+        3,
+        "23.1",
+        0
+      ]
+    },
+    {
+      "teamName": "Mainz",
+      "allMatches": [
+        {
+          "date": "24/08/2025",
+          "homeTeam": "Mainz",
+          "awayTeam": "FC Koln",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 1
+        },
+        {
+          "date": "31/08/2025",
+          "homeTeam": "Wolfsburg",
+          "awayTeam": "Mainz",
+          "homeCards": 3,
+          "awayCards": 5,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 8,
+          "totalReds": 1
+        },
+        {
+          "date": "13/09/2025",
+          "homeTeam": "Mainz",
+          "awayTeam": "RB Leipzig",
+          "homeCards": 1,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "20/09/2025",
+          "homeTeam": "Augsburg",
+          "awayTeam": "Mainz",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 3,
+          "totalReds": 1
+        },
+        {
+          "date": "27/09/2025",
+          "homeTeam": "Mainz",
+          "awayTeam": "Dortmund",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 1
+        },
+        {
+          "date": "05/10/2025",
+          "homeTeam": "Hamburg",
+          "awayTeam": "Mainz",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "18/10/2025",
+          "homeTeam": "Mainz",
+          "awayTeam": "Leverkusen",
+          "homeCards": 4,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 8,
+          "totalReds": 0
+        },
+        {
+          "date": "26/10/2025",
+          "homeTeam": "Stuttgart",
+          "awayTeam": "Mainz",
+          "homeCards": 4,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        },
+        {
+          "date": "01/11/2025",
+          "homeTeam": "Mainz",
+          "awayTeam": "Werder Bremen",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "09/11/2025",
+          "homeTeam": "Ein Frankfurt",
+          "awayTeam": "Mainz",
+          "homeCards": 0,
+          "awayCards": 5,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "21/11/2025",
+          "homeTeam": "Mainz",
+          "awayTeam": "Hoffenheim",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 1
+        },
+        {
+          "date": "30/11/2025",
+          "homeTeam": "Freiburg",
+          "awayTeam": "Mainz",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 2,
+          "totalReds": 1
+        },
+        {
+          "date": "05/12/2025",
+          "homeTeam": "Mainz",
+          "awayTeam": "M'gladbach",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        7,
+        4,
+        "57.1",
+        0
+      ],
+      "homeCardsOver25": [
+        7,
+        2,
+        "28.6",
+        0
+      ],
+      "homeCardsOver35": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "homeCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        6,
+        6,
+        "100.0",
+        0
+      ],
+      "awayCardsOver25": [
+        6,
+        4,
+        "66.7",
+        0
+      ],
+      "awayCardsOver35": [
+        6,
+        2,
+        "33.3",
+        0
+      ],
+      "awayCardsOver45": [
+        6,
+        2,
+        "33.3",
+        0
+      ],
+      "overallOver15": [
+        13,
+        12,
+        "92.3",
+        0
+      ],
+      "overallOver25": [
+        13,
+        10,
+        "76.9",
+        0
+      ],
+      "overallOver35": [
+        13,
+        7,
+        "53.8",
+        0
+      ],
+      "overallOver45": [
+        13,
+        6,
+        "46.2",
+        0
+      ]
+    },
+    {
+      "teamName": "RB Leipzig",
+      "allMatches": [
+        {
+          "date": "22/08/2025",
+          "homeTeam": "Bayern Munich",
+          "awayTeam": "RB Leipzig",
+          "homeCards": 4,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "30/08/2025",
+          "homeTeam": "RB Leipzig",
+          "awayTeam": "Heidenheim",
+          "homeCards": 2,
+          "awayCards": 5,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        },
+        {
+          "date": "13/09/2025",
+          "homeTeam": "Mainz",
+          "awayTeam": "RB Leipzig",
+          "homeCards": 1,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "20/09/2025",
+          "homeTeam": "RB Leipzig",
+          "awayTeam": "FC Koln",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "27/09/2025",
+          "homeTeam": "Wolfsburg",
+          "awayTeam": "RB Leipzig",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "04/10/2025",
+          "homeTeam": "Dortmund",
+          "awayTeam": "RB Leipzig",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "18/10/2025",
+          "homeTeam": "RB Leipzig",
+          "awayTeam": "Hamburg",
+          "homeCards": 3,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "25/10/2025",
+          "homeTeam": "Augsburg",
+          "awayTeam": "RB Leipzig",
+          "homeCards": 3,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "01/11/2025",
+          "homeTeam": "RB Leipzig",
+          "awayTeam": "Stuttgart",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "08/11/2025",
+          "homeTeam": "Hoffenheim",
+          "awayTeam": "RB Leipzig",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "23/11/2025",
+          "homeTeam": "RB Leipzig",
+          "awayTeam": "Werder Bremen",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "28/11/2025",
+          "homeTeam": "M'gladbach",
+          "awayTeam": "RB Leipzig",
+          "homeCards": 0,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "06/12/2025",
+          "homeTeam": "RB Leipzig",
+          "awayTeam": "Ein Frankfurt",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        6,
+        2,
+        "33.3",
+        0
+      ],
+      "homeCardsOver25": [
+        6,
+        1,
+        "16.7",
+        0
+      ],
+      "homeCardsOver35": [
+        6,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver45": [
+        6,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        7,
+        4,
+        "57.1",
+        0
+      ],
+      "awayCardsOver25": [
+        7,
+        2,
+        "28.6",
+        0
+      ],
+      "awayCardsOver35": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        13,
+        12,
+        "92.3",
+        0
+      ],
+      "overallOver25": [
+        13,
+        11,
+        "84.6",
+        0
+      ],
+      "overallOver35": [
+        13,
+        7,
+        "53.8",
+        0
+      ],
+      "overallOver45": [
+        13,
+        3,
+        "23.1",
+        0
+      ]
+    },
+    {
+      "teamName": "St Pauli",
+      "allMatches": [
+        {
+          "date": "23/08/2025",
+          "homeTeam": "St Pauli",
+          "awayTeam": "Dortmund",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 5,
+          "totalReds": 1
+        },
+        {
+          "date": "29/08/2025",
+          "homeTeam": "Hamburg",
+          "awayTeam": "St Pauli",
+          "homeCards": 3,
+          "awayCards": 3,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 1
+        },
+        {
+          "date": "14/09/2025",
+          "homeTeam": "St Pauli",
+          "awayTeam": "Augsburg",
+          "homeCards": 1,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "19/09/2025",
+          "homeTeam": "Stuttgart",
+          "awayTeam": "St Pauli",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "27/09/2025",
+          "homeTeam": "St Pauli",
+          "awayTeam": "Leverkusen",
+          "homeCards": 3,
+          "awayCards": 5,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 8,
+          "totalReds": 0
+        },
+        {
+          "date": "04/10/2025",
+          "homeTeam": "Werder Bremen",
+          "awayTeam": "St Pauli",
+          "homeCards": 3,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "19/10/2025",
+          "homeTeam": "St Pauli",
+          "awayTeam": "Hoffenheim",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "25/10/2025",
+          "homeTeam": "Ein Frankfurt",
+          "awayTeam": "St Pauli",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "01/11/2025",
+          "homeTeam": "St Pauli",
+          "awayTeam": "M'gladbach",
+          "homeCards": 4,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "09/11/2025",
+          "homeTeam": "Freiburg",
+          "awayTeam": "St Pauli",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "23/11/2025",
+          "homeTeam": "St Pauli",
+          "awayTeam": "Union Berlin",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "29/11/2025",
+          "homeTeam": "Bayern Munich",
+          "awayTeam": "St Pauli",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "06/12/2025",
+          "homeTeam": "FC Koln",
+          "awayTeam": "St Pauli",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        6,
+        3,
+        "50.0",
+        0
+      ],
+      "homeCardsOver25": [
+        6,
+        2,
+        "33.3",
+        0
+      ],
+      "homeCardsOver35": [
+        6,
+        1,
+        "16.7",
+        0
+      ],
+      "homeCardsOver45": [
+        6,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        7,
+        3,
+        "42.9",
+        0
+      ],
+      "awayCardsOver25": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "awayCardsOver35": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        13,
+        11,
+        "84.6",
+        0
+      ],
+      "overallOver25": [
+        13,
+        8,
+        "61.5",
+        0
+      ],
+      "overallOver35": [
+        13,
+        8,
+        "61.5",
+        0
+      ],
+      "overallOver45": [
+        13,
+        4,
+        "30.8",
+        0
+      ]
+    },
+    {
+      "teamName": "Stuttgart",
+      "allMatches": [
+        {
+          "date": "23/08/2025",
+          "homeTeam": "Union Berlin",
+          "awayTeam": "Stuttgart",
+          "homeCards": 4,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 8,
+          "totalReds": 0
+        },
+        {
+          "date": "30/08/2025",
+          "homeTeam": "Stuttgart",
+          "awayTeam": "M'gladbach",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "13/09/2025",
+          "homeTeam": "Freiburg",
+          "awayTeam": "Stuttgart",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 1
+        },
+        {
+          "date": "19/09/2025",
+          "homeTeam": "Stuttgart",
+          "awayTeam": "St Pauli",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "28/09/2025",
+          "homeTeam": "FC Koln",
+          "awayTeam": "Stuttgart",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "05/10/2025",
+          "homeTeam": "Stuttgart",
+          "awayTeam": "Heidenheim",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "18/10/2025",
+          "homeTeam": "Wolfsburg",
+          "awayTeam": "Stuttgart",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "26/10/2025",
+          "homeTeam": "Stuttgart",
+          "awayTeam": "Mainz",
+          "homeCards": 4,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        },
+        {
+          "date": "01/11/2025",
+          "homeTeam": "RB Leipzig",
+          "awayTeam": "Stuttgart",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "09/11/2025",
+          "homeTeam": "Stuttgart",
+          "awayTeam": "Augsburg",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "22/11/2025",
+          "homeTeam": "Dortmund",
+          "awayTeam": "Stuttgart",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "30/11/2025",
+          "homeTeam": "Hamburg",
+          "awayTeam": "Stuttgart",
+          "homeCards": 2,
+          "awayCards": 4,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 1
+        },
+        {
+          "date": "06/12/2025",
+          "homeTeam": "Stuttgart",
+          "awayTeam": "Bayern Munich",
+          "homeCards": 2,
+          "awayCards": 4,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 1
+        }
+      ],
+      "homeCardsOver15": [
+        6,
+        4,
+        "66.7",
+        0
+      ],
+      "homeCardsOver25": [
+        6,
+        1,
+        "16.7",
+        0
+      ],
+      "homeCardsOver35": [
+        6,
+        1,
+        "16.7",
+        0
+      ],
+      "homeCardsOver45": [
+        6,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        7,
+        4,
+        "57.1",
+        0
+      ],
+      "awayCardsOver25": [
+        7,
+        2,
+        "28.6",
+        0
+      ],
+      "awayCardsOver35": [
+        7,
+        2,
+        "28.6",
+        0
+      ],
+      "awayCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        13,
+        13,
+        "100.0",
+        0
+      ],
+      "overallOver25": [
+        13,
+        8,
+        "61.5",
+        0
+      ],
+      "overallOver35": [
+        13,
+        6,
+        "46.2",
+        0
+      ],
+      "overallOver45": [
+        13,
+        5,
+        "38.5",
+        0
+      ]
+    },
+    {
+      "teamName": "Union Berlin",
+      "allMatches": [
+        {
+          "date": "23/08/2025",
+          "homeTeam": "Union Berlin",
+          "awayTeam": "Stuttgart",
+          "homeCards": 4,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 8,
+          "totalReds": 0
+        },
+        {
+          "date": "31/08/2025",
+          "homeTeam": "Dortmund",
+          "awayTeam": "Union Berlin",
+          "homeCards": 0,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 0,
+          "totalReds": 0
+        },
+        {
+          "date": "13/09/2025",
+          "homeTeam": "Union Berlin",
+          "awayTeam": "Hoffenheim",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 1
+        },
+        {
+          "date": "21/09/2025",
+          "homeTeam": "Ein Frankfurt",
+          "awayTeam": "Union Berlin",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "28/09/2025",
+          "homeTeam": "Union Berlin",
+          "awayTeam": "Hamburg",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 4,
+          "totalReds": 1
+        },
+        {
+          "date": "04/10/2025",
+          "homeTeam": "Leverkusen",
+          "awayTeam": "Union Berlin",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "17/10/2025",
+          "homeTeam": "Union Berlin",
+          "awayTeam": "M'gladbach",
+          "homeCards": 5,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 8,
+          "totalReds": 0
+        },
+        {
+          "date": "24/10/2025",
+          "homeTeam": "Werder Bremen",
+          "awayTeam": "Union Berlin",
+          "homeCards": 4,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "01/11/2025",
+          "homeTeam": "Union Berlin",
+          "awayTeam": "Freiburg",
+          "homeCards": 6,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        },
+        {
+          "date": "08/11/2025",
+          "homeTeam": "Union Berlin",
+          "awayTeam": "Bayern Munich",
+          "homeCards": 2,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "23/11/2025",
+          "homeTeam": "St Pauli",
+          "awayTeam": "Union Berlin",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "29/11/2025",
+          "homeTeam": "Union Berlin",
+          "awayTeam": "Heidenheim",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "06/12/2025",
+          "homeTeam": "Wolfsburg",
+          "awayTeam": "Union Berlin",
+          "homeCards": 4,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        7,
+        6,
+        "85.7",
+        0
+      ],
+      "homeCardsOver25": [
+        7,
+        4,
+        "57.1",
+        0
+      ],
+      "homeCardsOver35": [
+        7,
+        3,
+        "42.9",
+        0
+      ],
+      "homeCardsOver45": [
+        7,
+        2,
+        "28.6",
+        0
+      ],
+      "awayCardsOver15": [
+        6,
+        2,
+        "33.3",
+        0
+      ],
+      "awayCardsOver25": [
+        6,
+        1,
+        "16.7",
+        0
+      ],
+      "awayCardsOver35": [
+        6,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver45": [
+        6,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        13,
+        12,
+        "92.3",
+        0
+      ],
+      "overallOver25": [
+        13,
+        10,
+        "76.9",
+        0
+      ],
+      "overallOver35": [
+        13,
+        10,
+        "76.9",
+        0
+      ],
+      "overallOver45": [
+        13,
+        7,
+        "53.8",
+        0
+      ]
+    },
+    {
+      "teamName": "Werder Bremen",
+      "allMatches": [
+        {
+          "date": "23/08/2025",
+          "homeTeam": "Ein Frankfurt",
+          "awayTeam": "Werder Bremen",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "30/08/2025",
+          "homeTeam": "Werder Bremen",
+          "awayTeam": "Leverkusen",
+          "homeCards": 4,
+          "awayCards": 3,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 1
+        },
+        {
+          "date": "14/09/2025",
+          "homeTeam": "M'gladbach",
+          "awayTeam": "Werder Bremen",
+          "homeCards": 1,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "20/09/2025",
+          "homeTeam": "Werder Bremen",
+          "awayTeam": "Freiburg",
+          "homeCards": 5,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        },
+        {
+          "date": "26/09/2025",
+          "homeTeam": "Bayern Munich",
+          "awayTeam": "Werder Bremen",
+          "homeCards": 2,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "04/10/2025",
+          "homeTeam": "Werder Bremen",
+          "awayTeam": "St Pauli",
+          "homeCards": 3,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "18/10/2025",
+          "homeTeam": "Heidenheim",
+          "awayTeam": "Werder Bremen",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "24/10/2025",
+          "homeTeam": "Werder Bremen",
+          "awayTeam": "Union Berlin",
+          "homeCards": 4,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "01/11/2025",
+          "homeTeam": "Mainz",
+          "awayTeam": "Werder Bremen",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "07/11/2025",
+          "homeTeam": "Werder Bremen",
+          "awayTeam": "Wolfsburg",
+          "homeCards": 2,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "23/11/2025",
+          "homeTeam": "RB Leipzig",
+          "awayTeam": "Werder Bremen",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "29/11/2025",
+          "homeTeam": "Werder Bremen",
+          "awayTeam": "FC Koln",
+          "homeCards": 2,
+          "awayCards": 4,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 1
+        },
+        {
+          "date": "07/12/2025",
+          "homeTeam": "Hamburg",
+          "awayTeam": "Werder Bremen",
+          "homeCards": 1,
+          "awayCards": 6,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        6,
+        6,
+        "100.0",
+        0
+      ],
+      "homeCardsOver25": [
+        6,
+        4,
+        "66.7",
+        0
+      ],
+      "homeCardsOver35": [
+        6,
+        3,
+        "50.0",
+        0
+      ],
+      "homeCardsOver45": [
+        6,
+        1,
+        "16.7",
+        0
+      ],
+      "awayCardsOver15": [
+        7,
+        5,
+        "71.4",
+        0
+      ],
+      "awayCardsOver25": [
+        7,
+        4,
+        "57.1",
+        0
+      ],
+      "awayCardsOver35": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "awayCardsOver45": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "overallOver15": [
+        13,
+        12,
+        "92.3",
+        0
+      ],
+      "overallOver25": [
+        13,
+        10,
+        "76.9",
+        0
+      ],
+      "overallOver35": [
+        13,
+        9,
+        "69.2",
+        0
+      ],
+      "overallOver45": [
+        13,
+        4,
+        "30.8",
+        0
+      ]
+    },
+    {
+      "teamName": "Wolfsburg",
+      "allMatches": [
+        {
+          "date": "23/08/2025",
+          "homeTeam": "Heidenheim",
+          "awayTeam": "Wolfsburg",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "31/08/2025",
+          "homeTeam": "Wolfsburg",
+          "awayTeam": "Mainz",
+          "homeCards": 3,
+          "awayCards": 5,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 8,
+          "totalReds": 1
+        },
+        {
+          "date": "13/09/2025",
+          "homeTeam": "Wolfsburg",
+          "awayTeam": "FC Koln",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "21/09/2025",
+          "homeTeam": "Dortmund",
+          "awayTeam": "Wolfsburg",
+          "homeCards": 1,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "27/09/2025",
+          "homeTeam": "Wolfsburg",
+          "awayTeam": "RB Leipzig",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "04/10/2025",
+          "homeTeam": "Augsburg",
+          "awayTeam": "Wolfsburg",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "18/10/2025",
+          "homeTeam": "Wolfsburg",
+          "awayTeam": "Stuttgart",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "25/10/2025",
+          "homeTeam": "Hamburg",
+          "awayTeam": "Wolfsburg",
+          "homeCards": 1,
+          "awayCards": 5,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "02/11/2025",
+          "homeTeam": "Wolfsburg",
+          "awayTeam": "Hoffenheim",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "07/11/2025",
+          "homeTeam": "Werder Bremen",
+          "awayTeam": "Wolfsburg",
+          "homeCards": 2,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "22/11/2025",
+          "homeTeam": "Wolfsburg",
+          "awayTeam": "Leverkusen",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "30/11/2025",
+          "homeTeam": "Ein Frankfurt",
+          "awayTeam": "Wolfsburg",
+          "homeCards": 1,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "06/12/2025",
+          "homeTeam": "Wolfsburg",
+          "awayTeam": "Union Berlin",
+          "homeCards": 4,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        7,
+        5,
+        "71.4",
+        0
+      ],
+      "homeCardsOver25": [
+        7,
+        2,
+        "28.6",
+        0
+      ],
+      "homeCardsOver35": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "homeCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        6,
+        3,
+        "50.0",
+        0
+      ],
+      "awayCardsOver25": [
+        6,
+        3,
+        "50.0",
+        0
+      ],
+      "awayCardsOver35": [
+        6,
+        2,
+        "33.3",
+        0
+      ],
+      "awayCardsOver45": [
+        6,
+        1,
+        "16.7",
+        0
+      ],
+      "overallOver15": [
+        13,
+        12,
+        "92.3",
+        0
+      ],
+      "overallOver25": [
+        13,
+        9,
+        "69.2",
+        0
+      ],
+      "overallOver35": [
+        13,
+        7,
+        "53.8",
+        0
+      ],
+      "overallOver45": [
+        13,
+        6,
+        "46.2",
+        0
+      ]
+    }
+  ]
+}

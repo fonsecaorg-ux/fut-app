@@ -1,0 +1,4360 @@
+{
+  "teams": [
+    {
+      "teamName": "Angers",
+      "allMatches": [
+        {
+          "date": "17/08/2025",
+          "homeTeam": "Angers",
+          "awayTeam": "Paris FC",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 1
+        },
+        {
+          "date": "22/08/2025",
+          "homeTeam": "Paris SG",
+          "awayTeam": "Angers",
+          "homeCards": 0,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 0,
+          "totalReds": 0
+        },
+        {
+          "date": "31/08/2025",
+          "homeTeam": "Angers",
+          "awayTeam": "Rennes",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "14/09/2025",
+          "homeTeam": "Metz",
+          "awayTeam": "Angers",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "19/09/2025",
+          "homeTeam": "Lyon",
+          "awayTeam": "Angers",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "28/09/2025",
+          "homeTeam": "Angers",
+          "awayTeam": "Brest",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "05/10/2025",
+          "homeTeam": "Strasbourg",
+          "awayTeam": "Angers",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "18/10/2025",
+          "homeTeam": "Angers",
+          "awayTeam": "Monaco",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "26/10/2025",
+          "homeTeam": "Angers",
+          "awayTeam": "Lorient",
+          "homeCards": 1,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "29/10/2025",
+          "homeTeam": "Marseille",
+          "awayTeam": "Angers",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "02/11/2025",
+          "homeTeam": "Lille",
+          "awayTeam": "Angers",
+          "homeCards": 1,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "09/11/2025",
+          "homeTeam": "Angers",
+          "awayTeam": "Auxerre",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "23/11/2025",
+          "homeTeam": "Toulouse",
+          "awayTeam": "Angers",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "30/11/2025",
+          "homeTeam": "Angers",
+          "awayTeam": "Lens",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "07/12/2025",
+          "homeTeam": "Nice",
+          "awayTeam": "Angers",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 1
+        }
+      ],
+      "homeCardsOver15": [
+        7,
+        4,
+        "57.1",
+        0
+      ],
+      "homeCardsOver25": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver35": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        8,
+        3,
+        "37.5",
+        0
+      ],
+      "awayCardsOver25": [
+        8,
+        1,
+        "12.5",
+        0
+      ],
+      "awayCardsOver35": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver45": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        15,
+        11,
+        "73.3",
+        0
+      ],
+      "overallOver25": [
+        15,
+        8,
+        "53.3",
+        0
+      ],
+      "overallOver35": [
+        15,
+        6,
+        "40.0",
+        0
+      ],
+      "overallOver45": [
+        15,
+        0,
+        "0.0",
+        0
+      ]
+    },
+    {
+      "teamName": "Auxerre",
+      "allMatches": [
+        {
+          "date": "17/08/2025",
+          "homeTeam": "Auxerre",
+          "awayTeam": "Lorient",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "23/08/2025",
+          "homeTeam": "Nice",
+          "awayTeam": "Auxerre",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 4,
+          "totalReds": 1
+        },
+        {
+          "date": "30/08/2025",
+          "homeTeam": "Nantes",
+          "awayTeam": "Auxerre",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "13/09/2025",
+          "homeTeam": "Auxerre",
+          "awayTeam": "Monaco",
+          "homeCards": 3,
+          "awayCards": 6,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 9,
+          "totalReds": 1
+        },
+        {
+          "date": "21/09/2025",
+          "homeTeam": "Auxerre",
+          "awayTeam": "Toulouse",
+          "homeCards": 1,
+          "awayCards": 6,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 1
+        },
+        {
+          "date": "27/09/2025",
+          "homeTeam": "Paris SG",
+          "awayTeam": "Auxerre",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "04/10/2025",
+          "homeTeam": "Auxerre",
+          "awayTeam": "Lens",
+          "homeCards": 3,
+          "awayCards": 7,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 10,
+          "totalReds": 1
+        },
+        {
+          "date": "19/10/2025",
+          "homeTeam": "Rennes",
+          "awayTeam": "Auxerre",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "26/10/2025",
+          "homeTeam": "Auxerre",
+          "awayTeam": "Le Havre",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "29/10/2025",
+          "homeTeam": "Strasbourg",
+          "awayTeam": "Auxerre",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "01/11/2025",
+          "homeTeam": "Auxerre",
+          "awayTeam": "Marseille",
+          "homeCards": 3,
+          "awayCards": 4,
+          "homeReds": 1,
+          "awayReds": 1,
+          "totalCards": 7,
+          "totalReds": 2
+        },
+        {
+          "date": "09/11/2025",
+          "homeTeam": "Angers",
+          "awayTeam": "Auxerre",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "23/11/2025",
+          "homeTeam": "Auxerre",
+          "awayTeam": "Lyon",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "29/11/2025",
+          "homeTeam": "Paris FC",
+          "awayTeam": "Auxerre",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "07/12/2025",
+          "homeTeam": "Auxerre",
+          "awayTeam": "Metz",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        8,
+        6,
+        "75.0",
+        0
+      ],
+      "homeCardsOver25": [
+        8,
+        4,
+        "50.0",
+        0
+      ],
+      "homeCardsOver35": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver45": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        7,
+        5,
+        "71.4",
+        0
+      ],
+      "awayCardsOver25": [
+        7,
+        2,
+        "28.6",
+        0
+      ],
+      "awayCardsOver35": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        15,
+        15,
+        "100.0",
+        0
+      ],
+      "overallOver25": [
+        15,
+        14,
+        "93.3",
+        0
+      ],
+      "overallOver35": [
+        15,
+        11,
+        "73.3",
+        0
+      ],
+      "overallOver45": [
+        15,
+        5,
+        "33.3",
+        0
+      ]
+    },
+    {
+      "teamName": "Brest",
+      "allMatches": [
+        {
+          "date": "17/08/2025",
+          "homeTeam": "Brest",
+          "awayTeam": "Lille",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "24/08/2025",
+          "homeTeam": "Toulouse",
+          "awayTeam": "Brest",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "29/08/2025",
+          "homeTeam": "Lens",
+          "awayTeam": "Brest",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 4,
+          "totalReds": 1
+        },
+        {
+          "date": "14/09/2025",
+          "homeTeam": "Brest",
+          "awayTeam": "Paris FC",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 2,
+          "totalReds": 1
+        },
+        {
+          "date": "20/09/2025",
+          "homeTeam": "Brest",
+          "awayTeam": "Nice",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "28/09/2025",
+          "homeTeam": "Angers",
+          "awayTeam": "Brest",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "04/10/2025",
+          "homeTeam": "Brest",
+          "awayTeam": "Nantes",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "19/10/2025",
+          "homeTeam": "Lorient",
+          "awayTeam": "Brest",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "25/10/2025",
+          "homeTeam": "Brest",
+          "awayTeam": "Paris SG",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "29/10/2025",
+          "homeTeam": "Le Havre",
+          "awayTeam": "Brest",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "02/11/2025",
+          "homeTeam": "Brest",
+          "awayTeam": "Lyon",
+          "homeCards": 1,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 1,
+          "totalReds": 1
+        },
+        {
+          "date": "08/11/2025",
+          "homeTeam": "Marseille",
+          "awayTeam": "Brest",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "23/11/2025",
+          "homeTeam": "Brest",
+          "awayTeam": "Metz",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "30/11/2025",
+          "homeTeam": "Strasbourg",
+          "awayTeam": "Brest",
+          "homeCards": 0,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "05/12/2025",
+          "homeTeam": "Brest",
+          "awayTeam": "Monaco",
+          "homeCards": 2,
+          "awayCards": 4,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 1
+        }
+      ],
+      "homeCardsOver15": [
+        8,
+        4,
+        "50.0",
+        0
+      ],
+      "homeCardsOver25": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver35": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver45": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        7,
+        4,
+        "57.1",
+        0
+      ],
+      "awayCardsOver25": [
+        7,
+        3,
+        "42.9",
+        0
+      ],
+      "awayCardsOver35": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        15,
+        12,
+        "80.0",
+        0
+      ],
+      "overallOver25": [
+        15,
+        9,
+        "60.0",
+        0
+      ],
+      "overallOver35": [
+        15,
+        6,
+        "40.0",
+        0
+      ],
+      "overallOver45": [
+        15,
+        3,
+        "20.0",
+        0
+      ]
+    },
+    {
+      "teamName": "Le Havre",
+      "allMatches": [
+        {
+          "date": "16/08/2025",
+          "homeTeam": "Monaco",
+          "awayTeam": "Le Havre",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "24/08/2025",
+          "homeTeam": "Le Havre",
+          "awayTeam": "Lens",
+          "homeCards": 3,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "31/08/2025",
+          "homeTeam": "Le Havre",
+          "awayTeam": "Nice",
+          "homeCards": 1,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "14/09/2025",
+          "homeTeam": "Strasbourg",
+          "awayTeam": "Le Havre",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 1
+        },
+        {
+          "date": "21/09/2025",
+          "homeTeam": "Le Havre",
+          "awayTeam": "Lorient",
+          "homeCards": 3,
+          "awayCards": 6,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 9,
+          "totalReds": 0
+        },
+        {
+          "date": "28/09/2025",
+          "homeTeam": "Metz",
+          "awayTeam": "Le Havre",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "05/10/2025",
+          "homeTeam": "Le Havre",
+          "awayTeam": "Rennes",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "18/10/2025",
+          "homeTeam": "Marseille",
+          "awayTeam": "Le Havre",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 3,
+          "totalReds": 1
+        },
+        {
+          "date": "26/10/2025",
+          "homeTeam": "Auxerre",
+          "awayTeam": "Le Havre",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "29/10/2025",
+          "homeTeam": "Le Havre",
+          "awayTeam": "Brest",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "02/11/2025",
+          "homeTeam": "Toulouse",
+          "awayTeam": "Le Havre",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "08/11/2025",
+          "homeTeam": "Le Havre",
+          "awayTeam": "Nantes",
+          "homeCards": 3,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "22/11/2025",
+          "homeTeam": "Paris SG",
+          "awayTeam": "Le Havre",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "30/11/2025",
+          "homeTeam": "Le Havre",
+          "awayTeam": "Lille",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 4,
+          "totalReds": 1
+        },
+        {
+          "date": "07/12/2025",
+          "homeTeam": "Le Havre",
+          "awayTeam": "Paris FC",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        8,
+        3,
+        "37.5",
+        0
+      ],
+      "homeCardsOver25": [
+        8,
+        3,
+        "37.5",
+        0
+      ],
+      "homeCardsOver35": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver45": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        7,
+        4,
+        "57.1",
+        0
+      ],
+      "awayCardsOver25": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver35": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        15,
+        14,
+        "93.3",
+        0
+      ],
+      "overallOver25": [
+        15,
+        13,
+        "86.7",
+        0
+      ],
+      "overallOver35": [
+        15,
+        9,
+        "60.0",
+        0
+      ],
+      "overallOver45": [
+        15,
+        3,
+        "20.0",
+        0
+      ]
+    },
+    {
+      "teamName": "Lens",
+      "allMatches": [
+        {
+          "date": "16/08/2025",
+          "homeTeam": "Lens",
+          "awayTeam": "Lyon",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "24/08/2025",
+          "homeTeam": "Le Havre",
+          "awayTeam": "Lens",
+          "homeCards": 3,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "29/08/2025",
+          "homeTeam": "Lens",
+          "awayTeam": "Brest",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 4,
+          "totalReds": 1
+        },
+        {
+          "date": "14/09/2025",
+          "homeTeam": "Paris SG",
+          "awayTeam": "Lens",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "20/09/2025",
+          "homeTeam": "Lens",
+          "awayTeam": "Lille",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "28/09/2025",
+          "homeTeam": "Rennes",
+          "awayTeam": "Lens",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 5,
+          "totalReds": 1
+        },
+        {
+          "date": "04/10/2025",
+          "homeTeam": "Auxerre",
+          "awayTeam": "Lens",
+          "homeCards": 3,
+          "awayCards": 7,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 10,
+          "totalReds": 1
+        },
+        {
+          "date": "19/10/2025",
+          "homeTeam": "Lens",
+          "awayTeam": "Paris FC",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "25/10/2025",
+          "homeTeam": "Lens",
+          "awayTeam": "Marseille",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "29/10/2025",
+          "homeTeam": "Metz",
+          "awayTeam": "Lens",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 1
+        },
+        {
+          "date": "02/11/2025",
+          "homeTeam": "Lens",
+          "awayTeam": "Lorient",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "08/11/2025",
+          "homeTeam": "Monaco",
+          "awayTeam": "Lens",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 1
+        },
+        {
+          "date": "22/11/2025",
+          "homeTeam": "Lens",
+          "awayTeam": "Strasbourg",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 1,
+          "awayReds": 1,
+          "totalCards": 5,
+          "totalReds": 2
+        },
+        {
+          "date": "30/11/2025",
+          "homeTeam": "Angers",
+          "awayTeam": "Lens",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "06/12/2025",
+          "homeTeam": "Nantes",
+          "awayTeam": "Lens",
+          "homeCards": 2,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        7,
+        5,
+        "71.4",
+        0
+      ],
+      "homeCardsOver25": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "homeCardsOver35": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        8,
+        5,
+        "62.5",
+        0
+      ],
+      "awayCardsOver25": [
+        8,
+        1,
+        "12.5",
+        0
+      ],
+      "awayCardsOver35": [
+        8,
+        1,
+        "12.5",
+        0
+      ],
+      "awayCardsOver45": [
+        8,
+        1,
+        "12.5",
+        0
+      ],
+      "overallOver15": [
+        15,
+        15,
+        "100.0",
+        0
+      ],
+      "overallOver25": [
+        15,
+        13,
+        "86.7",
+        0
+      ],
+      "overallOver35": [
+        15,
+        11,
+        "73.3",
+        0
+      ],
+      "overallOver45": [
+        15,
+        6,
+        "40.0",
+        0
+      ]
+    },
+    {
+      "teamName": "Lille",
+      "allMatches": [
+        {
+          "date": "17/08/2025",
+          "homeTeam": "Brest",
+          "awayTeam": "Lille",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "24/08/2025",
+          "homeTeam": "Lille",
+          "awayTeam": "Monaco",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "30/08/2025",
+          "homeTeam": "Lorient",
+          "awayTeam": "Lille",
+          "homeCards": 3,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "14/09/2025",
+          "homeTeam": "Lille",
+          "awayTeam": "Toulouse",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 5,
+          "totalReds": 1
+        },
+        {
+          "date": "20/09/2025",
+          "homeTeam": "Lens",
+          "awayTeam": "Lille",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "28/09/2025",
+          "homeTeam": "Lille",
+          "awayTeam": "Lyon",
+          "homeCards": 4,
+          "awayCards": 4,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 8,
+          "totalReds": 1
+        },
+        {
+          "date": "05/10/2025",
+          "homeTeam": "Lille",
+          "awayTeam": "Paris SG",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "19/10/2025",
+          "homeTeam": "Nantes",
+          "awayTeam": "Lille",
+          "homeCards": 1,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "26/10/2025",
+          "homeTeam": "Lille",
+          "awayTeam": "Metz",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "29/10/2025",
+          "homeTeam": "Nice",
+          "awayTeam": "Lille",
+          "homeCards": 3,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "02/11/2025",
+          "homeTeam": "Lille",
+          "awayTeam": "Angers",
+          "homeCards": 1,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "09/11/2025",
+          "homeTeam": "Strasbourg",
+          "awayTeam": "Lille",
+          "homeCards": 4,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 7,
+          "totalReds": 1
+        },
+        {
+          "date": "23/11/2025",
+          "homeTeam": "Lille",
+          "awayTeam": "Paris FC",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "30/11/2025",
+          "homeTeam": "Le Havre",
+          "awayTeam": "Lille",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 4,
+          "totalReds": 1
+        },
+        {
+          "date": "05/12/2025",
+          "homeTeam": "Lille",
+          "awayTeam": "Marseille",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        8,
+        3,
+        "37.5",
+        0
+      ],
+      "homeCardsOver25": [
+        8,
+        2,
+        "25.0",
+        0
+      ],
+      "homeCardsOver35": [
+        8,
+        1,
+        "12.5",
+        0
+      ],
+      "homeCardsOver45": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        7,
+        6,
+        "85.7",
+        0
+      ],
+      "awayCardsOver25": [
+        7,
+        6,
+        "85.7",
+        0
+      ],
+      "awayCardsOver35": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "awayCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        15,
+        14,
+        "93.3",
+        0
+      ],
+      "overallOver25": [
+        15,
+        12,
+        "80.0",
+        0
+      ],
+      "overallOver35": [
+        15,
+        9,
+        "60.0",
+        0
+      ],
+      "overallOver45": [
+        15,
+        7,
+        "46.7",
+        0
+      ]
+    },
+    {
+      "teamName": "Lorient",
+      "allMatches": [
+        {
+          "date": "17/08/2025",
+          "homeTeam": "Auxerre",
+          "awayTeam": "Lorient",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "24/08/2025",
+          "homeTeam": "Lorient",
+          "awayTeam": "Rennes",
+          "homeCards": 6,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 2,
+          "totalCards": 6,
+          "totalReds": 2
+        },
+        {
+          "date": "30/08/2025",
+          "homeTeam": "Lorient",
+          "awayTeam": "Lille",
+          "homeCards": 3,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "12/09/2025",
+          "homeTeam": "Marseille",
+          "awayTeam": "Lorient",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 5,
+          "totalReds": 1
+        },
+        {
+          "date": "21/09/2025",
+          "homeTeam": "Le Havre",
+          "awayTeam": "Lorient",
+          "homeCards": 3,
+          "awayCards": 6,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 9,
+          "totalReds": 0
+        },
+        {
+          "date": "27/09/2025",
+          "homeTeam": "Lorient",
+          "awayTeam": "Monaco",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 5,
+          "totalReds": 1
+        },
+        {
+          "date": "03/10/2025",
+          "homeTeam": "Paris FC",
+          "awayTeam": "Lorient",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "19/10/2025",
+          "homeTeam": "Lorient",
+          "awayTeam": "Brest",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "26/10/2025",
+          "homeTeam": "Angers",
+          "awayTeam": "Lorient",
+          "homeCards": 1,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "29/10/2025",
+          "homeTeam": "Lorient",
+          "awayTeam": "Paris SG",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "02/11/2025",
+          "homeTeam": "Lens",
+          "awayTeam": "Lorient",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "09/11/2025",
+          "homeTeam": "Lorient",
+          "awayTeam": "Toulouse",
+          "homeCards": 0,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "23/11/2025",
+          "homeTeam": "Nantes",
+          "awayTeam": "Lorient",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "30/11/2025",
+          "homeTeam": "Lorient",
+          "awayTeam": "Nice",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "07/12/2025",
+          "homeTeam": "Lorient",
+          "awayTeam": "Lyon",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 4,
+          "totalReds": 1
+        }
+      ],
+      "homeCardsOver15": [
+        8,
+        5,
+        "62.5",
+        0
+      ],
+      "homeCardsOver25": [
+        8,
+        3,
+        "37.5",
+        0
+      ],
+      "homeCardsOver35": [
+        8,
+        1,
+        "12.5",
+        0
+      ],
+      "homeCardsOver45": [
+        8,
+        1,
+        "12.5",
+        0
+      ],
+      "awayCardsOver15": [
+        7,
+        5,
+        "71.4",
+        0
+      ],
+      "awayCardsOver25": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "awayCardsOver35": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "awayCardsOver45": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "overallOver15": [
+        15,
+        14,
+        "93.3",
+        0
+      ],
+      "overallOver25": [
+        15,
+        11,
+        "73.3",
+        0
+      ],
+      "overallOver35": [
+        15,
+        10,
+        "66.7",
+        0
+      ],
+      "overallOver45": [
+        15,
+        7,
+        "46.7",
+        0
+      ]
+    },
+    {
+      "teamName": "Lyon",
+      "allMatches": [
+        {
+          "date": "16/08/2025",
+          "homeTeam": "Lens",
+          "awayTeam": "Lyon",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "23/08/2025",
+          "homeTeam": "Lyon",
+          "awayTeam": "Metz",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "31/08/2025",
+          "homeTeam": "Lyon",
+          "awayTeam": "Marseille",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 4,
+          "totalReds": 1
+        },
+        {
+          "date": "14/09/2025",
+          "homeTeam": "Rennes",
+          "awayTeam": "Lyon",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 4,
+          "totalReds": 1
+        },
+        {
+          "date": "19/09/2025",
+          "homeTeam": "Lyon",
+          "awayTeam": "Angers",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "28/09/2025",
+          "homeTeam": "Lille",
+          "awayTeam": "Lyon",
+          "homeCards": 4,
+          "awayCards": 4,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 8,
+          "totalReds": 1
+        },
+        {
+          "date": "05/10/2025",
+          "homeTeam": "Lyon",
+          "awayTeam": "Toulouse",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "18/10/2025",
+          "homeTeam": "Nice",
+          "awayTeam": "Lyon",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "26/10/2025",
+          "homeTeam": "Lyon",
+          "awayTeam": "Strasbourg",
+          "homeCards": 0,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 4,
+          "totalReds": 1
+        },
+        {
+          "date": "29/10/2025",
+          "homeTeam": "Paris FC",
+          "awayTeam": "Lyon",
+          "homeCards": 6,
+          "awayCards": 2,
+          "homeReds": 1,
+          "awayReds": 1,
+          "totalCards": 8,
+          "totalReds": 2
+        },
+        {
+          "date": "02/11/2025",
+          "homeTeam": "Brest",
+          "awayTeam": "Lyon",
+          "homeCards": 1,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 1,
+          "totalReds": 1
+        },
+        {
+          "date": "09/11/2025",
+          "homeTeam": "Lyon",
+          "awayTeam": "Paris SG",
+          "homeCards": 5,
+          "awayCards": 2,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 1
+        },
+        {
+          "date": "23/11/2025",
+          "homeTeam": "Auxerre",
+          "awayTeam": "Lyon",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "30/11/2025",
+          "homeTeam": "Lyon",
+          "awayTeam": "Nantes",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 3,
+          "totalReds": 1
+        },
+        {
+          "date": "07/12/2025",
+          "homeTeam": "Lorient",
+          "awayTeam": "Lyon",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 4,
+          "totalReds": 1
+        }
+      ],
+      "homeCardsOver15": [
+        7,
+        3,
+        "42.9",
+        0
+      ],
+      "homeCardsOver25": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "homeCardsOver35": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "homeCardsOver45": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "awayCardsOver15": [
+        8,
+        7,
+        "87.5",
+        0
+      ],
+      "awayCardsOver25": [
+        8,
+        3,
+        "37.5",
+        0
+      ],
+      "awayCardsOver35": [
+        8,
+        1,
+        "12.5",
+        0
+      ],
+      "awayCardsOver45": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        15,
+        14,
+        "93.3",
+        0
+      ],
+      "overallOver25": [
+        15,
+        13,
+        "86.7",
+        0
+      ],
+      "overallOver35": [
+        15,
+        11,
+        "73.3",
+        0
+      ],
+      "overallOver45": [
+        15,
+        4,
+        "26.7",
+        0
+      ]
+    },
+    {
+      "teamName": "Marseille",
+      "allMatches": [
+        {
+          "date": "15/08/2025",
+          "homeTeam": "Rennes",
+          "awayTeam": "Marseille",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 1
+        },
+        {
+          "date": "23/08/2025",
+          "homeTeam": "Marseille",
+          "awayTeam": "Paris FC",
+          "homeCards": 1,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "31/08/2025",
+          "homeTeam": "Lyon",
+          "awayTeam": "Marseille",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 4,
+          "totalReds": 1
+        },
+        {
+          "date": "12/09/2025",
+          "homeTeam": "Marseille",
+          "awayTeam": "Lorient",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 5,
+          "totalReds": 1
+        },
+        {
+          "date": "22/09/2025",
+          "homeTeam": "Marseille",
+          "awayTeam": "Paris SG",
+          "homeCards": 3,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "26/09/2025",
+          "homeTeam": "Strasbourg",
+          "awayTeam": "Marseille",
+          "homeCards": 2,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "04/10/2025",
+          "homeTeam": "Metz",
+          "awayTeam": "Marseille",
+          "homeCards": 0,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 0,
+          "totalReds": 0
+        },
+        {
+          "date": "18/10/2025",
+          "homeTeam": "Marseille",
+          "awayTeam": "Le Havre",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 3,
+          "totalReds": 1
+        },
+        {
+          "date": "25/10/2025",
+          "homeTeam": "Lens",
+          "awayTeam": "Marseille",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "29/10/2025",
+          "homeTeam": "Marseille",
+          "awayTeam": "Angers",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "01/11/2025",
+          "homeTeam": "Auxerre",
+          "awayTeam": "Marseille",
+          "homeCards": 3,
+          "awayCards": 4,
+          "homeReds": 1,
+          "awayReds": 1,
+          "totalCards": 7,
+          "totalReds": 2
+        },
+        {
+          "date": "08/11/2025",
+          "homeTeam": "Marseille",
+          "awayTeam": "Brest",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "21/11/2025",
+          "homeTeam": "Nice",
+          "awayTeam": "Marseille",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "29/11/2025",
+          "homeTeam": "Marseille",
+          "awayTeam": "Toulouse",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "05/12/2025",
+          "homeTeam": "Lille",
+          "awayTeam": "Marseille",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        7,
+        5,
+        "71.4",
+        0
+      ],
+      "homeCardsOver25": [
+        7,
+        2,
+        "28.6",
+        0
+      ],
+      "homeCardsOver35": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        8,
+        6,
+        "75.0",
+        0
+      ],
+      "awayCardsOver25": [
+        8,
+        3,
+        "37.5",
+        0
+      ],
+      "awayCardsOver35": [
+        8,
+        2,
+        "25.0",
+        0
+      ],
+      "awayCardsOver45": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        15,
+        12,
+        "80.0",
+        0
+      ],
+      "overallOver25": [
+        15,
+        11,
+        "73.3",
+        0
+      ],
+      "overallOver35": [
+        15,
+        7,
+        "46.7",
+        0
+      ],
+      "overallOver45": [
+        15,
+        5,
+        "33.3",
+        0
+      ]
+    },
+    {
+      "teamName": "Metz",
+      "allMatches": [
+        {
+          "date": "17/08/2025",
+          "homeTeam": "Metz",
+          "awayTeam": "Strasbourg",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "23/08/2025",
+          "homeTeam": "Lyon",
+          "awayTeam": "Metz",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "31/08/2025",
+          "homeTeam": "Paris FC",
+          "awayTeam": "Metz",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 2,
+          "totalReds": 1
+        },
+        {
+          "date": "14/09/2025",
+          "homeTeam": "Metz",
+          "awayTeam": "Angers",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "21/09/2025",
+          "homeTeam": "Monaco",
+          "awayTeam": "Metz",
+          "homeCards": 1,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "28/09/2025",
+          "homeTeam": "Metz",
+          "awayTeam": "Le Havre",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "04/10/2025",
+          "homeTeam": "Metz",
+          "awayTeam": "Marseille",
+          "homeCards": 0,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 0,
+          "totalReds": 0
+        },
+        {
+          "date": "19/10/2025",
+          "homeTeam": "Toulouse",
+          "awayTeam": "Metz",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 3,
+          "totalReds": 1
+        },
+        {
+          "date": "26/10/2025",
+          "homeTeam": "Lille",
+          "awayTeam": "Metz",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "29/10/2025",
+          "homeTeam": "Metz",
+          "awayTeam": "Lens",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 1
+        },
+        {
+          "date": "02/11/2025",
+          "homeTeam": "Nantes",
+          "awayTeam": "Metz",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "09/11/2025",
+          "homeTeam": "Metz",
+          "awayTeam": "Nice",
+          "homeCards": 2,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "23/11/2025",
+          "homeTeam": "Brest",
+          "awayTeam": "Metz",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "28/11/2025",
+          "homeTeam": "Metz",
+          "awayTeam": "Rennes",
+          "homeCards": 0,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 0,
+          "totalReds": 0
+        },
+        {
+          "date": "07/12/2025",
+          "homeTeam": "Auxerre",
+          "awayTeam": "Metz",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        7,
+        4,
+        "57.1",
+        0
+      ],
+      "homeCardsOver25": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "homeCardsOver35": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        8,
+        4,
+        "50.0",
+        0
+      ],
+      "awayCardsOver25": [
+        8,
+        2,
+        "25.0",
+        0
+      ],
+      "awayCardsOver35": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver45": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        15,
+        11,
+        "73.3",
+        0
+      ],
+      "overallOver25": [
+        15,
+        9,
+        "60.0",
+        0
+      ],
+      "overallOver35": [
+        15,
+        7,
+        "46.7",
+        0
+      ],
+      "overallOver45": [
+        15,
+        4,
+        "26.7",
+        0
+      ]
+    },
+    {
+      "teamName": "Monaco",
+      "allMatches": [
+        {
+          "date": "16/08/2025",
+          "homeTeam": "Monaco",
+          "awayTeam": "Le Havre",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "24/08/2025",
+          "homeTeam": "Lille",
+          "awayTeam": "Monaco",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "31/08/2025",
+          "homeTeam": "Monaco",
+          "awayTeam": "Strasbourg",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 3,
+          "totalReds": 1
+        },
+        {
+          "date": "13/09/2025",
+          "homeTeam": "Auxerre",
+          "awayTeam": "Monaco",
+          "homeCards": 3,
+          "awayCards": 6,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 9,
+          "totalReds": 1
+        },
+        {
+          "date": "21/09/2025",
+          "homeTeam": "Monaco",
+          "awayTeam": "Metz",
+          "homeCards": 1,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "27/09/2025",
+          "homeTeam": "Lorient",
+          "awayTeam": "Monaco",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 5,
+          "totalReds": 1
+        },
+        {
+          "date": "05/10/2025",
+          "homeTeam": "Monaco",
+          "awayTeam": "Nice",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 4,
+          "totalReds": 1
+        },
+        {
+          "date": "18/10/2025",
+          "homeTeam": "Angers",
+          "awayTeam": "Monaco",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "25/10/2025",
+          "homeTeam": "Monaco",
+          "awayTeam": "Toulouse",
+          "homeCards": 3,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        },
+        {
+          "date": "29/10/2025",
+          "homeTeam": "Nantes",
+          "awayTeam": "Monaco",
+          "homeCards": 3,
+          "awayCards": 5,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 8,
+          "totalReds": 0
+        },
+        {
+          "date": "01/11/2025",
+          "homeTeam": "Monaco",
+          "awayTeam": "Paris FC",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "08/11/2025",
+          "homeTeam": "Monaco",
+          "awayTeam": "Lens",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 1
+        },
+        {
+          "date": "22/11/2025",
+          "homeTeam": "Rennes",
+          "awayTeam": "Monaco",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 1,
+          "totalReds": 1
+        },
+        {
+          "date": "29/11/2025",
+          "homeTeam": "Monaco",
+          "awayTeam": "Paris SG",
+          "homeCards": 3,
+          "awayCards": 1,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 1
+        },
+        {
+          "date": "05/12/2025",
+          "homeTeam": "Brest",
+          "awayTeam": "Monaco",
+          "homeCards": 2,
+          "awayCards": 4,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 1
+        }
+      ],
+      "homeCardsOver15": [
+        8,
+        4,
+        "50.0",
+        0
+      ],
+      "homeCardsOver25": [
+        8,
+        3,
+        "37.5",
+        0
+      ],
+      "homeCardsOver35": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver45": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        7,
+        6,
+        "85.7",
+        0
+      ],
+      "awayCardsOver25": [
+        7,
+        4,
+        "57.1",
+        0
+      ],
+      "awayCardsOver35": [
+        7,
+        3,
+        "42.9",
+        0
+      ],
+      "awayCardsOver45": [
+        7,
+        2,
+        "28.6",
+        0
+      ],
+      "overallOver15": [
+        15,
+        12,
+        "80.0",
+        0
+      ],
+      "overallOver25": [
+        15,
+        12,
+        "80.0",
+        0
+      ],
+      "overallOver35": [
+        15,
+        9,
+        "60.0",
+        0
+      ],
+      "overallOver45": [
+        15,
+        6,
+        "40.0",
+        0
+      ]
+    },
+    {
+      "teamName": "Nantes",
+      "allMatches": [
+        {
+          "date": "17/08/2025",
+          "homeTeam": "Nantes",
+          "awayTeam": "Paris SG",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "24/08/2025",
+          "homeTeam": "Strasbourg",
+          "awayTeam": "Nantes",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "30/08/2025",
+          "homeTeam": "Nantes",
+          "awayTeam": "Auxerre",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "13/09/2025",
+          "homeTeam": "Nice",
+          "awayTeam": "Nantes",
+          "homeCards": 2,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "20/09/2025",
+          "homeTeam": "Nantes",
+          "awayTeam": "Rennes",
+          "homeCards": 3,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "27/09/2025",
+          "homeTeam": "Toulouse",
+          "awayTeam": "Nantes",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "04/10/2025",
+          "homeTeam": "Brest",
+          "awayTeam": "Nantes",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "19/10/2025",
+          "homeTeam": "Nantes",
+          "awayTeam": "Lille",
+          "homeCards": 1,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "24/10/2025",
+          "homeTeam": "Paris FC",
+          "awayTeam": "Nantes",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "29/10/2025",
+          "homeTeam": "Nantes",
+          "awayTeam": "Monaco",
+          "homeCards": 3,
+          "awayCards": 5,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 8,
+          "totalReds": 0
+        },
+        {
+          "date": "02/11/2025",
+          "homeTeam": "Nantes",
+          "awayTeam": "Metz",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "08/11/2025",
+          "homeTeam": "Le Havre",
+          "awayTeam": "Nantes",
+          "homeCards": 3,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "23/11/2025",
+          "homeTeam": "Nantes",
+          "awayTeam": "Lorient",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "30/11/2025",
+          "homeTeam": "Lyon",
+          "awayTeam": "Nantes",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 3,
+          "totalReds": 1
+        },
+        {
+          "date": "06/12/2025",
+          "homeTeam": "Nantes",
+          "awayTeam": "Lens",
+          "homeCards": 2,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        8,
+        3,
+        "37.5",
+        0
+      ],
+      "homeCardsOver25": [
+        8,
+        2,
+        "25.0",
+        0
+      ],
+      "homeCardsOver35": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver45": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        7,
+        5,
+        "71.4",
+        0
+      ],
+      "awayCardsOver25": [
+        7,
+        2,
+        "28.6",
+        0
+      ],
+      "awayCardsOver35": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        15,
+        15,
+        "100.0",
+        0
+      ],
+      "overallOver25": [
+        15,
+        11,
+        "73.3",
+        0
+      ],
+      "overallOver35": [
+        15,
+        9,
+        "60.0",
+        0
+      ],
+      "overallOver45": [
+        15,
+        5,
+        "33.3",
+        0
+      ]
+    },
+    {
+      "teamName": "Nice",
+      "allMatches": [
+        {
+          "date": "16/08/2025",
+          "homeTeam": "Nice",
+          "awayTeam": "Toulouse",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "23/08/2025",
+          "homeTeam": "Nice",
+          "awayTeam": "Auxerre",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 4,
+          "totalReds": 1
+        },
+        {
+          "date": "31/08/2025",
+          "homeTeam": "Le Havre",
+          "awayTeam": "Nice",
+          "homeCards": 1,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "13/09/2025",
+          "homeTeam": "Nice",
+          "awayTeam": "Nantes",
+          "homeCards": 2,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "20/09/2025",
+          "homeTeam": "Brest",
+          "awayTeam": "Nice",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "28/09/2025",
+          "homeTeam": "Nice",
+          "awayTeam": "Paris FC",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "05/10/2025",
+          "homeTeam": "Monaco",
+          "awayTeam": "Nice",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 4,
+          "totalReds": 1
+        },
+        {
+          "date": "18/10/2025",
+          "homeTeam": "Nice",
+          "awayTeam": "Lyon",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "26/10/2025",
+          "homeTeam": "Rennes",
+          "awayTeam": "Nice",
+          "homeCards": 5,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        },
+        {
+          "date": "29/10/2025",
+          "homeTeam": "Nice",
+          "awayTeam": "Lille",
+          "homeCards": 3,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "01/11/2025",
+          "homeTeam": "Paris SG",
+          "awayTeam": "Nice",
+          "homeCards": 3,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "09/11/2025",
+          "homeTeam": "Metz",
+          "awayTeam": "Nice",
+          "homeCards": 2,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "21/11/2025",
+          "homeTeam": "Nice",
+          "awayTeam": "Marseille",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "30/11/2025",
+          "homeTeam": "Lorient",
+          "awayTeam": "Nice",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "07/12/2025",
+          "homeTeam": "Nice",
+          "awayTeam": "Angers",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 1
+        }
+      ],
+      "homeCardsOver15": [
+        8,
+        5,
+        "62.5",
+        0
+      ],
+      "homeCardsOver25": [
+        8,
+        1,
+        "12.5",
+        0
+      ],
+      "homeCardsOver35": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver45": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        7,
+        6,
+        "85.7",
+        0
+      ],
+      "awayCardsOver25": [
+        7,
+        4,
+        "57.1",
+        0
+      ],
+      "awayCardsOver35": [
+        7,
+        2,
+        "28.6",
+        0
+      ],
+      "awayCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        15,
+        15,
+        "100.0",
+        0
+      ],
+      "overallOver25": [
+        15,
+        12,
+        "80.0",
+        0
+      ],
+      "overallOver35": [
+        15,
+        10,
+        "66.7",
+        0
+      ],
+      "overallOver45": [
+        15,
+        5,
+        "33.3",
+        0
+      ]
+    },
+    {
+      "teamName": "Paris FC",
+      "allMatches": [
+        {
+          "date": "17/08/2025",
+          "homeTeam": "Angers",
+          "awayTeam": "Paris FC",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 1
+        },
+        {
+          "date": "23/08/2025",
+          "homeTeam": "Marseille",
+          "awayTeam": "Paris FC",
+          "homeCards": 1,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "31/08/2025",
+          "homeTeam": "Paris FC",
+          "awayTeam": "Metz",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 2,
+          "totalReds": 1
+        },
+        {
+          "date": "14/09/2025",
+          "homeTeam": "Brest",
+          "awayTeam": "Paris FC",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 2,
+          "totalReds": 1
+        },
+        {
+          "date": "21/09/2025",
+          "homeTeam": "Paris FC",
+          "awayTeam": "Strasbourg",
+          "homeCards": 1,
+          "awayCards": 5,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "28/09/2025",
+          "homeTeam": "Nice",
+          "awayTeam": "Paris FC",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "03/10/2025",
+          "homeTeam": "Paris FC",
+          "awayTeam": "Lorient",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "19/10/2025",
+          "homeTeam": "Lens",
+          "awayTeam": "Paris FC",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "24/10/2025",
+          "homeTeam": "Paris FC",
+          "awayTeam": "Nantes",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "29/10/2025",
+          "homeTeam": "Paris FC",
+          "awayTeam": "Lyon",
+          "homeCards": 6,
+          "awayCards": 2,
+          "homeReds": 1,
+          "awayReds": 1,
+          "totalCards": 8,
+          "totalReds": 2
+        },
+        {
+          "date": "01/11/2025",
+          "homeTeam": "Monaco",
+          "awayTeam": "Paris FC",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "07/11/2025",
+          "homeTeam": "Paris FC",
+          "awayTeam": "Rennes",
+          "homeCards": 4,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "23/11/2025",
+          "homeTeam": "Lille",
+          "awayTeam": "Paris FC",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "29/11/2025",
+          "homeTeam": "Paris FC",
+          "awayTeam": "Auxerre",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "07/12/2025",
+          "homeTeam": "Le Havre",
+          "awayTeam": "Paris FC",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        7,
+        4,
+        "57.1",
+        0
+      ],
+      "homeCardsOver25": [
+        7,
+        3,
+        "42.9",
+        0
+      ],
+      "homeCardsOver35": [
+        7,
+        2,
+        "28.6",
+        0
+      ],
+      "homeCardsOver45": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "awayCardsOver15": [
+        8,
+        5,
+        "62.5",
+        0
+      ],
+      "awayCardsOver25": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver35": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver45": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        15,
+        14,
+        "93.3",
+        0
+      ],
+      "overallOver25": [
+        15,
+        9,
+        "60.0",
+        0
+      ],
+      "overallOver35": [
+        15,
+        6,
+        "40.0",
+        0
+      ],
+      "overallOver45": [
+        15,
+        5,
+        "33.3",
+        0
+      ]
+    },
+    {
+      "teamName": "Paris SG",
+      "allMatches": [
+        {
+          "date": "17/08/2025",
+          "homeTeam": "Nantes",
+          "awayTeam": "Paris SG",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "22/08/2025",
+          "homeTeam": "Paris SG",
+          "awayTeam": "Angers",
+          "homeCards": 0,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 0,
+          "totalReds": 0
+        },
+        {
+          "date": "30/08/2025",
+          "homeTeam": "Toulouse",
+          "awayTeam": "Paris SG",
+          "homeCards": 1,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "14/09/2025",
+          "homeTeam": "Paris SG",
+          "awayTeam": "Lens",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "22/09/2025",
+          "homeTeam": "Marseille",
+          "awayTeam": "Paris SG",
+          "homeCards": 3,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "27/09/2025",
+          "homeTeam": "Paris SG",
+          "awayTeam": "Auxerre",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "05/10/2025",
+          "homeTeam": "Lille",
+          "awayTeam": "Paris SG",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "17/10/2025",
+          "homeTeam": "Paris SG",
+          "awayTeam": "Strasbourg",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "25/10/2025",
+          "homeTeam": "Brest",
+          "awayTeam": "Paris SG",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "29/10/2025",
+          "homeTeam": "Lorient",
+          "awayTeam": "Paris SG",
+          "homeCards": 0,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "01/11/2025",
+          "homeTeam": "Paris SG",
+          "awayTeam": "Nice",
+          "homeCards": 3,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "09/11/2025",
+          "homeTeam": "Lyon",
+          "awayTeam": "Paris SG",
+          "homeCards": 5,
+          "awayCards": 2,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 1
+        },
+        {
+          "date": "22/11/2025",
+          "homeTeam": "Paris SG",
+          "awayTeam": "Le Havre",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "29/11/2025",
+          "homeTeam": "Monaco",
+          "awayTeam": "Paris SG",
+          "homeCards": 3,
+          "awayCards": 1,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 1
+        },
+        {
+          "date": "06/12/2025",
+          "homeTeam": "Paris SG",
+          "awayTeam": "Rennes",
+          "homeCards": 0,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 3,
+          "totalReds": 1
+        }
+      ],
+      "homeCardsOver15": [
+        7,
+        3,
+        "42.9",
+        0
+      ],
+      "homeCardsOver25": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "homeCardsOver35": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        8,
+        2,
+        "25.0",
+        0
+      ],
+      "awayCardsOver25": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver35": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver45": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        15,
+        13,
+        "86.7",
+        0
+      ],
+      "overallOver25": [
+        15,
+        9,
+        "60.0",
+        0
+      ],
+      "overallOver35": [
+        15,
+        3,
+        "20.0",
+        0
+      ],
+      "overallOver45": [
+        15,
+        1,
+        "6.7",
+        0
+      ]
+    },
+    {
+      "teamName": "Rennes",
+      "allMatches": [
+        {
+          "date": "15/08/2025",
+          "homeTeam": "Rennes",
+          "awayTeam": "Marseille",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 1
+        },
+        {
+          "date": "24/08/2025",
+          "homeTeam": "Lorient",
+          "awayTeam": "Rennes",
+          "homeCards": 6,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 2,
+          "totalCards": 6,
+          "totalReds": 2
+        },
+        {
+          "date": "31/08/2025",
+          "homeTeam": "Angers",
+          "awayTeam": "Rennes",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "14/09/2025",
+          "homeTeam": "Rennes",
+          "awayTeam": "Lyon",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 4,
+          "totalReds": 1
+        },
+        {
+          "date": "20/09/2025",
+          "homeTeam": "Nantes",
+          "awayTeam": "Rennes",
+          "homeCards": 3,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "28/09/2025",
+          "homeTeam": "Rennes",
+          "awayTeam": "Lens",
+          "homeCards": 3,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 5,
+          "totalReds": 1
+        },
+        {
+          "date": "05/10/2025",
+          "homeTeam": "Le Havre",
+          "awayTeam": "Rennes",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "19/10/2025",
+          "homeTeam": "Rennes",
+          "awayTeam": "Auxerre",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "26/10/2025",
+          "homeTeam": "Rennes",
+          "awayTeam": "Nice",
+          "homeCards": 5,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        },
+        {
+          "date": "29/10/2025",
+          "homeTeam": "Toulouse",
+          "awayTeam": "Rennes",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "02/11/2025",
+          "homeTeam": "Rennes",
+          "awayTeam": "Strasbourg",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "07/11/2025",
+          "homeTeam": "Paris FC",
+          "awayTeam": "Rennes",
+          "homeCards": 4,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "22/11/2025",
+          "homeTeam": "Rennes",
+          "awayTeam": "Monaco",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 1,
+          "totalReds": 1
+        },
+        {
+          "date": "28/11/2025",
+          "homeTeam": "Metz",
+          "awayTeam": "Rennes",
+          "homeCards": 0,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 0,
+          "totalReds": 0
+        },
+        {
+          "date": "06/12/2025",
+          "homeTeam": "Paris SG",
+          "awayTeam": "Rennes",
+          "homeCards": 0,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 3,
+          "totalReds": 1
+        }
+      ],
+      "homeCardsOver15": [
+        7,
+        4,
+        "57.1",
+        0
+      ],
+      "homeCardsOver25": [
+        7,
+        2,
+        "28.6",
+        0
+      ],
+      "homeCardsOver35": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "homeCardsOver45": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "awayCardsOver15": [
+        8,
+        5,
+        "62.5",
+        0
+      ],
+      "awayCardsOver25": [
+        8,
+        2,
+        "25.0",
+        0
+      ],
+      "awayCardsOver35": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver45": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "overallOver15": [
+        15,
+        13,
+        "86.7",
+        0
+      ],
+      "overallOver25": [
+        15,
+        12,
+        "80.0",
+        0
+      ],
+      "overallOver35": [
+        15,
+        10,
+        "66.7",
+        0
+      ],
+      "overallOver45": [
+        15,
+        6,
+        "40.0",
+        0
+      ]
+    },
+    {
+      "teamName": "Strasbourg",
+      "allMatches": [
+        {
+          "date": "17/08/2025",
+          "homeTeam": "Metz",
+          "awayTeam": "Strasbourg",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "24/08/2025",
+          "homeTeam": "Strasbourg",
+          "awayTeam": "Nantes",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "31/08/2025",
+          "homeTeam": "Monaco",
+          "awayTeam": "Strasbourg",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 3,
+          "totalReds": 1
+        },
+        {
+          "date": "14/09/2025",
+          "homeTeam": "Strasbourg",
+          "awayTeam": "Le Havre",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 1
+        },
+        {
+          "date": "21/09/2025",
+          "homeTeam": "Paris FC",
+          "awayTeam": "Strasbourg",
+          "homeCards": 1,
+          "awayCards": 5,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "26/09/2025",
+          "homeTeam": "Strasbourg",
+          "awayTeam": "Marseille",
+          "homeCards": 2,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        },
+        {
+          "date": "05/10/2025",
+          "homeTeam": "Strasbourg",
+          "awayTeam": "Angers",
+          "homeCards": 2,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "17/10/2025",
+          "homeTeam": "Paris SG",
+          "awayTeam": "Strasbourg",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "26/10/2025",
+          "homeTeam": "Lyon",
+          "awayTeam": "Strasbourg",
+          "homeCards": 0,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 4,
+          "totalReds": 1
+        },
+        {
+          "date": "29/10/2025",
+          "homeTeam": "Strasbourg",
+          "awayTeam": "Auxerre",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "02/11/2025",
+          "homeTeam": "Rennes",
+          "awayTeam": "Strasbourg",
+          "homeCards": 1,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 2,
+          "totalReds": 0
+        },
+        {
+          "date": "09/11/2025",
+          "homeTeam": "Strasbourg",
+          "awayTeam": "Lille",
+          "homeCards": 4,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 7,
+          "totalReds": 1
+        },
+        {
+          "date": "22/11/2025",
+          "homeTeam": "Lens",
+          "awayTeam": "Strasbourg",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 1,
+          "awayReds": 1,
+          "totalCards": 5,
+          "totalReds": 2
+        },
+        {
+          "date": "30/11/2025",
+          "homeTeam": "Strasbourg",
+          "awayTeam": "Brest",
+          "homeCards": 0,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "06/12/2025",
+          "homeTeam": "Toulouse",
+          "awayTeam": "Strasbourg",
+          "homeCards": 3,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        7,
+        5,
+        "71.4",
+        0
+      ],
+      "homeCardsOver25": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "homeCardsOver35": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "homeCardsOver45": [
+        7,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        8,
+        5,
+        "62.5",
+        0
+      ],
+      "awayCardsOver25": [
+        8,
+        4,
+        "50.0",
+        0
+      ],
+      "awayCardsOver35": [
+        8,
+        2,
+        "25.0",
+        0
+      ],
+      "awayCardsOver45": [
+        8,
+        1,
+        "12.5",
+        0
+      ],
+      "overallOver15": [
+        15,
+        15,
+        "100.0",
+        0
+      ],
+      "overallOver25": [
+        15,
+        13,
+        "86.7",
+        0
+      ],
+      "overallOver35": [
+        15,
+        10,
+        "66.7",
+        0
+      ],
+      "overallOver45": [
+        15,
+        5,
+        "33.3",
+        0
+      ]
+    },
+    {
+      "teamName": "Toulouse",
+      "allMatches": [
+        {
+          "date": "16/08/2025",
+          "homeTeam": "Nice",
+          "awayTeam": "Toulouse",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "24/08/2025",
+          "homeTeam": "Toulouse",
+          "awayTeam": "Brest",
+          "homeCards": 0,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "30/08/2025",
+          "homeTeam": "Toulouse",
+          "awayTeam": "Paris SG",
+          "homeCards": 1,
+          "awayCards": 0,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 1,
+          "totalReds": 0
+        },
+        {
+          "date": "14/09/2025",
+          "homeTeam": "Lille",
+          "awayTeam": "Toulouse",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 5,
+          "totalReds": 1
+        },
+        {
+          "date": "21/09/2025",
+          "homeTeam": "Auxerre",
+          "awayTeam": "Toulouse",
+          "homeCards": 1,
+          "awayCards": 6,
+          "homeReds": 1,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 1
+        },
+        {
+          "date": "27/09/2025",
+          "homeTeam": "Toulouse",
+          "awayTeam": "Nantes",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "05/10/2025",
+          "homeTeam": "Lyon",
+          "awayTeam": "Toulouse",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "19/10/2025",
+          "homeTeam": "Toulouse",
+          "awayTeam": "Metz",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 1,
+          "totalCards": 3,
+          "totalReds": 1
+        },
+        {
+          "date": "25/10/2025",
+          "homeTeam": "Monaco",
+          "awayTeam": "Toulouse",
+          "homeCards": 3,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 7,
+          "totalReds": 0
+        },
+        {
+          "date": "29/10/2025",
+          "homeTeam": "Toulouse",
+          "awayTeam": "Rennes",
+          "homeCards": 2,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 5,
+          "totalReds": 0
+        },
+        {
+          "date": "02/11/2025",
+          "homeTeam": "Toulouse",
+          "awayTeam": "Le Havre",
+          "homeCards": 1,
+          "awayCards": 2,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "09/11/2025",
+          "homeTeam": "Lorient",
+          "awayTeam": "Toulouse",
+          "homeCards": 0,
+          "awayCards": 4,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "23/11/2025",
+          "homeTeam": "Toulouse",
+          "awayTeam": "Angers",
+          "homeCards": 1,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 4,
+          "totalReds": 0
+        },
+        {
+          "date": "29/11/2025",
+          "homeTeam": "Marseille",
+          "awayTeam": "Toulouse",
+          "homeCards": 2,
+          "awayCards": 1,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 3,
+          "totalReds": 0
+        },
+        {
+          "date": "06/12/2025",
+          "homeTeam": "Toulouse",
+          "awayTeam": "Strasbourg",
+          "homeCards": 3,
+          "awayCards": 3,
+          "homeReds": 0,
+          "awayReds": 0,
+          "totalCards": 6,
+          "totalReds": 0
+        }
+      ],
+      "homeCardsOver15": [
+        8,
+        4,
+        "50.0",
+        0
+      ],
+      "homeCardsOver25": [
+        8,
+        1,
+        "12.5",
+        0
+      ],
+      "homeCardsOver35": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "homeCardsOver45": [
+        8,
+        0,
+        "0.0",
+        0
+      ],
+      "awayCardsOver15": [
+        7,
+        6,
+        "85.7",
+        0
+      ],
+      "awayCardsOver25": [
+        7,
+        6,
+        "85.7",
+        0
+      ],
+      "awayCardsOver35": [
+        7,
+        3,
+        "42.9",
+        0
+      ],
+      "awayCardsOver45": [
+        7,
+        1,
+        "14.3",
+        0
+      ],
+      "overallOver15": [
+        15,
+        13,
+        "86.7",
+        0
+      ],
+      "overallOver25": [
+        15,
+        13,
+        "86.7",
+        0
+      ],
+      "overallOver35": [
+        15,
+        10,
+        "66.7",
+        0
+      ],
+      "overallOver45": [
+        15,
+        7,
+        "46.7",
+        0
+      ]
+    }
+  ]
+}
