@@ -11,7 +11,7 @@ from datetime import datetime
 # ==============================================================================
 # 0. CONFIGURAÇÃO INICIAL
 # ==============================================================================
-st.set_page_config(page_title="FutPrevisão Pro V2.6", layout="wide", page_icon="⚽")
+st.set_page_config(page_title="FutPrevisão Pro V2.7", layout="wide", page_icon="⚽")
 
 # Tenta importar Plotly
 try:
@@ -74,46 +74,61 @@ if not check_login(): st.stop()
 # ==============================================================================
 
 # --- A. Mapeamento de Nomes (CSV -> Adam Choi TXT) ---
-# Aqui corrigimos os erros de "Sem Dados"
+# Esquerda: Nome EXATO no seu CSV | Direita: Nome EXATO no arquivo Adam Choi
 NAME_MAPPING = {
     # INGLATERRA
     "Manchester City": "Man City",
+    "Man City": "Man City",
     "Manchester United": "Man United",
+    "Man United": "Man United",
     "Nottingham Forest": "Nott'm Forest",
     "Wolverhampton": "Wolves",
+    "Wolves": "Wolves",
     "Leicester City": "Leicester",
     "Luton Town": "Luton",
     "Sheffield United": "Sheffield Utd",
     
     # ESPANHA
     "Atlético de Madrid": "Atl Madrid",
+    "Atl Madrid": "Atl Madrid",
     "Athletic Bilbao": "Athletic Club",
-    "Athletic Club": "Athletic Club", # Garante mapeamento direto
+    "Athletic Club": "Athletic Club", # Garante mapeamento
     "Real Betis": "Betis",
+    "Betis": "Betis",
+    "Real Madrid": "Real Madrid", 
     "Real Sociedad": "Real Sociedad",
     "Celta de Vigo": "Celta",
+    "Celta": "Celta",
     "Rayo Vallecano": "Rayo Vallecano",
     "Alavés": "Alaves",
+    "Alaves": "Alaves",
     
     # ITÁLIA
     "Inter de Milão": "Inter",
+    "Inter": "Inter",
     "Milan": "Milan",
+    "AC Milan": "Milan",
     "AS Roma": "Roma",
+    "Roma": "Roma",
     "Hellas Verona": "Hellas Verona",
+    "Verona": "Hellas Verona",
     
     # ALEMANHA
-    "Bayer Leverkusen": "Bayer 04 Leverkusen", # CORREÇÃO
-    "Leverkusen": "Bayer 04 Leverkusen",       # CORREÇÃO
+    "Bayer Leverkusen": "Bayer 04 Leverkusen",
+    "Leverkusen": "Bayer 04 Leverkusen", # CORREÇÃO IMPORTANTE
     "Bayern de Munique": "Bayern Munich",
     "Bayern Munich": "Bayern Munich",
     "Borussia Dortmund": "Dortmund",
+    "Dortmund": "Dortmund",
     "Borussia M'Gladbach": "Gladbach",
+    "Gladbach": "Gladbach",
     "Eintracht Frankfurt": "Eintracht Frankfurt",
     "Mainz 05": "Mainz",
+    "Mainz": "Mainz",
     
     # FRANÇA
-    "Paris Saint-Germain": "Paris SG", # CORREÇÃO
-    "PSG": "Paris SG",                 # CORREÇÃO
+    "Paris Saint-Germain": "Paris SG",
+    "PSG": "Paris SG", # CORREÇÃO IMPORTANTE
     "Saint-Etienne": "St Etienne",
     "Le Havre": "Le Havre"
 }
@@ -175,6 +190,7 @@ class AdamChoiLoader:
     def load_all_files(self):
         pasta = Path(__file__).parent
         for liga, files in FILES_CONFIG.items():
+            # Cantos
             try:
                 path_c = pasta / files["corners"]
                 if path_c.exists():
@@ -183,6 +199,8 @@ class AdamChoiLoader:
                         if '{' in raw: raw = raw[raw.find('{'):]
                         self.data_corners[liga] = json.loads(raw)
             except: pass
+            
+            # Cartões
             try:
                 path_k = pasta / files["cards"]
                 if path_k.exists():
@@ -193,10 +211,14 @@ class AdamChoiLoader:
             except: pass
 
     def _normalize(self, name):
-        """Padroniza nome para comparação"""
+        """Padroniza nome para comparação rigorosa"""
+        # 1. Remove espaços extras
         name = name.strip()
+        
+        # 2. Verifica mapeamento direto
         if name in NAME_MAPPING:
-            name = NAME_MAPPING[name]
+            return NAME_MAPPING[name].lower()
+            
         return name.lower()
 
     def get_history(self, team, league, market_type, key):
@@ -206,8 +228,9 @@ class AdamChoiLoader:
         target = self._normalize(team)
         
         for t in source[league].get('teams', []):
-            t_name = t['teamName'].strip().lower()
-            if t_name == target:
+            t_name_clean = t['teamName'].strip().lower()
+            
+            if t_name_clean == target:
                 stats = t.get(key)
                 if stats and isinstance(stats, list) and len(stats) >= 3:
                     return stats[0], stats[1], stats[2]
@@ -219,8 +242,9 @@ class AdamChoiLoader:
         
         for league in source:
             for t in source[league].get('teams', []):
-                t_name = t['teamName'].strip().lower()
-                if t_name == target:
+                t_name_clean = t['teamName'].strip().lower()
+                
+                if t_name_clean == target:
                     stats = t.get(key)
                     if stats and isinstance(stats, list) and len(stats) >= 3:
                         return stats[0], stats[1], stats[2], league
@@ -335,14 +359,13 @@ def render_dashboard():
         arb_sel = c2.selectbox("Árbitro", sorted(list(referees_data.keys())) or ["Genérico"])
         ref_f = referees_data.get(arb_sel, 1.0)
 
-        # Filtro de Times (Mostra todos para não bloquear, mas o user deve escolher certo)
         c3, c4 = st.columns(2)
         home = c3.selectbox("Mandante", team_list_raw, index=0)
         away = c4.selectbox("Visitante", team_list_raw, index=1)
 
         ctx_map = {"Neutro": 1.0, "Título 🏆": 1.15, "Z4 🔥": 1.10, "Rebaixado ❄️": 0.85}
-        f_h = ctx_map[st.selectbox(f"Momento {home}", list(ctx_map.keys()))]
-        f_a = ctx_map[st.selectbox(f"Momento {away}", list(ctx_map.keys()))]
+        f_h = ctx_map[st.selectbox(f"Momento {home}", list(ctx_map.keys()), key="ml")]
+        f_a = ctx_map[st.selectbox(f"Momento {away}", list(ctx_map.keys()), key="vl")]
 
         if st.button("🔮 Simular Liga", type="primary"):
             m = calcular_previsao(home, away, f_h, f_a, ref_f)
@@ -352,8 +375,7 @@ def render_dashboard():
             
             with col_cant:
                 st.info("🚩 **Escanteios**")
-                st.markdown('<p class="total-header">Totais</p>', unsafe_allow_html=True)
-                st.write(f"Exp: **{m['corners']['t']:.2f}**")
+                st.write(f"Exp Total: **{m['corners']['t']:.2f}**")
                 for l in [7.5, 8.5, 9.5]:
                     p = prob_over(m['corners']['t'], l)
                     st.write(f"+{l}: :{get_color(p)}[**{p:.0f}%**]")
@@ -373,8 +395,7 @@ def render_dashboard():
 
             with col_cart:
                 st.warning("🟨 **Cartões**")
-                st.markdown('<p class="total-header">Totais</p>', unsafe_allow_html=True)
-                st.write(f"Exp: **{m['cards']['t']:.2f}**")
+                st.write(f"Exp Total: **{m['cards']['t']:.2f}**")
                 for l in [2.5, 3.5, 4.5]:
                     p = prob_over(m['cards']['t'], l)
                     st.write(f"+{l}: :{get_color(p)}[**{p:.0f}%**]")
@@ -403,8 +424,8 @@ def render_dashboard():
         ac = c2c.selectbox("Visitante (Copa)", team_list_raw, index=1)
         
         c3c, c4c = st.columns(2)
-        f_hc = ctx_map[c3c.selectbox(f"Momento {hc}", list(ctx_map.keys()), key="ch_c")]
-        f_ac = ctx_map[c4c.selectbox(f"Momento {ac}", list(ctx_map.keys()), key="ca_c")]
+        f_hc = ctx_map[c3c.selectbox(f"Momento {hc}", list(ctx_map.keys()), key="mc")]
+        f_ac = ctx_map[c4c.selectbox(f"Momento {ac}", list(ctx_map.keys()), key="vc")]
 
         if st.button("🏆 Simular Copa", type="primary"):
             mc = calcular_previsao(hc, ac, f_hc, f_ac, ref_fc)
@@ -413,9 +434,8 @@ def render_dashboard():
             cc_cant, cc_cart = st.columns(2)
             
             with cc_cant:
-                st.info("🚩 **Escanteios**")
-                st.markdown('<p class="total-header">Totais</p>', unsafe_allow_html=True)
-                st.write(f"Exp: **{mc['corners']['t']:.2f}**")
+                st.info("🚩 **Escanteios (Global)**")
+                st.write(f"Exp Total: **{mc['corners']['t']:.2f}**")
                 for l in [7.5, 8.5, 9.5]:
                     p = prob_over(mc['corners']['t'], l)
                     st.write(f"+{l}: :{get_color(p)}[**{p:.0f}%**]")
@@ -434,9 +454,8 @@ def render_dashboard():
                     st.write(f"+{l}: :{get_color(pm)}[**{pm:.0f}%**] {tr}")
 
             with cc_cart:
-                st.warning("🟨 **Cartões**")
-                st.markdown('<p class="total-header">Totais</p>', unsafe_allow_html=True)
-                st.write(f"Exp: **{mc['cards']['t']:.2f}**")
+                st.warning("🟨 **Cartões (Global)**")
+                st.write(f"Exp Total: **{mc['cards']['t']:.2f}**")
                 for l in [2.5, 3.5, 4.5]:
                     p = prob_over(mc['cards']['t'], l)
                     st.write(f"+{l}: :{get_color(p)}[**{p:.0f}%**]")
