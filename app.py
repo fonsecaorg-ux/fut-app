@@ -1,378 +1,285 @@
 import streamlit as st
 import pandas as pd
+from scipy.stats import poisson
 import numpy as np
-import json
-from pathlib import Path
-import os
-import hmac
-from math import sqrt
-import time
+
+# Configuração da Página
+st.set_page_config(page_title="EsporteStats PRO V11.5", page_icon="⚽", layout="wide")
+
+# --- IMPORTAÇÃO BLINDADA DO DATABASE ---
+try:
+    from database import RAW_CORNERS_DATA, RAW_GOALS_DATA, RAW_CARDS_DATA, RAW_FOULS_DATA
+except ImportError:
+    st.error("🚨 ERRO: Arquivo 'database.py' não encontrado.")
+    st.stop()
 
 # ==============================================================================
-# 0. CONFIGURAÇÃO E DEPENDÊNCIAS
-# ==============================================================================
-st.set_page_config(page_title="FutPrevisão Pro - Validação V1.2 (Com Login)", layout="wide", page_icon="⚽")
-
-# Nomes de arquivos (Baseado nos arquivos reais do Adam Choi)
-ARQUIVOS_DADOS = {
-    "Premier League": "Escanteios_Preimier_League_-_codigo_fonte.txt",
-    "La Liga": "Escanteios Espanha.txt",
-    "Serie A": "Escanteios Italia.txt",
-    "Bundesliga": "Escanteios Alemanha.txt",
-    "Ligue 1": "Escanteios França.txt",
-}
-
-# --- CLASSE DE AUTENTICAÇÃO (AuthSystem Restaurado) ---
-class AuthSystem:
-    @staticmethod
-    def check_password():
-        if "password_correct" not in st.session_state:
-            st.session_state["password_correct"] = False
-        
-        def password_entered():
-            if "passwords" in st.secrets:
-                user = st.session_state["username"]
-                password = st.session_state["password"]
-                
-                # A chave de st.secrets é a senha (st.secrets["passwords"][user])
-                if user in st.secrets["passwords"] and \
-                   hmac.compare_digest(password, st.secrets["passwords"][user]):
-                    st.session_state["password_correct"] = True
-                    del st.session_state["password"]
-                    del st.session_state["username"]
-                else:
-                    st.session_state["password_correct"] = False
-                    st.error("😕 Usuário ou senha incorretos")
-            else:
-                st.error("Erro: Senhas não configuradas em secrets.toml.")
-                # Fallback para debug (remova em produção)
-                if st.session_state.get("username") == "admin" and st.session_state.get("password") == "admin":
-                     st.session_state["password_correct"] = True
-
-
-        if st.session_state["password_correct"]: return True
-
-        # Tela de Login
-        st.markdown("### 🔒 Acesso Restrito - FutPrevisão Pro")
-        st.text_input("Usuário", key="username")
-        st.text_input("Senha", type="password", key="password")
-        st.button("Entrar", on_click=password_entered)
-        return False
-
-# ==============================================================================
-# 1. CARREGADOR DE DADOS E VALIDADORES (Restante do Código Mantido)
+# 1. MOTORES E PARSERS
 # ==============================================================================
 
-class AdamChoiDataLoader:
-    def __init__(self):
-        self.data = {}
-        self.all_teams = set()
-        self.data, self.all_teams = self.load_data() 
-
-    @st.cache_data(ttl=3600)
-    def load_data(_self):
-        pasta_atual = Path(__file__).parent
-        data = {}
-        all_teams = set()
-
-        for liga, filename in ARQUIVOS_DADOS.items():
-            caminho = pasta_atual / filename
-            if caminho.exists():
-                try:
-                    with open(caminho, 'r', encoding='utf-8') as f:
-                        content = f.read().strip()
-                        json_start = content.find('{')
-                        if json_start != -1:
-                            content = content[json_start:]
-                        
-                        json_data = json.loads(content)
-                        data[liga] = json_data
-                        
-                        for team_info in json_data.get('teams', []):
-                            all_teams.add(team_info.get('teamName'))
-
-                except json.JSONDecodeError as e:
-                    st.sidebar.error(f"JSON inválido em {filename}")
-                except Exception as e:
-                    st.sidebar.error(f"Erro ao ler {filename}")
-            else:
-                st.sidebar.warning(f"Arquivo não encontrado: {filename}")
-        
-        return data, sorted(list(all_teams))
-
-    def get_teams_by_league(self, league_name):
-        return sorted([t['teamName'] for t in self.data.get(league_name, {}).get('teams', [])])
-
-    def get_stats(self, team_name, league_name, stat_key):
-        league_data = self.data.get(league_name)
-        if not league_data: return None
-
-        for team_info in league_data.get('teams', []):
-            if team_info['teamName'] == team_name:
-                stats = team_info.get(stat_key) 
-                if stats and len(stats) >= 3:
-                    try:
-                        percentual_float = float(stats[2].replace('%', ''))
-                        return {
-                            'jogos': stats[0],
-                            'acertos': stats[1],
-                            'percentual': percentual_float,
-                            'streak': stats[3]
-                        }
-                    except ValueError:
-                        return None
-                return None
-        return None
-
-# --- CLASSE VALIDADOR HISTÓRICO ---
-class ValidadorHistorico:
-    @staticmethod
-    def classificar_divergencia(prob_ia, taxa_real):
-        divergencia = abs(prob_ia - taxa_real)
-        
-        if divergencia <= 10.0:
-            return "VALIDADO", "✅ Alta confiança", "green"
-        elif divergencia <= 20.0:
-            return "ALERTA", "⚠️ Média confiança", "orange"
-        else:
-            return "DIVERGENTE", "❌ Baixa confiança", "red"
-
-    @staticmethod
-    def get_emoji_sequencia(escanteios_reais):
-        if not escanteios_reais:
-            return "N/A"
-        
-        hit_rate = escanteios_reais.get('percentual', 0)
-        emojis = []
-        for _ in range(5):
-            if np.random.rand() * 100 < hit_rate:
-                emojis.append("✅")
-            else:
-                emojis.append("❌")
-        
-        return " ".join(emojis)
+def parse_match_logs(raw_text, market_type="corners"):
+    data = []
+    if not raw_text or not isinstance(raw_text, str):
+        return pd.DataFrame(columns=['Date', 'HomeTeam', 'AwayTeam', 'HomeStats', 'AwayStats'])
     
-# --- CLASSE ALGORITMO MOCKADO ORIGINAL (IA) ---
-class PrevisaoGenerator:
-    @staticmethod
-    def prever_escanteios(time_h, time_a, liga):
-        np.random.seed(sum(map(ord, time_h + time_a + liga))) 
-        
-        base_h = len(time_h) + np.random.uniform(5.5, 7.5)
-        base_a = len(time_a) + np.random.uniform(4.0, 6.0)
-        
-        prob_h_35 = base_h * 10
-        prob_h_45 = base_h * 9
-        prob_a_35 = base_a * 10
-        prob_a_45 = base_a * 9
-        
-        prob_h_35 = min(90, max(40, prob_h_35 % 90))
-        prob_h_45 = min(90, max(40, prob_h_45 % 90))
-        prob_a_35 = min(90, max(40, prob_a_35 % 90))
-        prob_a_45 = min(90, max(40, prob_a_45 % 90))
-        
-        return {
-            'h_35': prob_h_35, 'h_45': prob_h_45,
-            'a_35': prob_a_35, 'a_45': prob_a_45,
-            'total_95': (prob_h_35 + prob_a_35) / 2
-        }
+    lines = raw_text.strip().split('\n')
+    if market_type == "corners":
+        pattern = r'"(\d{2}-\d{2}-\d{4})".*?"(.*?)"\s*,.*?"(\d+)-(\d+)"\s*,.*?"(.*?)"'
+    else:
+        pattern = r'(\d{2}[\/-]\d{2}[\/-]\d{4}):\s*(.+?)\s+(\d+)-(\d+)\s+(.+)'
 
-# ==============================================================================
-# 2. INICIALIZAÇÃO E NAVEGAÇÃO
-# ==============================================================================
-data_loader = AdamChoiDataLoader()
-
-# ESTA LINHA TRAVA O APLICATIVO SE O secrets.toml NÃO ESTIVER CORRETO
-if not AuthSystem.check_password(): st.stop()
-
-
-def dashboard_home():
-    st.title(" FutPrevisão Pro: Dashboard de Validação Histórica")
-    st.subheader("Métricas Reais (Adam Choi) das 5 Grandes Ligas")
-    
-    st.markdown("""
-        <style>
-            .stDataFrame { font-size: 10px; }
-            .stMetricLabel { font-size: 14px; }
-        </style>
-    """, unsafe_allow_html=True)
-    
-    liga_selecionada = st.selectbox("Selecione a Liga para Análise:", list(ARQUIVOS_DADOS.keys()))
-    times_da_liga = data_loader.get_teams_by_league(liga_selecionada)
-    
-    if not times_da_liga:
-        st.warning(f"Não há dados disponíveis para a liga: {liga_selecionada}")
-        return
-
-    data_for_df = []
-    
-    for team_name in times_da_liga:
-        stats_home = data_loader.get_stats(team_name, liga_selecionada, 'homeTeamOver45')
-        stats_away = data_loader.get_stats(team_name, liga_selecionada, 'awayTeamOver45')
-        
-        if stats_home and stats_away:
-            data_for_df.append({
-                'Time': team_name,
-                'Acerto_C_4.5': f"{stats_home['acertos']}/{stats_home['jogos']} ({stats_home['percentual']:.1f}%)",
-                'Acerto_F_4.5': f"{stats_away['acertos']}/{stats_away['jogos']} ({stats_away['percentual']:.1f}%)",
-                'Tendência_C_4.5': stats_home['percentual']
-            })
-
-    df_display = pd.DataFrame(data_for_df)
-    
-    st.dataframe(
-        df_display, 
-        column_order=('Time', 'Acerto_C_4.5', 'Acerto_F_4.5', 'Tendência_C_4.5'),
-        column_config={
-            "Tendência_C_4.5": st.column_config.ProgressColumn(
-                "Consistência C +4.5 (%)",
-                format="%.1f",
-                min_value=0,
-                max_value=100,
-            ),
-        },
-        hide_index=True
-    )
-    
-    st.caption("Os dados acima são o Histórico Real (Adam Choi).")
-
-def pagina_previsao():
-    st.title(" 🚀 Previsão IA + Validação Histórica")
-    
-    st.markdown("""
-        <div style="background-color: #f0f2f6; padding: 10px; border-radius: 5px; margin-bottom: 20px;">
-            <p><strong>Atenção:</strong> A Previsão da IA (Algoritmo Original) é apenas um ponto de partida. A decisão final deve ser baseada na <strong>Validação Histórica</strong> (taxa real).</p>
-        </div>
-    """, unsafe_allow_html=True)
-    
-    # 1. Seleção de Jogo
-    liga_selecionada = st.selectbox("Selecione a Liga:", list(ARQUIVOS_DADOS.keys()))
-    times_da_liga = data_loader.get_teams_by_league(liga_selecionada)
-    
-    if not times_da_liga:
-        st.error("Não foi possível carregar os times. Verifique os arquivos de dados.")
-        return
-
-    col_home, col_away = st.columns(2)
-    home_team = col_home.selectbox("Mandante:", times_da_liga)
-    away_team = col_away.selectbox("Visitante:", [t for t in times_da_liga if t != home_team], index=0 if len(times_da_liga) > 1 else 0)
-
-    st.markdown("---")
-    
-    if st.button("Gerar Previsão e Validar Histórico"):
-        
-        # 2. Executar Previsão da IA (Original)
-        ia_predictions = PrevisaoGenerator.prever_escanteios(home_team, away_team, liga_selecionada)
-        
-        # 3. Executar Validação Histórica (Dados Reais)
-        
-        linhas_analise = {
-            'h_45': {'time': home_team, 'lado': 'Casa', 'linha_key': 'homeTeamOver45', 'prob_ia': ia_predictions['h_45']},
-            'a_45': {'time': away_team, 'lado': 'Fora', 'linha_key': 'awayTeamOver45', 'prob_ia': ia_predictions['a_45']},
-            'h_35': {'time': home_team, 'lado': 'Casa', 'linha_key': 'homeTeamOver35', 'prob_ia': ia_predictions['h_35']},
-            'a_35': {'time': away_team, 'lado': 'Fora', 'linha_key': 'awayTeamOver35', 'prob_ia': ia_predictions['a_35']},
-        }
-        
-        resultados_finais = []
-        
-        for key, linha_info in linhas_analise.items():
-            
-            stats_reais = data_loader.get_stats(linha_info['time'], liga_selecionada, linha_info['linha_key'])
-            
-            if stats_reais:
-                
-                # CÁLCULO DA VALIDAÇÃO
-                prob_ia = linha_info['prob_ia']
-                taxa_real = stats_reais['percentual']
-                
-                status, confianca, cor = ValidadorHistorico.classificar_divergencia(prob_ia, taxa_real)
-                
-                resultados_finais.append({
-                    'chave': key,
-                    'time': linha_info['time'],
-                    'linha_desc': f"+{linha_info['linha_key'][-2:]} ({linha_info['lado']})",
-                    'prob_ia': prob_ia,
-                    'taxa_real': taxa_real,
-                    'status': status,
-                    'confianca': confianca,
-                    'cor': cor,
-                    'stats': stats_reais
+    for line in lines:
+        match = re.search(pattern, line)
+        if match:
+            try:
+                data.append({
+                    'Date': match.group(1),
+                    'HomeTeam': match.group(2).strip(),
+                    'AwayTeam': match.group(5).strip(),
+                    'HomeStats': int(match.group(3)),
+                    'AwayStats': int(match.group(4))
                 })
-            else:
-                st.warning(f"Dados históricos para {linha_info['time']} na linha {linha_info['linha_key']} não encontrados.")
+            except: continue
+    df = pd.DataFrame(data)
+    if not df.empty:
+        df.drop_duplicates(subset=['Date', 'HomeTeam', 'AwayTeam'], inplace=True)
+    return df
 
-
-        # 4. Exibir Resultados
-        st.markdown("### 📈 Comparativo de Desempenho Histórico")
-        
-        col_ia, col_real = st.columns(2)
-        
-        with col_ia:
-            st.markdown("#### 🟡 IA vs Histórico (Validação de Confiança)")
-            
-            for res in resultados_finais:
-                st.markdown(f"**{res['time']}** - {res['linha_desc']}")
-                
-                st.markdown(f"""
-                    <div style="padding: 10px; border-radius: 8px; border: 1px solid {res['cor']}; background-color: #ffffff;">
-                        <div style="display: flex; justify-content: space-around; font-size: 18px; font-weight: bold;">
-                            <div style="color: #ffc107;">IA: {res['prob_ia']:.1f}%</div>
-                            <div style="color: {res['cor']};">REAL: {res['taxa_real']:.1f}%</div>
-                        </div>
-                        <div style="text-align: center; margin-top: 10px; font-size: 16px; color: {res['cor']};">
-                            Status: {res['status']} ({res['confianca']})
-                        </div>
-                    </div>
-                """, unsafe_allow_html=True)
-                st.markdown("---")
-        
-        with col_real:
-            st.markdown("#### 🟢 Sequência e Recomendação de Stake")
-            
-            for res in resultados_finais:
-                st.markdown(f"**{res['time']}** - {res['linha_desc']}")
-                
-                sequencia_emojis = ValidadorHistorico.get_emoji_sequencia(res['stats'])
-                st.markdown(f"**Sequência (Últimos 5):** {sequencia_emojis}")
-                
-                st.markdown(f"**Acertos Reais:** {res['stats']['acertos']}/{res['stats']['jogos']}")
-                
-                if res['status'] == 'VALIDADO':
-                    stake_rec = "Stake Alta (3-5 Unidades)"
-                elif res['status'] == 'ALERTA':
-                    stake_rec = "Stake Média (1-2 Unidades)"
-                else:
-                    stake_rec = "Stake Baixa/Fora (0.5 Unidade)"
-
-                st.markdown(f"**Recomendação:** {stake_rec}")
-                st.markdown("---")
-
-def pagina_bilhetes():
-    st.title(" 🎫 Sistema de Bilhetes")
-    st.info("Funcionalidade mantida do sistema original: aqui você registra suas apostas.")
-
-def pagina_explorador():
-    st.title(" 🔍 Explorador de Times (Dados Reais)")
-    st.info("Funcionalidade mantida do sistema original: explore as médias de todos os times.")
-
-# ==============================================================================
-# 3. ESTRUTURA DE NAVEGAÇÃO
-# ==============================================================================
-
-if st.session_state.get("password_correct", False) or True: # Mantém True como fallback
+def parse_card_summary(raw_text, fouls_dict, league_name):
+    stats = {}
+    if not raw_text: return stats
     
-    st.sidebar.title("Navegação")
-    st.sidebar.markdown("---")
-    pagina_selecionada = st.sidebar.radio(
-        "Selecione a Página",
-        ["Previsão", "Dashboard", "Bilhetes", "Explorador"] 
-    )
+    fouls_data = fouls_dict.get(league_name, {})
+    lines = [l.strip() for l in raw_text.split('\n') if l.strip()]
+    current_team = None
+    
+    for line in lines:
+        if ":" not in line and len(line) > 3:
+            name = line.split("(")[0].strip()
+            current_team = name
+            f_stats = fouls_data.get(current_team, {'cometidas': 12.0, 'sofridas': 12.0})
+            stats[current_team] = {'yellow': 0, 'fouls_comm': f_stats['cometidas'], 'fouls_suff': f_stats['sofridas']}
+        elif current_team and "Cartões Amarelos:" in line:
+            try: stats[current_team]['yellow'] = float(line.split(":")[1].replace("por jogo", "").replace(",", ".").strip())
+            except: pass
+    return stats
 
-    if pagina_selecionada == "Dashboard":
-        dashboard_home()
-    elif pagina_selecionada == "Previsão":
-        pagina_previsao()
-    elif pagina_selecionada == "Bilhetes":
-        pagina_bilhetes()
-    elif pagina_selecionada == "Explorador":
-        pagina_explorador()
+# --- NOVA FUNÇÃO DE TENDÊNCIAS (SEU SISTEMA) ---
+def analyze_corner_trends(df, team, side):
+    """Gera o relatório de consistência (Trend System)"""
+    if df.empty: return "Sem dados suficientes."
+    
+    # Filtra jogos
+    if side == 'Home':
+        matches = df[df['HomeTeam'] == team]
+        stats = matches['HomeStats']
+    else:
+        matches = df[df['AwayTeam'] == team]
+        stats = matches['AwayStats']
+        
+    total_games = len(stats)
+    if total_games == 0: return "Sem jogos registrados."
+
+    report = f"✅ **{team} ({'Casa' if side == 'Home' else 'Fora'}):**\n"
+    report += f"Últimos {total_games} jogos:\n"
+    
+    best_line = None
+    best_rate = -1
+
+    for line in [3.5, 4.5, 5.5, 6.5]:
+        hits = sum(1 for x in stats if x > line)
+        rate = (hits / total_games) * 100
+        
+        # Define emoji
+        if rate >= 60: icon = "✅"
+        elif rate >= 40: icon = "⚠️"
+        else: icon = "❌"
+        
+        report += f"- {side} +{line}: {hits}/{total_games} ({rate:.1f}%) {icon}\n"
+        
+        # Lógica para "Melhor Aposta"
+        if rate >= 60 and line > (best_rate if best_rate else 0):
+            best_line = line
+            best_rate = rate
+
+    report += "Análise preliminar:\n"
+    if best_line:
+        report += f"✅ {team} é CONSISTENTE em +{best_line}\n"
+        report += f"💡 Melhor aposta: {team} +{best_line}"
+    else:
+        report += "⚠️ Time inconsistente em linhas altas."
+        
+    return report
+
+class ContextualEngine:
+    def __init__(self, df):
+        self.df = df
+        self.teams = sorted(list(set(df['HomeTeam'].unique()) | set(df['AwayTeam'].unique()))) if not df.empty else []
+
+    def get_lambdas(self, home, away):
+        if self.df.empty: return 0, 0, 0, 0, 0, 0
+        h_games = self.df[self.df['HomeTeam'] == home]
+        h_atk = h_games['HomeStats'].mean() if not h_games.empty else 1.5
+        a_games = self.df[self.df['AwayTeam'] == away]
+        a_def = a_games['HomeStats'].mean() if not a_games.empty else 1.5 
+        l_home = (h_atk + a_def) / 2
+        
+        a_games_atk = self.df[self.df['AwayTeam'] == away]
+        a_atk = a_games_atk['AwayStats'].mean() if not a_games_atk.empty else 1.0
+        h_games_def = self.df[self.df['HomeTeam'] == home]
+        h_def = h_games_def['AwayStats'].mean() if not h_games_def.empty else 1.0
+        l_away = (a_atk + h_def) / 2
+        return l_home, l_away, h_atk, h_def, a_atk, a_def
+
+class CardEngineV2:
+    def __init__(self, stats_dict):
+        self.stats = stats_dict
+        self.teams = sorted(list(stats_dict.keys()))
+    
+    def get_lambdas(self, home, away):
+        sh = self.stats.get(home, {'yellow': 2.0, 'fouls_comm': 12.0, 'fouls_suff': 12.0})
+        sa = self.stats.get(away, {'yellow': 2.0, 'fouls_comm': 12.0, 'fouls_suff': 12.0})
+        lh = sh['yellow'] + (sa['fouls_comm'] * 0.08) 
+        la = sa['yellow'] + (sh['fouls_comm'] * 0.08)
+        return lh, la, sh, sa
+
+# Helper de Cor
+def get_color(prob):
+    if prob >= 75: return "green"
+    if prob >= 50: return "orange"
+    return "red"
+
+# ==============================================================================
+# 2. INTERFACE DASHBOARD
+# ==============================================================================
+
+with st.sidebar:
+    st.header("EsporteStats PRO")
+    leagues = list(RAW_CORNERS_DATA.keys())
+    league = st.selectbox("Liga", leagues)
+    
+    df_corn = parse_match_logs(RAW_CORNERS_DATA.get(league, ""), "corners")
+    eng_corn = ContextualEngine(df_corn)
+    
+    df_goals = parse_match_logs(RAW_GOALS_DATA.get(league, ""), "goals")
+    eng_goals = ContextualEngine(df_goals)
+    
+    card_stats = parse_card_summary(RAW_CARDS_DATA, RAW_FOULS_DATA, league)
+    eng_card = CardEngineV2(card_stats)
+    
+    teams = eng_goals.teams if eng_goals.teams else eng_corn.teams
+    
+    if teams:
+        h_team = st.selectbox("Mandante", teams)
+        a_team = st.selectbox("Visitante", teams, index=1 if len(teams)>1 else 0)
+        btn_calc = st.button("🔥 GERAR ANÁLISE", type="primary")
+    else:
+        st.error("Sem dados.")
+        btn_calc = False
+    
+    st.info("ℹ️ Sistema Híbrido: Poisson + Tendências Históricas.")
+
+if btn_calc:
+    st.markdown(f"<h2 style='text-align: center;'>⚔️ {h_team} x {a_team}</h2>", unsafe_allow_html=True)
+    st.markdown("---")
+
+    col_corn, col_goals, col_cards = st.columns(3)
+
+    # --- ESCANTEIOS ---
+    with col_corn:
+        st.subheader("🚩 Escanteios")
+        if not df_corn.empty:
+            lc_h, lc_a, _, _, _, _ = eng_corn.get_lambdas(h_team, a_team)
+            tot_corn = lc_h + lc_a
+            
+            st.info(f"**Exp. Total: {tot_corn:.2f}**")
+            
+            # --- NOVO SISTEMA DE TENDÊNCIAS ---
+            st.markdown("#### 📊 Tendências (Últimos Jogos)")
+            trend_h = analyze_corner_trends(df_corn, h_team, 'Home')
+            trend_a = analyze_corner_trends(df_corn, a_team, 'Away')
+            
+            with st.expander(f"Análise {h_team} (Casa)", expanded=True):
+                st.markdown(trend_h)
+            
+            with st.expander(f"Análise {a_team} (Fora)", expanded=True):
+                st.markdown(trend_a)
+            
+            st.markdown("---")
+            st.markdown("**Probabilidade Futura (Poisson):**")
+            
+            # Individuais Casa
+            p_h_35 = (1-poisson.cdf(3, lc_h))*100
+            p_h_45 = (1-poisson.cdf(4, lc_h))*100
+            st.markdown(f"🏠 **{h_team}:**")
+            st.markdown(f"+3.5: :{get_color(p_h_35)}[**{p_h_35:.0f}%**] | +4.5: :{get_color(p_h_45)}[**{p_h_45:.0f}%**]")
+            
+            # Individuais Fora
+            p_a_35 = (1-poisson.cdf(3, lc_a))*100
+            p_a_45 = (1-poisson.cdf(4, lc_a))*100
+            st.markdown(f"✈️ **{a_team}:**")
+            st.markdown(f"+3.5: :{get_color(p_a_35)}[**{p_a_35:.0f}%**] | +4.5: :{get_color(p_a_45)}[**{p_a_45:.0f}%**]")
+
+        else:
+            st.warning("Sem dados.")
+
+    # --- GOLS ---
+    with col_goals:
+        st.subheader("⚽ Gols")
+        if not df_goals.empty:
+            lg_h, lg_a, _, _, _, _ = eng_goals.get_lambdas(h_team, a_team)
+            tot_goals = lg_h + lg_a
+            btts = (1 - poisson.pmf(0, lg_h)) * (1 - poisson.pmf(0, lg_a)) * 100
+            
+            st.success(f"**Exp. Total: {tot_goals:.2f}**")
+            st.markdown(f"**BTTS (Ambas):** :{get_color(btts)}[**{btts:.0f}%**]")
+            
+            st.markdown("---")
+            
+            # LINHAS PRINCIPAIS
+            p_15 = (1-poisson.cdf(1, tot_goals))*100
+            p_25 = (1-poisson.cdf(2, tot_goals))*100
+            
+            st.markdown(f"**Over 1.5:** :{get_color(p_15)}[**{p_15:.0f}%**]")
+            st.markdown(f"**Over 2.5:** :{get_color(p_25)}[**{p_25:.0f}%**]")
+            
+            st.markdown("---")
+            st.write(f"Over 0.5 Casa ({h_team}): :{get_color((1-poisson.cdf(0, lg_h))*100)}[**{(1-poisson.cdf(0, lg_h))*100:.0f}%**]")
+            st.write(f"Over 0.5 Fora ({a_team}): :{get_color((1-poisson.cdf(0, lg_a))*100)}[**{(1-poisson.cdf(0, lg_a))*100:.0f}%**]")
+
+    # --- CARTÕES ---
+    with col_cards:
+        st.subheader("🟨 Cartões")
+        if h_team in eng_card.teams and a_team in eng_card.teams:
+            lk_h, lk_a, _, _ = eng_card.get_lambdas(h_team, a_team)
+            tot_card = lk_h + lk_a
+            
+            st.warning(f"**Exp. Total: {tot_card:.2f}**")
+            
+            st.markdown("**Total no Jogo:**")
+            p_tot_35 = (1-poisson.cdf(3, tot_card))*100
+            p_tot_45 = (1-poisson.cdf(4, tot_card))*100
+            
+            st.markdown(f"Over 3.5: :{get_color(p_tot_35)}[**{p_tot_35:.0f}%**]")
+            st.markdown(f"Over 4.5: :{get_color(p_tot_45)}[**{p_tot_45:.0f}%**]")
+            
+            st.markdown("---")
+            st.markdown("**Individuais:**")
+            
+            # Individuais Casa
+            pk_h_15 = (1-poisson.cdf(1, lk_h))*100
+            pk_h_25 = (1-poisson.cdf(2, lk_h))*100
+            st.markdown(f"🏠 **{h_team}:**")
+            st.markdown(f"+1.5: :{get_color(pk_h_15)}[**{pk_h_15:.0f}%**] | +2.5: :{get_color(pk_h_25)}[**{pk_h_25:.0f}%**]")
+            
+            # Individuais Fora
+            pk_a_15 = (1-poisson.cdf(1, lk_a))*100
+            pk_a_25 = (1-poisson.cdf(2, lk_a))*100
+            st.markdown(f"✈️ **{a_team}:**")
+            st.markdown(f"+1.5: :{get_color(pk_a_15)}[**{pk_a_15:.0f}%**] | +2.5: :{get_color(pk_a_25)}[**{pk_a_25:.0f}%**]")
+
+        else:
+            st.warning("Times não encontrados na base.")
+
+elif not league:
+    st.info("👈 Selecione a liga para começar.")
