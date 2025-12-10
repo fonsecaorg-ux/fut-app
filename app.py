@@ -11,7 +11,7 @@ from datetime import datetime
 # ==============================================================================
 # 0. CONFIGURAÇÃO INICIAL
 # ==============================================================================
-st.set_page_config(page_title="FutPrevisão Pro V2.0", layout="wide", page_icon="⚽")
+st.set_page_config(page_title="FutPrevisão Pro V2.1", layout="wide", page_icon="⚽")
 
 # Tenta importar Plotly
 try:
@@ -70,7 +70,7 @@ def check_login():
 if not check_login(): st.stop()
 
 # ==============================================================================
-# 3. CARREGAMENTO DE DADOS (CSV + TXT ADAM CHOI)
+# 3. CARREGAMENTO DE DADOS
 # ==============================================================================
 
 # --- A. Dados Matemáticos (CSV) ---
@@ -103,6 +103,15 @@ def load_csv_data():
         return teams_dict
     except: return BACKUP_TEAMS
 
+@st.cache_data(ttl=3600)
+def load_referees():
+    try:
+        # Lê o arquivo de árbitros e cria um dicionário {Nome: Fator}
+        df = pd.read_csv("arbitros.csv")
+        return dict(zip(df['Nome'], df['Fator']))
+    except:
+        return {}
+
 # --- B. Dados Históricos (TXT Adam Choi) ---
 ARQUIVOS_ADAM = {
     "Premier League": "Escanteios Preimier League - codigo fonte.txt",
@@ -130,26 +139,25 @@ class AdamChoiLoader:
                 except: pass
 
     def get_history(self, team, league, key):
-        # key ex: 'homeTeamOver35'
         if league not in self.data: return None
         for t in self.data[league].get('teams', []):
             if t['teamName'] == team:
                 stats = t.get(key)
                 if stats and len(stats) >= 3:
-                    # Retorna: (Jogos, Acertos, %)
                     return stats[0], stats[1], stats[2] 
         return None
 
 # Inicializa Carregadores
 teams_data = load_csv_data()
+referees_data = load_referees()
 team_list_raw = sorted(list(teams_data.keys()))
 team_list_with_empty = [""] + team_list_raw
 history_loader = AdamChoiLoader()
 
 # ==============================================================================
-# 4. LÓGICA DE PREVISÃO (ATUALIZADA)
+# 4. LÓGICA DE PREVISÃO
 # ==============================================================================
-def calcular_previsao(home, away, f_h, f_a):
+def calcular_previsao(home, away, f_h, f_a, ref_factor=1.0):
     h_data = teams_data.get(home, BACKUP_TEAMS["Arsenal"])
     a_data = teams_data.get(away, BACKUP_TEAMS["Man City"])
     
@@ -158,16 +166,16 @@ def calcular_previsao(home, away, f_h, f_a):
     corn_a = (a_data['corners'] * 0.85) * f_a
     total_corners = corn_h + corn_a
     
-    # Cartões (Intensidade + Contexto)
-    # Jogos de Z4 ou Titulo tendem a ter mais cartões (fator boost)
+    # Cartões (Intensidade + Contexto + Árbitro)
     tension_boost = 1.0
     if f_h > 1.05 or f_a > 1.05: tension_boost = 1.15
     
     avg_fouls = (h_data['fouls'] + a_data['fouls']) / 2
     tension = (avg_fouls / 12.0) * tension_boost
     
-    card_h = h_data['cards'] * tension
-    card_a = a_data['cards'] * tension
+    # Aplica o fator do árbitro
+    card_h = h_data['cards'] * tension * ref_factor
+    card_a = a_data['cards'] * tension * ref_factor
     total_cards = card_h + card_a
     
     # Gols
@@ -226,6 +234,7 @@ def render_dashboard():
         .stat-label { font-size: 12px; color: #666; }
         .stat-val { font-weight: bold; font-size: 14px; }
         .real-data { font-size: 11px; color: #007bff; font-weight: bold; }
+        .total-header { font-size: 16px; font-weight: bold; color: #333; margin-top: 15px; margin-bottom: 5px; border-bottom: 2px solid #ddd; }
     </style>
     """, unsafe_allow_html=True)
     
@@ -255,15 +264,22 @@ def render_dashboard():
         # 1. Seletores Principais
         col_liga, col_arb = st.columns([2, 2])
         liga_sel = col_liga.selectbox("Liga (para dados históricos)", list(ARQUIVOS_ADAM.keys()))
-        arbitro = col_arb.text_input("Árbitro da Partida")
+        
+        # --- NOVO: Dropdown de Árbitros (Lê do CSV) ---
+        lista_arbitros = sorted(list(referees_data.keys()))
+        if not lista_arbitros: lista_arbitros = ["Genérico (Padrão)"]
+        
+        arbitro_sel = col_arb.selectbox("Árbitro da Partida", lista_arbitros)
+        ref_factor = referees_data.get(arbitro_sel, 1.0)
+        col_arb.caption(f"Fator de Rigor: {ref_factor}x")
 
         col_h, col_a = st.columns(2)
         home_team = col_h.selectbox("Mandante", team_list_raw, index=0)
         away_team = col_a.selectbox("Visitante", team_list_raw, index=1 if len(team_list_raw) > 1 else 0)
 
-        # 2. Contexto (Pedido 1)
+        # 2. Contexto
         st.write("---")
-        st.caption("Contexto da Partida (Afeta o cálculo)")
+        st.caption("Contexto da Partida")
         
         ctx_map = {
             "Neutro (Meio Tabela)": 1.0,
@@ -273,87 +289,79 @@ def render_dashboard():
         }
         
         cc1, cc2 = st.columns(2)
-        c_ctx_h = cc1.selectbox(f"Contexto {home_team}", list(ctx_map.keys()), index=0)
-        c_ctx_a = cc2.selectbox(f"Contexto {away_team}", list(ctx_map.keys()), index=0)
+        c_ctx_h = cc1.selectbox(f"Momento {home_team}", list(ctx_map.keys()), index=0)
+        c_ctx_a = cc2.selectbox(f"Momento {away_team}", list(ctx_map.keys()), index=0)
         
         factor_h = ctx_map[c_ctx_h]
         factor_a = ctx_map[c_ctx_a]
 
         if st.button("🔮 Gerar Relatório Completo", type="primary"):
-            # Cálculos Matemáticos
-            m = calcular_previsao(home_team, away_team, factor_h, factor_a)
+            # Cálculos Matemáticos (Passando o fator do árbitro)
+            m = calcular_previsao(home_team, away_team, factor_h, factor_a, ref_factor)
             
             st.divider()
             st.markdown(f"#### 📋 Relatório: {home_team} x {away_team}")
-            if arbitro: st.caption(f"👮 Árbitro: {arbitro}")
             
             # --- COLUNAS DE ANÁLISE ---
             col_cantos, col_cartoes = st.columns(2)
             
-            # BLOCO ESCANTEIOS (Pedido 3: Linhas Individuais + Histórico)
+            # === BLOCO ESCANTEIOS ===
             with col_cantos:
-                st.info("🚩 **Escanteios Individuais**")
+                st.info("🚩 **Escanteios**")
                 
-                # --- MANDANTE ---
-                st.markdown(f"**🏠 {home_team}** (Exp. Math: {m['corners']['h']:.2f})")
+                # NOVO: TOTAIS
+                st.markdown('<p class="total-header">Totais da Partida</p>', unsafe_allow_html=True)
+                st.write(f"Expectativa Total: **{m['corners']['t']:.2f}**")
+                for line in [7.5, 8.5, 9.5]:
+                    prob = prob_over(m['corners']['t'], line)
+                    st.markdown(f"Mais de {line}: :{get_color(prob)}[**{prob:.0f}%**]")
+                
+                st.markdown("---")
+                
+                # INDIVIDUAIS
+                st.markdown(f"**🏠 {home_team}** (Exp: {m['corners']['h']:.2f})")
                 for line, key_adam in [(3.5, 'homeTeamOver35'), (4.5, 'homeTeamOver45'), (5.5, 'homeTeamOver55')]:
-                    # Probabilidade Matemática
                     prob_math = prob_over(m['corners']['h'], line)
-                    color = get_color(prob_math)
-                    
-                    # Dados Reais (Adam Choi)
                     hist_data = history_loader.get_history(home_team, liga_sel, key_adam)
-                    if hist_data:
-                        jogos, acertos, pct = hist_data
-                        txt_real = f"({acertos} de {jogos} - {pct})"
-                    else:
-                        txt_real = "(Sem dados históricos)"
-                    
-                    st.markdown(f"+{line}: :{color}[**{prob_math:.0f}%**] {txt_real}")
+                    txt_real = f"({hist_data[1]}/{hist_data[0]} - {hist_data[2]})" if hist_data else ""
+                    st.markdown(f"+{line}: :{get_color(prob_math)}[**{prob_math:.0f}%**] {txt_real}")
+
+                st.markdown("")
+                
+                st.markdown(f"**✈️ {away_team}** (Exp: {m['corners']['a']:.2f})")
+                for line, key_adam in [(3.5, 'awayTeamOver35'), (4.5, 'awayTeamOver45'), (5.5, 'awayTeamOver55')]:
+                    prob_math = prob_over(m['corners']['a'], line)
+                    hist_data = history_loader.get_history(away_team, liga_sel, key_adam)
+                    txt_real = f"({hist_data[1]}/{hist_data[0]} - {hist_data[2]})" if hist_data else ""
+                    st.markdown(f"+{line}: :{get_color(prob_math)}[**{prob_math:.0f}%**] {txt_real}")
+
+            # === BLOCO CARTÕES ===
+            with col_cartoes:
+                st.warning("🟨 **Cartões**")
+                
+                # NOVO: TOTAIS
+                st.markdown('<p class="total-header">Totais da Partida</p>', unsafe_allow_html=True)
+                st.write(f"Expectativa Total: **{m['cards']['t']:.2f}**")
+                for line in [2.5, 3.5, 4.5]:
+                    prob = prob_over(m['cards']['t'], line)
+                    st.markdown(f"Mais de {line}: :{get_color(prob)}[**{prob:.0f}%**]")
 
                 st.markdown("---")
                 
-                # --- VISITANTE ---
-                st.markdown(f"**✈️ {away_team}** (Exp. Math: {m['corners']['a']:.2f})")
-                for line, key_adam in [(3.5, 'awayTeamOver35'), (4.5, 'awayTeamOver45'), (5.5, 'awayTeamOver55')]:
-                    # Probabilidade Matemática
-                    prob_math = prob_over(m['corners']['a'], line)
-                    color = get_color(prob_math)
-                    
-                    # Dados Reais (Adam Choi) - Usa awayTeamOverXX
-                    hist_data = history_loader.get_history(away_team, liga_sel, key_adam)
-                    if hist_data:
-                        jogos, acertos, pct = hist_data
-                        txt_real = f"({acertos} de {jogos} - {pct})"
-                    else:
-                        txt_real = "(Sem dados históricos)"
-                    
-                    st.markdown(f"+{line}: :{color}[**{prob_math:.0f}%**] {txt_real}")
-
-            # BLOCO CARTÕES (Pedido 4: Linhas Individuais)
-            with col_cartoes:
-                st.warning("🟨 **Cartões Individuais**")
-                
-                # --- MANDANTE ---
+                # INDIVIDUAIS
                 st.markdown(f"**🏠 {home_team}** (Exp: {m['cards']['h']:.2f})")
                 for line in [1.5, 2.5]:
                     prob = prob_over(m['cards']['h'], line)
-                    cor = get_color(prob)
-                    st.markdown(f"+{line}: :{cor}[**{prob:.0f}%**]")
+                    st.markdown(f"+{line}: :{get_color(prob)}[**{prob:.0f}%**]")
                 
-                st.markdown("---")
+                st.markdown("")
                 
-                # --- VISITANTE ---
                 st.markdown(f"**✈️ {away_team}** (Exp: {m['cards']['a']:.2f})")
                 for line in [1.5, 2.5]:
                     prob = prob_over(m['cards']['a'], line)
-                    cor = get_color(prob)
-                    st.markdown(f"+{line}: :{cor}[**{prob:.0f}%**]")
-                
-                st.markdown("---")
-                st.caption(f"*Cálculo ajustado pela intensidade ({m['cards']['t']:.2f} total esp.)")
+                    st.markdown(f"+{line}: :{get_color(prob)}[**{prob:.0f}%**]")
 
-    # --- OUTRAS ABAS (MANTIDAS) ---
+    # --- ABA NOVO BILHETE (MANTIDA) ---
     with tab_new:
         st.markdown("### Registrar Aposta")
         if 'n_games' not in st.session_state: st.session_state['n_games'] = 1
