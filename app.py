@@ -9,15 +9,14 @@ from math import sqrt
 import time
 
 # ==============================================================================
-# 0. CONFIGURAÇÃO, FUNÇÕES GLOBAIS E DEPENDÊNCIAS
+# 0. CONFIGURAÇÃO E DEPENDÊNCIAS
 # ==============================================================================
-st.set_page_config(page_title="FutPrevisão Pro - Validação V1", layout="wide", page_icon="⚽")
+st.set_page_config(page_title="FutPrevisão Pro - Validação V1.1 (Estável)", layout="wide", page_icon="⚽")
 
-# Variáveis de Estado Global (Login Desativado para Produção)
-if 'logged_in' not in st.session_state:
-    st.session_state['logged_in'] = True # FORÇANDO LOGIN PARA TRUE
+# Variáveis de Estado Global: Força login para True para carregar o app
+st.session_state['logged_in'] = True 
 
-# Nomes de arquivos (BASEADO NAS SUAS FONTES REAIS)
+# Nomes de arquivos (Baseado nos arquivos reais do Adam Choi)
 ARQUIVOS_DADOS = {
     "Premier League": "Escanteios_Preimier_League_-_codigo_fonte.txt",
     "La Liga": "Escanteios Espanha.txt",
@@ -26,24 +25,26 @@ ARQUIVOS_DADOS = {
     "Ligue 1": "Escanteios França.txt",
 }
 
-# --- CLASSES ESSENCIAIS PARA O PROJETO ---
-
-# Classe de Login Simples (Mantida, mas não executada)
+# --- CLASSE DE LOGIN MOCKADA/DESATIVADA ---
 class AuthSystem:
+    # Desativada para garantir a estabilidade do Streamlit
     @staticmethod
     def check_password():
-        return True # Sempre retorna True para não travar o app
+        return True 
 
-# --- CLASSE ADICIONADA: CARREGAMENTO DE DADOS REAIS ---
+# ==============================================================================
+# 1. CARREGADOR DE DADOS E VALIDADORES
+# ==============================================================================
+
 class AdamChoiDataLoader:
     def __init__(self):
         self.data = {}
         self.all_teams = set()
-        self.load_data()
+        # O self.data e self.all_teams são populados por load_data()
+        self.data, self.all_teams = self.load_data() 
 
     @st.cache_data(ttl=3600)
     def load_data(_self):
-        # AQUI BUSCAMOS OS ARQUIVOS NA PASTA ATUAL
         pasta_atual = Path(__file__).parent
         data = {}
         all_teams = set()
@@ -54,6 +55,7 @@ class AdamChoiDataLoader:
                 try:
                     with open(caminho, 'r', encoding='utf-8') as f:
                         content = f.read().strip()
+                        # Limpa o conteúdo para garantir que é um JSON válido
                         json_start = content.find('{')
                         if json_start != -1:
                             content = content[json_start:]
@@ -65,16 +67,14 @@ class AdamChoiDataLoader:
                             all_teams.add(team_info.get('teamName'))
 
                 except json.JSONDecodeError as e:
-                    st.error(f"Erro ao decodificar JSON em {filename}: {e}")
+                    # Reporta o erro, mas não trava o app
+                    st.sidebar.error(f"JSON inválido em {filename}")
                 except Exception as e:
-                    st.error(f"Erro ao ler {filename}: {e}")
+                    st.sidebar.error(f"Erro ao ler {filename}")
             else:
-                # Alerta na barra lateral, não trava o app
                 st.sidebar.warning(f"Arquivo não encontrado: {filename}")
         
-        _self.data = data
-        _self.all_teams = sorted(list(all_teams))
-        return data, _self.all_teams
+        return data, sorted(list(all_teams))
 
     def get_teams_by_league(self, league_name):
         return sorted([t['teamName'] for t in self.data.get(league_name, {}).get('teams', [])])
@@ -87,16 +87,21 @@ class AdamChoiDataLoader:
             if team_info['teamName'] == team_name:
                 stats = team_info.get(stat_key) 
                 if stats and len(stats) >= 3:
-                    return {
-                        'jogos': stats[0],
-                        'acertos': stats[1],
-                        'percentual': float(stats[2].replace('%', '')),
-                        'streak': stats[3]
-                    }
+                    try:
+                        # Converte a string de porcentagem para float
+                        percentual_float = float(stats[2].replace('%', ''))
+                        return {
+                            'jogos': stats[0],
+                            'acertos': stats[1],
+                            'percentual': percentual_float,
+                            'streak': stats[3]
+                        }
+                    except ValueError:
+                        return None
                 return None
         return None
 
-# --- CLASSE ADICIONADA: VALIDADOR HISTÓRICO ---
+# --- CLASSE VALIDADOR HISTÓRICO ---
 class ValidadorHistorico:
     @staticmethod
     def classificar_divergencia(prob_ia, taxa_real):
@@ -110,9 +115,8 @@ class ValidadorHistorico:
             return "DIVERGENTE", "❌ Baixa confiança", "red"
 
     @staticmethod
-    def get_emoji_sequencia(escanteios_reais, linha):
-        # MOCK/Simulação, pois a sequência completa de logs (que é o que o Adam Choi fornece) 
-        # não está na chave de resumo 'homeTeamOverX'
+    def get_emoji_sequencia(escanteios_reais):
+        # MOCK: Simulação de sequência com base na taxa de acerto
         if not escanteios_reais:
             return "N/A"
         
@@ -126,10 +130,13 @@ class ValidadorHistorico:
         
         return " ".join(emojis)
     
-# --- ALGORITMO MOCKADO ORIGINAL (MANTIDO) ---
+# --- CLASSE ALGORITMO MOCKADO ORIGINAL (IA) ---
 class PrevisaoGenerator:
     @staticmethod
     def prever_escanteios(time_h, time_a, liga):
+        # MOCK: Algoritmo original mantido, apenas com seed para simular dados
+        np.random.seed(sum(map(ord, time_h + time_a + liga))) 
+        
         base_h = len(time_h) + np.random.uniform(5.5, 7.5)
         base_a = len(time_a) + np.random.uniform(4.0, 6.0)
         
@@ -138,6 +145,7 @@ class PrevisaoGenerator:
         prob_a_35 = base_a * 10
         prob_a_45 = base_a * 9
         
+        # Garante que as probabilidades sejam entre 40% e 90%
         prob_h_35 = min(90, max(40, prob_h_35 % 90))
         prob_h_45 = min(90, max(40, prob_h_45 % 90))
         prob_a_35 = min(90, max(40, prob_a_35 % 90))
@@ -149,16 +157,12 @@ class PrevisaoGenerator:
             'total_95': (prob_h_35 + prob_a_35) / 2
         }
 
-
 # ==============================================================================
-# INICIALIZAÇÃO DO DATA LOADER E APLICAÇÃO
+# 2. INICIALIZAÇÃO DA APLICAÇÃO
 # ==============================================================================
-# O @st.cache_data garante que isso só seja carregado uma vez
-data_loader = AdamChoiDataLoader()
+data_loader = AdamChoiDataLoader() # Carrega os dados reais ao iniciar
 
-# Se o login estivesse ativo, o app pararia aqui.
-if not AuthSystem.check_password(): st.stop()
-
+# PÁGINAS DE NAVEGAÇÃO
 
 def dashboard_home():
     st.title(" FutPrevisão Pro: Dashboard de Validação Histórica")
@@ -172,7 +176,6 @@ def dashboard_home():
     """, unsafe_allow_html=True)
     
     liga_selecionada = st.selectbox("Selecione a Liga para Análise:", list(ARQUIVOS_DADOS.keys()))
-    
     times_da_liga = data_loader.get_teams_by_league(liga_selecionada)
     
     if not times_da_liga:
@@ -182,6 +185,7 @@ def dashboard_home():
     data_for_df = []
     
     for team_name in times_da_liga:
+        # Foco na linha +4.5 para o Dashboard
         stats_home = data_loader.get_stats(team_name, liga_selecionada, 'homeTeamOver45')
         stats_away = data_loader.get_stats(team_name, liga_selecionada, 'awayTeamOver45')
         
@@ -190,7 +194,7 @@ def dashboard_home():
                 'Time': team_name,
                 'Acerto_C_4.5': f"{stats_home['acertos']}/{stats_home['jogos']} ({stats_home['percentual']:.1f}%)",
                 'Acerto_F_4.5': f"{stats_away['acertos']}/{stats_away['jogos']} ({stats_away['percentual']:.1f}%)",
-                'Tendência_C_4.5': f"{stats_home['percentual']:.1f}"
+                'Tendência_C_4.5': stats_home['percentual']
             })
 
     df_display = pd.DataFrame(data_for_df)
@@ -201,7 +205,7 @@ def dashboard_home():
         column_config={
             "Tendência_C_4.5": st.column_config.ProgressColumn(
                 "Consistência C +4.5 (%)",
-                format="%f",
+                format="%.1f",
                 min_value=0,
                 max_value=100,
             ),
@@ -209,7 +213,7 @@ def dashboard_home():
         hide_index=True
     )
     
-    st.caption("Filtre o time desejado na tabela acima para verificar a consistência dos dados.")
+    st.caption("Os dados acima são o Histórico Real (Adam Choi).")
 
 def pagina_previsao():
     st.title(" 🚀 Previsão IA + Validação Histórica")
@@ -236,14 +240,12 @@ def pagina_previsao():
     
     if st.button("Gerar Previsão e Validar Histórico"):
         
-        st.session_state['run_analysis'] = True
-        
         # 2. Executar Previsão da IA (Original)
         ia_predictions = PrevisaoGenerator.prever_escanteios(home_team, away_team, liga_selecionada)
         
         # 3. Executar Validação Histórica (Dados Reais)
         
-        # Mapeamento: Linhas da IA -> Chaves Adam Choi (Home/Away Over 45/35)
+        # Mapeamento: Linhas da IA -> Chaves Adam Choi 
         linhas_analise = {
             'h_45': {'time': home_team, 'lado': 'Casa', 'linha_key': 'homeTeamOver45', 'prob_ia': ia_predictions['h_45']},
             'a_45': {'time': away_team, 'lado': 'Fora', 'linha_key': 'awayTeamOver45', 'prob_ia': ia_predictions['a_45']},
@@ -277,7 +279,7 @@ def pagina_previsao():
                     'stats': stats_reais
                 })
             else:
-                st.warning(f"Dados históricos para {linha_info['time']} na linha {linha_info['linha_key']} não encontrados. O time pode não ter jogado o suficiente em casa/fora.")
+                st.warning(f"Dados históricos para {linha_info['time']} na linha {linha_info['linha_key']} não encontrados.")
 
 
         # 4. Exibir Resultados
@@ -320,7 +322,7 @@ def pagina_previsao():
                 st.markdown(f"**{res['time']}** - {res['linha_desc']}")
                 
                 # Sequência Simulada (Necessita de logs completos, aqui é simulada/mockada)
-                sequencia_emojis = ValidadorHistorico.get_emoji_sequencia(res['stats'], res['linha_desc'])
+                sequencia_emojis = ValidadorHistorico.get_emoji_sequencia(res['stats'])
                 st.markdown(f"**Sequência (Últimos 5):** {sequencia_emojis}")
                 
                 # Acertos Reais
@@ -349,13 +351,13 @@ def pagina_explorador():
 # ESTRUTURA DE NAVEGAÇÃO
 # ==============================================================================
 
-# Execução principal após o carregamento inicial dos dados.
-if st.session_state.get("logged_in", True): # Usar True como default se a chave não existir.
+if st.session_state["logged_in"]:
     
+    st.sidebar.title("Navegação")
     st.sidebar.markdown("---")
     pagina_selecionada = st.sidebar.radio(
-        "Navegação",
-        ["Dashboard", "Previsão", "Bilhetes", "Explorador"]
+        "Selecione a Página",
+        ["Previsão", "Dashboard", "Bilhetes", "Explorador"] # Previsão como default
     )
 
     if pagina_selecionada == "Dashboard":
@@ -366,7 +368,4 @@ if st.session_state.get("logged_in", True): # Usar True como default se a chave 
         pagina_bilhetes()
     elif pagina_selecionada == "Explorador":
         pagina_explorador()
-else:
-    # Caso o login fosse requerido e não fosse feito (se o AuthSystem estivesse ativo)
-    st.title("Bem-vindo ao FutPrevisão Pro")
-    st.info("Faça login para começar.")
+# O 'else' do login não é mais necessário, pois o logged_in é True por padrão
