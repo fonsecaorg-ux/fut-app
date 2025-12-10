@@ -5,31 +5,29 @@ import json
 import os
 import uuid
 from datetime import datetime
+from scipy.stats import poisson
 
 # ==============================================================================
-# 0. CONFIGURAÇÃO INICIAL (DEVE SER A PRIMEIRA LINHA)
+# 0. CONFIGURAÇÃO INICIAL
 # ==============================================================================
 st.set_page_config(page_title="FutPrevisão Pro", layout="wide", page_icon="⚽")
 
-# Tentativa de importar Plotly (com aviso caso falhe)
+# Tentativa de importar Plotly
 try:
     import plotly.graph_objects as go
     import plotly.express as px
     HAS_PLOTLY = True
 except ImportError:
     HAS_PLOTLY = False
-    st.error("⚠️ Biblioteca 'plotly' não encontrada. O Dashboard ficará sem gráficos.")
 
 # ==============================================================================
 # 1. SEGURANÇA E LOGIN
 # ==============================================================================
-# Credenciais
 USERS = {
     "diego": "@Casa612"
 }
 
 def check_login():
-    """Sistema de Login Simplificado e Robusto"""
     if "logged_in" not in st.session_state:
         st.session_state["logged_in"] = False
 
@@ -52,12 +50,11 @@ def check_login():
     
     return False
 
-# SE NÃO ESTIVER LOGADO, PARA AQUI.
 if not check_login():
     st.stop()
 
 # ==============================================================================
-# 2. CARREGAMENTO DE DADOS
+# 2. CARREGAMENTO DE DADOS (CSV)
 # ==============================================================================
 BACKUP_TEAMS = {
     "Arsenal": {"corners": 6.82, "cards": 1.00, "fouls": 10.45, "goals_f": 2.3, "goals_a": 0.8},
@@ -70,7 +67,6 @@ def safe_float(value):
 
 @st.cache_data(ttl=3600)
 def load_data():
-    # 1. Tenta carregar dados_times.csv
     try:
         df = pd.read_csv("dados_times.csv")
         teams_dict = {}
@@ -82,30 +78,16 @@ def load_data():
                 'goals_f': safe_float(row['GolsFeitos']),
                 'goals_a': safe_float(row['GolsSofridos'])
             }
-    except Exception as e:
-        # Se falhar, usa backup silencioso para não travar
+    except:
         teams_dict = BACKUP_TEAMS
     
-    # 2. Tenta carregar arbitros.csv
-    try:
-        df_ref = pd.read_csv("arbitros.csv")
-        referees = dict(zip(df_ref['Nome'], df_ref['Fator']))
-    except:
-        referees = {}
-        
-    referees['Estilo: Normal (Padrão)'] = 1.00
-    referees['Estilo: Rigoroso'] = 1.25
-    referees['Estilo: Conservador'] = 0.80
-        
-    return teams_dict, referees
+    return teams_dict
 
-# Carrega os dados com mensagem de status
-with st.spinner("Carregando base de dados..."):
-    teams_data, referees_data = load_data()
-    team_list_raw = sorted(list(teams_data.keys()))
-    team_list_with_empty = [""] + team_list_raw
+teams_data = load_data()
+team_list_raw = sorted(list(teams_data.keys()))
+team_list_with_empty = [""] + team_list_raw
 
-# Configura lista de mercados
+# Lista de Mercados para o Registro
 MERCADOS_LISTA = ["Selecione o mercado..."]
 for i in [2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5, 10.5, 11.5, 12.5]:
     MERCADOS_LISTA.append(f"Escanteios Mais de {i}")
@@ -114,19 +96,66 @@ for i in [1.5, 2.5, 3.5, 4.5, 5.5, 6.5]:
 MERCADOS_LISTA.extend(["Gols Mais de 0.5", "Gols Mais de 1.5", "Gols Mais de 2.5", "Ambas Marcam", "Vitória Casa", "Vitória Fora"])
 
 # ==============================================================================
-# 3. ESTILOS CSS
+# 3. MOTOR DE CÁLCULO (POISSON / SIMULAÇÃO)
+# ==============================================================================
+def prob_over(exp, line):
+    return poisson.sf(int(line), exp) * 100
+
+def calcular_previsao(home, away, context_h, context_a):
+    h_data = teams_data.get(home, BACKUP_TEAMS["Arsenal"])
+    a_data = teams_data.get(away, BACKUP_TEAMS["Man City"])
+    
+    # Fatores de Contexto (1.0 = Neutro, >1 = Motivado, <1 = Crise)
+    f_h = context_h
+    f_a = context_a
+    
+    # 1. Escanteios (Modelo Contextual Simplificado)
+    # Casa tem boost natural (1.10), Fora tem penalidade (0.85)
+    corn_h = (h_data['corners'] * 1.10) * f_h
+    corn_a = (a_data['corners'] * 0.85) * f_a
+    total_corners = corn_h + corn_a
+    
+    # 2. Cartões (Modelo de Tensão)
+    # Tensão baseada na média de faltas do jogo
+    avg_fouls = (h_data['fouls'] + a_data['fouls']) / 2
+    tension = avg_fouls / 12.0 # Normalizador
+    card_h = h_data['cards'] * tension
+    card_a = a_data['cards'] * tension
+    total_cards = card_h + card_a
+    
+    # 3. Gols (Modelo Poisson Ofensivo/Defensivo)
+    avg_league_goals = 1.3
+    exp_goals_h = ((h_data['goals_f'] * f_h) / avg_league_goals) * (a_data['goals_a'] / avg_league_goals) * avg_league_goals
+    exp_goals_a = ((a_data['goals_f'] * f_a) / avg_league_goals) * (h_data['goals_a'] / avg_league_goals) * avg_league_goals
+    
+    return {
+        "corners": {"total": total_corners, "h": corn_h, "a": corn_a},
+        "cards": {"total": total_cards, "h": card_h, "a": card_a},
+        "goals": {"h": exp_goals_h, "a": exp_goals_a}
+    }
+
+def get_color(prob):
+    if prob >= 70: return "green"
+    if prob >= 50: return "orange"
+    return "red"
+
+# ==============================================================================
+# 4. ESTILOS CSS
 # ==============================================================================
 st.markdown("""
 <style>
     .bet-card-green { background-color: #d4edda; border-left: 5px solid #28a745; padding: 15px; border-radius: 5px; margin-bottom: 10px; }
     .bet-card-red { background-color: #f8d7da; border-left: 5px solid #dc3545; padding: 15px; border-radius: 5px; margin-bottom: 10px; }
     .bet-card-cashout { background-color: #fff3cd; border-left: 5px solid #ffc107; padding: 15px; border-radius: 5px; margin-bottom: 10px; }
-    .kpi-box { background: #f0f2f6; padding: 20px; border-radius: 10px; text-align: center; }
+    
+    .pred-card { background: #ffffff; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 10px; border: 1px solid #e0e0e0; }
+    .pred-header { font-weight: bold; font-size: 16px; margin-bottom: 10px; color: #333; }
+    .prob-val { font-weight: bold; font-size: 18px; }
 </style>
 """, unsafe_allow_html=True)
 
 # ==============================================================================
-# 4. FUNÇÕES DE GESTÃO (ARQUIVOS JSON)
+# 5. FUNÇÕES DE GESTÃO (JSON)
 # ==============================================================================
 DATA_FILE = "historico_bilhetes_v6.json"
 CONFIG_FILE = "config_banca.json"
@@ -144,19 +173,14 @@ def carregar_tickets():
     try:
         with open(DATA_FILE, "r") as f: dados = json.load(f)
         return sorted(dados, key=lambda x: datetime.strptime(x['Data'], "%d/%m/%Y"), reverse=True)
-    except:
-        return []
+    except: return []
 
 def salvar_ticket(ticket_data):
     if os.path.exists(DATA_FILE):
-        try:
-            with open(DATA_FILE, "r") as f: dados = json.load(f)
+        try: with open(DATA_FILE, "r") as f: dados = json.load(f)
         except: dados = []
     else: dados = []
-    
-    if "id" not in ticket_data:
-        ticket_data["id"] = str(uuid.uuid4())[:8].upper()
-        
+    if "id" not in ticket_data: ticket_data["id"] = str(uuid.uuid4())[:8].upper()
     dados.append(ticket_data)
     with open(DATA_FILE, "w") as f: json.dump(dados, f, indent=2)
 
@@ -169,13 +193,13 @@ def excluir_ticket(id_ticket):
     return False
 
 # ==============================================================================
-# 5. RENDERIZAÇÃO DO DASHBOARD (BLOCO PRINCIPAL)
+# 6. RENDERIZAÇÃO DO DASHBOARD
 # ==============================================================================
 def render_dashboard():
     try:
-        st.title("📊 Gestão de Banca")
+        st.title("📊 Painel de Controle")
         
-        # --- Sidebar Config ---
+        # --- Config Sidebar ---
         cfg = carregar_config()
         with st.sidebar.expander("⚙️ Configurações", expanded=False):
             nova_banca = st.number_input("Banca Inicial", value=cfg["banca_inicial"], step=50.0)
@@ -190,12 +214,10 @@ def render_dashboard():
         lucro_total = sum(t["Lucro"] for t in tickets)
         banca_atual = cfg["banca_inicial"] + lucro_total
         
-        # Stop Loss Check
         hoje = datetime.now().strftime("%d/%m/%Y")
         prejuizo_hoje = sum(t["Lucro"] for t in tickets if t["Data"] == hoje and t["Lucro"] < 0)
         perda_atual = abs(prejuizo_hoje)
         
-        # Top KPIs
         c1, c2, c3 = st.columns(3)
         c1.metric("Banca Atual", f"R$ {banca_atual:,.2f}", f"{lucro_total:,.2f}")
         c2.metric("Lucro Total", f"R$ {lucro_total:,.2f}")
@@ -206,26 +228,76 @@ def render_dashboard():
 
         st.divider()
 
-        # --- ABAS ---
-        tab_new, tab_hist, tab_stats = st.tabs(["➕ Novo Bilhete", "📜 Histórico", "📈 Gráficos"])
+        # --- ABAS (AQUI ESTÁ A NOVIDADE) ---
+        tab_sim, tab_new, tab_hist, tab_stats = st.tabs(["🔮 Simulação IA", "➕ Novo Bilhete", "📜 Histórico", "📈 Gráficos"])
 
-        # === ABA 1: NOVO BILHETE ===
-        with tab_new:
-            st.markdown("### Registrar Aposta")
+        # === ABA 0: SIMULAÇÃO / PREVISÃO (RESTAURADA) ===
+        with tab_sim:
+            st.markdown("### 🤖 Previsão de Partidas (Baseado no CSV)")
             
-            # Inicializa Num Jogos
+            c_h, c_a = st.columns(2)
+            home_team = c_h.selectbox("Mandante", team_list_raw, index=0)
+            away_team = c_a.selectbox("Visitante", team_list_raw, index=1 if len(team_list_raw) > 1 else 0)
+            
+            with st.expander("Ajustes de Contexto (Opcional)"):
+                cc1, cc2 = st.columns(2)
+                ctx_h = cc1.select_slider("Momento Mandante", options=[0.8, 1.0, 1.2], value=1.0, format_func=lambda x: "Crise" if x<1 else "Neutro" if x==1 else "Motivado")
+                ctx_a = cc2.select_slider("Momento Visitante", options=[0.8, 1.0, 1.2], value=1.0, format_func=lambda x: "Crise" if x<1 else "Neutro" if x==1 else "Motivado")
+
+            if st.button("🔮 Calcular Probabilidades", type="primary"):
+                m = calcular_previsao(home_team, away_team, ctx_h, ctx_a)
+                
+                # --- RESULTADOS DA SIMULAÇÃO ---
+                col_esc, col_gol, col_car = st.columns(3)
+                
+                # 1. Escanteios
+                with col_esc:
+                    st.info(f"🚩 **Escanteios** (Exp: {m['corners']['total']:.2f})")
+                    for line in [8.5, 9.5, 10.5, 11.5]:
+                        prob = prob_over(m['corners']['total'], line)
+                        cor = get_color(prob)
+                        st.markdown(f"**+{line}**: :{cor}[**{prob:.1f}%**]")
+                    
+                    st.markdown("---")
+                    st.caption(f"🏠 {home_team}: {m['corners']['h']:.2f} | ✈️ {away_team}: {m['corners']['a']:.2f}")
+
+                # 2. Gols
+                with col_gol:
+                    total_gols = m['goals']['h'] + m['goals']['a']
+                    st.success(f"⚽ **Gols** (Exp: {total_gols:.2f})")
+                    
+                    # BTTS
+                    btts_prob = (1 - poisson.pmf(0, m['goals']['h'])) * (1 - poisson.pmf(0, m['goals']['a'])) * 100
+                    st.markdown(f"**Ambas Marcam**: :{get_color(btts_prob)}[**{btts_prob:.1f}%**]")
+                    
+                    for line in [1.5, 2.5, 3.5]:
+                        prob = prob_over(total_gols, line)
+                        cor = get_color(prob)
+                        st.markdown(f"**+{line}**: :{cor}[**{prob:.1f}%**]")
+
+                # 3. Cartões
+                with col_car:
+                    st.warning(f"🟨 **Cartões** (Exp: {m['cards']['total']:.2f})")
+                    for line in [3.5, 4.5, 5.5]:
+                        prob = prob_over(m['cards']['total'], line)
+                        cor = get_color(prob)
+                        st.markdown(f"**+{line}**: :{cor}[**{prob:.1f}%**]")
+                    st.markdown("---")
+                    st.caption("Baseado na intensidade de faltas")
+
+        # === ABA 1: NOVO BILHETE (MANTIDA) ===
+        with tab_new:
+            st.markdown("### Registrar Aposta Real")
+            
             if 'num_jogos' not in st.session_state: st.session_state['num_jogos'] = 1
             
-            # Dados Gerais
             c_d, c_s, c_o = st.columns(3)
             data_t = c_d.date_input("Data", datetime.now())
             stake = c_s.number_input("Stake (R$)", min_value=0.0, value=10.0)
             odd = c_o.number_input("Odd Total", min_value=1.0, value=1.50)
             
-            res_options = ["Green ✅", "Green (Cashout) 💰", "Red ❌", "Reembolso 🔄"]
-            resultado = st.selectbox("Resultado", res_options)
+            resultado = st.selectbox("Resultado", ["Green ✅", "Green (Cashout) 💰", "Red ❌", "Reembolso 🔄"])
             
-            # Cálculo Lucro
             lucro = 0.0
             if "Green ✅" in resultado: lucro = (stake * odd) - stake
             elif "Red" in resultado: lucro = -stake
@@ -236,16 +308,12 @@ def render_dashboard():
             st.info(f"Lucro Previsto: R$ {lucro:.2f}")
             st.divider()
 
-            # Loop de Jogos
             jogos_data = []
             for j in range(st.session_state['num_jogos']):
                 st.markdown(f"**Jogo {j+1}**")
                 col_m, col_v = st.columns(2)
                 m = col_m.selectbox(f"Mandante {j}", team_list_with_empty, key=f"m_{j}")
                 v = col_v.selectbox(f"Visitante {j}", team_list_with_empty, key=f"v_{j}")
-                
-                # Seleção Simples (1 por jogo para simplificar UX se quiser, ou manter complexo)
-                # Mantendo simplificado para evitar tela branca por excesso de widgets
                 sel_mercado = st.selectbox(f"Mercado {j}", MERCADOS_LISTA, key=f"merc_{j}")
                 
                 jogos_data.append({
@@ -254,7 +322,6 @@ def render_dashboard():
                 })
                 st.markdown("---")
 
-            # Botões Controle
             cb1, cb2 = st.columns(2)
             if cb1.button("➕ Adicionar Jogo"):
                 st.session_state['num_jogos'] += 1
@@ -263,7 +330,6 @@ def render_dashboard():
                 st.session_state['num_jogos'] = 1
                 st.rerun()
 
-            # Salvar
             if st.button("💾 SALVAR BILHETE", type="primary", use_container_width=True):
                 novo = {
                     "Data": data_t.strftime("%d/%m/%Y"),
@@ -278,7 +344,7 @@ def render_dashboard():
                 st.success("Bilhete Salvo!")
                 st.rerun()
 
-        # === ABA 2: HISTÓRICO ===
+        # === ABA 2: HISTÓRICO (MANTIDA) ===
         with tab_hist:
             if not tickets:
                 st.info("Nenhum bilhete.")
@@ -294,36 +360,28 @@ def render_dashboard():
                         Resultado: {t['Resultado']}
                     </div>
                     """, unsafe_allow_html=True)
-                    
                     with st.expander("Detalhes"):
-                        for j in t['Jogos']:
-                            st.write(f"⚽ {j['Nome']}")
+                        for j in t['Jogos']: st.write(f"⚽ {j['Nome']} - {j['Selecoes'][0]['Mercado']}")
                         if st.button("Excluir", key=f"del_{t['id']}"):
                             excluir_ticket(t['id'])
                             st.rerun()
 
-        # === ABA 3: GRÁFICOS ===
+        # === ABA 3: GRÁFICOS (MANTIDA) ===
         with tab_stats:
             if HAS_PLOTLY and tickets:
                 df = pd.DataFrame(tickets)
-                # Conversão de data segura
                 try:
                     df['Data_Dt'] = pd.to_datetime(df['Data'], format="%d/%m/%Y")
                     df = df.sort_values('Data_Dt')
                     df['Acumulado'] = df['Lucro'].cumsum()
-                    
                     fig = px.line(df, x='Data_Dt', y='Acumulado', title="Evolução da Banca", markers=True)
                     st.plotly_chart(fig, use_container_width=True)
-                except Exception as e:
-                    st.error(f"Erro ao gerar gráfico: {e}")
+                except: st.error("Erro ao gerar gráfico.")
             else:
-                st.info("Gráficos indisponíveis (sem dados ou Plotly ausente).")
+                st.info("Sem dados para gráficos.")
 
     except Exception as e:
-        # CAPTURA QUALQUER ERRO E MOSTRA NA TELA EM VEZ DE FICAR BRANCO
-        st.error(f"Ocorreu um erro crítico no Dashboard: {str(e)}")
-        st.write("Tente recarregar a página.")
+        st.error(f"Erro no Dashboard: {str(e)}")
 
-# Chamada Principal
 if __name__ == "__main__":
     render_dashboard()
