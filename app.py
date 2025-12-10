@@ -11,8 +11,9 @@ from datetime import datetime
 # ==============================================================================
 # 0. CONFIGURAÇÃO INICIAL
 # ==============================================================================
-st.set_page_config(page_title="FutPrevisão Pro V2.4", layout="wide", page_icon="⚽")
+st.set_page_config(page_title="FutPrevisão Pro V2.5", layout="wide", page_icon="⚽")
 
+# Tenta importar Plotly
 try:
     import plotly.graph_objects as go
     import plotly.express as px
@@ -41,7 +42,7 @@ def get_color(prob):
     return "red"
 
 # ==============================================================================
-# 2. SEGURANÇA E LOGIN
+# 2. SEGURANÇA
 # ==============================================================================
 USERS = {
     "diego": "@Casa612"
@@ -69,35 +70,47 @@ def check_login():
 if not check_login(): st.stop()
 
 # ==============================================================================
-# 3. CARREGAMENTO DE DADOS
+# 3. CARREGAMENTO DE DADOS (ROBUSTO)
 # ==============================================================================
 
-# --- MAPEAMENTO DE NOMES (CORREÇÃO DE NOMES DO CSV PARA O TXT) ---
-# Esquerda: Nome no seu CSV/Dropdown | Direita: Nome no arquivo Adam Choi
+# --- A. Mapeamento de Nomes (CSV -> Adam Choi) ---
 NAME_MAPPING = {
     "Manchester City": "Man City",
     "Manchester United": "Man United",
     "Nottingham Forest": "Nott'm Forest",
     "Wolverhampton": "Wolves",
+    "Leicester City": "Leicester",
+    "Luton Town": "Luton",
+    "Sheffield United": "Sheffield Utd",
+    
     "Atlético de Madrid": "Atl Madrid",
     "Athletic Bilbao": "Athletic Club",
     "Real Betis": "Betis",
-    "Rayo Vallecano": "Rayo Vallecano", # As vezes muda, mantendo padrão
+    "Real Madrid": "Real Madrid", # Forçando correspondência
+    "Real Sociedad": "Real Sociedad",
+    "Celta de Vigo": "Celta",
+    "Rayo Vallecano": "Rayo Vallecano",
+    "Alavés": "Alaves",
+    
     "Inter de Milão": "Inter",
-    "Milan": "Milan", # As vezes AC Milan
+    "Milan": "Milan",
     "AS Roma": "Roma",
-    "Hellas Verona": "Hellas Verona", # Verona
+    "Hellas Verona": "Hellas Verona",
+    "Juventus": "Juventus",
+    
     "Bayer Leverkusen": "Leverkusen",
     "Bayern de Munique": "Bayern Munich",
     "Borussia Dortmund": "Dortmund",
     "Borussia M'Gladbach": "Gladbach",
     "Eintracht Frankfurt": "Eintracht Frankfurt",
+    "Mainz 05": "Mainz",
+    
     "Paris Saint-Germain": "PSG",
     "Saint-Etienne": "St Etienne",
-    "Le Havre": "Le Havre" 
+    "Le Havre": "Le Havre"
 }
 
-# --- A. Dados Matemáticos (CSV) ---
+# --- B. Dados Matemáticos (CSV) ---
 BACKUP_TEAMS = {
     "Arsenal": {"corners": 6.82, "cards": 1.00, "fouls": 10.45, "goals_f": 2.3, "goals_a": 0.8},
     "Man City": {"corners": 7.45, "cards": 1.50, "fouls": 9.20, "goals_f": 2.7, "goals_a": 0.8},
@@ -114,10 +127,14 @@ def load_csv_data():
         except: df = pd.read_csv("dados_times.csv", encoding='latin1', sep=';')
         
         teams_dict = {}
+        # Limpa nomes das colunas
         df.columns = [c.strip() for c in df.columns]
+        
         for _, row in df.iterrows():
             if 'Time' in row:
-                teams_dict[row['Time']] = {
+                # Limpa nome do time
+                t_name = str(row['Time']).strip()
+                teams_dict[t_name] = {
                     'corners': safe_float(row.get('Escanteios', 0)),
                     'cards': safe_float(row.get('CartoesAmarelos', 2.0)), 
                     'fouls': safe_float(row.get('Faltas', 12.0)),
@@ -125,7 +142,9 @@ def load_csv_data():
                     'goals_a': safe_float(row.get('GolsSofridos', 1.0))
                 }
         return teams_dict
-    except: return BACKUP_TEAMS
+    except Exception as e:
+        st.sidebar.error(f"Erro no CSV: {e}")
+        return BACKUP_TEAMS
 
 @st.cache_data(ttl=3600)
 def load_referees():
@@ -134,7 +153,7 @@ def load_referees():
         return dict(zip(df['Nome'], df['Fator']))
     except: return {}
 
-# --- B. Dados Históricos (TXT Adam Choi) ---
+# --- C. Dados Históricos (TXT Adam Choi) ---
 FILES_CONFIG = {
     "Premier League": {"corners": "Escanteios Preimier League - codigo fonte.txt", "cards": "Cartoes Premier League - Inglaterra.txt"},
     "La Liga": {"corners": "Escanteios Espanha.txt", "cards": "Cartoes La Liga - Espanha.txt"},
@@ -152,6 +171,7 @@ class AdamChoiLoader:
     def load_all_files(self):
         pasta = Path(__file__).parent
         for liga, files in FILES_CONFIG.items():
+            # Cantos
             try:
                 path_c = pasta / files["corners"]
                 if path_c.exists():
@@ -159,7 +179,10 @@ class AdamChoiLoader:
                         raw = f.read().strip()
                         if '{' in raw: raw = raw[raw.find('{'):]
                         self.data_corners[liga] = json.loads(raw)
-            except: pass
+            except Exception as e:
+                st.sidebar.error(f"Erro arquivo cantos {liga}: {e}")
+            
+            # Cartões
             try:
                 path_k = pasta / files["cards"]
                 if path_k.exists():
@@ -167,23 +190,27 @@ class AdamChoiLoader:
                         raw = f.read().strip()
                         if '{' in raw: raw = raw[raw.find('{'):]
                         self.data_cards[liga] = json.loads(raw)
-            except: pass
+            except Exception as e:
+                st.sidebar.error(f"Erro arquivo cartões {liga}: {e}")
 
-    def _normalize_name(self, team_name):
-        # 1. Verifica mapeamento direto
-        if team_name in NAME_MAPPING:
-            return NAME_MAPPING[team_name]
-        return team_name
+    def _normalize(self, name):
+        """Padroniza nome para comparação"""
+        name = name.strip()
+        if name in NAME_MAPPING:
+            name = NAME_MAPPING[name]
+        return name.lower()
 
     def get_history(self, team, league, market_type, key):
         source = self.data_corners if market_type == 'corners' else self.data_cards
         if league not in source: return None
         
-        target_name = self._normalize_name(team)
+        target = self._normalize(team)
         
         for t in source[league].get('teams', []):
-            # Compara nome normalizado ou nome direto
-            if t['teamName'] == target_name or t['teamName'] == team:
+            # Compara minúsculo e sem espaço
+            t_name = t['teamName'].strip().lower()
+            
+            if t_name == target:
                 stats = t.get(key)
                 if stats and isinstance(stats, list) and len(stats) >= 3:
                     return stats[0], stats[1], stats[2]
@@ -191,16 +218,19 @@ class AdamChoiLoader:
 
     def get_history_global(self, team, market_type, key):
         source = self.data_corners if market_type == 'corners' else self.data_cards
-        target_name = self._normalize_name(team)
+        target = self._normalize(team)
         
         for league in source:
             for t in source[league].get('teams', []):
-                if t['teamName'] == target_name or t['teamName'] == team:
+                t_name = t['teamName'].strip().lower()
+                
+                if t_name == target:
                     stats = t.get(key)
                     if stats and isinstance(stats, list) and len(stats) >= 3:
                         return stats[0], stats[1], stats[2], league
         return None
 
+# Inicializa
 teams_data = load_csv_data()
 referees_data = load_referees()
 team_list_raw = sorted(list(teams_data.keys()))
@@ -208,13 +238,13 @@ team_list_with_empty = [""] + team_list_raw
 history_loader = AdamChoiLoader()
 
 # ==============================================================================
-# 4. LÓGICA DE PREVISÃO
+# 4. LÓGICA PREVISÃO
 # ==============================================================================
 def calcular_previsao(home, away, f_h, f_a, ref_factor=1.0):
     h_data = teams_data.get(home, BACKUP_TEAMS["Arsenal"])
     a_data = teams_data.get(away, BACKUP_TEAMS["Man City"])
     
-    # Escanteios
+    # Cantos
     corn_h = (h_data['corners'] * 1.10) * f_h
     corn_a = (a_data['corners'] * 0.85) * f_a
     total_corners = corn_h + corn_a
@@ -240,7 +270,7 @@ def calcular_previsao(home, away, f_h, f_a, ref_factor=1.0):
     }
 
 # ==============================================================================
-# 5. GESTÃO DE DADOS (JSON)
+# 5. GESTÃO DE DADOS
 # ==============================================================================
 DATA_FILE = "historico_bilhetes_v6.json"
 CONFIG_FILE = "config_banca.json"
@@ -301,142 +331,147 @@ def render_dashboard():
     
     tab_ligas, tab_copas, tab_new, tab_hist, tab_grf = st.tabs(["🔮 Ligas", "🏆 Copas", "➕ Novo Bilhete", "📜 Histórico", "📈 Gráficos"])
 
-    # --- ABA 1: LIGAS ---
+    # --- ABA LIGAS ---
     with tab_ligas:
         st.markdown("### 🏟️ Análise de Ligas")
-        col_liga, col_arb = st.columns([2, 2])
-        liga_sel = col_liga.selectbox("Liga", list(FILES_CONFIG.keys()))
-        
-        lista_arbitros = sorted(list(referees_data.keys()))
-        if not lista_arbitros: lista_arbitros = ["Genérico"]
-        arbitro_sel = col_arb.selectbox("Árbitro", lista_arbitros, key="arb_lig")
-        ref_factor = referees_data.get(arbitro_sel, 1.0)
+        c1, c2 = st.columns(2)
+        liga_sel = c1.selectbox("Liga", list(FILES_CONFIG.keys()))
+        arb_sel = c2.selectbox("Árbitro", sorted(list(referees_data.keys())) or ["Genérico"])
+        ref_f = referees_data.get(arb_sel, 1.0)
 
-        # Filtro de Times da Liga
-        teams_liga = history_loader.data_corners.get(liga_sel, {}).get('teams', [])
-        # Mapeamento reverso simples para exibir nomes 'bonitos' se possível, mas aqui usamos o raw
-        names_liga = sorted([t['teamName'] for t in teams_liga]) if teams_liga else team_list_raw
+        # Filtro Inteligente de Times
+        teams_in_league = []
+        if liga_sel in history_loader.data_corners:
+            raw_teams = history_loader.data_corners[liga_sel].get('teams', [])
+            # Tenta mapear o nome do Adam Choi de volta para o CSV (reverso) ou usa o raw
+            # Para simplificar, usamos a lista geral, mas o usuário deve escolher certo
+            pass
         
-        col_h, col_a = st.columns(2)
-        home_team = col_h.selectbox("Mandante", team_list_raw, index=0, key="hl")
-        away_team = col_a.selectbox("Visitante", team_list_raw, index=1 if len(team_list_raw)>1 else 0, key="al")
+        c3, c4 = st.columns(2)
+        home = c3.selectbox("Mandante", team_list_raw, index=0)
+        away = c4.selectbox("Visitante", team_list_raw, index=1)
 
-        st.caption("Contexto")
         ctx_map = {"Neutro": 1.0, "Título 🏆": 1.15, "Z4 🔥": 1.10, "Rebaixado ❄️": 0.85}
-        cc1, cc2 = st.columns(2)
-        f_h = ctx_map[cc1.selectbox(f"Momento {home_team}", list(ctx_map.keys()), key="ch_l")]
-        f_a = ctx_map[cc2.selectbox(f"Momento {away_team}", list(ctx_map.keys()), key="ca_l")]
+        f_h = ctx_map[st.selectbox(f"Momento {home}", list(ctx_map.keys()))]
+        f_a = ctx_map[st.selectbox(f"Momento {away}", list(ctx_map.keys()))]
 
         if st.button("🔮 Simular Liga", type="primary"):
-            m = calcular_previsao(home_team, away_team, f_h, f_a, ref_factor)
+            m = calcular_previsao(home, away, f_h, f_a, ref_f)
             
             st.divider()
-            c1, c2 = st.columns(2)
-            with c1:
+            col_cant, col_cart = st.columns(2)
+            
+            with col_cant:
                 st.info("🚩 **Escanteios**")
-                st.write(f"Total Exp: **{m['corners']['t']:.2f}**")
+                st.write(f"Exp Total: **{m['corners']['t']:.2f}**")
                 for l in [7.5, 8.5, 9.5]:
                     p = prob_over(m['corners']['t'], l)
                     st.write(f"+{l}: :{get_color(p)}[**{p:.0f}%**]")
+                
                 st.markdown("---")
-                st.write(f"**🏠 {home_team}**")
+                st.write(f"**🏠 {home}**")
                 for l, k in [(3.5, 'homeTeamOver35'), (4.5, 'homeTeamOver45'), (5.5, 'homeTeamOver55')]:
                     pm = prob_over(m['corners']['h'], l)
-                    hist = history_loader.get_history(home_team, liga_sel, 'corners', k)
-                    tr = f"({hist[1]}/{hist[0]} - {hist[2]})" if hist else ""
+                    hist = history_loader.get_history(home, liga_sel, 'corners', k)
+                    tr = f"({hist[1]}/{hist[0]} - {hist[2]})" if hist else "(Sem dados)"
                     st.write(f"+{l}: :{get_color(pm)}[**{pm:.0f}%**] {tr}")
-                st.write(f"**✈️ {away_team}**")
+                
+                st.write(f"**✈️ {away}**")
                 for l, k in [(3.5, 'awayTeamOver35'), (4.5, 'awayTeamOver45'), (5.5, 'awayTeamOver55')]:
                     pm = prob_over(m['corners']['a'], l)
-                    hist = history_loader.get_history(away_team, liga_sel, 'corners', k)
-                    tr = f"({hist[1]}/{hist[0]} - {hist[2]})" if hist else ""
+                    hist = history_loader.get_history(away, liga_sel, 'corners', k)
+                    tr = f"({hist[1]}/{hist[0]} - {hist[2]})" if hist else "(Sem dados)"
                     st.write(f"+{l}: :{get_color(pm)}[**{pm:.0f}%**] {tr}")
 
-            with c2:
+            with col_cart:
                 st.warning("🟨 **Cartões**")
-                st.write(f"Total Exp: **{m['cards']['t']:.2f}**")
+                st.write(f"Exp Total: **{m['cards']['t']:.2f}**")
                 for l in [2.5, 3.5, 4.5]:
                     p = prob_over(m['cards']['t'], l)
                     st.write(f"+{l}: :{get_color(p)}[**{p:.0f}%**]")
+                
                 st.markdown("---")
-                st.write(f"**🏠 {home_team}**")
+                st.write(f"**🏠 {home}**")
                 for l, k in [(1.5, 'homeCardsOver15'), (2.5, 'homeCardsOver25')]:
                     pm = prob_over(m['cards']['h'], l)
-                    hist = history_loader.get_history(home_team, liga_sel, 'cards', k)
-                    tr = f"({hist[1]}/{hist[0]} - {hist[2]})" if hist else ""
+                    hist = history_loader.get_history(home, liga_sel, 'cards', k)
+                    tr = f"({hist[1]}/{hist[0]} - {hist[2]})" if hist else "(Sem dados)"
                     st.write(f"+{l}: :{get_color(pm)}[**{pm:.0f}%**] {tr}")
-                st.write(f"**✈️ {away_team}**")
+                
+                st.write(f"**✈️ {away}**")
                 for l, k in [(1.5, 'awayCardsOver15'), (2.5, 'awayCardsOver25')]:
                     pm = prob_over(m['cards']['a'], l)
-                    hist = history_loader.get_history(away_team, liga_sel, 'cards', k)
-                    tr = f"({hist[1]}/{hist[0]} - {hist[2]})" if hist else ""
+                    hist = history_loader.get_history(away, liga_sel, 'cards', k)
+                    tr = f"({hist[1]}/{hist[0]} - {hist[2]})" if hist else "(Sem dados)"
                     st.write(f"+{l}: :{get_color(pm)}[**{pm:.0f}%**] {tr}")
 
-    # --- ABA 2: COPAS ---
+    # --- ABA 2: COPAS (GLOBAL SEARCH) ---
     with tab_copas:
-        st.markdown("### 🏆 Análise de Copas")
+        st.markdown("### 🏆 Análise de Copas (Global)")
         
-        col_arb_c, _ = st.columns([2, 2])
-        arbitro_sel_c = col_arb_c.selectbox("Árbitro", lista_arbitros, key="arb_cop")
-        ref_factor_c = referees_data.get(arbitro_sel_c, 1.0)
-
-        col_hc, col_ac = st.columns(2)
-        home_team_c = col_hc.selectbox("Mandante", team_list_raw, index=0, key="hc")
-        away_team_c = col_ac.selectbox("Visitante", team_list_raw, index=1, key="ac")
-
+        arb_c = st.selectbox("Árbitro (Copa)", sorted(list(referees_data.keys())) or ["Genérico"])
+        ref_fc = referees_data.get(arb_c, 1.0)
+        
+        c1c, c2c = st.columns(2)
+        hc = c1c.selectbox("Mandante (Copa)", team_list_raw, index=0)
+        ac = c2c.selectbox("Visitante (Copa)", team_list_raw, index=1)
+        
         st.caption("Contexto")
-        cc1c, cc2c = st.columns(2)
-        f_hc = ctx_map[cc1c.selectbox(f"Momento {home_team_c}", list(ctx_map.keys()), key="ch_c")]
-        f_ac = ctx_map[cc2c.selectbox(f"Momento {away_team_c}", list(ctx_map.keys()), key="ca_c")]
+        c3c, c4c = st.columns(2)
+        f_hc = ctx_map[c3c.selectbox(f"Momento {hc}", list(ctx_map.keys()), key="ctx_hc")]
+        f_ac = ctx_map[c4c.selectbox(f"Momento {ac}", list(ctx_map.keys()), key="ctx_ac")]
 
         if st.button("🏆 Simular Copa", type="primary"):
-            mc = calcular_previsao(home_team_c, away_team_c, f_hc, f_ac, ref_factor_c)
+            mc = calcular_previsao(hc, ac, f_hc, f_ac, ref_fc)
             
             st.divider()
-            st.markdown(f"#### 🌍 {home_team_c} x {away_team_c}")
+            cc_cant, cc_cart = st.columns(2)
             
-            c1c, c2c = st.columns(2)
-            with c1c:
-                st.info("🚩 **Escanteios (Global)**")
+            with cc_cant:
+                st.info("🚩 **Escanteios**")
                 st.write(f"Total Exp: **{mc['corners']['t']:.2f}**")
                 for l in [7.5, 8.5, 9.5]:
                     p = prob_over(mc['corners']['t'], l)
                     st.write(f"+{l}: :{get_color(p)}[**{p:.0f}%**]")
+                
                 st.markdown("---")
-                st.write(f"**🏠 {home_team_c}**")
+                st.write(f"**🏠 {hc}**")
                 for l, k in [(3.5, 'homeTeamOver35'), (4.5, 'homeTeamOver45'), (5.5, 'homeTeamOver55')]:
                     pm = prob_over(mc['corners']['h'], l)
-                    gh = history_loader.get_history_global(home_team_c, 'corners', k)
+                    gh = history_loader.get_history_global(hc, 'corners', k)
                     tr = f"({gh[1]}/{gh[0]} - {gh[2]} na {gh[3]})" if gh else "(Sem dados)"
                     st.write(f"+{l}: :{get_color(pm)}[**{pm:.0f}%**] {tr}")
-                st.write(f"**✈️ {away_team_c}**")
+                
+                st.write(f"**✈️ {ac}**")
                 for l, k in [(3.5, 'awayTeamOver35'), (4.5, 'awayTeamOver45'), (5.5, 'awayTeamOver55')]:
                     pm = prob_over(mc['corners']['a'], l)
-                    gh = history_loader.get_history_global(away_team_c, 'corners', k)
+                    gh = history_loader.get_history_global(ac, 'corners', k)
                     tr = f"({gh[1]}/{gh[0]} - {gh[2]} na {gh[3]})" if gh else "(Sem dados)"
                     st.write(f"+{l}: :{get_color(pm)}[**{pm:.0f}%**] {tr}")
 
-            with c2c:
-                st.warning("🟨 **Cartões (Global)**")
+            with cc_cart:
+                st.warning("🟨 **Cartões**")
                 st.write(f"Total Exp: **{mc['cards']['t']:.2f}**")
                 for l in [2.5, 3.5, 4.5]:
                     p = prob_over(mc['cards']['t'], l)
                     st.write(f"+{l}: :{get_color(p)}[**{p:.0f}%**]")
+                
                 st.markdown("---")
-                st.write(f"**🏠 {home_team_c}**")
+                st.write(f"**🏠 {hc}**")
                 for l, k in [(1.5, 'homeCardsOver15'), (2.5, 'homeCardsOver25')]:
                     pm = prob_over(mc['cards']['h'], l)
-                    gh = history_loader.get_history_global(home_team_c, 'cards', k)
-                    tr = f"({gh[1]}/{gh[0]} - {gh[2]})" if gh else ""
+                    gh = history_loader.get_history_global(hc, 'cards', k)
+                    tr = f"({gh[1]}/{gh[0]} - {gh[2]} na {gh[3]})" if gh else "(Sem dados)"
                     st.write(f"+{l}: :{get_color(pm)}[**{pm:.0f}%**] {tr}")
-                st.write(f"**✈️ {away_team_c}**")
+                
+                st.write(f"**✈️ {ac}**")
                 for l, k in [(1.5, 'awayCardsOver15'), (2.5, 'awayCardsOver25')]:
                     pm = prob_over(mc['cards']['a'], l)
-                    gh = history_loader.get_history_global(away_team_c, 'cards', k)
-                    tr = f"({gh[1]}/{gh[0]} - {gh[2]})" if gh else ""
+                    gh = history_loader.get_history_global(ac, 'cards', k)
+                    tr = f"({gh[1]}/{gh[0]} - {gh[2]} na {gh[3]})" if gh else "(Sem dados)"
                     st.write(f"+{l}: :{get_color(pm)}[**{pm:.0f}%**] {tr}")
 
-    # --- ABA NOVO BILHETE ---
+    # --- ABAS RESTANTES (MANTIDAS) ---
     with tab_new:
         st.markdown("### Registrar Aposta")
         if 'n_games' not in st.session_state: st.session_state['n_games'] = 1
