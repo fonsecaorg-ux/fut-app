@@ -5,14 +5,14 @@ import json
 import os
 import uuid
 import math
-import difflib  # <--- A MÁGICA DA BUSCA INTELIGENTE
+import difflib
 from pathlib import Path
 from datetime import datetime
 
 # ==============================================================================
 # 0. CONFIGURAÇÃO INICIAL
 # ==============================================================================
-st.set_page_config(page_title="FutPrevisão Pro V2.8 (Smart Match)", layout="wide", page_icon="⚽")
+st.set_page_config(page_title="FutPrevisão Pro V2.9 (Ultra Match)", layout="wide", page_icon="⚽")
 
 # Tenta importar Plotly
 try:
@@ -71,10 +71,71 @@ def check_login():
 if not check_login(): st.stop()
 
 # ==============================================================================
-# 3. CARREGAMENTO DE DADOS (SMART MATCHING)
+# 3. CARREGAMENTO DE DADOS (ULTRA MATCHING)
 # ==============================================================================
 
-# --- A. Dados Matemáticos (CSV) ---
+# --- A. Mapeamento de Nomes (CSV -> Adam Choi TXT) ---
+NAME_MAPPING = {
+    # INGLATERRA
+    "Man City": "Man City",
+    "Manchester City": "Man City",
+    "Man United": "Man United",
+    "Manchester United": "Man United",
+    "Nott'm Forest": "Nott'm Forest",
+    "Nottingham Forest": "Nott'm Forest",
+    "Wolves": "Wolves",
+    "Wolverhampton": "Wolves",
+    "Sheffield Utd": "Sheffield Utd",
+    "Sheffield United": "Sheffield Utd",
+    
+    # ESPANHA
+    "Atl Madrid": "Atl Madrid",
+    "Atlético de Madrid": "Atl Madrid",
+    "Athletic Club": "Athletic Club",
+    "Athletic Bilbao": "Athletic Club", # CORREÇÃO
+    "Betis": "Betis",
+    "Real Betis": "Betis",
+    "Celta": "Celta",
+    "Celta de Vigo": "Celta",
+    "Real Sociedad": "Real Sociedad",
+    "Real Madrid": "Real Madrid",
+    "Rayo Vallecano": "Rayo Vallecano",
+    "Alaves": "Alaves",
+    "Alavés": "Alaves",
+    
+    # ITÁLIA
+    "Inter": "Inter",
+    "Inter de Milão": "Inter",
+    "Milan": "Milan",
+    "AC Milan": "Milan",
+    "Roma": "Roma",
+    "AS Roma": "Roma",
+    "Hellas Verona": "Hellas Verona",
+    "Verona": "Hellas Verona",
+    
+    # ALEMANHA
+    "Bayer 04 Leverkusen": "Bayer 04 Leverkusen",
+    "Bayer Leverkusen": "Bayer 04 Leverkusen", # CORREÇÃO
+    "Leverkusen": "Bayer 04 Leverkusen",       # CORREÇÃO
+    "Bayern Munich": "Bayern Munich",
+    "Bayern de Munique": "Bayern Munich",
+    "Dortmund": "Dortmund",
+    "Borussia Dortmund": "Dortmund",
+    "Gladbach": "Gladbach",
+    "Borussia M'Gladbach": "Gladbach",
+    "Mainz": "Mainz",
+    "Mainz 05": "Mainz",
+    
+    # FRANÇA
+    "Paris SG": "Paris SG",
+    "Paris Saint-Germain": "Paris SG", # CORREÇÃO
+    "PSG": "Paris SG",                 # CORREÇÃO
+    "St Etienne": "St Etienne",
+    "Saint-Etienne": "St Etienne",
+    "Le Havre": "Le Havre"
+}
+
+# --- B. Dados Matemáticos (CSV) ---
 BACKUP_TEAMS = {
     "Arsenal": {"corners": 6.82, "cards": 1.00, "fouls": 10.45, "goals_f": 2.3, "goals_a": 0.8},
 }
@@ -113,7 +174,7 @@ def load_referees():
         return dict(zip(df['Nome'], df['Fator']))
     except: return {}
 
-# --- B. Dados Históricos (TXT Adam Choi) ---
+# --- C. Dados Históricos (TXT Adam Choi) ---
 FILES_CONFIG = {
     "Premier League": {"corners": "Escanteios Preimier League - codigo fonte.txt", "cards": "Cartoes Premier League - Inglaterra.txt"},
     "La Liga": {"corners": "Escanteios Espanha.txt", "cards": "Cartoes La Liga - Espanha.txt"},
@@ -131,7 +192,6 @@ class AdamChoiLoader:
     def load_all_files(self):
         pasta = Path(__file__).parent
         for liga, files in FILES_CONFIG.items():
-            # Cantos
             try:
                 path_c = pasta / files["corners"]
                 if path_c.exists():
@@ -139,10 +199,7 @@ class AdamChoiLoader:
                         raw = f.read().strip()
                         if '{' in raw: raw = raw[raw.find('{'):]
                         self.data_corners[liga] = json.loads(raw)
-            except Exception as e:
-                st.sidebar.error(f"Erro arquivo cantos {liga}: {e}")
-            
-            # Cartões
+            except: pass
             try:
                 path_k = pasta / files["cards"]
                 if path_k.exists():
@@ -150,19 +207,37 @@ class AdamChoiLoader:
                         raw = f.read().strip()
                         if '{' in raw: raw = raw[raw.find('{'):]
                         self.data_cards[liga] = json.loads(raw)
-            except Exception as e:
-                st.sidebar.error(f"Erro arquivo cartões {liga}: {e}")
+            except: pass
 
     def find_best_match(self, target_name, available_names):
-        """Encontra o nome mais parecido na lista usando difflib"""
-        # 1. Tentativa Exata (Case Insensitive)
-        target_lower = target_name.lower().strip()
+        """Encontra o nome mais parecido na lista (Lógica Híbrida)"""
+        target = target_name.strip()
+        target_lower = target.lower()
+        
+        # 1. Mapeamento Direto
+        if target in NAME_MAPPING:
+            mapped = NAME_MAPPING[target]
+            # Verifica se o mapeado existe na lista disponível
+            for name in available_names:
+                if name.lower() == mapped.lower():
+                    return name
+
+        # 2. Busca Exata (Insensitive)
         for name in available_names:
-            if name.lower().strip() == target_lower:
+            if name.lower() == target_lower:
                 return name
         
-        # 2. Tentativa por Aproximação (Fuzzy)
-        matches = difflib.get_close_matches(target_name, available_names, n=1, cutoff=0.6)
+        # 3. Busca por Substring (A Mágica)
+        # Ex: "Leverkusen" está em "Bayer 04 Leverkusen"
+        for name in available_names:
+            name_lower = name.lower()
+            # Verifica se um está contido no outro (apenas se tiver mais de 4 letras para evitar falsos positivos curtos)
+            if len(target_lower) > 4 and len(name_lower) > 4:
+                if target_lower in name_lower or name_lower in target_lower:
+                    return name
+
+        # 4. Fuzzy Match (Último recurso)
+        matches = difflib.get_close_matches(target, available_names, n=1, cutoff=0.7)
         if matches:
             return matches[0]
             
@@ -172,10 +247,7 @@ class AdamChoiLoader:
         source = self.data_corners if market_type == 'corners' else self.data_cards
         if league not in source: return None
         
-        # Lista todos os times disponíveis neste arquivo
         available_teams = [t['teamName'] for t in source[league].get('teams', [])]
-        
-        # Encontra o nome correto usando Inteligência
         matched_name = self.find_best_match(team, available_teams)
         
         if matched_name:
@@ -189,7 +261,7 @@ class AdamChoiLoader:
     def get_history_global(self, team, market_type, key):
         source = self.data_corners if market_type == 'corners' else self.data_cards
         
-        # Procura em TODAS as ligas
+        # Varredura Global
         for league in source:
             available_teams = [t['teamName'] for t in source[league].get('teams', [])]
             matched_name = self.find_best_match(team, available_teams)
@@ -311,7 +383,6 @@ def render_dashboard():
         arb_sel = c2.selectbox("Árbitro", sorted(list(referees_data.keys())) or ["Genérico"])
         ref_f = referees_data.get(arb_sel, 1.0)
 
-        # Filtro de Times (Mostra todos para não bloquear)
         c3, c4 = st.columns(2)
         home = c3.selectbox("Mandante", team_list_raw, index=0)
         away = c4.selectbox("Visitante", team_list_raw, index=1)
@@ -350,7 +421,7 @@ def render_dashboard():
             with col_cart:
                 st.warning("🟨 **Cartões**")
                 st.markdown('<p class="total-header">Totais</p>', unsafe_allow_html=True)
-                st.write(f"Exp Total: **{m['cards']['t']:.2f}**")
+                st.write(f"Exp: **{m['cards']['t']:.2f}**")
                 for l in [2.5, 3.5, 4.5]:
                     p = prob_over(m['cards']['t'], l)
                     st.write(f"+{l}: :{get_color(p)}[**{p:.0f}%**]")
