@@ -12,7 +12,7 @@ from datetime import datetime
 # ==============================================================================
 # 0. CONFIGURAÇÃO INICIAL
 # ==============================================================================
-st.set_page_config(page_title="FutPrevisão Pro V3.0 (Scanner)", layout="wide", page_icon="⚽")
+st.set_page_config(page_title="FutPrevisão Pro V3.1 (Scanner)", layout="wide", page_icon="⚽")
 
 # Tenta importar Plotly
 try:
@@ -85,7 +85,7 @@ NAME_MAPPING = {
     
     # ESPANHA
     "Atl. Madrid": "Atl Madrid", "Atl Madrid": "Atl Madrid", "Atlético de Madrid": "Atl Madrid",
-    "Athletic Club": "Athletic Club", "Athletic Bilbao": "Athletic Club",
+    "Athletic Club": "Athletic Club", "Athletic Bilbao": "Athletic Club", # CORREÇÃO AQUI
     "Real Betis": "Betis", "Betis": "Betis",
     "Real Madrid": "Real Madrid", 
     "Real Sociedad": "Real Sociedad",
@@ -101,7 +101,7 @@ NAME_MAPPING = {
     "Verona": "Hellas Verona", "Hellas Verona": "Hellas Verona",
     
     # ALEMANHA
-    "Leverkusen": "Bayer 04 Leverkusen", "Bayer Leverkusen": "Bayer 04 Leverkusen",
+    "Leverkusen": "Bayer 04 Leverkusen", "Bayer Leverkusen": "Bayer 04 Leverkusen", # CORREÇÃO AQUI
     "Bayern": "Bayern Munich", "Bayern Munich": "Bayern Munich", "Bayern de Munique": "Bayern Munich",
     "Dortmund": "Dortmund", "Borussia Dortmund": "Dortmund",
     "M'gladbach": "Gladbach", "Gladbach": "Gladbach", "Borussia M'Gladbach": "Gladbach",
@@ -111,7 +111,7 @@ NAME_MAPPING = {
     "HSV": "Hamburg", "Hamburg": "Hamburg",
     
     # FRANÇA
-    "PSG": "Paris SG", "Paris Saint-Germain": "Paris SG",
+    "PSG": "Paris SG", "Paris Saint-Germain": "Paris SG", # CORREÇÃO AQUI
     "St Etienne": "St Etienne", "Saint-Etienne": "St Etienne",
     "Le Havre": "Le Havre"
 }
