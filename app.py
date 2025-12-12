@@ -10,10 +10,11 @@ import random
 from pathlib import Path
 from datetime import datetime
 
+# ... (Configurações Iniciais e Funções Matemáticas mantidas iguais) ...
 # ==============================================================================
 # 0. CONFIGURAÇÃO INICIAL
 # ==============================================================================
-st.set_page_config(page_title="FutPrevisão Pro V4.1 (Turbo)", layout="wide", page_icon="⚽")
+st.set_page_config(page_title="FutPrevisão Pro V4.2 (Mixed)", layout="wide", page_icon="⚽")
 
 # Tenta importar Plotly
 try:
@@ -166,7 +167,6 @@ class AdamChoiLoader:
     def load_all_files(self):
         pasta = Path(__file__).parent
         for liga, files in FILES_CONFIG.items():
-            # Carregamento silencioso (sem erros na tela)
             try:
                 p = pasta / files["corners"]
                 if p.exists():
@@ -188,7 +188,6 @@ class AdamChoiLoader:
         target = target_name.strip()
         if target in NAME_MAPPING: target = NAME_MAPPING[target]
         target_lower = target.lower()
-        
         for name in available_names:
             if name.lower() == target_lower: return name
         for name in available_names:
@@ -232,7 +231,7 @@ team_list_with_empty = [""] + team_list_raw
 history_loader = AdamChoiLoader()
 
 # ==============================================================================
-# 4. CALENDÁRIO & LÓGICA DE PREVISÃO
+# 4. CALENDÁRIO
 # ==============================================================================
 def load_calendar():
     calendar_files = ["premier_league.csv", "la_liga.csv", "serie_a.csv", "bundesliga.csv", "ligue_1.csv"]
@@ -250,6 +249,9 @@ def load_calendar():
         return full_df
     return pd.DataFrame()
 
+# ==============================================================================
+# 5. LÓGICA DE PREVISÃO
+# ==============================================================================
 def normalize_team_name_for_math(name):
     if name in teams_data: return name
     if name in NAME_MAPPING:
@@ -283,80 +285,74 @@ def calcular_previsao(home, away, f_h=1.0, f_a=1.0, ref_factor=1.0):
     }
 
 # ==============================================================================
-# 5. GERADOR DE MÚLTIPLAS TURBO (ODD > 1.70)
+# 6. GERADOR DE MÚLTIPLAS MISTAS (V4.2)
 # ==============================================================================
 def gerar_multiplas(oportunidades):
     if not oportunidades: return []
     
-    # 1. Filtra apenas as melhores (Alta confiança)
-    melhores = [op for op in oportunidades if op['Conf'] == 'Alta']
+    # Separa por tipo
+    cantos = [op for op in oportunidades if "Cantos" in op['Aposta']]
+    cartoes = [op for op in oportunidades if "Cartões" in op['Aposta']]
     
-    # Se não tiver "Alta" suficiente, pega as médias também
-    if len(melhores) < 4:
-        melhores = oportunidades
-        
-    por_jogo = {}
-    for op in melhores:
-        jogo = op['Jogo']
-        if jogo not in por_jogo: por_jogo[jogo] = []
-        por_jogo[jogo].append(op)
-    
-    jogos_unicos = list(por_jogo.keys())
-    random.shuffle(jogos_unicos)
+    # Junta e embaralha para garantir variedade
+    pool_geral = oportunidades.copy()
+    random.shuffle(pool_geral)
     
     bilhetes = []
     
-    # Gera 6 Bilhetes Triplos ou Duplos Fortes
     for i in range(6):
-        # Tenta pegar 3 jogos diferentes para aumentar a Odd
-        selecao_bilhete = []
+        selecao = []
         
-        # Pega até 3 jogos sem repetir
-        for _ in range(3):
-            if jogos_unicos:
-                jogo = jogos_unicos.pop(0)
-                selecao_bilhete.append(por_jogo[jogo][0]) # Pega a melhor desse jogo
-                jogos_unicos.append(jogo) # Devolve para o final (circular)
+        # Tenta pegar 1 Canto + 1 Cartão (Cross-Match)
+        if cantos and cartoes:
+            canto = random.choice(cantos)
+            cartao = random.choice(cartoes)
+            
+            # Evita mesmo jogo
+            if canto['Jogo'] != cartao['Jogo']:
+                selecao = [canto, cartao]
         
-        # Só adiciona se tiver pelo menos 2 jogos
-        if len(selecao_bilhete) >= 2:
-            bilhetes.append(selecao_bilhete)
-            random.shuffle(jogos_unicos) # Reembaralha para o próximo bilhete ser diferente
+        # Se não der (ou se faltar tipo), pega do pool geral
+        if len(selecao) < 2 and len(pool_geral) >= 2:
+            op1 = pool_geral.pop(0)
+            op2 = pool_geral.pop(0)
+            selecao = [op1, op2]
+            pool_geral.append(op1) # Devolve
+            pool_geral.append(op2)
+            
+        if selecao:
+            bilhetes.append(selecao)
             
     return bilhetes
 
 # ==============================================================================
-# 6. GESTÃO DE BILHETES & DASHBOARD
+# 7. DASHBOARD & GESTÃO
 # ==============================================================================
+# (Código de Gestão de Bilhetes mantido igual - omitido para brevidade, mas está aqui)
 DATA_FILE = "historico_bilhetes_v6.json"
 CONFIG_FILE = "config_banca.json"
-
 def carregar_config():
     if os.path.exists(CONFIG_FILE):
         with open(CONFIG_FILE, "r") as f: return json.load(f)
     return {"banca_inicial": 1000.0, "stop_loss": 50.0}
-
 def salvar_config(cfg):
     with open(CONFIG_FILE, "w") as f: json.dump(cfg, f)
-
 def carregar_tickets():
     if not os.path.exists(DATA_FILE): return []
     try:
         with open(DATA_FILE, "r") as f: return json.load(f)
     except: return []
-
 def salvar_ticket(ticket_data):
     dados = carregar_tickets()
     dados.append(ticket_data)
     with open(DATA_FILE, "w") as f: json.dump(dados, f, indent=2)
-
 def excluir_ticket(id_ticket):
     dados = carregar_tickets()
     novos = [t for t in dados if t.get("id") != id_ticket]
     with open(DATA_FILE, "w") as f: json.dump(novos, f, indent=2)
 
 def render_dashboard():
-    st.title("📊 Painel de Controle V4.1")
+    st.title("📊 Painel de Controle V4.2")
     
     st.markdown("""
     <style>
@@ -417,39 +413,32 @@ def render_dashboard():
                     
                     calc = calcular_previsao(m_time, v_time)
                     
-                    # --- FILTROS INTELIGENTES (LINHAS MISTAS PARA ODD MELHOR) ---
+                    # --- FILTROS BALANCEADOS (V4.2) ---
+                    # Cantos (Rigoroso: >70%)
+                    pm = prob_over(calc['corners']['h'], 3.5)
+                    hist = history_loader.get_history(m_time, liga, 'corners', 'homeTeamOver35')
+                    if not hist: hist = history_loader.get_history_global(m_time, 'corners', 'homeTeamOver35')
+                    if hist and pm > 65 and float(hist[2]) > 70:
+                        res.append({"Jogo": f"{m_time} x {v_time}", "Aposta": f"🏠 {m_time} +3.5 Cantos", "Conf": "Alta", "M": f"{pm:.0f}%", "R": f"{hist[2]}%"})
                     
-                    # 1. Escanteios Casa (+3.5 e +4.5 se for muito bom)
-                    hist_45 = history_loader.get_history(m_time, liga, 'corners', 'homeTeamOver45')
-                    if not hist_45: hist_45 = history_loader.get_history_global(m_time, 'corners', 'homeTeamOver45')
-                    
-                    hist_35 = history_loader.get_history(m_time, liga, 'corners', 'homeTeamOver35')
-                    if not hist_35: hist_35 = history_loader.get_history_global(m_time, 'corners', 'homeTeamOver35')
+                    pm = prob_over(calc['corners']['a'], 3.5)
+                    hist = history_loader.get_history(v_time, liga, 'corners', 'awayTeamOver35')
+                    if not hist: hist = history_loader.get_history_global(v_time, 'corners', 'awayTeamOver35')
+                    if hist and pm > 65 and float(hist[2]) > 70:
+                        res.append({"Jogo": f"{m_time} x {v_time}", "Aposta": f"✈️ {v_time} +3.5 Cantos", "Conf": "Alta", "M": f"{pm:.0f}%", "R": f"{hist[2]}%"})
 
-                    # Prioriza linha 4.5 se for boa (ODD MAIOR)
-                    if hist_45 and float(hist_45[2]) > 70:
-                         res.append({"Jogo": f"{m_time} x {v_time}", "Aposta": f"🏠 {m_time} +4.5 Cantos", "Conf": "Alta", "M": "--", "R": f"{hist_45[2]}%"})
-                    elif hist_35 and float(hist_35[2]) > 75:
-                         res.append({"Jogo": f"{m_time} x {v_time}", "Aposta": f"🏠 {m_time} +3.5 Cantos", "Conf": "Alta", "M": "--", "R": f"{hist_35[2]}%"})
+                    # Cartões (Flexível: >60% para aparecer)
+                    pm = prob_over(calc['cards']['h'], 1.5)
+                    hist = history_loader.get_history(m_time, liga, 'cards', 'homeCardsOver15')
+                    if not hist: hist = history_loader.get_history_global(m_time, 'cards', 'homeCardsOver15')
+                    if hist and pm > 55 and float(hist[2]) > 60: # Baixei régua de cartões
+                        res.append({"Jogo": f"{m_time} x {v_time}", "Aposta": f"🏠 {m_time} +1.5 Cartões", "Conf": "Média", "M": f"{pm:.0f}%", "R": f"{hist[2]}%"})
 
-                    # 2. Escanteios Fora
-                    hist_a_45 = history_loader.get_history(v_time, liga, 'corners', 'awayTeamOver45')
-                    if not hist_a_45: hist_a_45 = history_loader.get_history_global(v_time, 'corners', 'awayTeamOver45')
-                    
-                    hist_a_35 = history_loader.get_history(v_time, liga, 'corners', 'awayTeamOver35')
-                    if not hist_a_35: hist_a_35 = history_loader.get_history_global(v_time, 'corners', 'awayTeamOver35')
-
-                    if hist_a_45 and float(hist_a_45[2]) > 70:
-                         res.append({"Jogo": f"{m_time} x {v_time}", "Aposta": f"✈️ {v_time} +4.5 Cantos", "Conf": "Alta", "M": "--", "R": f"{hist_a_45[2]}%"})
-                    elif hist_a_35 and float(hist_a_35[2]) > 75:
-                         res.append({"Jogo": f"{m_time} x {v_time}", "Aposta": f"✈️ {v_time} +3.5 Cantos", "Conf": "Alta", "M": "--", "R": f"{hist_a_35[2]}%"})
-
-                    # 3. Cartões (Mantém +1.5 se muito forte)
-                    hist_c = history_loader.get_history(m_time, liga, 'cards', 'homeCardsOver15')
-                    if not hist_c: hist_c = history_loader.get_history_global(m_time, 'cards', 'homeCardsOver15')
-                    
-                    if hist_c and float(hist_c[2]) > 80:
-                        res.append({"Jogo": f"{m_time} x {v_time}", "Aposta": f"🏠 {m_time} +1.5 Cartões", "Conf": "Média", "M": "--", "R": f"{hist_c[2]}%"})
+                    pm = prob_over(calc['cards']['a'], 1.5)
+                    hist = history_loader.get_history(v_time, liga, 'cards', 'awayCardsOver15')
+                    if not hist: hist = history_loader.get_history_global(v_time, 'cards', 'awayCardsOver15')
+                    if hist and pm > 55 and float(hist[2]) > 60:
+                        res.append({"Jogo": f"{m_time} x {v_time}", "Aposta": f"✈️ {v_time} +1.5 Cartões", "Conf": "Média", "M": f"{pm:.0f}%", "R": f"{hist[2]}%"})
 
                     bar.progress((i+1)/len(jogos))
                 
@@ -457,11 +446,9 @@ def render_dashboard():
                 
             if st.session_state['scan_results']:
                 st.markdown("---")
+                st.subheader("🎫 Sugestão de Múltiplas Mistas")
                 
-                # GERADOR DE MÚLTIPLAS
-                st.subheader("🎫 Múltiplas Turbo (Odds Estimadas 1.80+)")
-                
-                if st.button("🔄 Gerar 6 Bilhetes Triplos"):
+                if st.button("🔄 Gerar Múltiplas Balanceadas"):
                     st.session_state['multiplas_geradas'] = gerar_multiplas(st.session_state['scan_results'])
                 
                 if 'multiplas_geradas' in st.session_state and st.session_state['multiplas_geradas']:
@@ -473,13 +460,12 @@ def render_dashboard():
                             <div class="multi-card">
                                 <strong>🎟️ BILHETE {i+1}</strong><hr style="margin:5px 0">
                                 1. {bilhete[0]['Aposta']} <small>({bilhete[0]['R']})</small><br>
-                                2. {bilhete[1]['Aposta']} <small>({bilhete[1]['R']})</small><br>
-                                {f"3. {bilhete[2]['Aposta']} <small>({bilhete[2]['R']})</small>" if len(bilhete) > 2 else ""}
+                                2. {bilhete[1]['Aposta']} <small>({bilhete[1]['R']})</small>
                             </div>
                             """, unsafe_allow_html=True)
                 
                 st.markdown("---")
-                st.markdown("#### 📋 Lista Geral")
+                st.markdown("#### 📋 Lista Completa")
                 for r in st.session_state['scan_results']:
                     css = "scan-high" if r["Conf"] == "Alta" else "scan-med"
                     st.markdown(f"""<div class="scan-card {css}"><b>{r['Jogo']}</b><br>👉 {r['Aposta']} | R: {r['R']}</div>""", unsafe_allow_html=True)
@@ -523,15 +509,15 @@ def render_dashboard():
     with tab_new:
         st.markdown("### Novo Bilhete")
         if 'n_games' not in st.session_state: st.session_state['n_games'] = 1
-        col1, col2, col3 = st.columns(3)
-        dt = col1.date_input("Data")
-        stake = col2.number_input("Stake", 10.0)
-        odd = col3.number_input("Odd", 1.5)
+        c_d, c_s, c_o = st.columns(3)
+        dt = c_d.date_input("Data")
+        sk = c_s.number_input("Stake", 10.0)
+        od = c_o.number_input("Odd", 1.5)
         res = st.selectbox("Resultado", ["Green ✅", "Red ❌", "Cashout 💰"])
-        profit = (stake*odd-stake) if "Green" in res else (-stake if "Red" in res else 0.0)
+        profit = (sk*odd-stake) if "Green" in res else (-stake if "Red" in res else 0.0)
         st.write(f"Lucro: **{profit:.2f}**")
         if st.button("Salvar"):
-            salvar_ticket({"id": str(uuid.uuid4())[:8], "Data": dt.strftime("%d/%m/%Y"), "Stake": stake, "Odd": odd, "Lucro": profit, "Resultado": res, "Jogos": []})
+            salvar_ticket({"id": str(uuid.uuid4())[:8], "Data": dt.strftime("%d/%m/%Y"), "Stake": stake, "Odd": od, "Lucro": profit, "Resultado": res, "Jogos": []})
             st.success("Salvo!")
 
     with tab_hist:
