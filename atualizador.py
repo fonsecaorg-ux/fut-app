@@ -33,7 +33,7 @@ if response.status_code == 200:
         print(f"❌ Resposta: {response.text[:200]}")
 else:
     print(f"❌ Bloqueado! Resposta: {response.text[:200]}")
-```
+
 
 ---
 
