@@ -10,31 +10,14 @@ import random
 import re
 from pathlib import Path
 from datetime import datetime
-from PIL import Image
 
 # ==============================================================================
 # 0. CONFIGURAÇÃO
 # ==============================================================================
-st.set_page_config(page_title="FutPrevisão V8.1 (Refined)", layout="wide", page_icon="⚽")
-
-# Configuração OCR (Silenciosa)
-HAS_OCR = False
-try:
-    import pytesseract
-    path_tesseract = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
-    if os.path.exists(path_tesseract):
-        pytesseract.pytesseract.tesseract_cmd = path_tesseract
-        HAS_OCR = True
-    else:
-        alts = [r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe", r"C:\Users\Kaiqu\AppData\Local\Programs\Tesseract-OCR\tesseract.exe"]
-        for p in alts:
-            if os.path.exists(p):
-                pytesseract.pytesseract.tesseract_cmd = p
-                HAS_OCR = True; break
-except: pass
+st.set_page_config(page_title="FutPrevisão V8.2 (Lines Fix)", layout="wide", page_icon="⚽")
 
 # ==============================================================================
-# 1. MAPEAMENTO DE ARQUIVOS (10 Ligas)
+# 1. ARQUIVOS & MAPAS
 # ==============================================================================
 LEAGUE_FILES = {
     "Premier League": {"csv": "Premier League 25.26.csv", "txt": "Prewmier League.txt", "txt_cards": "Cartoes Premier League - Inglaterra.txt"},
@@ -50,89 +33,62 @@ LEAGUE_FILES = {
 }
 
 # ==============================================================================
-# 2. DOUTOR DAS DATAS (CORREÇÃO DE BUG)
-# ==============================================================================
-def fix_date_format(date_str):
-    """Tenta padronizar qualquer data para DD/MM/YYYY"""
-    if pd.isna(date_str): return None
-    s = str(date_str).strip()
-    
-    # Formatos comuns encontrados no Football-Data
-    formats = [
-        "%d/%m/%Y",   # 25/12/2025
-        "%d/%m/%y",   # 25/12/25
-        "%Y-%m-%d",   # 2025-12-25
-        "%d-%m-%Y"    # 25-12-2025
-    ]
-    
-    for fmt in formats:
-        try:
-            return datetime.strptime(s, fmt).strftime("%d/%m/%Y")
-        except: continue
-    
-    return s # Retorna original se falhar (para debug)
-
-# ==============================================================================
-# 3. FUSÃO DE ÁRBITROS
+# 2. SISTEMA DE ÁRBITROS (FUSÃO DUPLA)
 # ==============================================================================
 @st.cache_data(ttl=3600)
 def load_referees_unified():
-    """Lê os dois arquivos e cria um mega dicionário de árbitros"""
     refs = {}
-    
-    # 1. Lê o arquivo simples (arbitros.csv)
+    # Arquivo 1 (Simples)
     if os.path.exists("arbitros.csv"):
         try:
             df1 = pd.read_csv("arbitros.csv")
             for _, r in df1.iterrows():
-                if 'Nome' in r and 'Fator' in r:
-                    refs[str(r['Nome']).strip()] = float(r['Fator'])
+                refs[str(r['Nome']).strip()] = float(r['Fator'])
         except: pass
-        
-    # 2. Lê o arquivo detalhado (arbitros_5_ligas...) e sobrescreve/adiciona
+    # Arquivo 2 (Detalhado)
     if os.path.exists("arbitros_5_ligas_2025_2026.csv"):
         try:
             df2 = pd.read_csv("arbitros_5_ligas_2025_2026.csv")
             for _, r in df2.iterrows():
                 nome = str(r['Arbitro']).strip()
+                # Converte Média para Fator (Base 4.0)
                 media = float(r['Media_Cartoes_Por_Jogo'])
-                # Converte Média para Fator (Base 4.0 cartões/jogo)
-                # Ex: Juiz com média 5.0 -> Fator 1.25
                 refs[nome] = media / 4.0
         except: pass
-        
     return refs
 
 referees_db = load_referees_unified()
 
-def get_referee_factor(ref_name):
-    if not ref_name: return 1.0
-    # Match Exato
-    if ref_name in referees_db: return referees_db[ref_name]
-    # Match Aproximado
-    match = difflib.get_close_matches(ref_name, referees_db.keys(), n=1, cutoff=0.7)
+def get_ref_factor(name):
+    if not name or name == "Neutro": return 1.0
+    if name in referees_db: return referees_db[name]
+    # Fuzzy
+    match = difflib.get_close_matches(name, referees_db.keys(), n=1, cutoff=0.7)
     if match: return referees_db[match[0]]
-    return 1.0 # Neutro
+    return 1.0
 
 # ==============================================================================
-# 4. LEITOR DE CALENDÁRIO UNIFICADO
+# 3. DATAS & CALENDÁRIO
 # ==============================================================================
+def fix_date(d):
+    try:
+        s = str(d).strip()
+        for fmt in ["%d/%m/%Y", "%d/%m/%y", "%Y-%m-%d", "%d-%m-%Y"]:
+            try: return datetime.strptime(s, fmt).strftime("%d/%m/%Y")
+            except: continue
+        return s
+    except: return None
+
 @st.cache_data(ttl=600)
 def load_unified_calendar():
     all_games = []
-    
     for l_name, f_data in LEAGUE_FILES.items():
-        csv_path = f_data['csv']
-        if os.path.exists(csv_path):
+        if os.path.exists(f_data['csv']):
             try:
-                # Tenta ler com diferentes encodings
-                try: df = pd.read_csv(csv_path, encoding='latin1', dtype=str)
-                except: df = pd.read_csv(csv_path, dtype=str)
+                try: df = pd.read_csv(f_data['csv'], encoding='latin1', dtype=str)
+                except: df = pd.read_csv(f_data['csv'], dtype=str)
                 
-                cols = [c.strip() for c in df.columns]
-                df.columns = cols
-                
-                # Mapeia colunas
+                cols = df.columns
                 d_col = next((c for c in cols if c in ['Date', 'Data']), None)
                 h_col = next((c for c in cols if c in ['HomeTeam', 'Mandante']), None)
                 a_col = next((c for c in cols if c in ['AwayTeam', 'Visitante']), None)
@@ -140,31 +96,38 @@ def load_unified_calendar():
                 
                 if d_col and h_col and a_col:
                     temp = pd.DataFrame()
-                    # Aplica o Doutor das Datas
-                    temp['Data'] = df[d_col].apply(fix_date_format)
+                    temp['Data'] = df[d_col].apply(fix_date)
                     temp['Mandante'] = df[h_col]
                     temp['Visitante'] = df[a_col]
                     temp['Liga'] = l_name
-                    temp['Arbitro'] = df[r_col] if r_col else None
-                    
-                    # Remove datas inválidas
-                    temp = temp.dropna(subset=['Data'])
-                    all_games.append(temp)
-            except Exception as e:
-                print(f"Erro lendo {l_name}: {e}")
-
+                    temp['Arbitro'] = df[r_col] if r_col else "Desconhecido"
+                    # Identifica se é jogo futuro (sem gols marcados)
+                    # Verifica se tem FTHG e se está vazio
+                    res_col = next((c for c in cols if c in ['FTHG', 'HG', 'GolsMandante']), None)
+                    if res_col:
+                        temp['Status'] = df[res_col].apply(lambda x: 'Finalizado' if pd.notna(x) and str(x).strip() != '' else 'Futuro')
+                    else:
+                        temp['Status'] = 'Futuro' # Assume futuro se não tiver coluna de gols
+                        
+                    all_games.append(temp.dropna(subset=['Data']))
+            except: pass
+            
     if all_games:
-        return pd.concat(all_games, ignore_index=True)
+        final = pd.concat(all_games, ignore_index=True)
+        # Ordena datas (converte para datetime para sortear, depois volta string)
+        final['DtObj'] = pd.to_datetime(final['Data'], format="%d/%m/%Y", errors='coerce')
+        final = final.sort_values('DtObj', ascending=False) # Mais recentes primeiro
+        return final
     return pd.DataFrame()
 
 # ==============================================================================
-# 5. APRENDIZADO E HISTÓRICO
+# 4. LEARNING & HISTÓRICO
 # ==============================================================================
 @st.cache_data(ttl=3600)
-def learn_stats_from_csvs():
+def learn_stats():
     db = {}
     for liga, files in LEAGUE_FILES.items():
-        f = files["csv"]
+        f = files['csv']
         if os.path.exists(f):
             try:
                 try: df = pd.read_csv(f, encoding='latin1')
@@ -173,13 +136,11 @@ def learn_stats_from_csvs():
                 cols = df.columns
                 h_c = 'HomeTeam' if 'HomeTeam' in cols else 'Mandante'
                 a_c = 'AwayTeam' if 'AwayTeam' in cols else 'Visitante'
-                
-                # Detecta colunas de dados
                 has_corn = 'HC' in cols and 'AC' in cols
-                has_card = 'HY' in cols and 'AY' in cols 
+                has_card = 'HY' in cols and 'AY' in cols
                 
                 if h_c in cols:
-                    teams = set(df[h_c].unique()).union(set(df[a_c].unique()))
+                    teams = set(df[h_c].dropna().unique()).union(set(df[a_c].dropna().unique()))
                     for t in teams:
                         hg = df[df[h_c] == t]
                         ag = df[df[a_c] == t]
@@ -196,227 +157,238 @@ def learn_stats_from_csvs():
             except: pass
     return db
 
-stats_db = learn_stats_from_csvs()
+stats_db = learn_stats()
 team_list = sorted(list(stats_db.keys()))
 
 class HistoryLoader:
     def __init__(self):
-        self.corners = {}
-        self.cards = {}
-        self.load_all()
-
-    def load_all(self):
-        for liga, files in LEAGUE_FILES.items():
-            if files['txt'] and os.path.exists(files['txt']):
-                try: 
-                    with open(files['txt'], 'r', encoding='utf-8') as f:
-                        raw = f.read().strip()
-                        if '{' in raw: raw = raw[raw.find('{'):]
-                        self.corners[liga] = json.loads(raw)
+        self.corn = {}
+        self.card = {}
+        self.load()
+    def load(self):
+        for l, f in LEAGUE_FILES.items():
+            if f['txt'] and os.path.exists(f['txt']):
+                try: self.corn[l] = json.load(open(f['txt'], encoding='utf-8'))
                 except: pass
-            if files['txt_cards'] and os.path.exists(files['txt_cards']):
-                try: 
-                    with open(files['txt_cards'], 'r', encoding='utf-8') as f:
-                        raw = f.read().strip()
-                        if '{' in raw: raw = raw[raw.find('{'):]
-                        self.cards[liga] = json.loads(raw)
+            if f['txt_cards'] and os.path.exists(f['txt_cards']):
+                try: self.card[l] = json.load(open(f['txt_cards'], encoding='utf-8'))
                 except: pass
-
-    def get_data(self, team, liga, market, key):
-        src = self.corners if market == 'corners' else self.cards
-        
-        # Busca Prioritária (Liga Correta)
+    
+    def get(self, team, liga, mkt, key):
+        src = self.corn if mkt == 'corners' else self.card
+        # Tenta liga
         if liga in src:
-            res = self._find(src[liga], team, key)
+            res = self._search(src[liga], team, key)
             if res: return res
-            
-        # Busca Global
+        # Tenta global
         for l in src:
-            res = self._find(src[l], team, key)
+            res = self._search(src[l], team, key)
             if res: return res
         return None
 
-    def _find(self, json_data, team, key):
-        avail = [t['teamName'] for t in json_data.get('teams', [])]
-        match = difflib.get_close_matches(team, avail, n=1, cutoff=0.6)
+    def _search(self, data, team, key):
+        teams = [t['teamName'] for t in data.get('teams', [])]
+        match = difflib.get_close_matches(team, teams, n=1, cutoff=0.6)
         if match:
-            for t in json_data['teams']:
+            for t in data['teams']:
                 if t['teamName'] == match[0]:
                     d = t.get(key)
                     if d and len(d) >= 3: return d[0], d[1], d[2]
         return None
 
-history = HistoryLoader()
+hist = HistoryLoader()
 
 # ==============================================================================
-# 6. LÓGICA DE PREVISÃO
+# 5. MATEMÁTICA V8.2 (LINHAS ESPECÍFICAS)
 # ==============================================================================
-def poisson_prob(k, lam): return (math.exp(-lam) * (lam ** k)) / math.factorial(k)
-
-def prob_over_line(lam, line):
+def poisson_prob(k, lam): return (math.exp(-lam) * (lam ** k)) / math.factorial(int(k))
+def prob_over(lam, line):
     cdf = sum(poisson_prob(i, lam) for i in range(int(line) + 1))
     return max(0.0, (1 - cdf) * 100)
 
-def normalize_name(name):
+def normalize(name):
     if name in stats_db: return name
-    matches = difflib.get_close_matches(name, stats_db.keys(), n=1, cutoff=0.6)
-    return matches[0] if matches else None
+    m = difflib.get_close_matches(name, stats_db.keys(), n=1, cutoff=0.6)
+    return m[0] if m else None
 
-def calcular_previsao(home, away, referee=None):
-    h = normalize_name(home)
-    a = normalize_name(away)
+def calcular(h_name, a_name, ref_name):
+    h = normalize(h_name)
+    a = normalize(a_name)
     if not h or not a: return None
     
     s_h = stats_db.get(h, {'corners': 5.0, 'cards': 2.0})
     s_a = stats_db.get(a, {'corners': 4.0, 'cards': 2.0})
     
-    rf = get_referee_factor(referee)
+    rf = get_ref_factor(ref_name)
     
-    # Modelo Matemático
-    # Casa tem boost de 10% em cantos, Fora tem penalidade de 10%
-    c_h = s_h['corners'] * 1.10
-    c_a = s_a['corners'] * 0.90
+    # Modelagem
+    c_h_exp = s_h['corners'] * 1.15 # Mandante tem mais volume
+    c_a_exp = s_a['corners'] * 0.90 # Visitante recua
     
-    # Cartões dependem do Juiz
-    k_h = s_h['cards'] * rf
-    k_a = s_a['cards'] * rf
+    k_h_exp = s_h['cards'] * rf
+    k_a_exp = s_a['cards'] * rf
     
     return {
-        'corners': {'h': c_h, 'a': c_a, 't': c_h + c_a},
-        'cards': {'h': k_h, 'a': k_a, 't': k_h + k_a}
+        'corners': {'h': c_h_exp, 'a': c_a_exp, 't': c_h_exp + c_a_exp},
+        'cards': {'h': k_h_exp, 'a': k_a_exp, 't': k_h_exp + k_a_exp}
     }
 
-def get_color(prob):
-    if prob >= 70: return "green"
-    if prob >= 50: return "orange"
-    return "red"
+def color(p): return "green" if p >= 65 else ("orange" if p >= 50 else "red")
 
 # ==============================================================================
-# 7. DASHBOARD V8.1
+# 6. DASHBOARD
 # ==============================================================================
 def render_dashboard():
-    st.title("⚽ FutPrevisão V8.1 (Refined)")
+    st.title("🛡️ FutPrevisão V8.2 (Scanner de Linhas)")
     
-    tab_scan, tab_sim = st.tabs(["🔍 Scanner (Corrigido)", "🔮 Simulação"])
+    tab_scan, tab_sim = st.tabs(["🔍 Scanner", "🔮 Simulação"])
     
-    # --- SCANNER ---
+    # --- SCANNER CORRIGIDO ---
     with tab_scan:
         df = load_unified_calendar()
-        
         if df.empty:
-            st.error("⚠️ Erro Crítico: Nenhum calendário carregado. Verifique os arquivos CSV.")
+            st.warning("⚠️ CSVs não carregados ou vazios.")
         else:
-            # Filtro de datas para Selectbox
-            dias_disponiveis = sorted(df['Data'].unique())
-            
-            # Tenta selecionar hoje
+            # Filtro Data
+            dates = df['Data'].unique()
             hoje = datetime.now().strftime("%d/%m/%Y")
             idx = 0
-            if hoje in dias_disponiveis:
-                idx = dias_disponiveis.index(hoje)
+            # Tenta achar hoje, senão pega o primeiro (mais recente devido ao sort)
+            if hoje in list(dates): idx = list(dates).index(hoje)
             
-            dia_sel = st.selectbox("Escolha a Data do Jogo:", dias_disponiveis, index=idx)
+            sel_date = st.selectbox("Data do Jogo", dates, index=idx)
             
-            jogos = df[df['Data'] == dia_sel]
-            st.info(f"{len(jogos)} jogos encontrados para {dia_sel}.")
+            # Filtra Jogos
+            jogos = df[df['Data'] == sel_date]
+            st.info(f"{len(jogos)} jogos listados para {sel_date}.")
             
-            if st.button("Rastrear Oportunidades"):
+            if st.button("🔎 Escanear Linhas (3.5/4.5 & 1.5/2.5)"):
                 for _, row in jogos.iterrows():
                     h, a, l, r = row['Mandante'], row['Visitante'], row['Liga'], row['Arbitro']
+                    m = calcular(h, a, r)
                     
-                    m = calcular_previsao(h, a, r)
                     if m:
-                        with st.expander(f"{l} | {h} x {a}"):
+                        with st.expander(f"{l} | {h} x {a} | Juiz: {r}"):
                             c1, c2 = st.columns(2)
                             
-                            # Analise Cantos
-                            ph35 = prob_over_line(m['corners']['h'], 3.5)
-                            hh35 = history.get_data(h, l, 'corners', 'homeTeamOver35')
-                            
-                            pa35 = prob_over_line(m['corners']['a'], 3.5)
-                            ha35 = history.get_data(a, l, 'corners', 'awayTeamOver35')
-                            
+                            # --- CANTO ESQUERDO: ESCANTEIOS ---
                             with c1:
-                                st.write("🚩 **Cantos**")
-                                if ph35 > 60:
-                                    htxt = f"{hh35[2]}%" if hh35 else "?"
-                                    st.write(f"🏠 {h} +3.5: :{get_color(ph35)}[{ph35:.0f}%] (Hist: {htxt})")
-                                if pa35 > 60:
-                                    htxt = f"{ha35[2]}%" if ha35 else "?"
-                                    st.write(f"✈️ {a} +3.5: :{get_color(pa35)}[{pa35:.0f}%] (Hist: {htxt})")
-                                    
-                            # Analise Cartões
+                                st.markdown("### 🚩 Escanteios")
+                                
+                                # CASA
+                                ph35 = prob_over(m['corners']['h'], 3.5)
+                                ph45 = prob_over(m['corners']['h'], 4.5)
+                                hh35 = hist.get(h, l, 'corners', 'homeTeamOver35')
+                                
+                                st.markdown(f"**🏠 {h}**")
+                                st.markdown(f"Over 3.5: :{color(ph35)}[{ph35:.0f}%] | Hist: {hh35[2] if hh35 else 'N/A'}%")
+                                st.markdown(f"Over 4.5: :{color(ph45)}[{ph45:.0f}%]")
+                                
+                                st.divider()
+                                
+                                # FORA
+                                pa35 = prob_over(m['corners']['a'], 3.5)
+                                pa45 = prob_over(m['corners']['a'], 4.5)
+                                ha35 = hist.get(a, l, 'corners', 'awayTeamOver35')
+                                
+                                st.markdown(f"**✈️ {a}**")
+                                st.markdown(f"Over 3.5: :{color(pa35)}[{pa35:.0f}%] | Hist: {ha35[2] if ha35 else 'N/A'}%")
+                                st.markdown(f"Over 4.5: :{color(pa45)}[{pa45:.0f}%]")
+
+                            # --- CANTO DIREITO: CARTÕES ---
                             with c2:
-                                st.write("🟨 **Cartões**")
-                                rf = get_referee_factor(r)
-                                st.caption(f"Juiz: {r} (Fator: {rf:.2f}x)")
+                                st.markdown("### 🟨 Cartões")
+                                rf = get_ref_factor(r)
+                                st.caption(f"Rigidez do Juiz: {rf:.2f}x")
                                 
-                                pk15h = prob_over_line(m['cards']['h'], 1.5)
-                                if pk15h > 50: st.write(f"🏠 {h} +1.5: {pk15h:.0f}%")
+                                # CASA
+                                kh15 = prob_over(m['cards']['h'], 1.5)
+                                kh25 = prob_over(m['cards']['h'], 2.5)
+                                hist_k_h = hist.get(h, l, 'cards', 'homeCardsOver15')
                                 
-                                pk15a = prob_over_line(m['cards']['a'], 1.5)
-                                if pk15a > 50: st.write(f"✈️ {a} +1.5: {pk15a:.0f}%")
+                                st.markdown(f"**🏠 {h}**")
+                                st.markdown(f"Over 1.5: :{color(kh15)}[{kh15:.0f}%] | Hist: {hist_k_h[2] if hist_k_h else 'N/A'}%")
+                                st.markdown(f"Over 2.5: :{color(kh25)}[{kh25:.0f}%]")
+                                
+                                st.divider()
+                                
+                                # FORA
+                                ka15 = prob_over(m['cards']['a'], 1.5)
+                                ka25 = prob_over(m['cards']['a'], 2.5)
+                                hist_k_a = hist.get(a, l, 'cards', 'awayCardsOver15')
+                                
+                                st.markdown(f"**✈️ {a}**")
+                                st.markdown(f"Over 1.5: :{color(ka15)}[{ka15:.0f}%] | Hist: {hist_k_a[2] if hist_k_a else 'N/A'}%")
+                                st.markdown(f"Over 2.5: :{color(ka25)}[{ka25:.0f}%]")
 
     # --- SIMULAÇÃO ---
     with tab_sim:
-        st.subheader("Simulador Avançado")
+        st.subheader("Simulação Manual")
         c1, c2, c3 = st.columns(3)
-        
         tl = team_list if team_list else ["Carregando..."]
+        
         home = c1.selectbox("Mandante", tl, index=0)
         away = c2.selectbox("Visitante", tl, index=1 if len(tl)>1 else 0)
         
-        # Lista de Árbitros Fundida
-        ref_list = sorted(list(referees_db.keys()))
-        referee = c3.selectbox("Árbitro", ["Neutro"] + ref_list)
+        ref_keys = sorted(list(referees_db.keys()))
+        ref = c3.selectbox("Árbitro", ["Neutro"] + ref_keys)
         
-        if st.button("Analisar"):
-            ref_n = referee if referee != "Neutro" else None
-            m = calcular_previsao(home, away, ref_n)
-            liga_est = stats_db.get(home, {}).get('league', 'Premier League')
+        if st.button("Processar Dados"):
+            rn = ref if ref != "Neutro" else None
+            m = calcular(home, away, rn)
+            l_est = stats_db.get(home, {}).get('league', 'Premier League')
             
             if m:
-                st.divider()
+                st.write("---")
                 k1, k2 = st.columns(2)
                 
                 # ESCANTEIOS
                 with k1:
-                    st.info(f"🚩 Cantos Totais: {m['corners']['t']:.2f}")
+                    st.info("🚩 Escanteios (Linhas Individuais)")
                     
-                    # Casa
-                    p35 = prob_over_line(m['corners']['h'], 3.5)
-                    h35 = history.get_data(home, liga_est, 'corners', 'homeTeamOver35')
-                    htxt = f"{h35[2]}% ({h35[1]}/{h35[0]})" if h35 else "N/A"
-                    st.write(f"🏠 {home} +3.5: :{get_color(p35)}[{p35:.0f}%] | Hist: **{htxt}**")
+                    # CASA
+                    p35 = prob_over(m['corners']['h'], 3.5)
+                    p45 = prob_over(m['corners']['h'], 4.5)
+                    h35 = hist.get(home, l_est, 'corners', 'homeTeamOver35')
                     
-                    p45 = prob_over_line(m['corners']['h'], 4.5)
-                    h45 = history.get_data(home, liga_est, 'corners', 'homeTeamOver45')
-                    htxt = f"{h45[2]}% ({h45[1]}/{h45[0]})" if h45 else "N/A"
-                    st.write(f"🏠 {home} +4.5: :{get_color(p45)}[{p45:.0f}%] | Hist: **{htxt}**")
+                    st.write(f"**🏠 {home}**")
+                    st.write(f"+3.5: :{color(p35)}[{p35:.0f}%] (Hist: {h35[2] if h35 else 'N/A'}%)")
+                    st.write(f"+4.5: :{color(p45)}[{p45:.0f}%]")
                     
-                    st.markdown("---")
+                    st.write("---")
                     
-                    # Fora
-                    p35a = prob_over_line(m['corners']['a'], 3.5)
-                    h35a = history.get_data(away, liga_est, 'corners', 'awayTeamOver35')
-                    htxt = f"{h35a[2]}% ({h35a[1]}/{h35a[0]})" if h35a else "N/A"
-                    st.write(f"✈️ {away} +3.5: :{get_color(p35a)}[{p35a:.0f}%] | Hist: **{htxt}**")
-
+                    # FORA
+                    pa35 = prob_over(m['corners']['a'], 3.5)
+                    pa45 = prob_over(m['corners']['a'], 4.5)
+                    ha35 = hist.get(away, l_est, 'corners', 'awayTeamOver35')
+                    
+                    st.write(f"**✈️ {away}**")
+                    st.write(f"+3.5: :{color(pa35)}[{pa35:.0f}%] (Hist: {ha35[2] if ha35 else 'N/A'}%)")
+                    st.write(f"+4.5: :{color(pa45)}[{pa45:.0f}%]")
+                
                 # CARTÕES
                 with k2:
-                    st.warning(f"🟨 Cartões Totais: {m['cards']['t']:.2f}")
+                    st.warning("🟨 Cartões (Linhas Individuais)")
                     
-                    # Casa
-                    p15 = prob_over_line(m['cards']['h'], 1.5)
-                    h15 = history.get_data(home, liga_est, 'cards', 'homeCardsOver15')
-                    htxt = f"{h15[2]}% ({h15[1]}/{h15[0]})" if h15 else "N/A"
-                    st.write(f"🏠 {home} +1.5: :{get_color(p15)}[{p15:.0f}%] | Hist: **{htxt}**")
+                    # CASA
+                    pk15 = prob_over(m['cards']['h'], 1.5)
+                    pk25 = prob_over(m['cards']['h'], 2.5)
+                    hk15 = hist.get(home, l_est, 'cards', 'homeCardsOver15')
                     
-                    # Fora
-                    p15a = prob_over_line(m['cards']['a'], 1.5)
-                    h15a = history.get_data(away, liga_est, 'cards', 'awayCardsOver15')
-                    htxt = f"{h15a[2]}% ({h15a[1]}/{h15a[0]})" if h15a else "N/A"
-                    st.write(f"✈️ {away} +1.5: :{get_color(p15a)}[{p15a:.0f}%] | Hist: **{htxt}**")
+                    st.write(f"**🏠 {home}**")
+                    st.write(f"+1.5: :{color(pk15)}[{pk15:.0f}%] (Hist: {hk15[2] if hk15 else 'N/A'}%)")
+                    st.write(f"+2.5: :{color(pk25)}[{pk25:.0f}%]")
+                    
+                    st.write("---")
+                    
+                    # FORA
+                    pka15 = prob_over(m['cards']['a'], 1.5)
+                    pka25 = prob_over(m['cards']['a'], 2.5)
+                    hka15 = hist.get(away, l_est, 'cards', 'awayCardsOver15')
+                    
+                    st.write(f"**✈️ {away}**")
+                    st.write(f"+1.5: :{color(pka15)}[{pka15:.0f}%] (Hist: {hka15[2] if hka15 else 'N/A'}%)")
+                    st.write(f"+2.5: :{color(pka25)}[{pka25:.0f}%]")
 
 if __name__ == "__main__":
     render_dashboard()
