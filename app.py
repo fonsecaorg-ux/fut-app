@@ -13,54 +13,246 @@ from datetime import datetime
 from PIL import Image
 
 # ==============================================================================
-# 0. CONFIGURAÇÃO INICIAL
+# 0. CONFIGURAÇÃO & OCR
 # ==============================================================================
-st.set_page_config(page_title="FutPrevisão Pro V5.3 (Safe)", layout="wide", page_icon="⚽")
+st.set_page_config(page_title="FutPrevisão Pro V7.0 (Global Master)", layout="wide", page_icon="⚽")
 
-# ==============================================================================
-# 1. CONFIGURAÇÃO DE OCR (BLINDADA)
-# ==============================================================================
 HAS_OCR = False
-OCR_ERROR_MSG = ""
-
 try:
     import pytesseract
-    # Caminho que você confirmou
     path_tesseract = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
-    
     if os.path.exists(path_tesseract):
         pytesseract.pytesseract.tesseract_cmd = path_tesseract
         HAS_OCR = True
     else:
-        # Tenta procurar em outros lugares comuns caso tenha instalado diferente
-        paths_alternativos = [
-            r"C:\Users\Kaiqu\AppData\Local\Programs\Tesseract-OCR\tesseract.exe",
-            r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe"
-        ]
-        for p in paths_alternativos:
+        alts = [r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe", r"C:\Users\Kaiqu\AppData\Local\Programs\Tesseract-OCR\tesseract.exe"]
+        for p in alts:
             if os.path.exists(p):
                 pytesseract.pytesseract.tesseract_cmd = p
-                HAS_OCR = True
-                path_tesseract = p
-                break
-        
-        if not HAS_OCR:
-            OCR_ERROR_MSG = f"Arquivo não encontrado em: {path_tesseract}"
+                HAS_OCR = True; break
+except: pass
+
+# ==============================================================================
+# 1. MAPEAMENTO DE ARQUIVOS (O CORAÇÃO DO SISTEMA)
+# ==============================================================================
+# Mapeia o Nome da Liga -> (Arquivo CSV Calendário, Arquivo TXT Stats)
+LEAGUE_FILES = {
+    # --- AS 5 GRANDES ---
+    "Premier League": {"csv": "Premier League 25.26.csv", "txt": "Prewmier League.txt", "txt_cards": "Cartoes Premier League - Inglaterra.txt"},
+    "La Liga": {"csv": "La Liga 25.26.csv", "txt": "Escanteios Espanha.txt", "txt_cards": "Cartoes La Liga - Espanha.txt"},
+    "Serie A": {"csv": "Serie A 25.26.csv", "txt": "Escanteios Italia.txt", "txt_cards": "Cartoes Serie A - Italia.txt"},
+    "Bundesliga": {"csv": "Bundesliga 25.26.csv", "txt": "Escanteios Alemanha.txt", "txt_cards": "Cartoes Bundesliga - Alemanha.txt"},
+    "Ligue 1": {"csv": "Ligue 1 25.26.csv", "txt": "Escanteios França.txt", "txt_cards": "Cartoes Ligue 1 - França.txt"},
+    
+    # --- NOVAS LIGAS ---
+    "Championship": {"csv": "Championship Inglaterra 25.26.csv", "txt": "Championship Escanteios Inglaterra.txt", "txt_cards": None},
+    "Bundesliga 2": {"csv": "Bundesliga 2.csv", "txt": "Bundesliga 2.txt", "txt_cards": None},
+    "Pro League (BEL)": {"csv": "Pro League Belgica 25.26.csv", "txt": "Pro League Belgica.txt", "txt_cards": None},
+    "Süper Lig (TUR)": {"csv": "Super Lig Turquia 25.26.csv", "txt": "Super Lig Turquia.txt", "txt_cards": None},
+    "Premiership (SCO)": {"csv": "Premiership Escocia 25.26.csv", "txt": "Premiership Escocia.txt", "txt_cards": None}
+}
+
+# ==============================================================================
+# 2. MOTOR DE APRENDIZAGEM (LÊ CSVs -> CALCULA MÉDIAS)
+# ==============================================================================
+GENERIC_STATS = {"corners": 5.0, "cards": 2.0, "fouls": 11.0}
+
+@st.cache_data(ttl=3600)
+def learn_stats_from_csvs():
+    """
+    Lê todos os CSVs configurados, identifica colunas de estatísticas (HC, AC, HY, AY)
+    e calcula a média histórica de cada time para usar na previsão.
+    """
+    learned_db = {}
+    
+    for liga, files in LEAGUE_FILES.items():
+        csv_file = files["csv"]
+        if os.path.exists(csv_file):
+            try:
+                # Tenta ler (football-data costuma ser latin1)
+                try: df = pd.read_csv(csv_file, encoding='latin1')
+                except: df = pd.read_csv(csv_file)
+                
+                # Normaliza colunas
+                cols = df.columns.tolist()
+                
+                # Identifica colunas chaves
+                # Home/Away Team
+                col_h = 'HomeTeam' if 'HomeTeam' in cols else ('Mandante' if 'Mandante' in cols else None)
+                col_a = 'AwayTeam' if 'AwayTeam' in cols else ('Visitante' if 'Visitante' in cols else None)
+                
+                # Corners (HC = Home Corners, AC = Away Corners)
+                has_corners = 'HC' in cols and 'AC' in cols
+                
+                # Cards (HY = Home Yellow, AY = Away Yellow)
+                has_cards = 'HY' in cols and 'AY' in cols
+                
+                if col_h and col_a:
+                    teams = set(df[col_h].dropna().unique()).union(set(df[col_a].dropna().unique()))
+                    
+                    for t in teams:
+                        stats = {'cnt': 0, 'sum_corn': 0, 'sum_card': 0}
+                        
+                        # Jogos em Casa
+                        home_games = df[df[col_h] == t]
+                        stats['cnt'] += len(home_games)
+                        if has_corners: stats['sum_corn'] += home_games['HC'].sum()
+                        if has_cards: stats['sum_card'] += home_games['HY'].sum() # Simplificando para amarelos
+                        
+                        # Jogos Fora
+                        away_games = df[df[col_a] == t]
+                        stats['cnt'] += len(away_games)
+                        if has_corners: stats['sum_corn'] += away_games['AC'].sum()
+                        if has_cards: stats['sum_card'] += away_games['AY'].sum()
+                        
+                        # Calcula Médias
+                        if stats['cnt'] > 0:
+                            avg_corn = (stats['sum_corn'] / stats['cnt']) if has_corners else 5.0
+                            avg_card = (stats['sum_card'] / stats['cnt']) if has_cards else 2.0
+                            
+                            # Refinamento: Se a média for 0 (dados faltantes), usa genérico
+                            if avg_corn == 0: avg_corn = 5.0
+                            if avg_card == 0: avg_card = 2.0
+                            
+                            learned_db[t] = {
+                                'corners': avg_corn,
+                                'cards': avg_card,
+                                'fouls': 11.5 # Faltas raramente tem nos CSVs básicos, mantemos genérico
+                            }
+            except: pass
             
-except ImportError:
-    OCR_ERROR_MSG = "Biblioteca 'pytesseract' não instalada. (pip install pytesseract)"
-except Exception as e:
-    OCR_ERROR_MSG = f"Erro genérico OCR: {str(e)}"
+    return learned_db
+
+# Carrega a base de conhecimento
+teams_data = learn_stats_from_csvs()
+team_list = sorted(list(teams_data.keys()))
+
+# Carrega Árbitros
+@st.cache_data(ttl=3600)
+def load_referees():
+    if os.path.exists("arbitros_5_ligas_2025_2026.csv"):
+        try:
+            df = pd.read_csv("arbitros_5_ligas_2025_2026.csv")
+            return dict(zip(df['Arbitro'], df['Media_Cartoes_Por_Jogo'])) # Usa média como fator base
+        except: return {}
+    return {}
+
+referees_data = load_referees()
 
 # ==============================================================================
-# 2. FUNÇÕES MATEMÁTICAS
+# 3. CARREGAMENTO DE CALENDÁRIO UNIFICADO
 # ==============================================================================
-def safe_float(value):
-    try:
-        if isinstance(value, (int, float)): return float(value)
-        return float(str(value).replace('R$', '').replace(',', '.').strip())
-    except: return 0.0
+def load_unified_calendar():
+    all_games = []
+    
+    for liga, files in LEAGUE_FILES.items():
+        f = files["csv"]
+        if os.path.exists(f):
+            try:
+                try: df = pd.read_csv(f, encoding='latin1', dtype=str)
+                except: df = pd.read_csv(f, dtype=str)
+                
+                # Padroniza nomes das colunas para o Scanner
+                rename_map = {}
+                if 'Date' in df.columns: rename_map['Date'] = 'Data'
+                if 'HomeTeam' in df.columns: rename_map['HomeTeam'] = 'Mandante'
+                if 'AwayTeam' in df.columns: rename_map['AwayTeam'] = 'Visitante'
+                if 'Referee' in df.columns: rename_map['Referee'] = 'Arbitro'
+                
+                df = df.rename(columns=rename_map)
+                
+                # Adiciona coluna da Liga se não tiver
+                if 'Liga' not in df.columns:
+                    df['Liga'] = liga
+                
+                # Seleciona apenas colunas essenciais e limpa dados vazios
+                cols_req = ['Data', 'Mandante', 'Visitante', 'Liga']
+                if set(cols_req).issubset(df.columns):
+                    temp_df = df[cols_req].copy()
+                    if 'Arbitro' in df.columns: temp_df['Arbitro'] = df['Arbitro']
+                    else: temp_df['Arbitro'] = "Desconhecido"
+                    
+                    all_games.append(temp_df)
+            except: pass
+            
+    if all_games:
+        full_df = pd.concat(all_games, ignore_index=True)
+        full_df['Data'] = full_df['Data'].str.strip()
+        return full_df
+    return pd.DataFrame()
 
+# ==============================================================================
+# 4. HISTÓRICO (ADAM CHOI LOADER OTIMIZADO)
+# ==============================================================================
+class AdamChoiLoader:
+    def __init__(self):
+        self.data_corners = {}
+        self.data_cards = {}
+        self.load_all()
+
+    def load_all(self):
+        for liga, files in LEAGUE_FILES.items():
+            # Carrega Cantos
+            if files["txt"] and os.path.exists(files["txt"]):
+                try:
+                    with open(files["txt"], 'r', encoding='utf-8') as f:
+                        raw = f.read().strip()
+                        if '{' in raw: raw = raw[raw.find('{'):]
+                        self.data_corners[liga] = json.loads(raw)
+                except: pass
+            
+            # Carrega Cartões (Se existir)
+            if files.get("txt_cards") and os.path.exists(files["txt_cards"]):
+                try:
+                    with open(files["txt_cards"], 'r', encoding='utf-8') as f:
+                        raw = f.read().strip()
+                        if '{' in raw: raw = raw[raw.find('{'):]
+                        self.data_cards[liga] = json.loads(raw)
+                except: pass
+
+    def find_match(self, t, avail):
+        # Mapeamentos manuais para casos difíceis
+        MAP_MANUAL = {
+            "Man United": "Man Utd", "Manchester United": "Man Utd",
+            "Nott'm Forest": "Forest", "Nottingham Forest": "Forest",
+            "Sheffield United": "Sheff Utd", "Sheffield Utd": "Sheff Utd",
+            "Wolverhampton": "Wolves"
+        }
+        t_clean = t.strip()
+        if t_clean in MAP_MANUAL: t_clean = MAP_MANUAL[t_clean]
+        
+        matches = difflib.get_close_matches(t_clean, avail, n=1, cutoff=0.6)
+        return matches[0] if matches else None
+
+    def get_hist(self, team, liga, m_type, key):
+        src = self.data_corners if m_type == 'corners' else self.data_cards
+        
+        # Busca na liga específica primeiro
+        if liga in src:
+            avail = [x['teamName'] for x in src[liga].get('teams', [])]
+            found = self.find_match(team, avail)
+            if found:
+                for x in src[liga]['teams']:
+                    if x['teamName'] == found:
+                        s = x.get(key)
+                        if s and len(s) >= 3: return s[0], s[1], s[2]
+        
+        # Se não achar, busca globalmente (Fallback)
+        for l in src:
+            avail = [x['teamName'] for x in src[l].get('teams', [])]
+            found = self.find_match(team, avail)
+            if found:
+                for x in src[l]['teams']:
+                    if x['teamName'] == found:
+                        s = x.get(key)
+                        if s and len(s) >= 3: return s[0], s[1], s[2]
+        return None
+
+history_loader = AdamChoiLoader()
+
+# ==============================================================================
+# 5. MATEMÁTICA & PREVISÃO
+# ==============================================================================
 def poisson_pmf(k, mu):
     try: return (math.exp(-mu) * (mu ** k)) / math.factorial(int(k))
     except: return 0.0
@@ -79,249 +271,90 @@ def get_color(prob):
     if prob >= 50: return "orange"
     return "red"
 
-# ==============================================================================
-# 3. DADOS & CORINGA
-# ==============================================================================
-GENERIC_STATS = {"corners": 5.0, "cards": 2.2, "fouls": 11.5}
-INTERNAL_DB = {
-    "Arsenal": {"corners": 7.5, "cards": 1.5, "fouls": 9.5},
-    "Man City": {"corners": 8.2, "cards": 1.4, "fouls": 8.5},
-    "Liverpool": {"corners": 7.2, "cards": 1.8, "fouls": 10.5},
-    "Real Madrid": {"corners": 6.8, "cards": 1.9, "fouls": 10.0},
-    "Barcelona": {"corners": 6.5, "cards": 2.0, "fouls": 10.2},
-    "Flamengo": {}, "Palmeiras": {}, "São Paulo": {}, "Corinthians": {}
-}
-
-@st.cache_data(ttl=3600)
-def load_data_master():
-    final_db = INTERNAL_DB.copy()
-    if os.path.exists("dados_times.csv"):
-        try:
-            try: df = pd.read_csv("dados_times.csv", encoding='utf-8')
-            except: df = pd.read_csv("dados_times.csv", encoding='latin1', sep=';')
-            df.columns = [c.strip() for c in df.columns]
-            for _, row in df.iterrows():
-                if 'Time' in row and pd.notna(row['Time']):
-                    t_name = str(row['Time']).strip()
-                    final_db[t_name] = {
-                        'corners': safe_float(row.get('Escanteios', 5.0)),
-                        'cards': safe_float(row.get('CartoesAmarelos', 2.0)), 
-                        'fouls': safe_float(row.get('Faltas', 12.0))
-                    }
-        except: pass
-    return final_db
-
-teams_data = load_data_master()
-team_list = sorted(list(teams_data.keys()))
-
-# ==============================================================================
-# 4. OCR LÓGICA
-# ==============================================================================
-def extrair_times_e_linhas(texto, lista_times):
-    texto_low = texto.lower()
-    times_encontrados = []
-    
-    # Busca Times
-    lista_ordenada = sorted(lista_times, key=len, reverse=True)
-    for time in lista_ordenada:
-        if len(time) > 3 and time.lower() in texto_low:
-            if not any(time in t_exist for t_exist in times_encontrados):
-                times_encontrados.append(time)
-    
-    times_encontrados = times_encontrados[:2]
-    
-    # Busca Linhas
-    linhas_encontradas = []
-    keywords = ["escanteios", "cantos", "corners", "cartões", "cards", "gols", "over", "under", "mais de"]
-    
-    lines = texto.split('\n')
-    for line in lines:
-        line_low = line.lower()
-        if any(k in line_low for k in keywords):
-            clean = re.sub(r'[^a-zA-Z0-9\.\s]', '', line).strip()
-            if len(clean) > 5:
-                linhas_encontradas.append(clean)
-
-    return times_encontrados, linhas_encontradas
-
-def ler_bilhete_completo(imagem, lista_times):
-    if not HAS_OCR: return datetime.now(), 0.0, 0.0, "", "OCR Não configurado"
-    
-    try:
-        text = pytesseract.image_to_string(imagem)
-        data_det = datetime.now()
-        stake_det = 0.0
-        odd_det = 0.0
-        
-        lines = text.split('\n')
-        for line in lines:
-            line_low = line.lower()
-            if "@" in line_low or "odd" in line_low or "cota" in line_low:
-                nums = re.findall(r"\d+\.\d+", line)
-                if nums:
-                    for n in nums:
-                        if 1.01 < float(n) < 100.0: odd_det = float(n)
-            
-            if any(x in line_low for x in ["aposta", "valor", "stake", "total"]):
-                clean = line_low.replace("r$", "").replace(",", ".")
-                nums = re.findall(r"\d+\.\d+", clean)
-                if nums:
-                    v = float(nums[0])
-                    if v > 0: stake_det = v
-
-        times, linhas = extrair_times_e_linhas(text, lista_times)
-        desc = ""
-        if times: desc += " x ".join(times)
-        if linhas:
-            if desc: desc += " | "
-            desc += ", ".join(linhas)
-            
-        return data_det, stake_det, odd_det, desc, text
-    except Exception as e:
-        return datetime.now(), 0.0, 0.0, "", f"Erro: {str(e)}"
-
-# ==============================================================================
-# 5. SISTEMA PRINCIPAL (SCANNER/SIMULAÇÃO/GESTÃO)
-# ==============================================================================
-NAME_MAPPING = {"Man City": "Man City", "Man Utd": "Man United"}
-class AdamChoiLoader:
-    def __init__(self): self.data = {}
-    def get_history_global(self, t, m, k): return None
-history_loader = AdamChoiLoader()
-
-# Carregamento Robusto do Histórico
-FILES_CONFIG = {
-    "Premier League": {"corners": "Escanteios Preimier League - codigo fonte.txt", "cards": "Cartoes Premier League - Inglaterra.txt"},
-    "La Liga": {"corners": "Escanteios Espanha.txt", "cards": "Cartoes La Liga - Espanha.txt"},
-    "Serie A": {"corners": "Escanteios Italia.txt", "cards": "Cartoes Serie A - Italia.txt"},
-    "Bundesliga": {"corners": "Escanteios Alemanha.txt", "cards": "Cartoes Bundesliga - Alemanha.txt"},
-    "Ligue 1": {"corners": "Escanteios França.txt", "cards": "Cartoes Ligue 1 - França.txt"}
-}
-
-class FullLoader(AdamChoiLoader):
-    def __init__(self):
-        self.data_corners = {}
-        self.data_cards = {}
-        self.load_files()
-    def load_files(self):
-        pasta = Path(__file__).parent
-        for liga, files in FILES_CONFIG.items():
-            try:
-                p = pasta / files["corners"]
-                if p.exists():
-                    with open(p, 'r', encoding='utf-8') as f:
-                        raw = f.read().strip(); 
-                        if '{' in raw: raw = raw[raw.find('{'):]
-                        self.data_corners[liga] = json.loads(raw)
-            except: pass
-            try:
-                p = pasta / files["cards"]
-                if p.exists():
-                    with open(p, 'r', encoding='utf-8') as f:
-                        raw = f.read().strip(); 
-                        if '{' in raw: raw = raw[raw.find('{'):]
-                        self.data_cards[liga] = json.loads(raw)
-            except: pass
-    def find_best_match(self, target_name, available_names):
-        if not target_name: return None
-        target = target_name.strip()
-        if target in NAME_MAPPING: target = NAME_MAPPING[target]
-        target_lower = target.lower()
-        for name in available_names:
-            if name.lower() == target_lower: return name
-        matches = difflib.get_close_matches(target, available_names, n=1, cutoff=0.6)
-        return matches[0] if matches else None
-    def get_history_global(self, team, market_type, key):
-        try:
-            source = self.data_corners if market_type == 'corners' else self.data_cards
-            for league in source:
-                avail = [t['teamName'] for t in source[league].get('teams', [])]
-                matched = self.find_best_match(team, avail)
-                if matched:
-                    for t in source[league]['teams']:
-                        if t['teamName'] == matched:
-                            stats = t.get(key)
-                            if stats and isinstance(stats, list) and len(stats) >= 3:
-                                return stats[0], stats[1], stats[2], league
-            return None
-        except: return None
-
-history_loader = FullLoader()
-
-# ==============================================================================
-# 6. GESTÃO DE TICKETS
-# ==============================================================================
-DATA_FILE = "tickets_v53.json"
-def get_tickets():
-    if not os.path.exists(DATA_FILE): return []
-    try: return json.load(open(DATA_FILE))
-    except: return []
-
-def save_ticket(t):
-    ts = get_tickets()
-    ts.append(t)
-    with open(DATA_FILE, 'w') as f: json.dump(ts, f)
-
-def del_ticket(id):
-    ts = [t for t in get_tickets() if t['id'] != id]
-    with open(DATA_FILE, 'w') as f: json.dump(ts, f)
-
-# ==============================================================================
-# 7. RENDERIZAÇÃO
-# ==============================================================================
-def normalize_team_name_for_math(name):
+def normalize_team_name(name):
     if name in teams_data: return name
-    if name in NAME_MAPPING:
-        mapped = NAME_MAPPING[name]
-        if mapped in teams_data: return mapped
     matches = difflib.get_close_matches(name, teams_data.keys(), n=1, cutoff=0.6)
     return matches[0] if matches else None
 
-def calcular_previsao(home, away):
-    h_key = normalize_team_name_for_math(home)
-    a_key = normalize_team_name_for_math(away)
+def calcular_previsao(home, away, referee=None):
+    h_key = normalize_team_name(home)
+    a_key = normalize_team_name(away)
+    
     h_data = teams_data.get(h_key, GENERIC_STATS)
     a_data = teams_data.get(a_key, GENERIC_STATS)
     
-    corn_h = (h_data['corners'] * 1.10)
-    corn_a = (a_data['corners'] * 0.85)
-    total_corners = corn_h + corn_a
+    # Fator do Árbitro
+    ref_factor = 1.0
+    if referee and referee in referees_data:
+        # Se o juiz dá mais de 4.5 cartões, aumenta a tensão
+        try:
+            r_avg = float(referees_data[referee])
+            ref_factor = r_avg / 4.0 # Normaliza em base 4.0
+        except: pass
+
+    # Cálculos
+    corn_t = (h_data['corners'] + a_data['corners']) * 1.05 # Fator casa
+    card_t = (h_data['cards'] + a_data['cards']) * ref_factor
     
-    avg_fouls = (h_data['fouls'] + a_data['fouls']) / 2
-    tension = avg_fouls / 12.0
-    
-    card_h = h_data['cards'] * tension
-    card_a = a_data['cards'] * tension
-    
-    return {"corners": {"t": total_corners, "h": corn_h, "a": corn_a}, "cards": {"t": card_h+card_a, "h": card_h, "a": card_a}}
+    return {
+        'corners': {'t': corn_t, 'h': h_data['corners'], 'a': a_data['corners']},
+        'cards': {'t': card_t, 'h': h_data['cards'], 'a': a_data['cards']}
+    }
 
 def gerar_multiplas(oportunidades):
     if not oportunidades: return []
     random.shuffle(oportunidades)
-    cantos = [o for o in oportunidades if "Canto" in o['Aposta']]
-    cartoes = [o for o in oportunidades if "Cartão" in o['Aposta']]
     bilhetes = []
-    for _ in range(6):
-        selecao = []
-        if cantos and cartoes:
-            c = random.choice(cantos)
-            k = random.choice(cartoes)
-            if c['Jogo'] != k['Jogo']: selecao = [c, k]
-        if not selecao and len(oportunidades) >= 2:
-            s = random.sample(oportunidades, 2)
-            if s[0]['Jogo'] != s[1]['Jogo']: selecao = s
-        if selecao: bilhetes.append(selecao)
+    # Tenta agrupar por liga diferente se possivel, ou simplesmente pares
+    for i in range(0, len(oportunidades), 2):
+        if i+1 < len(oportunidades):
+            bilhetes.append([oportunidades[i], oportunidades[i+1]])
+        if len(bilhetes) >= 6: break
     return bilhetes
 
-# LOGIN
+# ==============================================================================
+# 6. GESTÃO DE BILHETES & OCR
+# ==============================================================================
+DATA_FILE = "tickets_v7.json"
+def get_tickets():
+    if not os.path.exists(DATA_FILE): return []
+    try: return json.load(open(DATA_FILE))
+    except: return []
+def save_ticket(t):
+    ts = get_tickets()
+    ts.append(t)
+    with open(DATA_FILE, 'w') as f: json.dump(ts, f)
+def del_ticket(id):
+    ts = [t for t in get_tickets() if t['id'] != id]
+    with open(DATA_FILE, 'w') as f: json.dump(ts, f)
+
+# Leitor OCR Simplificado para V7
+def ler_bilhete(img):
+    if not HAS_OCR: return datetime.now(), 10.0, 2.0, "OCR Off"
+    try:
+        txt = pytesseract.image_to_string(img).lower()
+        stake = 10.0
+        odd = 2.0
+        # Busca simples
+        nums = re.findall(r"\d+\.\d+", txt)
+        if nums: 
+            vals = [float(n) for n in nums]
+            odd = max(vals) if max(vals) < 100 else 2.0
+            stake = min(vals) if min(vals) > 1 else 10.0
+        return datetime.now(), stake, odd, txt
+    except: return datetime.now(), 10.0, 2.0, "Erro Leitura"
+
+# ==============================================================================
+# 7. DASHBOARD
+# ==============================================================================
 USERS = {"diego": "@Casa612"}
 def check_login():
     if "logged_in" not in st.session_state: st.session_state["logged_in"] = False
     if st.session_state["logged_in"]: return True
-    st.markdown("### 🔒 Acesso V5.3")
+    st.markdown("### 🔒 FutPrevisão V7.0")
     c1, c2 = st.columns([1,2])
     with c1:
-        if st.button("Entrar (Dev Mode)"):
+        if st.button("Entrar (Dev)"):
             st.session_state["logged_in"] = True
             st.rerun()
     return False
@@ -329,151 +362,177 @@ def check_login():
 if not check_login(): st.stop()
 
 def render_dashboard():
-    st.title("📊 FutPrevisão V5.3 (Safe Mode)")
+    st.title("🌍 FutPrevisão Pro V7.0 (Master)")
     
     st.markdown("""
     <style>
-        .bet-card-green { border-left: 5px solid #28a745; background: #f0fff4; padding: 10px; margin-bottom: 5px; }
-        .bet-card-red { border-left: 5px solid #dc3545; background: #fff5f5; padding: 10px; margin-bottom: 5px; }
-        .scan-card { background: #f0f8ff; border: 1px solid #bce8f1; padding: 10px; border-radius: 5px; margin-bottom: 8px; }
-        .scan-high { border-left: 5px solid #28a745; }
-        .scan-med { border-left: 5px solid #ffc107; }
-        .multi-card { background: #fff3cd; border: 1px solid #ffeeba; padding: 10px; border-radius: 8px; margin-bottom: 10px; }
+        .scan-card { background: #e3f2fd; border-left: 5px solid #2196f3; padding: 10px; margin-bottom: 8px; border-radius: 5px; }
+        .conf-high { border-left: 5px solid #4caf50; background: #e8f5e9; }
+        .multi-card { background: #fff3e0; border: 1px solid #ffe0b2; padding: 10px; border-radius: 8px; margin-bottom: 10px; }
     </style>
     """, unsafe_allow_html=True)
-
-    tab_scan, tab_sim, tab_tik = st.tabs(["🔍 Scanner", "🔮 Simulação", "🎫 Bilhetes"])
-
-    with tab_scan:
-        st.subheader("Scanner")
-        # Load Calendars
-        all_games = []
-        for f in ["premier_league.csv", "la_liga.csv", "serie_a.csv", "bundesliga.csv", "ligue_1.csv"]:
-            if os.path.exists(f):
-                try: 
-                    df = pd.read_csv(f, dtype=str)
-                    df.columns = [c.strip() for c in df.columns]
-                    all_games.append(df)
-                except: pass
-        
-        if not all_games:
-            st.warning("⚠️ Calendário não encontrado.")
+    
+    tab1, tab2, tab3 = st.tabs(["🔍 Scanner (10 Ligas)", "🔮 Simulação", "🎫 Bilhetes"])
+    
+    # --- SCANNER ---
+    with tab1:
+        df = load_unified_calendar()
+        if df.empty:
+            st.warning("Nenhum calendário carregado. Verifique os arquivos CSV.")
         else:
-            full = pd.concat(all_games, ignore_index=True)
-            full['Data'] = full['Data'].str.strip()
-            dias = sorted(full['Data'].unique())
-            
+            dias = sorted(df['Data'].unique())
             hoje = datetime.now().strftime("%d/%m/%Y")
             idx = dias.index(hoje) if hoje in dias else 0
-            dia = st.selectbox("Data", dias, index=idx)
-            jogos = full[full['Data'] == dia]
-            st.info(f"{len(jogos)} jogos.")
             
-            if st.button("ESCANEAR"):
+            c_d, c_b = st.columns([3,1])
+            dia_sel = c_d.selectbox("Selecione a Data:", dias, index=idx)
+            
+            jogos = df[df['Data'] == dia_sel]
+            st.info(f"📅 {dia_sel}: {len(jogos)} jogos encontrados em {len(jogos['Liga'].unique())} ligas.")
+            
+            if c_b.button("🚀 ESCANEAR"):
                 res = []
                 bar = st.progress(0)
+                total = len(jogos)
+                
                 for i, (_, row) in enumerate(jogos.iterrows()):
                     try:
-                        h, a = row['Mandante'], row['Visitante']
-                        calc = calcular_previsao(h, a)
-                        # Filtros (Resumido para segurança)
-                        hh = history_loader.get_history_global(h, 'corners', 'homeTeamOver35')
-                        if hh and prob_over(calc['corners']['h'], 3.5) > 60 and float(hh[2]) > 70:
-                            res.append({"Jogo": f"{h} x {a}", "Aposta": f"🏠 {h} +3.5 Cantos", "Conf": "Alta", "R": f"{hh[2]}%"})
-                        ha = history_loader.get_history_global(a, 'corners', 'awayTeamOver35')
-                        if ha and prob_over(calc['corners']['a'], 3.5) > 60 and float(ha[2]) > 70:
-                            res.append({"Jogo": f"{h} x {a}", "Aposta": f"✈️ {a} +3.5 Cantos", "Conf": "Alta", "R": f"{ha[2]}%"})
+                        h, a, l = row['Mandante'], row['Visitante'], row['Liga']
+                        ref = row['Arbitro'] if 'Arbitro' in row else None
+                        
+                        # Previsão
+                        calc = calcular_previsao(h, a, ref)
+                        
+                        # Histórico
+                        h_corn = history_loader.get_hist(h, l, 'corners', 'homeTeamOver35')
+                        a_corn = history_loader.get_hist(a, l, 'corners', 'awayTeamOver35')
+                        
+                        # Lógica de Filtro (Mais de 65% chance matemática + Histórico sólido)
+                        # 1. Escanteios
+                        prob_h = prob_over(calc['corners']['h'], 3.5)
+                        if prob_h > 65 and (not h_corn or float(h_corn[2]) > 60):
+                            res.append({"J": f"{h} x {a}", "A": f"🏠 {h} +3.5 Cantos", "L": l, "P": f"{prob_h:.0f}%"})
+                            
+                        prob_a = prob_over(calc['corners']['a'], 3.5)
+                        if prob_a > 65 and (not a_corn or float(a_corn[2]) > 60):
+                            res.append({"J": f"{h} x {a}", "A": f"✈️ {a} +3.5 Cantos", "L": l, "P": f"{prob_a:.0f}%"})
+                            
+                        # 2. Cartões (Se tiver dados de juiz, melhor ainda)
+                        prob_card = prob_over(calc['cards']['t'], 3.5)
+                        if prob_card > 70:
+                             res.append({"J": f"{h} x {a}", "A": f"🟨 Jogo +3.5 Cartões", "L": l, "P": f"{prob_card:.0f}%"})
+
                     except: pass
-                    bar.progress((i+1)/len(jogos))
+                    bar.progress((i+1)/total)
+                
                 st.session_state['scan_res'] = res
             
+            # Resultados Scanner
             if 'scan_res' in st.session_state and st.session_state['scan_res']:
-                if st.button("🔄 Gerar Múltiplas"):
-                    st.session_state['mult'] = gerar_multiplas(st.session_state['scan_res'])
-                if 'mult' in st.session_state:
-                    c1, c2, c3 = st.columns(3)
-                    for i, m in enumerate(st.session_state['mult']):
-                        with [c1,c2,c3][i%3]:
-                            st.markdown(f"<div class='multi-card'><b>Bilhete {i+1}</b><br>1. {m[0]['Aposta']}<br>2. {m[1]['Aposta']}</div>", unsafe_allow_html=True)
                 st.write("---")
+                # Botão Múltiplas
+                if st.button("Gerar Bilhetes Prontos"):
+                    st.session_state['mult'] = gerar_multiplas(st.session_state['scan_res'])
+                
+                if 'mult' in st.session_state:
+                    cols = st.columns(3)
+                    for i, m in enumerate(st.session_state['mult']):
+                        with cols[i%3]:
+                            st.markdown(f"<div class='multi-card'><b>Bilhete {i+1}</b><br>1. {m[0]['A']}<br>2. {m[1]['A']}</div>", unsafe_allow_html=True)
+                
+                st.write("### Lista de Oportunidades")
                 for r in st.session_state['scan_res']:
-                    cls = "scan-high" if r['Conf'] == "Alta" else "scan-med"
-                    st.markdown(f"<div class='scan-card {cls}'><b>{r['Jogo']}</b><br>{r['Aposta']} | Hist: {r['R']}</div>", unsafe_allow_html=True)
+                    st.markdown(f"""
+                    <div class='scan-card conf-high'>
+                        <small>{r['L']}</small><br>
+                        <b>{r['J']}</b><br>
+                        👉 {r['A']} | Math: {r['P']}
+                    </div>
+                    """, unsafe_allow_html=True)
 
-    with tab_sim:
-        st.subheader("Simulação Manual")
-        tl = team_list if team_list else ["Time A", "Time B"]
+    # --- SIMULAÇÃO ---
+    with tab2:
+        st.subheader("Simulador Manual")
+        tl = team_list if team_list else ["Carregando..."]
         c1, c2 = st.columns(2)
-        home = c1.selectbox("Mandante", tl, index=0)
-        away = c2.selectbox("Visitante", tl, index=1 if len(tl)>1 else 0)
+        h = c1.selectbox("Mandante", tl, index=0)
+        a = c2.selectbox("Visitante", tl, index=1 if len(tl)>1 else 0)
         
-        if st.button("Analisar"):
-            m = calcular_previsao(home, away)
+        # Tenta achar árbitro se tiver
+        arb_list = sorted(list(referees_data.keys()))
+        arb = st.selectbox("Árbitro (Opcional)", ["Neutro"] + arb_list)
+        
+        if st.button("Analisar Confronto"):
+            ref_name = arb if arb != "Neutro" else None
+            m = calcular_previsao(h, a, ref_name)
+            
             st.divider()
             k1, k2 = st.columns(2)
-            with k1:
-                st.info(f"🚩 Escanteios (Total: {m['corners']['t']:.2f})")
-                p = prob_over(m['corners']['h'], 3.5)
-                h = history_loader.get_history_global(home, 'corners', 'homeTeamOver35')
-                htxt = h[2] if h else "N/A"
-                st.write(f"🏠 {home} +3.5: :{get_color(p)}[{p:.0f}%] (Hist: {htxt}%)")
-            with k2:
-                st.warning(f"🟨 Cartões (Total: {m['cards']['t']:.2f})")
-                p = prob_over(m['cards']['a'], 1.5)
-                h = history_loader.get_history_global(away, 'cards', 'awayCardsOver15')
-                htxt = h[2] if h else "N/A"
-                st.write(f"✈️ {away} +1.5: :{get_color(p)}[{p:.0f}%] (Hist: {htxt}%)")
-
-    with tab_tik:
-        st.subheader("Importar Bilhete")
-        if HAS_OCR:
-            st.success(f"✅ OCR Ativado: {path_tesseract}")
-            uploaded_file = st.file_uploader("Subir Print", type=["png", "jpg", "jpeg"])
             
-            if 'ocr_done' not in st.session_state:
-                st.session_state['ocr_data'] = datetime.now()
-                st.session_state['ocr_stake'] = 10.0
-                st.session_state['ocr_odd'] = 2.0
-                st.session_state['ocr_desc'] = ""
+            with k1:
+                st.info(f"🚩 Escanteios (Exp: {m['corners']['t']:.2f})")
+                
+                # Casa
+                p35 = prob_over(m['corners']['h'], 3.5)
+                p45 = prob_over(m['corners']['h'], 4.5)
+                st.write(f"**🏠 {h}**")
+                st.write(f"+3.5: :{get_color(p35)}[{p35:.0f}%]")
+                st.write(f"+4.5: :{get_color(p45)}[{p45:.0f}%]")
+                
+                st.markdown("---")
+                # Fora
+                p35a = prob_over(m['corners']['a'], 3.5)
+                st.write(f"**✈️ {a}**")
+                st.write(f"+3.5: :{get_color(p35a)}[{p35a:.0f}%]")
 
-            if uploaded_file:
-                if st.button("🔍 Ler Imagem"):
-                    try:
-                        img = Image.open(uploaded_file)
-                        d, s, o, desc, raw = ler_bilhete_completo(img, team_list)
-                        st.session_state['ocr_data'] = d
-                        st.session_state['ocr_stake'] = s if s > 0 else 10.0
-                        st.session_state['ocr_odd'] = o if o > 1.0 else 2.0
-                        st.session_state['ocr_desc'] = desc
-                        st.success("Leitura Concluída!")
-                    except Exception as e:
-                        st.error(f"Erro na leitura: {e}")
-        else:
-            st.warning(f"⚠️ OCR Indisponível. Motivo: {OCR_ERROR_MSG}")
+            with k2:
+                st.warning(f"🟨 Cartões (Exp: {m['cards']['t']:.2f})")
+                p35c = prob_over(m['cards']['t'], 3.5)
+                p45c = prob_over(m['cards']['t'], 4.5)
+                st.metric("Prob Jogo +3.5", f"{p35c:.0f}%")
+                st.metric("Prob Jogo +4.5", f"{p45c:.0f}%")
+                if ref_name: st.caption(f"Ajustado pelo árbitro: {ref_name}")
 
-        st.markdown("---")
+    # --- BILHETES ---
+    with tab3:
+        st.subheader("Gestão de Banca")
+        
+        # OCR Upload
+        img_file = st.file_uploader("Ler Print (OCR)", type=['png', 'jpg'])
+        if img_file and HAS_OCR:
+            if st.button("Ler Dados"):
+                _, sk, od, txt = ler_bilhete(Image.open(img_file))
+                st.session_state['new_tk'] = {'stake': sk, 'odd': od, 'desc': txt[:50]+"..."}
+                st.success("Dados lidos!")
+        
+        # Form
+        default = st.session_state.get('new_tk', {'stake': 10.0, 'odd': 2.0, 'desc': ''})
+        
         c1, c2, c3 = st.columns(3)
-        dt = c1.date_input("Data", value=st.session_state.get('ocr_data', datetime.now()))
-        sk = c2.number_input("Stake", value=st.session_state.get('ocr_stake', 10.0))
-        od = c3.number_input("Odd", value=st.session_state.get('ocr_odd', 2.0))
-        desc_final = st.text_area("Descrição", value=st.session_state.get('ocr_desc', ""))
-        res = st.selectbox("Resultado", ["Aguardando ⏳", "Green ✅", "Red ❌"])
+        dt = c1.date_input("Data")
+        sk = c2.number_input("Stake", value=default['stake'])
+        od = c3.number_input("Odd", value=default['odd'])
+        desc = st.text_input("Descrição", value=default['desc'])
+        res = st.selectbox("Status", ["Pendente", "Green", "Red"])
         
         if st.button("Salvar"):
-            lucro = (sk * od - sk) if "Green" in res else (-sk if "Red" in res else 0.0)
-            save_ticket({"id": str(uuid.uuid4())[:6], "data": str(dt), "stake": sk, "odd": od, "desc": desc_final, "res": res, "lucro": lucro})
-            st.success("Salvo!")
+            lucro = 0
+            if res == "Green": lucro = (sk * od) - sk
+            elif res == "Red": lucro = -sk
             
+            save_ticket({"id": str(uuid.uuid4())[:5], "data": str(dt), "desc": desc, "lucro": lucro, "res": res})
+            st.success("Registrado!")
+            
+        # Lista
         ts = get_tickets()
         if ts:
-            total = sum([t['lucro'] for t in ts])
-            st.metric("Lucro Global", f"R$ {total:.2f}")
+            tot = sum(t['lucro'] for t in ts)
+            st.metric("Lucro Total", f"R$ {tot:.2f}")
             for t in reversed(ts):
-                cls = "bet-card-green" if "Green" in t['res'] else "bet-card-red"
-                st.markdown(f"<div class='{cls}'>{t['desc']} | R$ {t['lucro']:.2f}</div>", unsafe_allow_html=True)
-                if st.button("Excluir", key=t['id']):
-                    del_ticket(t['id'])
-                    st.rerun()
+                color = "green" if t['lucro'] > 0 else ("red" if t['lucro'] < 0 else "grey")
+                st.markdown(f":{color}[{t['data']} | {t['desc']} | R$ {t['lucro']:.2f}]")
+                if st.button("X", key=t['id']):
+                    del_ticket(t['id']); st.rerun()
 
 if __name__ == "__main__":
     render_dashboard()
