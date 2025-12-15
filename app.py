@@ -10,10 +10,18 @@ from datetime import datetime
 # ==============================================================================
 # 0. CONFIGURAÇÃO
 # ==============================================================================
-st.set_page_config(page_title="FutPrevisão V10.1 (Diagnostic)", layout="wide", page_icon="⚽")
+st.set_page_config(page_title="FutPrevisão V11.0 (Command Center)", layout="wide", page_icon="⚽")
+
+# Estilo CSS para as Barras de Confiança
+st.markdown("""
+<style>
+    .stProgress > div > div > div > div { background-color: #4CAF50; }
+    .big-font { font-size:18px !important; font-weight: bold; }
+</style>
+""", unsafe_allow_html=True)
 
 # ==============================================================================
-# 1. MAPEAMENTO DE ARQUIVOS (Estatísticas)
+# 1. MAPEAMENTO DE ARQUIVOS (Estatísticas - O Cérebro)
 # ==============================================================================
 LEAGUE_FILES = {
     "Premier League": {"csv": "Premier League 25.26.csv", "txt": "Prewmier League.txt", "txt_cards": "Cartoes Premier League - Inglaterra.txt"},
@@ -28,7 +36,7 @@ LEAGUE_FILES = {
     "Premiership (SCO)": {"csv": "Premiership Escocia 25.26.csv", "txt": "Premiership Escocia.txt", "txt_cards": None}
 }
 
-# Mapeia nomes do SEU calendario_ligas.csv para as chaves acima
+# Tradutor: Nome no Calendário -> Nome no Sistema
 LIGA_MAP = {
     "Trendyol Süper Lig": "Süper Lig (TUR)",
     "Scottish Premiership": "Premiership (SCO)",
@@ -51,8 +59,7 @@ def load_referees_unified():
     if os.path.exists("arbitros_5_ligas_2025_2026.csv"):
         try:
             df = pd.read_csv("arbitros_5_ligas_2025_2026.csv")
-            for _, r in df.iterrows():
-                refs[str(r['Arbitro']).strip()] = float(r['Media_Cartoes_Por_Jogo']) / 4.0
+            for _, r in df.iterrows(): refs[str(r['Arbitro']).strip()] = float(r['Media_Cartoes_Por_Jogo']) / 4.0
         except: pass
     if os.path.exists("arbitros.csv"): 
         try:
@@ -77,37 +84,21 @@ def get_ref_factor(name):
 @st.cache_data(ttl=600)
 def load_calendar_file():
     f = "calendario_ligas.csv"
-    
-    # Debug: Se não achar, tenta listar o diretório para ver o que tem
-    if not os.path.exists(f): 
-        return pd.DataFrame(), f"Arquivo '{f}' não encontrado."
-    
+    if not os.path.exists(f): return pd.DataFrame(), f"Arquivo '{f}' não encontrado."
     try:
-        # Tenta ler com encoding padrão e depois latin1
         try: df = pd.read_csv(f, dtype=str)
         except: df = pd.read_csv(f, dtype=str, encoding='latin1')
-        
-        # Normaliza colunas (Remove espaços, troca espaço por underline)
-        # Ex: "Time Casa" vira "Time_Casa"
         df.columns = [c.strip().replace(' ', '_') for c in df.columns]
-        
-        # Verifica colunas essenciais
         req = ['Data', 'Liga', 'Time_Casa', 'Time_Visitante']
-        missing = [c for c in req if c not in df.columns]
+        if not set(req).issubset(df.columns): return pd.DataFrame(), "Colunas incorretas"
         
-        if missing:
-            return pd.DataFrame(), f"Colunas faltando no CSV: {missing}. Encontradas: {list(df.columns)}"
-        
-        # Padroniza Data
         df['DtObj'] = pd.to_datetime(df['Data'], format="%d/%m/%Y", errors='coerce')
-        df = df.dropna(subset=['DtObj']).sort_values('DtObj')
-        
+        df = df.dropna(subset=['DtObj']).sort_values(['DtObj', 'Hora'])
         return df, "Sucesso"
-    except Exception as e:
-        return pd.DataFrame(), str(e)
+    except Exception as e: return pd.DataFrame(), str(e)
 
 # ==============================================================================
-# 4. CÉREBRO ESTATÍSTICO
+# 4. CÉREBRO ESTATÍSTICO & HISTÓRICO
 # ==============================================================================
 @st.cache_data(ttl=3600)
 def learn_stats():
@@ -189,96 +180,140 @@ def normalize_team(name):
 def calcular_jogo(home_raw, away_raw, ref_name):
     h = normalize_team(home_raw)
     a = normalize_team(away_raw)
-    
     s_h = stats_db.get(h, {'corners': 5.0, 'cards': 2.0})
     s_a = stats_db.get(a, {'corners': 4.5, 'cards': 2.0})
     rf = get_ref_factor(ref_name)
     
+    # Modelo com Pesos
     c_h_exp = s_h['corners'] * 1.15
     c_a_exp = s_a['corners'] * 0.90
     k_h_exp = s_h['cards'] * rf
     k_a_exp = s_a['cards'] * rf
     
-    return {
-        'corners': {'h': c_h_exp, 'a': c_a_exp},
-        'cards': {'h': k_h_exp, 'a': k_a_exp}
-    }
+    return {'corners': {'h': c_h_exp, 'a': c_a_exp}, 'cards': {'h': k_h_exp, 'a': k_a_exp}}
 
 def fmt_hist(data): return f"{data[1]}/{data[0]}" if data else "N/A"
-def check_elite(prob, hist_data):
-    if hist_data: return float(hist_data[2]) >= 70
-    return prob >= 75
-def color(p): return "green" if p >= 70 else ("orange" if p >= 50 else "red")
+def check_elite(prob, hist_data): return (float(hist_data[2]) >= 70) if hist_data else (prob >= 75)
+def get_bar_color(prob): return "green" if prob >= 70 else ("orange" if prob >= 50 else "red")
 
 # ==============================================================================
-# 6. DASHBOARD
+# 6. UI: PARTIDAS DO DIA & RADAR
 # ==============================================================================
+def render_match_row(t_casa, t_visitante, liga_nome, hora, liga_key):
+    """Renderiza a linha expansível do jogo com barras de progresso"""
+    
+    with st.expander(f"⏰ {hora} | {liga_nome} | {t_casa} x {t_visitante} (Clique para Analisar)"):
+        m = calcular_jogo(t_casa, t_visitante, None)
+        if m:
+            c1, c2 = st.columns(2)
+            
+            # --- ESCANTEIOS ---
+            with c1:
+                st.markdown("##### 🚩 Escanteios")
+                # Casa
+                ph35 = prob_over(m['corners']['h'], 3.5)
+                hh35 = hist.get(t_casa, liga_key, 'corners', 'homeTeamOver35')
+                st.write(f"🏠 {t_casa} +3.5 Cantos ({ph35:.0f}% | Hist: {fmt_hist(hh35)})")
+                st.progress(int(ph35)/100)
+                
+                # Fora
+                pa35 = prob_over(m['corners']['a'], 3.5)
+                ha35 = hist.get(t_visitante, liga_key, 'corners', 'awayTeamOver35')
+                st.write(f"✈️ {t_visitante} +3.5 Cantos ({pa35:.0f}% | Hist: {fmt_hist(ha35)})")
+                st.progress(int(pa35)/100)
+
+            # --- CARTÕES ---
+            with c2:
+                st.markdown("##### 🟨 Cartões")
+                # Casa
+                kh15 = prob_over(m['cards']['h'], 1.5)
+                hk15 = hist.get(t_casa, liga_key, 'cards', 'homeCardsOver15')
+                st.write(f"🏠 {t_casa} +1.5 Cartões ({kh15:.0f}% | Hist: {fmt_hist(hk15)})")
+                st.progress(int(kh15)/100)
+                
+                # Fora
+                ka15 = prob_over(m['cards']['a'], 1.5)
+                hka15 = hist.get(t_visitante, liga_key, 'cards', 'awayCardsOver15')
+                st.write(f"✈️ {t_visitante} +1.5 Cartões ({ka15:.0f}% | Hist: {fmt_hist(hka15)})")
+                st.progress(int(ka15)/100)
+
 def render_dashboard():
-    st.title("📆 FutPrevisão V10.1 (Diagnostic)")
+    st.title("🎛️ FutPrevisão V11.0 (Command Center)")
     
-    tab_scan, tab_sim = st.tabs(["🔥 Scanner", "🔮 Simulação"])
+    tab_day, tab_sim = st.tabs(["📅 Partidas do Dia", "🔮 Simulação Manual"])
     
-    with tab_scan:
+    # --- ABA 1: PARTIDAS DO DIA ---
+    with tab_day:
         df, status = load_calendar_file()
         
-        # ÁREA DE DIAGNÓSTICO
         if df.empty:
-            st.error(f"❌ Erro no Scanner: {status}")
-            with st.expander("🛠️ Ver arquivos disponíveis no sistema"):
-                st.write("Diretório Atual:", os.getcwd())
-                st.write("Arquivos encontrados:", os.listdir())
+            st.error(f"Erro no Calendário: {status}")
         else:
+            # 1. SELETOR DE DATA
             dates = df['Data'].unique()
             hoje = datetime.now().strftime("%d/%m/%Y")
             idx = list(dates).index(hoje) if hoje in dates else 0
             
-            sel_date = st.selectbox("📅 Data:", dates, index=idx)
-            jogos = df[df['Data'] == sel_date]
+            c_d, c_f = st.columns([1, 2])
+            sel_date = c_d.selectbox("Selecione a Data:", dates, index=idx)
             
-            st.info(f"{len(jogos)} jogos para {sel_date}")
+            jogos_dia = df[df['Data'] == sel_date]
             
-            if st.button("🚀 Escanear"):
-                found_any = False
-                bar = st.progress(0)
+            # 2. BOTÃO RADAR DE ELITE
+            st.markdown("---")
+            if st.button("📡 Rastrear Oportunidades de Ouro (>75%)"):
+                found_elite = False
+                st.info("Escanenando jogos... (Isso pode levar alguns segundos)")
                 
-                for i, (_, row) in enumerate(jogos.iterrows()):
-                    t_casa = row['Time_Casa']
-                    t_visitante = row['Time_Visitante']
-                    liga_nome = row['Liga']
-                    liga_key = LIGA_MAP.get(liga_nome, "Premier League")
-                    
-                    m = calcular_jogo(t_casa, t_visitante, None)
+                elite_cols = st.columns(3) # Grid para mostrar os resultados
+                col_idx = 0
+                
+                for _, row in jogos_dia.iterrows():
+                    tc, tv, lig = row['Time_Casa'], row['Time_Visitante'], row['Liga']
+                    lk = LIGA_MAP.get(lig, "Premier League")
+                    m = calcular_jogo(tc, tv, None)
                     
                     if m:
-                        ops = []
-                        # Cantos
-                        ph35 = prob_over(m['corners']['h'], 3.5)
-                        hh35 = hist.get(t_casa, liga_key, 'corners', 'homeTeamOver35')
-                        if check_elite(ph35, hh35): ops.append(f"🚩 **{t_casa}** Over 3.5 Cantos | {ph35:.0f}% | {fmt_hist(hh35)}")
+                        # Checagem rápida de Elite
+                        ph = prob_over(m['corners']['h'], 3.5)
+                        hh = hist.get(tc, lk, 'corners', 'homeTeamOver35')
+                        pa = prob_over(m['corners']['a'], 3.5)
+                        ha = hist.get(tv, lk, 'corners', 'awayTeamOver35')
                         
-                        pa35 = prob_over(m['corners']['a'], 3.5)
-                        ha35 = hist.get(t_visitante, liga_key, 'corners', 'awayTeamOver35')
-                        if check_elite(pa35, ha35): ops.append(f"🚩 **{t_visitante}** Over 3.5 Cantos | {pa35:.0f}% | {fmt_hist(ha35)}")
+                        msg = ""
+                        if check_elite(ph, hh): msg += f"🚩 {tc} +3.5 Cantos ({ph:.0f}%)\n\n"
+                        if check_elite(pa, ha): msg += f"🚩 {tv} +3.5 Cantos ({pa:.0f}%)\n\n"
                         
-                        # Cartões
-                        kh15 = prob_over(m['cards']['h'], 1.5)
-                        hk15 = hist.get(t_casa, liga_key, 'cards', 'homeCardsOver15')
-                        if check_elite(kh15, hk15): ops.append(f"🟨 **{t_casa}** Over 1.5 Cartões | {kh15:.0f}% | {fmt_hist(hk15)}")
-                        
-                        ka15 = prob_over(m['cards']['a'], 1.5)
-                        hka15 = hist.get(t_visitante, liga_key, 'cards', 'awayCardsOver15')
-                        if check_elite(ka15, hka15): ops.append(f"🟨 **{t_visitante}** Over 1.5 Cartões | {ka15:.0f}% | {fmt_hist(hka15)}")
-
-                        if ops:
-                            found_any = True
-                            with st.expander(f"{liga_nome} | {t_casa} x {t_visitante}"):
-                                for op in ops: st.markdown(op)
-                    bar.progress((i+1)/len(jogos))
+                        if msg:
+                            found_elite = True
+                            with elite_cols[col_idx % 3]:
+                                st.success(f"**{lig}**\n\n**{tc} x {tv}**\n\n{msg}")
+                            col_idx += 1
                 
-                if not found_any: st.warning("Nenhuma oportunidade Elite hoje.")
+                if not found_elite: st.warning("Nenhuma oportunidade 'Elite' encontrada para hoje.")
+                st.markdown("---")
 
+            # 3. FILTRO DE LIGAS
+            ligas_disponiveis = jogos_dia['Liga'].unique()
+            sel_ligas = st.multiselect("Filtrar por Liga:", ligas_disponiveis, default=ligas_disponiveis)
+            
+            jogos_filtrados = jogos_dia[jogos_dia['Liga'].isin(sel_ligas)]
+            
+            # 4. LISTA DE JOGOS (EXPANSÍVEL)
+            st.write(f"Mostrando {len(jogos_filtrados)} jogos:")
+            
+            for _, row in jogos_filtrados.iterrows():
+                hora = row['Hora']
+                liga = row['Liga']
+                casa = row['Time_Casa']
+                visi = row['Time_Visitante']
+                lk = LIGA_MAP.get(liga, "Premier League")
+                
+                render_match_row(casa, visi, liga, hora, lk)
+
+    # --- ABA 2: SIMULAÇÃO MANUAL ---
     with tab_sim:
-        st.subheader("Simulador Manual")
+        st.subheader("Simulador Avançado (Com Árbitro)")
         c1, c2, c3 = st.columns(3)
         tl = team_list_all if team_list_all else ["Carregando..."]
         home = c1.selectbox("Mandante", tl, index=0)
@@ -286,7 +321,7 @@ def render_dashboard():
         ref_keys = sorted(list(referees_db.keys()))
         ref = c3.selectbox("Árbitro", ["Neutro"] + ref_keys)
         
-        if st.button("Analisar"):
+        if st.button("Simular"):
             rn = ref if ref != "Neutro" else None
             m = calcular_jogo(home, away, rn)
             l_est = stats_db.get(home, {}).get('league', 'Premier League')
@@ -297,33 +332,15 @@ def render_dashboard():
                 with k1:
                     st.info("🚩 Escanteios")
                     p35 = prob_over(m['corners']['h'], 3.5)
-                    h35 = hist.get(home, l_est, 'corners', 'homeTeamOver35')
-                    st.write(f"🏠 {home} +3.5: :{color(p35)}[{p35:.0f}%] ({fmt_hist(h35)})")
-                    p45 = prob_over(m['corners']['h'], 4.5)
-                    h45 = hist.get(home, l_est, 'corners', 'homeTeamOver45')
-                    st.write(f"🏠 {home} +4.5: :{color(p45)}[{p45:.0f}%] ({fmt_hist(h45)})")
-                    st.markdown("---")
+                    st.write(f"🏠 {home} +3.5"); st.progress(int(p35)/100); st.caption(f"{p35:.0f}%")
                     pa35 = prob_over(m['corners']['a'], 3.5)
-                    ha35 = hist.get(away, l_est, 'corners', 'awayTeamOver35')
-                    st.write(f"✈️ {away} +3.5: :{color(pa35)}[{pa35:.0f}%] ({fmt_hist(ha35)})")
-                    pa45 = prob_over(m['corners']['a'], 4.5)
-                    ha45 = hist.get(away, l_est, 'corners', 'awayTeamOver45')
-                    st.write(f"✈️ {away} +4.5: :{color(pa45)}[{pa45:.0f}%] ({fmt_hist(ha45)})")
+                    st.write(f"✈️ {away} +3.5"); st.progress(int(pa35)/100); st.caption(f"{pa35:.0f}%")
                 with k2:
                     st.warning("🟨 Cartões")
                     pk15 = prob_over(m['cards']['h'], 1.5)
-                    hk15 = hist.get(home, l_est, 'cards', 'homeCardsOver15')
-                    st.write(f"🏠 {home} +1.5: :{color(pk15)}[{pk15:.0f}%] ({fmt_hist(hk15)})")
-                    pk25 = prob_over(m['cards']['h'], 2.5)
-                    hk25 = hist.get(home, l_est, 'cards', 'homeCardsOver25')
-                    st.write(f"🏠 {home} +2.5: :{color(pk25)}[{pk25:.0f}%] ({fmt_hist(hk25)})")
-                    st.markdown("---")
+                    st.write(f"🏠 {home} +1.5"); st.progress(int(pk15)/100); st.caption(f"{pk15:.0f}%")
                     pka15 = prob_over(m['cards']['a'], 1.5)
-                    hka15 = hist.get(away, l_est, 'cards', 'awayCardsOver15')
-                    st.write(f"✈️ {away} +1.5: :{color(pka15)}[{pka15:.0f}%] ({fmt_hist(hka15)})")
-                    pka25 = prob_over(m['cards']['a'], 2.5)
-                    hka25 = hist.get(away, l_est, 'cards', 'awayCardsOver25')
-                    st.write(f"✈️ {away} +2.5: :{color(pka25)}[{pka25:.0f}%] ({fmt_hist(hka25)})")
+                    st.write(f"✈️ {away} +1.5"); st.progress(int(pka15)/100); st.caption(f"{pka15:.0f}%")
 
 if __name__ == "__main__":
     render_dashboard()
