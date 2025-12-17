@@ -10,9 +10,8 @@ from datetime import datetime
 # ==============================================================================
 # 0. CONFIGURAÇÃO
 # ==============================================================================
-st.set_page_config(page_title="FutPrevisão V11.1 (Card Safe)", layout="wide", page_icon="⚽")
+st.set_page_config(page_title="FutPrevisão V12.0 (Causality)", layout="wide", page_icon="⚽")
 
-# CSS: Barras verdes agora indicam alta confiança real
 st.markdown("""
 <style>
     .stProgress > div > div > div > div { background-color: #4CAF50; }
@@ -43,7 +42,7 @@ LIGA_MAP = {
 }
 
 # ==============================================================================
-# 2. SISTEMA DE ÁRBITROS (COM PENALIDADE NA DÚVIDA)
+# 2. SISTEMA DE ÁRBITROS
 # ==============================================================================
 @st.cache_data(ttl=3600)
 def load_referees_unified():
@@ -65,11 +64,10 @@ def load_referees_unified():
 referees_db = load_referees_unified()
 
 def get_ref_factor(name):
-    # AJUSTE V11.1: Se não sabemos o juiz, assumimos que ele dá POUCO cartão (0.9) para ser seguro.
     if not name or str(name).lower() in ["nan", "none", "neutro", "desconhecido"]: return 0.90
     if name in referees_db: return referees_db[name]
     match = difflib.get_close_matches(name, referees_db.keys(), n=1, cutoff=0.7)
-    return referees_db[match[0]] if match else 0.90 # Fallback seguro
+    return referees_db[match[0]] if match else 0.90
 
 # ==============================================================================
 # 3. LEITOR DO CALENDÁRIO
@@ -90,7 +88,7 @@ def load_calendar_file():
     except Exception as e: return pd.DataFrame(), str(e)
 
 # ==============================================================================
-# 4. ESTATÍSTICAS
+# 4. CÉREBRO ESTATÍSTICO (V12 - AGORA COM FALTAS E CHUTES)
 # ==============================================================================
 @st.cache_data(ttl=3600)
 def learn_stats():
@@ -101,21 +99,45 @@ def learn_stats():
                 try: df = pd.read_csv(files['csv'], encoding='latin1')
                 except: df = pd.read_csv(files['csv'])
                 cols = df.columns
+                
                 h_c = next((c for c in cols if c in ['HomeTeam', 'Mandante']), None)
                 a_c = next((c for c in cols if c in ['AwayTeam', 'Visitante']), None)
+                
+                # Checa se temos as colunas "Mágicas" (Faltas e Chutes no Gol)
                 has_corn = 'HC' in cols and 'AC' in cols
                 has_card = 'HY' in cols and 'AY' in cols
+                has_foul = 'HF' in cols and 'AF' in cols # Faltas
+                has_shot = 'HST' in cols and 'AST' in cols # Chutes no Gol
                 
                 if h_c:
                     teams = set(df[h_c].dropna().unique()).union(set(df[a_c].dropna().unique()))
                     for t in teams:
+                        # Pega apenas jogos com dados preenchidos
                         hg = df[(df[h_c] == t) & (df['HC'].notna() if has_corn else True)]
                         ag = df[(df[a_c] == t) & (df['AC'].notna() if has_corn else True)]
                         n = len(hg) + len(ag)
                         if n < 3: continue
+                        
+                        # Médias Básicas
                         c = ((hg['HC'].sum() + ag['AC'].sum()) / n) if has_corn else 5.0
                         k = ((hg['HY'].sum() + ag['AY'].sum()) / n) if has_card else 2.0
-                        db[t] = {'corners': c, 'cards': k, 'league': liga_key}
+                        
+                        # Médias Avançadas (V12)
+                        f = 0.0
+                        s = 0.0
+                        
+                        if has_foul:
+                            f = (hg['HF'].sum() + ag['AF'].sum()) / n
+                        if has_shot:
+                            s = (hg['HST'].sum() + ag['AST'].sum()) / n
+                            
+                        db[t] = {
+                            'corners': c, 
+                            'cards': k, 
+                            'fouls': f,  # Nova Metrica
+                            'shots': s,  # Nova Metrica
+                            'league': liga_key
+                        }
             except: pass
     return db
 
@@ -157,7 +179,7 @@ class HistoryLoader:
 hist = HistoryLoader()
 
 # ==============================================================================
-# 5. MATEMÁTICA (MODIFICADA V11.1)
+# 5. MATEMÁTICA CAUSAL (V12)
 # ==============================================================================
 def poisson_prob(k, lam): return (math.exp(-lam) * (lam ** k)) / math.factorial(int(k))
 def prob_over(lam, line):
@@ -172,34 +194,44 @@ def normalize_team(name):
 def calcular_jogo(home_raw, away_raw, ref_name):
     h = normalize_team(home_raw)
     a = normalize_team(away_raw)
-    s_h = stats_db.get(h, {'corners': 5.0, 'cards': 2.0})
-    s_a = stats_db.get(a, {'corners': 4.5, 'cards': 2.0})
+    
+    # Defaults
+    s_h = stats_db.get(h, {'corners': 5.0, 'cards': 2.0, 'fouls': 10.0, 'shots': 4.0})
+    s_a = stats_db.get(a, {'corners': 4.5, 'cards': 2.0, 'fouls': 10.0, 'shots': 4.0})
     rf = get_ref_factor(ref_name)
     
-    # AJUSTE 1: Escanteios mantêm a lógica agressiva
-    c_h_exp = s_h['corners'] * 1.15
-    c_a_exp = s_a['corners'] * 0.90
+    # --- ESCANTEIOS (Com Boost de Pressão) ---
+    # Se time chuta muito no gol (> 5.5), ganha boost de 10%
+    pressao_h = 1.10 if s_h.get('shots', 0) > 5.5 else 1.0
+    pressao_a = 1.10 if s_a.get('shots', 0) > 5.5 else 1.0
     
-    # AJUSTE 2: Cartões recebem "Nerf" (Redutor de Segurança) de 15%
-    # Multiplicamos por 0.85 para ser pessimista.
-    # Só vai dar Green se o time for MUITO faltoso e o juiz MUITO rigoroso.
-    k_h_exp = (s_h['cards'] * 0.85) * rf
-    k_a_exp = (s_a['cards'] * 0.85) * rf
+    c_h_exp = s_h['corners'] * 1.15 * pressao_h
+    c_a_exp = s_a['corners'] * 0.90 * pressao_a
     
-    return {'corners': {'h': c_h_exp, 'a': c_a_exp}, 'cards': {'h': k_h_exp, 'a': k_a_exp}}
+    # --- CARTÕES (Com Analise de Violência) ---
+    # Padrão: Penalidade de 15% (0.85)
+    # Mas se o time faz muitas faltas (> 12.5), removemos a penalidade (1.0)
+    violencia_h = 1.0 if s_h.get('fouls', 0) > 12.5 else 0.85
+    violencia_a = 1.0 if s_a.get('fouls', 0) > 12.5 else 0.85
+    
+    k_h_exp = s_h['cards'] * violencia_h * rf
+    k_a_exp = s_a['cards'] * violencia_a * rf
+    
+    return {
+        'corners': {'h': c_h_exp, 'a': c_a_exp}, 
+        'cards': {'h': k_h_exp, 'a': k_a_exp},
+        'meta': {'vh': violencia_h == 1.0, 'va': violencia_a == 1.0} # Meta dados para UI
+    }
 
 def fmt_hist(data): return f"{data[1]}/{data[0]}" if data else "N/A"
 
 def check_elite(prob, hist_data, is_card=False):
-    # AJUSTE 3: Régua mais alta para Cartões
-    cutoff = 78 if is_card else 75 # Escanteios 75%, Cartões 78%
-    if hist_data: return float(hist_data[2]) >= 70 and prob >= cutoff
-    return prob >= (cutoff + 5) # Se não tem historico, exige ainda mais da matemática
-
-def get_bar_color(prob): return "green" if prob >= 70 else ("orange" if prob >= 50 else "red")
+    math_cut = 65 if is_card else 75 
+    if hist_data: return float(hist_data[2]) >= 70 and prob >= math_cut
+    return prob >= (math_cut + 5)
 
 # ==============================================================================
-# 6. UI
+# 6. UI (COM INDICADORES V12)
 # ==============================================================================
 def render_match_row(t_casa, t_visitante, liga_nome, hora, liga_key):
     with st.expander(f"⏰ {hora} | {liga_nome} | {t_casa} x {t_visitante}"):
@@ -210,28 +242,41 @@ def render_match_row(t_casa, t_visitante, liga_nome, hora, liga_key):
                 st.markdown("##### 🚩 Escanteios")
                 ph35 = prob_over(m['corners']['h'], 3.5)
                 hh35 = hist.get(t_casa, liga_key, 'corners', 'homeTeamOver35')
-                st.write(f"🏠 {t_casa} +3.5: **{ph35:.0f}%** ({fmt_hist(hh35)})")
+                color = "green" if ph35 >= 70 else "orange" if ph35 >= 50 else "red"
+                st.write(f"🏠 {t_casa} +3.5: :{color}[**{ph35:.0f}%**] ({fmt_hist(hh35)})")
                 st.progress(int(ph35)/100)
                 
                 pa35 = prob_over(m['corners']['a'], 3.5)
                 ha35 = hist.get(t_visitante, liga_key, 'corners', 'awayTeamOver35')
-                st.write(f"✈️ {t_visitante} +3.5: **{pa35:.0f}%** ({fmt_hist(ha35)})")
+                color = "green" if pa35 >= 70 else "orange" if pa35 >= 50 else "red"
+                st.write(f"✈️ {t_visitante} +3.5: :{color}[**{pa35:.0f}%**] ({fmt_hist(ha35)})")
                 st.progress(int(pa35)/100)
 
             with c2:
-                st.markdown("##### 🟨 Cartões (Modo Seguro)")
+                st.markdown("##### 🟨 Cartões")
+                # Indicador visual de time violento
+                icon_h = "🔥" if m['meta']['vh'] else "🛡️"
+                icon_a = "🔥" if m['meta']['va'] else "🛡️"
+                
                 kh15 = prob_over(m['cards']['h'], 1.5)
                 hk15 = hist.get(t_casa, liga_key, 'cards', 'homeCardsOver15')
-                st.write(f"🏠 {t_casa} +1.5: **{kh15:.0f}%** ({fmt_hist(hk15)})")
+                color = "green" if kh15 >= 65 else "orange" if kh15 >= 50 else "red"
+                st.write(f"🏠 {t_casa} +1.5: :{color}[**{kh15:.0f}%**] ({fmt_hist(hk15)}) {icon_h}")
                 st.progress(int(kh15)/100)
                 
                 ka15 = prob_over(m['cards']['a'], 1.5)
                 hka15 = hist.get(t_visitante, liga_key, 'cards', 'awayCardsOver15')
-                st.write(f"✈️ {t_visitante} +1.5: **{ka15:.0f}%** ({fmt_hist(hka15)})")
+                color = "green" if ka15 >= 65 else "orange" if ka15 >= 50 else "red"
+                st.write(f"✈️ {t_visitante} +1.5: :{color}[**{ka15:.0f}%**] ({fmt_hist(hka15)}) {icon_a}")
                 st.progress(int(ka15)/100)
+                
+                if m['meta']['vh'] or m['meta']['va']:
+                    st.caption("🔥 = Time muito faltoso (Penalidade removida)")
+                else:
+                    st.caption("🛡️ = Modo Seguro (-15%) ativado")
 
 def render_dashboard():
-    st.title("🛡️ FutPrevisão V11.1 (Card Safe Mode)")
+    st.title("🛡️ FutPrevisão V12.0 (Causality Engine)")
     
     tab_day, tab_sim = st.tabs(["📅 Partidas do Dia", "🔮 Simulação Manual"])
     
@@ -249,9 +294,9 @@ def render_dashboard():
             jogos_dia = df[df['Data'] == sel_date]
             
             st.markdown("---")
-            if st.button("📡 Rastrear Oportunidades (Filtro Rígido)"):
+            if st.button("📡 Rastrear Oportunidades"):
                 found = False
-                st.info("Filtrando jogos com alta segurança...")
+                st.info("Filtrando com Inteligência Causal...")
                 
                 cols = st.columns(3)
                 idx = 0
@@ -262,17 +307,19 @@ def render_dashboard():
                     
                     if m:
                         msg = ""
-                        # Cantos (IsCard=False)
+                        # Cantos
                         if check_elite(prob_over(m['corners']['h'], 3.5), hist.get(tc, lk, 'corners', 'homeTeamOver35'), False):
                             msg += f"🚩 {tc} +3.5 Cantos\n"
                         if check_elite(prob_over(m['corners']['a'], 3.5), hist.get(tv, lk, 'corners', 'awayTeamOver35'), False):
                             msg += f"🚩 {tv} +3.5 Cantos\n"
                         
-                        # Cartões (IsCard=True -> Mais rigoroso)
+                        # Cartões
                         if check_elite(prob_over(m['cards']['h'], 1.5), hist.get(tc, lk, 'cards', 'homeCardsOver15'), True):
-                            msg += f"🟨 {tc} +1.5 Cartões\n"
+                            icon = "🔥" if m['meta']['vh'] else ""
+                            msg += f"🟨 {tc} +1.5 Cartões {icon}\n"
                         if check_elite(prob_over(m['cards']['a'], 1.5), hist.get(tv, lk, 'cards', 'awayCardsOver15'), True):
-                            msg += f"🟨 {tv} +1.5 Cartões\n"
+                            icon = "🔥" if m['meta']['va'] else ""
+                            msg += f"🟨 {tv} +1.5 Cartões {icon}\n"
                         
                         if msg:
                             found = True
@@ -312,8 +359,11 @@ def render_dashboard():
                 with k2:
                     st.warning(f"🟨 Cartões (Exp: {m['cards']['h']:.1f} x {m['cards']['a']:.1f})")
                     p = prob_over(m['cards']['h'], 1.5)
-                    st.write(f"🏠 {home} +1.5: **{p:.0f}%**"); st.progress(int(p)/100)
-                    st.caption("Nota: Probabilidade reduzida em 15% por segurança.")
+                    color = "green" if p >= 65 else "orange"
+                    st.write(f"🏠 {home} +1.5: :{color}[**{p:.0f}%**]"); st.progress(int(p)/100)
+                    
+                    if m['meta']['vh']: st.error("🔥 Time Violento detectado (Modo Seguro Desligado)")
+                    else: st.success("🛡️ Modo Seguro Ativado (-15%)")
 
 if __name__ == "__main__":
     render_dashboard()
