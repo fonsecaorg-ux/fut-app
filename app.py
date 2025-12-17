@@ -5,21 +5,42 @@ import json
 import os
 import math
 import difflib
+import re
 from datetime import datetime
+from PIL import Image
 
 # ==============================================================================
 # 0. CONFIGURAÇÃO
 # ==============================================================================
-st.set_page_config(page_title="FutPrevisão V12.0 (Causality)", layout="wide", page_icon="⚽")
+st.set_page_config(page_title="FutPrevisão V13.0 (Copa Edition)", layout="wide", page_icon="🏆")
 
+# CSS para Barras
 st.markdown("""
 <style>
     .stProgress > div > div > div > div { background-color: #4CAF50; }
+    .scan-card { background: #f0f8ff; border: 1px solid #bce8f1; padding: 10px; border-radius: 5px; margin-bottom: 8px; }
+    .scan-high { border-left: 5px solid #28a745; }
 </style>
 """, unsafe_allow_html=True)
 
+# Tenta OCR
+HAS_OCR = False
+try:
+    import pytesseract
+    path_tesseract = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+    if os.path.exists(path_tesseract):
+        pytesseract.pytesseract.tesseract_cmd = path_tesseract
+        HAS_OCR = True
+    else:
+        alts = [r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe", r"C:\Users\Kaiqu\AppData\Local\Programs\Tesseract-OCR\tesseract.exe"]
+        for p in alts:
+            if os.path.exists(p):
+                pytesseract.pytesseract.tesseract_cmd = p
+                HAS_OCR = True; break
+except: pass
+
 # ==============================================================================
-# 1. MAPEAMENTO DE ARQUIVOS
+# 1. MAPEAMENTO E DADOS
 # ==============================================================================
 LEAGUE_FILES = {
     "Premier League": {"csv": "Premier League 25.26.csv", "txt": "Prewmier League.txt", "txt_cards": "Cartoes Premier League - Inglaterra.txt"},
@@ -32,13 +53,6 @@ LEAGUE_FILES = {
     "Pro League (BEL)": {"csv": "Pro League Belgica 25.26.csv", "txt": "Pro League Belgica.txt", "txt_cards": None},
     "Süper Lig (TUR)": {"csv": "Super Lig Turquia 25.26.csv", "txt": "Super Lig Turquia.txt", "txt_cards": None},
     "Premiership (SCO)": {"csv": "Premiership Escocia 25.26.csv", "txt": "Premiership Escocia.txt", "txt_cards": None}
-}
-
-LIGA_MAP = {
-    "Trendyol Süper Lig": "Süper Lig (TUR)", "Scottish Premiership": "Premiership (SCO)",
-    "Pro League": "Pro League (BEL)", "Bundesliga 2": "Bundesliga 2",
-    "Championship": "Championship", "Premier League": "Premier League",
-    "La Liga": "La Liga", "Serie A": "Serie A", "Bundesliga": "Bundesliga", "Ligue 1": "Ligue 1"
 }
 
 # ==============================================================================
@@ -64,18 +78,27 @@ def load_referees_unified():
 referees_db = load_referees_unified()
 
 def get_ref_factor(name):
-    if not name or str(name).lower() in ["nan", "none", "neutro", "desconhecido"]: return 0.90
+    if not name or str(name).lower() in ["nan", "none", "neutro", "desconhecido"]: return 1.0
     if name in referees_db: return referees_db[name]
     match = difflib.get_close_matches(name, referees_db.keys(), n=1, cutoff=0.7)
-    return referees_db[match[0]] if match else 0.90
+    return referees_db[match[0]] if match else 1.0
 
 # ==============================================================================
-# 3. LEITOR DO CALENDÁRIO
+# 3. LEITOR DE CALENDÁRIO
 # ==============================================================================
+def fix_date(d):
+    try:
+        s = str(d).strip()
+        for fmt in ["%d/%m/%Y", "%d/%m/%y", "%Y-%m-%d", "%d-%m-%Y"]:
+            try: return datetime.strptime(s, fmt).strftime("%d/%m/%Y")
+            except: continue
+        return s
+    except: return None
+
 @st.cache_data(ttl=600)
 def load_calendar_file():
     f = "calendario_ligas.csv"
-    if not os.path.exists(f): return pd.DataFrame(), f"Arquivo '{f}' não encontrado."
+    if not os.path.exists(f): return pd.DataFrame(), "Arquivo não encontrado"
     try:
         try: df = pd.read_csv(f, dtype=str)
         except: df = pd.read_csv(f, dtype=str, encoding='latin1')
@@ -88,7 +111,7 @@ def load_calendar_file():
     except Exception as e: return pd.DataFrame(), str(e)
 
 # ==============================================================================
-# 4. CÉREBRO ESTATÍSTICO (V12 - AGORA COM FALTAS E CHUTES)
+# 4. ESTATÍSTICAS & HISTÓRICO (MOTOR HÍBRIDO)
 # ==============================================================================
 @st.cache_data(ttl=3600)
 def learn_stats():
@@ -99,45 +122,33 @@ def learn_stats():
                 try: df = pd.read_csv(files['csv'], encoding='latin1')
                 except: df = pd.read_csv(files['csv'])
                 cols = df.columns
-                
                 h_c = next((c for c in cols if c in ['HomeTeam', 'Mandante']), None)
                 a_c = next((c for c in cols if c in ['AwayTeam', 'Visitante']), None)
-                
-                # Checa se temos as colunas "Mágicas" (Faltas e Chutes no Gol)
                 has_corn = 'HC' in cols and 'AC' in cols
                 has_card = 'HY' in cols and 'AY' in cols
-                has_foul = 'HF' in cols and 'AF' in cols # Faltas
-                has_shot = 'HST' in cols and 'AST' in cols # Chutes no Gol
+                
+                # Novas colunas V12+ (Faltas e Gols)
+                has_foul = 'HF' in cols and 'AF' in cols
                 
                 if h_c:
                     teams = set(df[h_c].dropna().unique()).union(set(df[a_c].dropna().unique()))
                     for t in teams:
-                        # Pega apenas jogos com dados preenchidos
                         hg = df[(df[h_c] == t) & (df['HC'].notna() if has_corn else True)]
                         ag = df[(df[a_c] == t) & (df['AC'].notna() if has_corn else True)]
                         n = len(hg) + len(ag)
                         if n < 3: continue
                         
-                        # Médias Básicas
                         c = ((hg['HC'].sum() + ag['AC'].sum()) / n) if has_corn else 5.0
                         k = ((hg['HY'].sum() + ag['AY'].sum()) / n) if has_card else 2.0
+                        f = ((hg['HF'].sum() + ag['AF'].sum()) / n) if has_foul else 11.0
                         
-                        # Médias Avançadas (V12)
-                        f = 0.0
-                        s = 0.0
+                        # Gols Esperados (Simples)
+                        try:
+                            g_f = (hg['FTHG'].astype(float).sum() + ag['FTAG'].astype(float).sum()) / n
+                            g_a = (hg['FTAG'].astype(float).sum() + ag['FTHG'].astype(float).sum()) / n
+                        except: g_f, g_a = 1.2, 1.2
                         
-                        if has_foul:
-                            f = (hg['HF'].sum() + ag['AF'].sum()) / n
-                        if has_shot:
-                            s = (hg['HST'].sum() + ag['AST'].sum()) / n
-                            
-                        db[t] = {
-                            'corners': c, 
-                            'cards': k, 
-                            'fouls': f,  # Nova Metrica
-                            'shots': s,  # Nova Metrica
-                            'league': liga_key
-                        }
+                        db[t] = {'corners': c, 'cards': k, 'fouls': f, 'goals_f': g_f, 'goals_a': g_a, 'league': liga_key}
             except: pass
     return db
 
@@ -157,15 +168,15 @@ class HistoryLoader:
             if f['txt_cards'] and os.path.exists(f['txt_cards']):
                 try: self.card[l] = json.load(open(f['txt_cards'], encoding='utf-8'))
                 except: pass
-    def get(self, team, liga_key, mkt, key):
+    
+    def get_global(self, team, mkt, key):
+        """Busca em TODAS as ligas (Motor Copa)"""
         src = self.corn if mkt == 'corners' else self.card
-        if liga_key in src:
-            res = self._find(src[liga_key], team, key)
-            if res: return res
         for l in src:
             res = self._find(src[l], team, key)
             if res: return res
         return None
+
     def _find(self, data, team, key):
         teams = [t['teamName'] for t in data.get('teams', [])]
         match = difflib.get_close_matches(team, teams, n=1, cutoff=0.6)
@@ -179,7 +190,7 @@ class HistoryLoader:
 hist = HistoryLoader()
 
 # ==============================================================================
-# 5. MATEMÁTICA CAUSAL (V12)
+# 5. MATEMÁTICA CAUSAL (V13)
 # ==============================================================================
 def poisson_prob(k, lam): return (math.exp(-lam) * (lam ** k)) / math.factorial(int(k))
 def prob_over(lam, line):
@@ -195,92 +206,106 @@ def calcular_jogo(home_raw, away_raw, ref_name):
     h = normalize_team(home_raw)
     a = normalize_team(away_raw)
     
-    # Defaults
-    s_h = stats_db.get(h, {'corners': 5.0, 'cards': 2.0, 'fouls': 10.0, 'shots': 4.0})
-    s_a = stats_db.get(a, {'corners': 4.5, 'cards': 2.0, 'fouls': 10.0, 'shots': 4.0})
+    # Se não achar o time (ex: time pequeno da Copa), usa genérico
+    s_h = stats_db.get(h, {'corners': 5.0, 'cards': 2.0, 'fouls': 11.0, 'goals_f': 1.2, 'goals_a': 1.2})
+    s_a = stats_db.get(a, {'corners': 4.0, 'cards': 2.0, 'fouls': 11.0, 'goals_f': 1.0, 'goals_a': 1.5})
+    
     rf = get_ref_factor(ref_name)
     
-    # --- ESCANTEIOS (Com Boost de Pressão) ---
-    # Se time chuta muito no gol (> 5.5), ganha boost de 10%
-    pressao_h = 1.10 if s_h.get('shots', 0) > 5.5 else 1.0
-    pressao_a = 1.10 if s_a.get('shots', 0) > 5.5 else 1.0
-    
+    # 1. Escanteios (Boost de Pressão Ofensiva)
+    pressao_h = 1.10 if s_h['goals_f'] > 1.8 else 1.0
     c_h_exp = s_h['corners'] * 1.15 * pressao_h
-    c_a_exp = s_a['corners'] * 0.90 * pressao_a
+    c_a_exp = s_a['corners'] * 0.90
     
-    # --- CARTÕES (Com Analise de Violência) ---
-    # Padrão: Penalidade de 15% (0.85)
-    # Mas se o time faz muitas faltas (> 12.5), removemos a penalidade (1.0)
-    violencia_h = 1.0 if s_h.get('fouls', 0) > 12.5 else 0.85
-    violencia_a = 1.0 if s_a.get('fouls', 0) > 12.5 else 0.85
+    # 2. Cartões (Boost de Violência)
+    # Se o time faz muita falta (>12.5), removemos a penalidade de 15%
+    violencia_h = 1.0 if s_h['fouls'] > 12.5 else 0.85
+    violencia_a = 1.0 if s_a['fouls'] > 12.5 else 0.85
     
     k_h_exp = s_h['cards'] * violencia_h * rf
     k_a_exp = s_a['cards'] * violencia_a * rf
     
+    # 3. Gols Esperados (Novo!)
+    g_h_exp = s_h['goals_f'] * s_a['goals_a'] / 1.3
+    g_a_exp = s_a['goals_f'] * s_h['goals_a'] / 1.3
+    
     return {
-        'corners': {'h': c_h_exp, 'a': c_a_exp}, 
-        'cards': {'h': k_h_exp, 'a': k_a_exp},
-        'meta': {'vh': violencia_h == 1.0, 'va': violencia_a == 1.0} # Meta dados para UI
+        'corners': {'h': c_h_exp, 'a': c_a_exp, 't': c_h_exp + c_a_exp},
+        'cards': {'h': k_h_exp, 'a': k_a_exp, 't': k_h_exp + k_a_exp},
+        'goals': {'h': g_h_exp, 'a': g_a_exp},
+        'meta': {'vh': violencia_h == 1.0, 'va': violencia_a == 1.0}
     }
 
 def fmt_hist(data): return f"{data[1]}/{data[0]}" if data else "N/A"
-
 def check_elite(prob, hist_data, is_card=False):
-    math_cut = 65 if is_card else 75 
-    if hist_data: return float(hist_data[2]) >= 70 and prob >= math_cut
-    return prob >= (math_cut + 5)
+    cutoff = 75 if not is_card else 70 # Cartão aceita 70%
+    if hist_data: return float(hist_data[2]) >= 70 and prob >= cutoff
+    return prob >= (cutoff + 5)
+def get_color(prob): return "green" if prob >= 70 else ("orange" if prob >= 50 else "red")
 
 # ==============================================================================
-# 6. UI (COM INDICADORES V12)
+# 6. UI
 # ==============================================================================
-def render_match_row(t_casa, t_visitante, liga_nome, hora, liga_key):
+def render_match_row(t_casa, t_visitante, liga_nome, hora):
     with st.expander(f"⏰ {hora} | {liga_nome} | {t_casa} x {t_visitante}"):
         m = calcular_jogo(t_casa, t_visitante, None)
         if m:
             c1, c2 = st.columns(2)
+            
+            # Buscando histórico GLOBAL (Motor Copa)
+            # Isso garante que se for um jogo de Copa, ele acha os dados da Liga
+            
             with c1:
                 st.markdown("##### 🚩 Escanteios")
+                # Casa
                 ph35 = prob_over(m['corners']['h'], 3.5)
-                hh35 = hist.get(t_casa, liga_key, 'corners', 'homeTeamOver35')
-                color = "green" if ph35 >= 70 else "orange" if ph35 >= 50 else "red"
-                st.write(f"🏠 {t_casa} +3.5: :{color}[**{ph35:.0f}%**] ({fmt_hist(hh35)})")
-                st.progress(int(ph35)/100)
+                hh35 = hist.get_global(t_casa, 'corners', 'homeTeamOver35')
+                st.write(f"🏠 {t_casa} +3.5: :{get_color(ph35)}[{ph35:.0f}%] ({fmt_hist(hh35)})")
                 
+                ph45 = prob_over(m['corners']['h'], 4.5)
+                hh45 = hist.get_global(t_casa, 'corners', 'homeTeamOver45')
+                st.write(f"🏠 {t_casa} +4.5: :{get_color(ph45)}[{ph45:.0f}%] ({fmt_hist(hh45)})")
+                
+                st.markdown("---")
+                
+                # Fora
                 pa35 = prob_over(m['corners']['a'], 3.5)
-                ha35 = hist.get(t_visitante, liga_key, 'corners', 'awayTeamOver35')
-                color = "green" if pa35 >= 70 else "orange" if pa35 >= 50 else "red"
-                st.write(f"✈️ {t_visitante} +3.5: :{color}[**{pa35:.0f}%**] ({fmt_hist(ha35)})")
-                st.progress(int(pa35)/100)
+                ha35 = hist.get_global(t_visitante, 'corners', 'awayTeamOver35')
+                st.write(f"✈️ {t_visitante} +3.5: :{get_color(pa35)}[{pa35:.0f}%] ({fmt_hist(ha35)})")
+                
+                pa45 = prob_over(m['corners']['a'], 4.5)
+                ha45 = hist.get_global(t_visitante, 'corners', 'awayTeamOver45')
+                st.write(f"✈️ {t_visitante} +4.5: :{get_color(pa45)}[{pa45:.0f}%] ({fmt_hist(ha45)})")
 
             with c2:
                 st.markdown("##### 🟨 Cartões")
-                # Indicador visual de time violento
-                icon_h = "🔥" if m['meta']['vh'] else "🛡️"
-                icon_a = "🔥" if m['meta']['va'] else "🛡️"
-                
+                # Casa
                 kh15 = prob_over(m['cards']['h'], 1.5)
-                hk15 = hist.get(t_casa, liga_key, 'cards', 'homeCardsOver15')
-                color = "green" if kh15 >= 65 else "orange" if kh15 >= 50 else "red"
-                st.write(f"🏠 {t_casa} +1.5: :{color}[**{kh15:.0f}%**] ({fmt_hist(hk15)}) {icon_h}")
-                st.progress(int(kh15)/100)
-                
+                hk15 = hist.get_global(t_casa, 'cards', 'homeCardsOver15')
+                st.write(f"🏠 {t_casa} +1.5: :{get_color(kh15)}[{kh15:.0f}%] ({fmt_hist(hk15)})")
+
+                kh25 = prob_over(m['cards']['h'], 2.5)
+                hk25 = hist.get_global(t_casa, 'cards', 'homeCardsOver25')
+                st.write(f"🏠 {t_casa} +2.5: :{get_color(kh25)}[{kh25:.0f}%] ({fmt_hist(hk25)})")
+
+                st.markdown("---")
+
+                # Fora
                 ka15 = prob_over(m['cards']['a'], 1.5)
-                hka15 = hist.get(t_visitante, liga_key, 'cards', 'awayCardsOver15')
-                color = "green" if ka15 >= 65 else "orange" if ka15 >= 50 else "red"
-                st.write(f"✈️ {t_visitante} +1.5: :{color}[**{ka15:.0f}%**] ({fmt_hist(hka15)}) {icon_a}")
-                st.progress(int(ka15)/100)
-                
-                if m['meta']['vh'] or m['meta']['va']:
-                    st.caption("🔥 = Time muito faltoso (Penalidade removida)")
-                else:
-                    st.caption("🛡️ = Modo Seguro (-15%) ativado")
+                hka15 = hist.get_global(t_visitante, 'cards', 'awayCardsOver15')
+                st.write(f"✈️ {t_visitante} +1.5: :{get_color(ka15)}[{ka15:.0f}%] ({fmt_hist(hka15)})")
+
+                ka25 = prob_over(m['cards']['a'], 2.5)
+                hka25 = hist.get_global(t_visitante, 'cards', 'awayCardsOver25')
+                st.write(f"✈️ {t_visitante} +2.5: :{get_color(ka25)}[{ka25:.0f}%] ({fmt_hist(hka25)})")
 
 def render_dashboard():
-    st.title("🛡️ FutPrevisão V12.0 (Causality Engine)")
+    st.title("🏆 FutPrevisão V13.0 (Copa & Ligas)")
     
-    tab_day, tab_sim = st.tabs(["📅 Partidas do Dia", "🔮 Simulação Manual"])
+    tab_scan, tab_sim = st.tabs(["🔥 Partidas do Dia", "🔮 Simulação Manual / Copas"])
     
-    with tab_day:
+    # --- ABA 1: SCANNER ---
+    with tab_scan:
         df, status = load_calendar_file()
         if df.empty:
             st.error(f"Erro no Calendário: {status}")
@@ -289,81 +314,109 @@ def render_dashboard():
             hoje = datetime.now().strftime("%d/%m/%Y")
             idx = list(dates).index(hoje) if hoje in dates else 0
             
-            c_d, c_f = st.columns([1, 2])
-            sel_date = c_d.selectbox("Data:", dates, index=idx)
+            sel_date = st.selectbox("Data:", dates, index=idx)
             jogos_dia = df[df['Data'] == sel_date]
             
             st.markdown("---")
             if st.button("📡 Rastrear Oportunidades"):
                 found = False
-                st.info("Filtrando com Inteligência Causal...")
-                
+                st.info("Buscando Ouro...")
                 cols = st.columns(3)
                 idx = 0
                 for _, row in jogos_dia.iterrows():
-                    tc, tv, lig = row['Time_Casa'], row['Time_Visitante'], row['Liga']
-                    lk = LIGA_MAP.get(lig, "Premier League")
+                    tc, tv = row['Mandante'], row['Visitante']
                     m = calcular_jogo(tc, tv, None)
                     
                     if m:
                         msg = ""
-                        # Cantos
-                        if check_elite(prob_over(m['corners']['h'], 3.5), hist.get(tc, lk, 'corners', 'homeTeamOver35'), False):
-                            msg += f"🚩 {tc} +3.5 Cantos\n"
-                        if check_elite(prob_over(m['corners']['a'], 3.5), hist.get(tv, lk, 'corners', 'awayTeamOver35'), False):
-                            msg += f"🚩 {tv} +3.5 Cantos\n"
+                        # Verifica histórico GLOBAL (Motor Copa)
+                        hh35 = hist.get_global(tc, 'corners', 'homeTeamOver35')
+                        ha35 = hist.get_global(tv, 'corners', 'awayTeamOver35')
                         
-                        # Cartões
-                        if check_elite(prob_over(m['cards']['h'], 1.5), hist.get(tc, lk, 'cards', 'homeCardsOver15'), True):
-                            icon = "🔥" if m['meta']['vh'] else ""
-                            msg += f"🟨 {tc} +1.5 Cartões {icon}\n"
-                        if check_elite(prob_over(m['cards']['a'], 1.5), hist.get(tv, lk, 'cards', 'awayCardsOver15'), True):
-                            icon = "🔥" if m['meta']['va'] else ""
-                            msg += f"🟨 {tv} +1.5 Cartões {icon}\n"
+                        if check_elite(prob_over(m['corners']['h'], 3.5), hh35, False):
+                            msg += f"🚩 {tc} +3.5 C\n"
+                        if check_elite(prob_over(m['corners']['a'], 3.5), ha35, False):
+                            msg += f"🚩 {tv} +3.5 C\n"
                         
                         if msg:
                             found = True
                             with cols[idx % 3]:
-                                st.success(f"**{lig}**\n\n{msg}")
+                                st.success(f"**{row['Liga']}**\n\n**{tc} x {tv}**\n\n{msg}")
                             idx += 1
-                if not found: st.warning("Nenhuma aposta segura encontrada hoje.")
-                st.markdown("---")
-
-            ligas = jogos_dia['Liga'].unique()
-            sel_l = st.multiselect("Filtrar Ligas:", ligas, default=ligas)
-            jogos_f = jogos_dia[jogos_dia['Liga'].isin(sel_l)]
+                if not found: st.warning("Sem oportunidades > 75% hoje.")
             
-            st.write(f"Lista de Jogos ({len(jogos_f)}):")
-            for _, row in jogos_f.iterrows():
-                render_match_row(row['Time_Casa'], row['Time_Visitante'], row['Liga'], row['Hora'], LIGA_MAP.get(row['Liga'], "Premier League"))
+            st.write(f"Jogos ({len(jogos_dia)}):")
+            for _, row in jogos_dia.iterrows():
+                render_match_row(row['Mandante'], row['Visitante'], row['Liga'], row['Hora'])
 
+    # --- ABA 2: SIMULAÇÃO MANUAL (GLOBAL) ---
     with tab_sim:
-        st.subheader("Simulador Avançado")
+        st.subheader("Simulador Universal (Ligas & Copas)")
         c1, c2, c3 = st.columns(3)
         tl = team_list_all if team_list_all else ["Carregando..."]
+        
         home = c1.selectbox("Mandante", tl, index=0)
         away = c2.selectbox("Visitante", tl, index=1 if len(tl)>1 else 0)
+        
         ref_keys = sorted(list(referees_db.keys()))
         ref = c3.selectbox("Árbitro", ["Neutro"] + ref_keys)
         
-        if st.button("Simular"):
+        if st.button("Simular Confronto"):
             rn = ref if ref != "Neutro" else None
             m = calcular_jogo(home, away, rn)
             if m:
                 st.write("---")
+                
+                # KPI Gols (Novo)
+                st.metric("⚽ Expectativa de Gols (xG)", f"{m['goals']['h']:.2f} x {m['goals']['a']:.2f}")
+                
                 k1, k2 = st.columns(2)
+                
+                # ESCANTEIOS
                 with k1:
-                    st.info(f"🚩 Escanteios (Exp: {m['corners']['h']:.1f} x {m['corners']['a']:.1f})")
-                    p = prob_over(m['corners']['h'], 3.5)
-                    st.write(f"🏠 {home} +3.5: **{p:.0f}%**"); st.progress(int(p)/100)
-                with k2:
-                    st.warning(f"🟨 Cartões (Exp: {m['cards']['h']:.1f} x {m['cards']['a']:.1f})")
-                    p = prob_over(m['cards']['h'], 1.5)
-                    color = "green" if p >= 65 else "orange"
-                    st.write(f"🏠 {home} +1.5: :{color}[**{p:.0f}%**]"); st.progress(int(p)/100)
+                    st.info("🚩 Escanteios (Linhas Individuais)")
+                    # Casa
+                    p35 = prob_over(m['corners']['h'], 3.5)
+                    h35 = hist.get_global(home, 'corners', 'homeTeamOver35')
+                    st.write(f"🏠 {home} +3.5: :{get_color(p35)}[{p35:.0f}%] ({fmt_hist(h35)})")
                     
-                    if m['meta']['vh']: st.error("🔥 Time Violento detectado (Modo Seguro Desligado)")
-                    else: st.success("🛡️ Modo Seguro Ativado (-15%)")
+                    p45 = prob_over(m['corners']['h'], 4.5)
+                    h45 = hist.get_global(home, 'corners', 'homeTeamOver45')
+                    st.write(f"🏠 {home} +4.5: :{get_color(p45)}[{p45:.0f}%] ({fmt_hist(h45)})")
+                    
+                    st.markdown("---")
+                    
+                    # Fora
+                    p35a = prob_over(m['corners']['a'], 3.5)
+                    h35a = hist.get_global(away, 'corners', 'awayTeamOver35')
+                    st.write(f"✈️ {away} +3.5: :{get_color(p35a)}[{p35a:.0f}%] ({fmt_hist(h35a)})")
+                    
+                    p45a = prob_over(m['corners']['a'], 4.5)
+                    h45a = hist.get_global(away, 'corners', 'awayTeamOver45')
+                    st.write(f"✈️ {away} +4.5: :{get_color(p45a)}[{p45a:.0f}%] ({fmt_hist(h45a)})")
+
+                # CARTÕES
+                with k2:
+                    st.warning("🟨 Cartões (Linhas Individuais)")
+                    # Casa
+                    p15 = prob_over(m['cards']['h'], 1.5)
+                    h15 = hist.get_global(home, 'cards', 'homeCardsOver15')
+                    st.write(f"🏠 {home} +1.5: :{get_color(p15)}[{p15:.0f}%] ({fmt_hist(h15)})")
+                    
+                    p25 = prob_over(m['cards']['h'], 2.5)
+                    h25 = hist.get_global(home, 'cards', 'homeCardsOver25')
+                    st.write(f"🏠 {home} +2.5: :{get_color(p25)}[{p25:.0f}%] ({fmt_hist(h25)})")
+                    
+                    st.markdown("---")
+                    
+                    # Fora
+                    p15a = prob_over(m['cards']['a'], 1.5)
+                    h15a = hist.get_global(away, 'cards', 'awayCardsOver15')
+                    st.write(f"✈️ {away} +1.5: :{get_color(p15a)}[{p15a:.0f}%] ({fmt_hist(h15a)})")
+                    
+                    p25a = prob_over(m['cards']['a'], 2.5)
+                    h25a = hist.get_global(away, 'cards', 'awayCardsOver25')
+                    st.write(f"✈️ {away} +2.5: :{get_color(p25a)}[{p25a:.0f}%] ({fmt_hist(h25a)})")
 
 if __name__ == "__main__":
     render_dashboard()
