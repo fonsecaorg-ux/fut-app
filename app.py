@@ -12,9 +12,8 @@ from PIL import Image
 # ==============================================================================
 # 0. CONFIGURAÇÃO
 # ==============================================================================
-st.set_page_config(page_title="FutPrevisão V13.0 (Copa Edition)", layout="wide", page_icon="🏆")
+st.set_page_config(page_title="FutPrevisão V13.1 (Fix)", layout="wide", page_icon="🏆")
 
-# CSS para Barras
 st.markdown("""
 <style>
     .stProgress > div > div > div > div { background-color: #4CAF50; }
@@ -23,7 +22,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Tenta OCR
+# Tenta OCR (Opcional)
 HAS_OCR = False
 try:
     import pytesseract
@@ -40,7 +39,7 @@ try:
 except: pass
 
 # ==============================================================================
-# 1. MAPEAMENTO E DADOS
+# 1. MAPEAMENTO DE ARQUIVOS
 # ==============================================================================
 LEAGUE_FILES = {
     "Premier League": {"csv": "Premier League 25.26.csv", "txt": "Prewmier League.txt", "txt_cards": "Cartoes Premier League - Inglaterra.txt"},
@@ -53,6 +52,16 @@ LEAGUE_FILES = {
     "Pro League (BEL)": {"csv": "Pro League Belgica 25.26.csv", "txt": "Pro League Belgica.txt", "txt_cards": None},
     "Süper Lig (TUR)": {"csv": "Super Lig Turquia 25.26.csv", "txt": "Super Lig Turquia.txt", "txt_cards": None},
     "Premiership (SCO)": {"csv": "Premiership Escocia 25.26.csv", "txt": "Premiership Escocia.txt", "txt_cards": None}
+}
+
+# Mapeamento Estendido para Ligas Menores
+NAME_MAPPING = {
+    "Man City": "Man City", "Man Utd": "Man United", "Sheffield Wed": "Sheffield Wednesday",
+    "Forest": "Nott'm Forest", "Wolves": "Wolverhampton", "Spurs": "Tottenham",
+    "Atl. Madrid": "Atl Madrid", "Athletic Club": "Ath Bilbao",
+    "PSG": "Paris SG", "St Etienne": "Saint-Etienne",
+    "Fenerbahce": "Fenerbahçe", "Galatasaray": "Galatasaray",
+    "Rangers": "Rangers", "Celtic": "Celtic"
 }
 
 # ==============================================================================
@@ -111,7 +120,7 @@ def load_calendar_file():
     except Exception as e: return pd.DataFrame(), str(e)
 
 # ==============================================================================
-# 4. ESTATÍSTICAS & HISTÓRICO (MOTOR HÍBRIDO)
+# 4. ESTATÍSTICAS & HISTÓRICO
 # ==============================================================================
 @st.cache_data(ttl=3600)
 def learn_stats():
@@ -127,7 +136,7 @@ def learn_stats():
                 has_corn = 'HC' in cols and 'AC' in cols
                 has_card = 'HY' in cols and 'AY' in cols
                 
-                # Novas colunas V12+ (Faltas e Gols)
+                # Faltas e Gols (V12)
                 has_foul = 'HF' in cols and 'AF' in cols
                 
                 if h_c:
@@ -142,7 +151,6 @@ def learn_stats():
                         k = ((hg['HY'].sum() + ag['AY'].sum()) / n) if has_card else 2.0
                         f = ((hg['HF'].sum() + ag['AF'].sum()) / n) if has_foul else 11.0
                         
-                        # Gols Esperados (Simples)
                         try:
                             g_f = (hg['FTHG'].astype(float).sum() + ag['FTAG'].astype(float).sum()) / n
                             g_a = (hg['FTAG'].astype(float).sum() + ag['FTHG'].astype(float).sum()) / n
@@ -162,15 +170,23 @@ class HistoryLoader:
         self.load()
     def load(self):
         for l, f in LEAGUE_FILES.items():
+            # Carregamento seguro (Try/Except por arquivo)
             if f['txt'] and os.path.exists(f['txt']):
-                try: self.corn[l] = json.load(open(f['txt'], encoding='utf-8'))
+                try: 
+                    with open(f['txt'], 'r', encoding='utf-8') as file:
+                        raw = file.read().strip()
+                        if '{' in raw: raw = raw[raw.find('{'):]
+                        self.corn[l] = json.load(file)
                 except: pass
             if f['txt_cards'] and os.path.exists(f['txt_cards']):
-                try: self.card[l] = json.load(open(f['txt_cards'], encoding='utf-8'))
+                try: 
+                    with open(f['txt_cards'], 'r', encoding='utf-8') as file:
+                        raw = file.read().strip()
+                        if '{' in raw: raw = raw[raw.find('{'):]
+                        self.card[l] = json.load(file)
                 except: pass
     
     def get_global(self, team, mkt, key):
-        """Busca em TODAS as ligas (Motor Copa)"""
         src = self.corn if mkt == 'corners' else self.card
         for l in src:
             res = self._find(src[l], team, key)
@@ -178,8 +194,14 @@ class HistoryLoader:
         return None
 
     def _find(self, data, team, key):
+        if not data: return None
         teams = [t['teamName'] for t in data.get('teams', [])]
-        match = difflib.get_close_matches(team, teams, n=1, cutoff=0.6)
+        
+        # Mapeamento Manual primeiro
+        target = team
+        if team in NAME_MAPPING: target = NAME_MAPPING[team]
+        
+        match = difflib.get_close_matches(target, teams, n=1, cutoff=0.6)
         if match:
             for t in data['teams']:
                 if t['teamName'] == match[0]:
@@ -194,8 +216,10 @@ hist = HistoryLoader()
 # ==============================================================================
 def poisson_prob(k, lam): return (math.exp(-lam) * (lam ** k)) / math.factorial(int(k))
 def prob_over(lam, line):
-    cdf = sum(poisson_prob(i, lam) for i in range(int(line) + 1))
-    return max(0.0, (1 - cdf) * 100)
+    try:
+        cdf = sum(poisson_prob(i, lam) for i in range(int(line) + 1))
+        return max(0.0, (1 - cdf) * 100)
+    except: return 0.0
 
 def normalize_team(name):
     if name in stats_db: return name
@@ -206,39 +230,35 @@ def calcular_jogo(home_raw, away_raw, ref_name):
     h = normalize_team(home_raw)
     a = normalize_team(away_raw)
     
-    # Se não achar o time (ex: time pequeno da Copa), usa genérico
+    # Fallback seguro para times não encontrados
     s_h = stats_db.get(h, {'corners': 5.0, 'cards': 2.0, 'fouls': 11.0, 'goals_f': 1.2, 'goals_a': 1.2})
     s_a = stats_db.get(a, {'corners': 4.0, 'cards': 2.0, 'fouls': 11.0, 'goals_f': 1.0, 'goals_a': 1.5})
     
     rf = get_ref_factor(ref_name)
     
-    # 1. Escanteios (Boost de Pressão Ofensiva)
+    # Lógica V13
     pressao_h = 1.10 if s_h['goals_f'] > 1.8 else 1.0
     c_h_exp = s_h['corners'] * 1.15 * pressao_h
     c_a_exp = s_a['corners'] * 0.90
     
-    # 2. Cartões (Boost de Violência)
-    # Se o time faz muita falta (>12.5), removemos a penalidade de 15%
     violencia_h = 1.0 if s_h['fouls'] > 12.5 else 0.85
     violencia_a = 1.0 if s_a['fouls'] > 12.5 else 0.85
     
     k_h_exp = s_h['cards'] * violencia_h * rf
     k_a_exp = s_a['cards'] * violencia_a * rf
     
-    # 3. Gols Esperados (Novo!)
     g_h_exp = s_h['goals_f'] * s_a['goals_a'] / 1.3
     g_a_exp = s_a['goals_f'] * s_h['goals_a'] / 1.3
     
     return {
         'corners': {'h': c_h_exp, 'a': c_a_exp, 't': c_h_exp + c_a_exp},
         'cards': {'h': k_h_exp, 'a': k_a_exp, 't': k_h_exp + k_a_exp},
-        'goals': {'h': g_h_exp, 'a': g_a_exp},
-        'meta': {'vh': violencia_h == 1.0, 'va': violencia_a == 1.0}
+        'goals': {'h': g_h_exp, 'a': g_a_exp}
     }
 
 def fmt_hist(data): return f"{data[1]}/{data[0]}" if data else "N/A"
 def check_elite(prob, hist_data, is_card=False):
-    cutoff = 75 if not is_card else 70 # Cartão aceita 70%
+    cutoff = 75 if not is_card else 70 
     if hist_data: return float(hist_data[2]) >= 70 and prob >= cutoff
     return prob >= (cutoff + 5)
 def get_color(prob): return "green" if prob >= 70 else ("orange" if prob >= 50 else "red")
@@ -248,59 +268,60 @@ def get_color(prob): return "green" if prob >= 70 else ("orange" if prob >= 50 e
 # ==============================================================================
 def render_match_row(t_casa, t_visitante, liga_nome, hora):
     with st.expander(f"⏰ {hora} | {liga_nome} | {t_casa} x {t_visitante}"):
-        m = calcular_jogo(t_casa, t_visitante, None)
-        if m:
-            c1, c2 = st.columns(2)
-            
-            # Buscando histórico GLOBAL (Motor Copa)
-            # Isso garante que se for um jogo de Copa, ele acha os dados da Liga
-            
-            with c1:
-                st.markdown("##### 🚩 Escanteios")
-                # Casa
-                ph35 = prob_over(m['corners']['h'], 3.5)
-                hh35 = hist.get_global(t_casa, 'corners', 'homeTeamOver35')
-                st.write(f"🏠 {t_casa} +3.5: :{get_color(ph35)}[{ph35:.0f}%] ({fmt_hist(hh35)})")
+        # Garante que não quebre se o nome for estranho
+        try:
+            m = calcular_jogo(t_casa, t_visitante, None)
+            if m:
+                c1, c2 = st.columns(2)
                 
-                ph45 = prob_over(m['corners']['h'], 4.5)
-                hh45 = hist.get_global(t_casa, 'corners', 'homeTeamOver45')
-                st.write(f"🏠 {t_casa} +4.5: :{get_color(ph45)}[{ph45:.0f}%] ({fmt_hist(hh45)})")
-                
-                st.markdown("---")
-                
-                # Fora
-                pa35 = prob_over(m['corners']['a'], 3.5)
-                ha35 = hist.get_global(t_visitante, 'corners', 'awayTeamOver35')
-                st.write(f"✈️ {t_visitante} +3.5: :{get_color(pa35)}[{pa35:.0f}%] ({fmt_hist(ha35)})")
-                
-                pa45 = prob_over(m['corners']['a'], 4.5)
-                ha45 = hist.get_global(t_visitante, 'corners', 'awayTeamOver45')
-                st.write(f"✈️ {t_visitante} +4.5: :{get_color(pa45)}[{pa45:.0f}%] ({fmt_hist(ha45)})")
+                with c1:
+                    st.markdown("##### 🚩 Escanteios")
+                    # Casa
+                    ph35 = prob_over(m['corners']['h'], 3.5)
+                    hh35 = hist.get_global(t_casa, 'corners', 'homeTeamOver35')
+                    st.write(f"🏠 {t_casa} +3.5: :{get_color(ph35)}[{ph35:.0f}%] ({fmt_hist(hh35)})")
+                    
+                    ph45 = prob_over(m['corners']['h'], 4.5)
+                    hh45 = hist.get_global(t_casa, 'corners', 'homeTeamOver45')
+                    st.write(f"🏠 {t_casa} +4.5: :{get_color(ph45)}[{ph45:.0f}%] ({fmt_hist(hh45)})")
+                    
+                    st.markdown("---")
+                    
+                    # Fora
+                    pa35 = prob_over(m['corners']['a'], 3.5)
+                    ha35 = hist.get_global(t_visitante, 'corners', 'awayTeamOver35')
+                    st.write(f"✈️ {t_visitante} +3.5: :{get_color(pa35)}[{pa35:.0f}%] ({fmt_hist(ha35)})")
+                    
+                    pa45 = prob_over(m['corners']['a'], 4.5)
+                    ha45 = hist.get_global(t_visitante, 'corners', 'awayTeamOver45')
+                    st.write(f"✈️ {t_visitante} +4.5: :{get_color(pa45)}[{pa45:.0f}%] ({fmt_hist(ha45)})")
 
-            with c2:
-                st.markdown("##### 🟨 Cartões")
-                # Casa
-                kh15 = prob_over(m['cards']['h'], 1.5)
-                hk15 = hist.get_global(t_casa, 'cards', 'homeCardsOver15')
-                st.write(f"🏠 {t_casa} +1.5: :{get_color(kh15)}[{kh15:.0f}%] ({fmt_hist(hk15)})")
+                with c2:
+                    st.markdown("##### 🟨 Cartões")
+                    # Casa
+                    kh15 = prob_over(m['cards']['h'], 1.5)
+                    hk15 = hist.get_global(t_casa, 'cards', 'homeCardsOver15')
+                    st.write(f"🏠 {t_casa} +1.5: :{get_color(kh15)}[{kh15:.0f}%] ({fmt_hist(hk15)})")
 
-                kh25 = prob_over(m['cards']['h'], 2.5)
-                hk25 = hist.get_global(t_casa, 'cards', 'homeCardsOver25')
-                st.write(f"🏠 {t_casa} +2.5: :{get_color(kh25)}[{kh25:.0f}%] ({fmt_hist(hk25)})")
+                    kh25 = prob_over(m['cards']['h'], 2.5)
+                    hk25 = hist.get_global(t_casa, 'cards', 'homeCardsOver25')
+                    st.write(f"🏠 {t_casa} +2.5: :{get_color(kh25)}[{kh25:.0f}%] ({fmt_hist(hk25)})")
 
-                st.markdown("---")
+                    st.markdown("---")
 
-                # Fora
-                ka15 = prob_over(m['cards']['a'], 1.5)
-                hka15 = hist.get_global(t_visitante, 'cards', 'awayCardsOver15')
-                st.write(f"✈️ {t_visitante} +1.5: :{get_color(ka15)}[{ka15:.0f}%] ({fmt_hist(hka15)})")
+                    # Fora
+                    ka15 = prob_over(m['cards']['a'], 1.5)
+                    hka15 = hist.get_global(t_visitante, 'cards', 'awayCardsOver15')
+                    st.write(f"✈️ {t_visitante} +1.5: :{get_color(ka15)}[{ka15:.0f}%] ({fmt_hist(hka15)})")
 
-                ka25 = prob_over(m['cards']['a'], 2.5)
-                hka25 = hist.get_global(t_visitante, 'cards', 'awayCardsOver25')
-                st.write(f"✈️ {t_visitante} +2.5: :{get_color(ka25)}[{ka25:.0f}%] ({fmt_hist(hka25)})")
+                    ka25 = prob_over(m['cards']['a'], 2.5)
+                    hka25 = hist.get_global(t_visitante, 'cards', 'awayCardsOver25')
+                    st.write(f"✈️ {t_visitante} +2.5: :{get_color(ka25)}[{ka25:.0f}%] ({fmt_hist(hka25)})")
+        except:
+            st.error("Erro ao processar este jogo.")
 
 def render_dashboard():
-    st.title("🏆 FutPrevisão V13.0 (Copa & Ligas)")
+    st.title("🏆 FutPrevisão V13.1 (Fix)")
     
     tab_scan, tab_sim = st.tabs(["🔥 Partidas do Dia", "🔮 Simulação Manual / Copas"])
     
@@ -367,7 +388,6 @@ def render_dashboard():
             if m:
                 st.write("---")
                 
-                # KPI Gols (Novo)
                 st.metric("⚽ Expectativa de Gols (xG)", f"{m['goals']['h']:.2f} x {m['goals']['a']:.2f}")
                 
                 k1, k2 = st.columns(2)
