@@ -386,8 +386,8 @@ def render_result_v14_5(res, all_dfs):
         h35 = get_native_history(res['home'], res['league_h'], 'corners', 3.5, 'home', all_dfs)
         h45 = get_native_history(res['home'], res['league_h'], 'corners', 4.5, 'home', all_dfs)
         
-        c35 = "green" if p35 >= 70 else "gray"
-        c45 = "green" if p45 >= 60 else "gray"
+        c35 = "green" if p35 >= 70 else "red"
+        c45 = "green" if p45 >= 60 else "red"
         
         st.markdown(f"Over 3.5: :{c35}[**{p35:.0f}%**] | Hist CSV: {h35}")
         st.markdown(f"Over 4.5: :{c45}[**{p45:.0f}%**] | Hist CSV: {h45}")
@@ -401,8 +401,8 @@ def render_result_v14_5(res, all_dfs):
         h35 = get_native_history(res['away'], res['league_a'], 'corners', 3.5, 'away', all_dfs)
         h45 = get_native_history(res['away'], res['league_a'], 'corners', 4.5, 'away', all_dfs)
         
-        c35 = "green" if p35 >= 70 else "gray"
-        c45 = "green" if p45 >= 60 else "gray"
+        c35 = "green" if p35 >= 70 else "red"
+        c45 = "green" if p45 >= 60 else "red"
         
         st.markdown(f"Over 3.5: :{c35}[**{p35:.0f}%**] | Hist CSV: {h35}")
         st.markdown(f"Over 4.5: :{c45}[**{p45:.0f}%**] | Hist CSV: {h45}")
@@ -423,7 +423,7 @@ def render_result_v14_5(res, all_dfs):
         p15 = probs['cards']['home']['Over 1.5']
         
         h15 = get_native_history(res['home'], res['league_h'], 'cards', 1.5, 'home', all_dfs)
-        c15 = "green" if p15 >= 75 else "gray"
+        c15 = "green" if p15 >= 75 else "red"
         
         st.markdown(f"Over 1.5: :{c15}[**{p15:.0f}%**] | Hist CSV: {h15}")
 
@@ -432,7 +432,7 @@ def render_result_v14_5(res, all_dfs):
         p15 = probs['cards']['away']['Over 1.5']
         
         h15 = get_native_history(res['away'], res['league_a'], 'cards', 1.5, 'away', all_dfs)
-        c15 = "green" if p15 >= 75 else "gray"
+        c15 = "green" if p15 >= 75 else "red"
         
         st.markdown(f"Over 1.5: :{c15}[**{p15:.0f}%**] | Hist CSV: {h15}")
 
