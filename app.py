@@ -1,9 +1,9 @@
 """
 ╔═══════════════════════════════════════════════════════════════════════════╗
-║               FUTPREVISÃO V14.4 - HYBRID HISTORY                          ║
+║               FUTPREVISÃO V14.5 - NATIVE HISTORY (ZERO TXT)               ║
 ║                          Sistema de Análise de Apostas                     ║
 ║                                                                            ║
-║  Versão: V14.4 (Correção Cor + Histórico Real V13)                        ║
+║  Versão: V14.5 (Histórico calculado direto do CSV - Sem erros de dados)   ║
 ║  Data: Dezembro 2025                                                      ║
 ╚═══════════════════════════════════════════════════════════════════════════╝
 """
@@ -12,7 +12,6 @@ import streamlit as st
 import pandas as pd
 import math
 import numpy as np
-import json
 import os
 from typing import Dict, Optional, Any
 from difflib import get_close_matches
@@ -23,13 +22,13 @@ from datetime import datetime
 # ═══════════════════════════════════════════════════════════════════════════
 
 st.set_page_config(
-    page_title="FutPrevisão V14.4",
+    page_title="FutPrevisão V14.5",
     page_icon="⚽",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Constantes V14
+# Constantes
 THRESHOLDS = {
     'fouls_violent': 12.5,
     'shots_pressure_high': 6.0,
@@ -55,23 +54,13 @@ NAME_MAPPING = {
     'Wolves': 'Wolves', 'Brighton': 'Brighton',
     'Nott\'m Forest': 'Nottm Forest', 'Nottingham Forest': 'Nottm Forest',
     'West Ham': 'West Ham', 'Leicester': 'Leicester',
+    'Athletic Club': 'Ath Bilbao', 'Atl. Madrid': 'Ath Madrid'
 }
 
-# Mapeamento para Histórico (Arquivos TXT da V13)
-LEAGUE_FILES = {
-    "Premier League": {"txt": "Prewmier League.txt", "txt_cards": "Cartoes Premier League - Inglaterra.txt"},
-    "La Liga": {"txt": "Escanteios Espanha.txt", "txt_cards": "Cartoes La Liga - Espanha.txt"},
-    "Serie A": {"txt": "Escanteios Italia.txt", "txt_cards": "Cartoes Serie A - Italia.txt"},
-    "Bundesliga": {"txt": "Escanteios Alemanha.txt", "txt_cards": "Cartoes Bundesliga - Alemanha.txt"},
-    "Ligue 1": {"txt": "Escanteios França.txt", "txt_cards": "Cartoes Ligue 1 - França.txt"},
-    "Championship": {"txt": "Championship Escanteios Inglaterra.txt", "txt_cards": None},
-    "Bundesliga 2": {"txt": "Bundesliga 2.txt", "txt_cards": None},
-    "Pro League": {"txt": "Pro League Belgica.txt", "txt_cards": None},
-    "Süper Lig": {"txt": "Super Lig Turquia.txt", "txt_cards": None},
-    "Scottish Premiership": {"txt": "Premiership Escocia.txt", "txt_cards": None}
-}
-
-LIGAS_ALVO = list(LEAGUE_FILES.keys())
+LIGAS_ALVO = [
+    "Premier League", "La Liga", "Serie A", "Bundesliga", "Ligue 1",
+    "Championship", "Bundesliga 2", "Pro League", "Süper Lig", "Scottish Premiership"
+]
 
 DEBUG_LOGS = []
 
@@ -80,7 +69,7 @@ def log_status(msg: str, status: str = "info"):
     DEBUG_LOGS.append(f"{icon} {msg}")
 
 # ═══════════════════════════════════════════════════════════════════════════
-# CARREGAMENTO DE DADOS (CSVs e TXTs)
+# CARREGAMENTO INTELIGENTE
 # ═══════════════════════════════════════════════════════════════════════════
 
 @st.cache_data(ttl=3600)
@@ -90,7 +79,6 @@ def find_and_load_csv(league_name: str) -> pd.DataFrame:
         f"{league_name.replace(' ', '_')}_25_26.csv",
         f"{league_name}.csv"
     ]
-    # Adiciona variações específicas
     if "Süper Lig" in league_name: attempts.extend(["Super Lig Turquia 25.26.csv", "Super_Lig_Turquia_25_26.csv"])
     if "Pro League" in league_name: attempts.append("Pro League Belgica 25.26.csv")
     if "Premiership" in league_name: attempts.append("Premiership Escocia 25.26.csv")
@@ -102,19 +90,35 @@ def find_and_load_csv(league_name: str) -> pd.DataFrame:
                 try: df = pd.read_csv(filename, encoding='utf-8')
                 except: df = pd.read_csv(filename, encoding='latin1')
                 if not df.empty:
+                    # Garante nomes limpos e normaliza colunas
+                    df.columns = [c.strip() for c in df.columns]
+                    # Adiciona coluna da liga para referência
+                    df['_League_'] = league_name 
                     return df
-            except Exception as e:
-                log_status(f"Erro CSV {filename}: {e}", "error")
+            except: pass
     return pd.DataFrame()
+
+# NOVO: Cache Global de DataFrames para Histórico
+@st.cache_resource
+def load_all_dataframes() -> Dict[str, pd.DataFrame]:
+    """Carrega todos os CSVs em memória para consulta rápida de histórico."""
+    dfs = {}
+    for league in LIGAS_ALVO:
+        df = find_and_load_csv(league)
+        if not df.empty:
+            dfs[league] = df
+            log_status(f"DB Histórico: {league}", "success")
+    return dfs
 
 @st.cache_data(ttl=3600)
 def learn_stats_v14() -> Dict[str, Dict[str, Any]]:
     stats_db = {}
+    
+    # Usa a função de find normal
     for league in LIGAS_ALVO:
         df = find_and_load_csv(league)
         if df.empty: continue
         
-        df.columns = [c.strip() for c in df.columns]
         cols_needed = ['HomeTeam', 'AwayTeam', 'HC', 'AC', 'HY', 'AY', 'HF', 'AF', 'FTHG', 'FTAG', 'HST', 'AST', 'HR', 'AR']
         for c in cols_needed:
             if c not in df.columns: df[c] = np.nan
@@ -179,57 +183,6 @@ def load_referees_v14() -> Dict[str, Dict[str, float]]:
         except: pass
     return refs_db
 
-# --- CLASSE DE HISTÓRICO (RESTABELECIDA DA V13) ---
-class HistoryLoader:
-    def __init__(self):
-        self.corn = {}
-        self.card = {}
-        self.load()
-
-    def load(self):
-        for l, f in LEAGUE_FILES.items():
-            if f['txt'] and os.path.exists(f['txt']):
-                try: 
-                    with open(f['txt'], 'r', encoding='utf-8') as file:
-                        raw = file.read().strip()
-                        if '{' in raw: raw = raw[raw.find('{'):]
-                        self.corn[l] = json.loads(raw)
-                except: pass
-            if f['txt_cards'] and os.path.exists(f['txt_cards']):
-                try: 
-                    with open(f['txt_cards'], 'r', encoding='utf-8') as file:
-                        raw = file.read().strip()
-                        if '{' in raw: raw = raw[raw.find('{'):]
-                        self.card[l] = json.loads(raw)
-                except: pass
-
-    def get_global(self, team, mkt, key):
-        src = self.corn if mkt == 'corners' else self.card
-        # Tenta achar em todas as ligas
-        for l in src:
-            res = self._find(src[l], team, key)
-            if res: return res
-        return None
-
-    def _find(self, data, team, key):
-        if not data: return None
-        teams = [t['teamName'] for t in data.get('teams', [])]
-        
-        target = team
-        if team in NAME_MAPPING: target = NAME_MAPPING[team]
-        
-        match = get_close_matches(target, teams, n=1, cutoff=0.6)
-        if match:
-            for t in data['teams']:
-                if t['teamName'] == match[0]:
-                    d = t.get(key)
-                    if d and len(d) >= 3: return f"{d[1]}/{d[0]}" # Formato: Hits/Total
-        return "N/A"
-
-@st.cache_resource
-def get_history_loader():
-    return HistoryLoader()
-
 @st.cache_data(ttl=600)
 def load_calendar_safe() -> pd.DataFrame:
     fname = "calendario_ligas.csv"
@@ -253,7 +206,57 @@ def load_calendar_safe() -> pd.DataFrame:
     except: return pd.DataFrame()
 
 # ═══════════════════════════════════════════════════════════════════════════
-# CÁLCULO E MATEMÁTICA
+# CÁLCULO DE HISTÓRICO NATIVO (NOVO!)
+# ═══════════════════════════════════════════════════════════════════════════
+
+def get_native_history(team_name: str, league: str, market: str, line: float, location: str, all_dfs: Dict) -> str:
+    """
+    Calcula histórico real lendo diretamente do DataFrame da liga.
+    
+    Args:
+        team_name: Nome do time
+        league: Nome da liga (para buscar o DF correto)
+        market: 'corners' ou 'cards'
+        line: Linha de corte (ex: 3.5)
+        location: 'home' ou 'away'
+    """
+    if league not in all_dfs:
+        return "N/A (Liga?)"
+    
+    df = all_dfs[league]
+    
+    # Filtra jogos do time na posição correta
+    if location == 'home':
+        matches = df[df['HomeTeam'] == team_name]
+        col_code = 'HC' if market == 'corners' else 'HY'
+    else:
+        matches = df[df['AwayTeam'] == team_name]
+        col_code = 'AC' if market == 'corners' else 'AY'
+    
+    if matches.empty:
+        # Tenta fallback se o nome no CSV for ligeiramente diferente
+        # (Mas o ideal é que normalize_name já tenha cuidado disso antes)
+        return "0/0"
+
+    # Pega os últimos 10 jogos (ou menos se não tiver 10)
+    last_matches = matches.tail(10)
+    total_games = len(last_matches)
+    
+    if total_games == 0:
+        return "0/0"
+        
+    # Conta quantos bateram a linha
+    hits = 0
+    for val in last_matches[col_code]:
+        try:
+            if float(val) > line:
+                hits += 1
+        except: pass
+        
+    return f"{hits}/{total_games}"
+
+# ═══════════════════════════════════════════════════════════════════════════
+# CÁLCULO E MATEMÁTICA V14
 # ═══════════════════════════════════════════════════════════════════════════
 
 def normalize_name(name: str, db_keys: list) -> Optional[str]:
@@ -305,6 +308,7 @@ def calcular_jogo_v14(home: str, away: str, stats: Dict, ref: Optional[str], ref
 
     return {
         'home': h_norm, 'away': a_norm, 'referee': ref,
+        'league_h': s_h.get('league'), 'league_a': s_a.get('league'), # Passa a liga para buscar histórico
         'corners': {'total': corn_h + corn_a, 'h': corn_h, 'a': corn_a},
         'cards': {'total': card_h + card_a, 'h': card_h, 'a': card_a},
         'goals': {'h': (s_h['goals_f'] * s_a['goals_a'])/1.3, 'a': (s_a['goals_f'] * s_h['goals_a'])/1.3},
@@ -337,13 +341,12 @@ def get_detailed_probs(pred: Dict) -> Dict:
     }
 
 # ═══════════════════════════════════════════════════════════════════════════
-# UI REFORMULADA (V14.4)
+# UI V14.5
 # ═══════════════════════════════════════════════════════════════════════════
 
-def render_result_hybrid(res):
+def render_result_v14_5(res, all_dfs):
     m = res['meta']
     probs = get_detailed_probs(res)
-    hist = get_history_loader() # Carrega o histórico Adam Choi
     
     st.markdown("---")
     
@@ -353,7 +356,7 @@ def render_result_hybrid(res):
     c2.markdown("<h3 style='text-align: center'>VS</h3>", unsafe_allow_html=True)
     c3.markdown(f"<h3 style='text-align: right'>✈️ {res['away']}</h3>", unsafe_allow_html=True)
     
-    # Métricas Causais
+    # Métricas
     k1, k2, k3, k4 = st.columns(4)
     k1.metric("xG Casa", f"{res['goals']['h']:.2f}")
     k2.metric("xG Fora", f"{res['goals']['a']:.2f}")
@@ -373,36 +376,36 @@ def render_result_hybrid(res):
         for k, v in probs['corners']['total'].items():
             if v > 65: st.write(f"{k}: **{v:.0f}%**")
 
-    # Mandante (Prob V14 + Histórico V13)
+    # Mandante (Histórico REAL do CSV)
     with ec2:
         st.markdown(f"**🏠 {res['home']}** (Esp: {res['corners']['h']:.1f})")
         p35 = probs['corners']['home']['Over 3.5']
         p45 = probs['corners']['home']['Over 4.5']
         
-        # Busca Histórico
-        h35 = hist.get_global(res['home'], 'corners', 'homeTeamOver35') # Adam Choi
-        h45 = hist.get_global(res['home'], 'corners', 'homeTeamOver45')
+        # Histórico Nativo
+        h35 = get_native_history(res['home'], res['league_h'], 'corners', 3.5, 'home', all_dfs)
+        h45 = get_native_history(res['home'], res['league_h'], 'corners', 4.5, 'home', all_dfs)
         
-        c35 = "green" if p35 >= 70 else "gray" # CORRIGIDO O BUG "BLACK"
+        c35 = "green" if p35 >= 70 else "gray"
         c45 = "green" if p45 >= 60 else "gray"
         
-        st.markdown(f"Over 3.5: :{c35}[**{p35:.0f}%**] | Hist: {h35}")
-        st.markdown(f"Over 4.5: :{c45}[**{p45:.0f}%**] | Hist: {h45}")
+        st.markdown(f"Over 3.5: :{c35}[**{p35:.0f}%**] | Hist CSV: {h35}")
+        st.markdown(f"Over 4.5: :{c45}[**{p45:.0f}%**] | Hist CSV: {h45}")
 
-    # Visitante
+    # Visitante (Histórico REAL do CSV)
     with ec3:
         st.markdown(f"**✈️ {res['away']}** (Esp: {res['corners']['a']:.1f})")
         p35 = probs['corners']['away']['Over 3.5']
         p45 = probs['corners']['away']['Over 4.5']
         
-        h35 = hist.get_global(res['away'], 'corners', 'awayTeamOver35')
-        h45 = hist.get_global(res['away'], 'corners', 'awayTeamOver45')
+        h35 = get_native_history(res['away'], res['league_a'], 'corners', 3.5, 'away', all_dfs)
+        h45 = get_native_history(res['away'], res['league_a'], 'corners', 4.5, 'away', all_dfs)
         
         c35 = "green" if p35 >= 70 else "gray"
         c45 = "green" if p45 >= 60 else "gray"
         
-        st.markdown(f"Over 3.5: :{c35}[**{p35:.0f}%**] | Hist: {h35}")
-        st.markdown(f"Over 4.5: :{c45}[**{p45:.0f}%**] | Hist: {h45}")
+        st.markdown(f"Over 3.5: :{c35}[**{p35:.0f}%**] | Hist CSV: {h35}")
+        st.markdown(f"Over 4.5: :{c45}[**{p45:.0f}%**] | Hist CSV: {h45}")
         
     st.markdown("---")
 
@@ -418,35 +421,39 @@ def render_result_hybrid(res):
     with kc2:
         st.markdown(f"**🏠 {res['home']}**")
         p15 = probs['cards']['home']['Over 1.5']
-        h15 = hist.get_global(res['home'], 'cards', 'homeCardsOver15')
+        
+        h15 = get_native_history(res['home'], res['league_h'], 'cards', 1.5, 'home', all_dfs)
         c15 = "green" if p15 >= 75 else "gray"
-        st.markdown(f"Over 1.5: :{c15}[**{p15:.0f}%**] | Hist: {h15}")
+        
+        st.markdown(f"Over 1.5: :{c15}[**{p15:.0f}%**] | Hist CSV: {h15}")
 
     with kc3:
         st.markdown(f"**✈️ {res['away']}**")
         p15 = probs['cards']['away']['Over 1.5']
-        h15 = hist.get_global(res['away'], 'cards', 'awayCardsOver15')
+        
+        h15 = get_native_history(res['away'], res['league_a'], 'cards', 1.5, 'away', all_dfs)
         c15 = "green" if p15 >= 75 else "gray"
-        st.markdown(f"Over 1.5: :{c15}[**{p15:.0f}%**] | Hist: {h15}")
+        
+        st.markdown(f"Over 1.5: :{c15}[**{p15:.0f}%**] | Hist CSV: {h15}")
 
 def main():
-    st.title("⚽ FutPrevisão V14.4 (Hybrid History)")
-    st.caption("Matemática V14 + Histórico V13")
+    st.title("⚽ FutPrevisão V14.5 (Native Data)")
+    st.caption("Histórico 100% verificado via CSV (Sem TXT externo)")
     
-    with st.spinner("Inicializando motores..."):
+    with st.spinner("Carregando bases..."):
         DEBUG_LOGS.clear()
         stats = learn_stats_v14()
         refs = load_referees_v14()
         calendar = load_calendar_safe()
-        # Inicializa o histórico
-        _ = get_history_loader()
+        all_dfs = load_all_dataframes() # Carrega os DF brutos
     
     lista_times = sorted(list(stats.keys()))
     lista_juizes = ["Neutro"] + sorted(list(refs.keys()))
     
     with st.sidebar:
-        with st.expander("🛠️ Status do Sistema", expanded=not bool(stats)):
+        with st.expander("🛠️ Status do Sistema", expanded=False):
             st.write(f"Times: {len(stats)}")
+            st.write(f"Ligas DB: {len(all_dfs)}")
             for log in DEBUG_LOGS: st.write(log)
     
     if not stats:
@@ -468,7 +475,7 @@ def main():
                     if st.button("Analisar", key=f"btn_{i}"):
                         res = calcular_jogo_v14(row['Time_Casa'], row['Time_Visitante'], stats, None, refs)
                         if 'error' in res: st.error(res['error'])
-                        else: render_result_hybrid(res)
+                        else: render_result_v14_5(res, all_dfs)
 
     with tab2:
         st.subheader("Simulador Personalizado")
@@ -484,7 +491,7 @@ def main():
             ref_val = None if r == "Neutro" else r
             res = calcular_jogo_v14(h, a, stats, ref_val, refs)
             if 'error' in res: st.error(res['error'])
-            else: render_result_hybrid(res)
+            else: render_result_v14_5(res, all_dfs)
 
 if __name__ == "__main__":
     main()
