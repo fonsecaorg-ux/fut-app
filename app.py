@@ -423,7 +423,7 @@ def render_result_v14_5(res, all_dfs):
         p15 = probs['cards']['home']['Over 1.5']
         
         h15 = get_native_history(res['home'], res['league_h'], 'cards', 1.5, 'home', all_dfs)
-        c15 = "green" if p15 >= 75 else "red"
+        c15 = "green" if p15 >= 75 else "green"
         
         st.markdown(f"Over 1.5: :{c15}[**{p15:.0f}%**] | Hist CSV: {h15}")
 
