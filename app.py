@@ -1,11 +1,11 @@
 """
 ╔═══════════════════════════════════════════════════════════════════════════╗
-║       FUTPREVISÃO V14.10 - SMART HEDGE (ANTI-CORRELATION)                 ║
+║       FUTPREVISÃO V14.11 - CROSS-MARKET HEDGE (DUPLA CHANCE + FIX)        ║
 ║                          Sistema de Análise de Apostas                     ║
 ║                                                                            ║
-║  Versão: V14.10                                                           ║
+║  Versão: V14.11                                                           ║
 ║  Data: Dezembro 2025                                                      ║
-║  Refinamento: Bloqueio de correlação (Ex: Home Corners vs Total Corners)  ║
+║  Refinamento: Bloqueio Total de Mercado Repetido + Dupla Chance           ║
 ╚═══════════════════════════════════════════════════════════════════════════╝
 """
 
@@ -20,7 +20,7 @@ from datetime import datetime
 
 # Configuração da Página
 st.set_page_config(
-    page_title="FutPrevisão V14.10",
+    page_title="FutPrevisão V14.11",
     page_icon="⚽",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -247,12 +247,16 @@ def calcular_jogo_v14(home: str, away: str, stats: Dict, ref: Optional[str], ref
     prob_red = ((s_h['red_cards_avg'] + s_a['red_cards_avg']) / 2) * rr * 100
     pr_lbl = "ALTA 🔴" if prob_red > 12 else "MÉDIA 🟠" if prob_red > 8 else "BAIXA 🟡"
 
+    # Calculo de xG para Dupla Chance
+    xg_home = (s_h['goals_f'] * s_a['goals_a']) / 1.3
+    xg_away = (s_a['goals_f'] * s_h['goals_a']) / 1.3
+
     return {
         'home': h_norm, 'away': a_norm, 'referee': ref,
         'league_h': s_h.get('league'), 'league_a': s_a.get('league'),
         'corners': {'total': corn_h + corn_a, 'h': corn_h, 'a': corn_a},
         'cards': {'total': card_h + card_a, 'h': card_h, 'a': card_a},
-        'goals': {'h': (s_h['goals_f'] * s_a['goals_a'])/1.3, 'a': (s_a['goals_f'] * s_h['goals_a'])/1.3},
+        'goals': {'h': xg_home, 'a': xg_away},
         'meta': {
             'shots_h': shots_h, 'p_label_h': "ALTO 🔥" if p_h > 1.0 else "BAIXO ⚪",
             'shots_a': shots_a,
@@ -266,6 +270,21 @@ def get_detailed_probs(pred: Dict) -> Dict:
     cH, cA = pred['corners']['h'], pred['corners']['a']
     kH, kA = pred['cards']['h'], pred['cards']['a']
     
+    # Probabilidades de Dupla Chance baseadas em xG
+    xG_H, xG_A = pred['goals']['h'], pred['goals']['a']
+    # Modelo heurístico simples de probabilidade
+    total_strength = xG_H + xG_A
+    if total_strength == 0: p_home, p_away = 0.33, 0.33
+    else:
+        p_home = xG_H / (total_strength * 1.2) # Margem pro empate
+        p_away = xG_A / (total_strength * 1.2)
+    p_draw = 1 - (p_home + p_away)
+    
+    # 1X = Home + Draw, X2 = Away + Draw, 12 = Home + Away
+    dc_1x = (p_home + p_draw) * 100
+    dc_x2 = (p_away + p_draw) * 100
+    dc_12 = (p_home + p_away) * 100
+
     return {
         'corners': {
             'total': {f"Over {i}.5": (1-p(i, cH+cA))*100 for i in range(8, 13)},
@@ -276,30 +295,41 @@ def get_detailed_probs(pred: Dict) -> Dict:
             'total': {f"Over {i}.5": (1-p(i, kH+kA))*100 for i in range(2, 6)},
             'home': {'Over 1.5': (1-p(1, kH))*100, 'Over 2.5': (1-p(2, kH))*100},
             'away': {'Over 1.5': (1-p(1, kA))*100, 'Over 2.5': (1-p(2, kA))*100}
+        },
+        'chance': {
+            '1X': min(95, dc_1x),
+            'X2': min(95, dc_x2),
+            '12': min(95, dc_12)
         }
     }
 
 # ═══════════════════════════════════════════════════════════════════════════
-# 3. LÓGICA DE BET BUILDER & HEDGE (SMART)
+# 3. LÓGICA DE BET BUILDER & HEDGE (CROSS-MARKET)
 # ═══════════════════════════════════════════════════════════════════════════
 
 def generate_bet_options(home_team: str, away_team: str, probs: Dict) -> List[Dict]:
     options = []
-    # Corners
-    for line in [2.5, 3.5, 4.5, 5.5]:
+    
+    # 1. ESCANTEIOS
+    for line in [3.5, 4.5, 5.5]:
         options.append({'label': f"{home_team} Over {line} cantos", 'prob': probs['corners']['home'].get(f'Over {line}', 0), 'market':'corners', 'side':'home'})
-    for line in [2.5, 3.5, 4.5]:
+    for line in [3.5, 4.5]:
         options.append({'label': f"{away_team} Over {line} cantos", 'prob': probs['corners']['away'].get(f'Over {line}', 0), 'market':'corners', 'side':'away'})
     for line in [8.5, 9.5, 10.5]:
         options.append({'label': f"Total Over {line} cantos", 'prob': probs['corners']['total'].get(f'Over {int(line)}.5', 0), 'market':'corners', 'side':'total'})
     
-    # Cards
+    # 2. CARTÕES
     for line in [1.5, 2.5]:
         options.append({'label': f"{home_team} Over {line} cartões", 'prob': probs['cards']['home'].get(f'Over {line}', 0), 'market':'cards', 'side':'home'})
         options.append({'label': f"{away_team} Over {line} cartões", 'prob': probs['cards']['away'].get(f'Over {line}', 0), 'market':'cards', 'side':'away'})
     for line in [2.5, 3.5, 4.5, 5.5]:
         val = probs['cards']['total'].get(f'Over {int(line)}.5', 0)
         options.append({'label': f"Total Over {line} cartões", 'prob': val, 'market':'cards', 'side':'total'})
+
+    # 3. DUPLA CHANCE (NOVO!)
+    options.append({'label': f"Dupla Chance: {home_team} ou Empate", 'prob': probs['chance']['1X'], 'market':'chance', 'side':'home'})
+    options.append({'label': f"Dupla Chance: {away_team} ou Empate", 'prob': probs['chance']['X2'], 'market':'chance', 'side':'away'})
+    options.append({'label': f"Dupla Chance: {home_team} ou {away_team}", 'prob': probs['chance']['12'], 'market':'chance', 'side':'any'})
 
     options.sort(key=lambda x: x['prob'], reverse=True)
     return options
@@ -309,21 +339,6 @@ def calculate_combined_probability(selections: List[Dict]) -> float:
     prob = 1.0
     for s in selections: prob *= (s['prob']/100)
     return prob * 100
-
-def is_correlated(main_bet: Dict, candidate_bet: Dict) -> bool:
-    """Verifica se há correlação POSITIVA excessiva que anula o efeito do hedge."""
-    # Mesma aposta? (Óbvio)
-    if main_bet['label'] == candidate_bet['label']:
-        return True
-        
-    # Correlação de Lado no Mesmo Mercado (Ex: Home Corners vs Total Corners)
-    # Se apostou Over pro Time e Over pro Total = CORRELACIONADO (Ruim para Hedge)
-    if main_bet['market'] == candidate_bet['market']:
-        sides = {main_bet['side'], candidate_bet['side']}
-        if 'total' in sides and len(sides) > 1:
-            return True
-            
-    return False
 
 def generate_dual_hedges(main_slip: List[Dict], stats: Dict, refs_db: Dict):
     hedge1 = []
@@ -343,57 +358,66 @@ def generate_dual_hedges(main_slip: List[Dict], stats: Dict, refs_db: Dict):
         probs = get_detailed_probs(res)
         all_opts = generate_bet_options(home, away, probs)
         
-        # Filtra > 65% para ter mais opções
-        valid_opts = [o for o in all_opts if o['prob'] >= 65]
+        # Filtra opções seguras (>60% para hedge é aceitável se for proteção)
+        valid_opts = [o for o in all_opts if o['prob'] >= 60]
         if len(valid_opts) < 6: valid_opts = all_opts[:8]
         
         main_labels = [s['label'] for s in sels]
+        main_markets = set([s['market'] for s in sels]) # Mercados usados na principal
         
-        # --- HEDGE 1: Prioriza MERCADO OPOSTO (Cards vs Corners) ---
+        # ══════════════════════════════════════════════════════
+        # HEDGE 1: CROSS-MARKET FORCE
+        # Se Principal = Cantos, Hedge = Cartões ou Chance
+        # ══════════════════════════════════════════════════════
         h1_candidates = []
         for o in valid_opts:
-            # Não pode ser igual ao principal
             if o['label'] in main_labels: continue
             
-            # Anti-Correlação (AQUI ESTÁ O REFINAMENTO)
-            correlated = False
-            for m in sels:
-                if is_correlated(m, o): correlated = True
-            if correlated: continue
-            
-            # Bonus se for mercado diferente
+            # PONTUAÇÃO DE HEDGE
             score = o['prob']
-            if o['market'] != sels[0]['market']: score += 20 
             
+            # BLOQUEIO DURO: Se a principal é Canto, Hedge NÃO pode ser Canto
+            if 'corners' in main_markets and o['market'] == 'corners':
+                continue # Pula
+            
+            # Se for mercado diferente, ganha prioridade máxima
+            if o['market'] not in main_markets: 
+                score += 50
+                
+            # Se for Dupla Chance (Proteção Suprema), ganha mais pontos
+            if o['market'] == 'chance':
+                score += 30
+                
             h1_candidates.append({**o, 'score': score})
             
         h1_candidates.sort(key=lambda x: x['score'], reverse=True)
         current_h1 = h1_candidates[:2]
         
-        # Fallback se não achou descorrelacionado (pega qualquer um válido)
+        # Fallback se não achou nada (muito raro)
         if len(current_h1) < 2:
-            leftover = [o for o in valid_opts if o['label'] not in main_labels][:2]
-            for l in leftover: 
-                # Verifica duplicata por label para não adicionar repetido
-                if not any(curr['label'] == l['label'] for curr in current_h1):
-                    current_h1.append(l)
+            remaining = [o for o in valid_opts if o['label'] not in main_labels]
+            for l in remaining:
+                if l not in current_h1 and len(current_h1) < 2: current_h1.append(l)
         
-        for opt in current_h1[:2]:
+        for opt in current_h1:
             hedge1.append({**opt, 'game_id': gid, 'home': home, 'away': away, 'type': 'Cross-Market'})
             
-        # --- HEDGE 2: Prioriza LADO OPOSTO (Home vs Away) ---
+        # ══════════════════════════════════════════════════════
+        # HEDGE 2: DIVERSIFICAÇÃO
+        # Tenta cobrir o que sobrou (Dupla Chance se não usou)
+        # ══════════════════════════════════════════════════════
         h1_labels = [o['label'] for o in current_h1]
         h2_candidates = []
         
         for o in valid_opts:
             if o['label'] in h1_labels: continue
-            if o['label'] in main_labels and o['prob'] < 80: continue
+            if o['label'] in main_labels: continue
             
             score = o['prob']
-            # Bonus se for lado oposto
-            if sels[0]['side'] in ['home','away'] and o['side'] != sels[0]['side'] and o['side'] != 'total':
-                score += 15
-                
+            
+            # Se H1 não usou Chance, H2 tenta usar
+            if o['market'] == 'chance': score += 40
+            
             h2_candidates.append({**o, 'score': score})
             
         h2_candidates.sort(key=lambda x: x['score'], reverse=True)
@@ -402,17 +426,17 @@ def generate_dual_hedges(main_slip: List[Dict], stats: Dict, refs_db: Dict):
         if len(current_h2) < 2:
              remaining = [o for o in valid_opts if o['label'] not in h1_labels][:2]
              for l in remaining:
-                 if not any(curr['label'] == l['label'] for curr in current_h2):
+                 if l not in current_h2 and l not in current_h1 and len(current_h2) < 2:
                      current_h2.append(l)
              
-        for opt in current_h2[:2]:
-            hedge2.append({**opt, 'game_id': gid, 'home': home, 'away': away, 'type': 'Flip'})
+        for opt in current_h2:
+            hedge2.append({**opt, 'game_id': gid, 'home': home, 'away': away, 'type': 'Safety'})
             
     return hedge1, hedge2
 
 def render_bet_builder_tab(stats, refs_db):
-    st.markdown("## 🎰 Bet Builder (Smart Hedge)")
-    st.caption("Sistema de proteção inteligente com Anti-Correlação")
+    st.markdown("## 🎰 Bet Builder (Cross-Market Hedge)")
+    st.caption("Sistema inteligente: Se você aposta em Cantos, o Hedge busca Cartões ou Dupla Chance para proteger contra 'jogo morto'.")
     
     if 'main_slip' not in st.session_state: st.session_state.main_slip = []
     
@@ -429,7 +453,9 @@ def render_bet_builder_tab(stats, refs_db):
         a = c2.selectbox(f"Fora", lista_times, key=f"a_{i}", index=min(1, len(lista_times)-1))
         
         res = calcular_jogo_v14(h, a, stats, None, refs_db)
-        if 'error' in res: continue
+        if 'error' in res: 
+            st.error("Erro nos times")
+            continue
             
         probs = get_detailed_probs(res)
         opts = generate_bet_options(h, a, probs)
@@ -443,7 +469,7 @@ def render_bet_builder_tab(stats, refs_db):
     
     st.session_state.main_slip = temp_slip
     
-    if st.button("🔮 Gerar Hedges (Smart)", type="primary"):
+    if st.button("🔮 Gerar Hedges (Inteligentes)", type="primary"):
         h1, h2 = generate_dual_hedges(st.session_state.main_slip, stats, refs_db)
         
         st.success("✅ Hedges Gerados!")
@@ -461,7 +487,7 @@ def render_bet_builder_tab(stats, refs_db):
             st.metric("Prob Comb.", f"{calculate_combined_probability(st.session_state.main_slip):.1f}%")
             
         with c_h1:
-            st.warning("🛡️ **Hedge #1 (Mercado Oposto)**")
+            st.warning("🛡️ **Hedge #1 (Cruzado)**")
             games_seen = []
             for s in h1:
                 if s['game_id'] not in games_seen:
@@ -471,7 +497,7 @@ def render_bet_builder_tab(stats, refs_db):
             st.metric("Prob Comb.", f"{calculate_combined_probability(h1):.1f}%")
 
         with c_h2:
-            st.success("🔄 **Hedge #2 (Lado Inverso)**")
+            st.success("🔄 **Hedge #2 (Segurança)**")
             games_seen = []
             for s in h2:
                 if s['game_id'] not in games_seen:
@@ -520,7 +546,7 @@ def render_result_v14_5(res, all_dfs):
             st.markdown(f"Over {line}: :{c}[**{p:.0f}%**] | Hist: {h}")
 
 def main():
-    st.title("⚽ FutPrevisão V14.10 (Smart Hedge)")
+    st.title("⚽ FutPrevisão V14.11 (Hedge Cruzado)")
     
     with st.spinner("Carregando..."):
         DEBUG_LOGS.clear()
@@ -551,6 +577,7 @@ def main():
     with tab2:
         l_times = sorted(list(stats.keys()))
         l_refs = ["Neutro"] + sorted(list(refs.keys()))
+        
         c1, c2, c3 = st.columns(3)
         h = c1.selectbox("Casa", l_times, index=0)
         a = c2.selectbox("Fora", l_times, index=1)
