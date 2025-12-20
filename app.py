@@ -1,10 +1,11 @@
 """
 ╔═══════════════════════════════════════════════════════════════════════════╗
-║       FUTPREVISÃO V14.9.1 - STRUCTURE MIRROR (HOTFIX IMPORTS)             ║
+║       FUTPREVISÃO V14.9.2 - DETAILED LINES (LINHAS INDIVIDUAIS)           ║
 ║                          Sistema de Análise de Apostas                     ║
 ║                                                                            ║
-║  Versão: V14.9.1 (Correção de NameError + Hedge Estrutural)               ║
+║  Versão: V14.9.2                                                          ║
 ║  Data: Dezembro 2025                                                      ║
+║  Alteração: Adicionado linhas 3.5/4.5/5.5 Escanteios e 1.5/2.5 Cartões    ║
 ╚═══════════════════════════════════════════════════════════════════════════╝
 """
 
@@ -13,13 +14,13 @@ import pandas as pd
 import math
 import numpy as np
 import os
-from typing import Dict, List, Any, Optional  # <--- CORREÇÃO AQUI (Adicionado Optional)
+from typing import Dict, List, Any, Optional
 from difflib import get_close_matches
 from datetime import datetime
 
 # Configuração da Página
 st.set_page_config(
-    page_title="FutPrevisão V14.9.1",
+    page_title="FutPrevisão V14.9.2",
     page_icon="⚽",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -265,13 +266,27 @@ def get_detailed_probs(pred: Dict) -> Dict:
     return {
         'corners': {
             'total': {f"Over {i}.5": (1-p(i, cH+cA))*100 for i in range(8, 13)},
-            'home': {'Over 3.5': (1-p(3, cH))*100, 'Over 4.5': (1-p(4, cH))*100},
-            'away': {'Over 3.5': (1-p(3, cA))*100, 'Over 4.5': (1-p(4, cA))*100}
+            'home': {
+                'Over 3.5': (1-p(3, cH))*100, 
+                'Over 4.5': (1-p(4, cH))*100, 
+                'Over 5.5': (1-p(5, cH))*100 # ADICIONADO 5.5
+            },
+            'away': {
+                'Over 3.5': (1-p(3, cA))*100, 
+                'Over 4.5': (1-p(4, cA))*100, 
+                'Over 5.5': (1-p(5, cA))*100 # ADICIONADO 5.5
+            }
         },
         'cards': {
-            'total': {f"Over {i}.5": (1-p(i, kH+kA))*100 for i in range(2, 6)}, # Agora inclui 2.5
-            'home': {'Over 1.5': (1-p(1, kH))*100, 'Over 2.5': (1-p(2, kH))*100},
-            'away': {'Over 1.5': (1-p(1, kA))*100, 'Over 2.5': (1-p(2, kA))*100}
+            'total': {f"Over {i}.5": (1-p(i, kH+kA))*100 for i in range(2, 6)},
+            'home': {
+                'Over 1.5': (1-p(1, kH))*100, 
+                'Over 2.5': (1-p(2, kH))*100
+            },
+            'away': {
+                'Over 1.5': (1-p(1, kA))*100, 
+                'Over 2.5': (1-p(2, kA))*100
+            }
         }
     }
 
@@ -446,35 +461,55 @@ def render_bet_builder_tab(stats, refs_db):
 # ═══════════════════════════════════════════════════════════════════════════
 
 def render_result_v14_5(res, all_dfs):
-    # Função simplificada de exibição manual
     m = res['meta']
     probs = get_detailed_probs(res)
     st.markdown("---")
     st.subheader(f"🏠 {res['home']} vs ✈️ {res['away']}")
     
+    # MÉTRICAS DE ESCANTEIOS
+    st.info("🏁 **Escanteios Individuais**")
     c1, c2 = st.columns(2)
+    
     with c1:
-        st.info("🏁 **Escanteios**")
-        st.write(f"Total Esp: {res['corners']['total']:.1f}")
-        for k,v in probs['corners']['total'].items(): 
-            if v>65: st.write(f"{k}: {v:.0f}%")
-        
-        h35 = get_native_history(res['home'], res['league_h'], 'corners', 3.5, 'home', all_dfs)
-        p35h = probs['corners']['home']['Over 3.5']
-        st.write(f"🏠 Over 3.5: {p35h:.0f}% | Hist: {h35}")
-        
-    with c2:
-        st.warning("🟨 **Cartões**")
-        st.write(f"Total Esp: {res['cards']['total']:.1f}")
-        for k,v in probs['cards']['total'].items(): 
-            if v>60: st.write(f"{k}: {v:.0f}%")
+        st.markdown(f"**🏠 {res['home']}**")
+        for line in [3.5, 4.5, 5.5]:
+            p = probs['corners']['home'].get(f'Over {line}', 0)
+            h = get_native_history(res['home'], res['league_h'], 'corners', line, 'home', all_dfs)
+            color = "green" if p >= 70 else "black"
+            st.markdown(f"Over {line}: :{color}[**{p:.0f}%**] | Hist: {h}")
             
-        h15 = get_native_history(res['home'], res['league_h'], 'cards', 1.5, 'home', all_dfs)
-        p15h = probs['cards']['home']['Over 1.5']
-        st.write(f"🏠 Over 1.5: {p15h:.0f}% | Hist: {h15}")
+    with c2:
+        st.markdown(f"**✈️ {res['away']}**")
+        for line in [3.5, 4.5, 5.5]:
+            p = probs['corners']['away'].get(f'Over {line}', 0)
+            h = get_native_history(res['away'], res['league_a'], 'corners', line, 'away', all_dfs)
+            color = "green" if p >= 70 else "black"
+            st.markdown(f"Over {line}: :{color}[**{p:.0f}%**] | Hist: {h}")
+
+    st.markdown("---")
+
+    # MÉTRICAS DE CARTÕES
+    st.warning("🟨 **Cartões Individuais**")
+    c3, c4 = st.columns(2)
+    
+    with c3:
+        st.markdown(f"**🏠 {res['home']}**")
+        for line in [1.5, 2.5]:
+            p = probs['cards']['home'].get(f'Over {line}', 0)
+            h = get_native_history(res['home'], res['league_h'], 'cards', line, 'home', all_dfs)
+            color = "green" if p >= 70 else "black"
+            st.markdown(f"Over {line}: :{color}[**{p:.0f}%**] | Hist: {h}")
+            
+    with c4:
+        st.markdown(f"**✈️ {res['away']}**")
+        for line in [1.5, 2.5]:
+            p = probs['cards']['away'].get(f'Over {line}', 0)
+            h = get_native_history(res['away'], res['league_a'], 'cards', line, 'away', all_dfs)
+            color = "green" if p >= 70 else "black"
+            st.markdown(f"Over {line}: :{color}[**{p:.0f}%**] | Hist: {h}")
 
 def main():
-    st.title("⚽ FutPrevisão V14.9.1 (Structure Mirror)")
+    st.title("⚽ FutPrevisão V14.9.2 (Detailed Lines)")
     
     with st.spinner("Carregando..."):
         DEBUG_LOGS.clear()
