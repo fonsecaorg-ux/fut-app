@@ -1,11 +1,14 @@
 """
 ╔═══════════════════════════════════════════════════════════════════════════╗
-║       FUTPREVISÃO V14.9.2 - DETAILED LINES (LINHAS INDIVIDUAIS)           ║
+║       FUTPREVISÃO V14.9.3 - RISK RADAR & SIMULATION FIX                   ║
 ║                          Sistema de Análise de Apostas                     ║
 ║                                                                            ║
-║  Versão: V14.9.2                                                          ║
+║  Versão: V14.9.3                                                          ║
 ║  Data: Dezembro 2025                                                      ║
-║  Alteração: Adicionado linhas 3.5/4.5/5.5 Escanteios e 1.5/2.5 Cartões    ║
+║  Novidades:                                                               ║
+║  1. Árbitro na Simulação Manual                                           ║
+║  2. Radar de Risco (Evita Red)                                            ║
+║  3. Correção do bug visual ":black"                                       ║
 ╚═══════════════════════════════════════════════════════════════════════════╝
 """
 
@@ -20,7 +23,7 @@ from datetime import datetime
 
 # Configuração da Página
 st.set_page_config(
-    page_title="FutPrevisão V14.9.2",
+    page_title="FutPrevisão V14.9.3",
     page_icon="⚽",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -254,7 +257,9 @@ def calcular_jogo_v14(home: str, away: str, stats: Dict, ref: Optional[str], ref
         'goals': {'h': (s_h['goals_f'] * s_a['goals_a'])/1.3, 'a': (s_a['goals_f'] * s_h['goals_a'])/1.3},
         'meta': {
             'shots_h': shots_h, 'p_label_h': "ALTO 🔥" if p_h > 1.0 else "BAIXO ⚪",
-            'strict_val': strict, 'prob_red': prob_red, 'prob_red_lbl': pr_lbl
+            'shots_a': shots_a,
+            'strict_val': strict, 'prob_red': prob_red, 'prob_red_lbl': pr_lbl,
+            'red_rate': rr
         }
     }
 
@@ -266,27 +271,13 @@ def get_detailed_probs(pred: Dict) -> Dict:
     return {
         'corners': {
             'total': {f"Over {i}.5": (1-p(i, cH+cA))*100 for i in range(8, 13)},
-            'home': {
-                'Over 3.5': (1-p(3, cH))*100, 
-                'Over 4.5': (1-p(4, cH))*100, 
-                'Over 5.5': (1-p(5, cH))*100 # ADICIONADO 5.5
-            },
-            'away': {
-                'Over 3.5': (1-p(3, cA))*100, 
-                'Over 4.5': (1-p(4, cA))*100, 
-                'Over 5.5': (1-p(5, cA))*100 # ADICIONADO 5.5
-            }
+            'home': {'Over 3.5': (1-p(3, cH))*100, 'Over 4.5': (1-p(4, cH))*100, 'Over 5.5': (1-p(5, cH))*100},
+            'away': {'Over 3.5': (1-p(3, cA))*100, 'Over 4.5': (1-p(4, cA))*100, 'Over 5.5': (1-p(5, cA))*100}
         },
         'cards': {
             'total': {f"Over {i}.5": (1-p(i, kH+kA))*100 for i in range(2, 6)},
-            'home': {
-                'Over 1.5': (1-p(1, kH))*100, 
-                'Over 2.5': (1-p(2, kH))*100
-            },
-            'away': {
-                'Over 1.5': (1-p(1, kA))*100, 
-                'Over 2.5': (1-p(2, kA))*100
-            }
+            'home': {'Over 1.5': (1-p(1, kH))*100, 'Over 2.5': (1-p(2, kH))*100},
+            'away': {'Over 1.5': (1-p(1, kA))*100, 'Over 2.5': (1-p(2, kA))*100}
         }
     }
 
@@ -304,12 +295,10 @@ def generate_bet_options(home_team: str, away_team: str, probs: Dict) -> List[Di
     for line in [8.5, 9.5, 10.5]:
         options.append({'label': f"Total Over {line} cantos", 'prob': probs['corners']['total'].get(f'Over {int(line)}.5', 0), 'market':'corners'})
     
-    # Cards (Incluindo Totais)
+    # Cards
     for line in [1.5, 2.5]:
         options.append({'label': f"{home_team} Over {line} cartões", 'prob': probs['cards']['home'].get(f'Over {line}', 0), 'market':'cards'})
         options.append({'label': f"{away_team} Over {line} cartões", 'prob': probs['cards']['away'].get(f'Over {line}', 0), 'market':'cards'})
-    
-    # NOVAS LINHAS DE TOTAIS DE CARTÕES
     for line in [2.5, 3.5, 4.5, 5.5]:
         key = f'Over {int(line)}.5'
         val = probs['cards']['total'].get(key, 0)
@@ -328,14 +317,12 @@ def generate_dual_hedges(main_slip: List[Dict], stats: Dict, refs_db: Dict):
     hedge1 = []
     hedge2 = []
     
-    # Agrupar seleções por jogo
     games = {}
     for sel in main_slip:
         gid = sel['game_id']
         if gid not in games: games[gid] = []
         games[gid].append(sel)
         
-    # Para cada jogo do bilhete principal...
     for gid, sels in games.items():
         home, away = sels[0]['home'], sels[0]['away']
         res = calcular_jogo_v14(home, away, stats, None, refs_db)
@@ -344,21 +331,13 @@ def generate_dual_hedges(main_slip: List[Dict], stats: Dict, refs_db: Dict):
         probs = get_detailed_probs(res)
         all_opts = generate_bet_options(home, away, probs)
         
-        # 1. Tenta filtrar opções >= 70%
         valid_opts = [o for o in all_opts if o['prob'] >= 70]
-        
-        # 2. Se não tiver opções suficientes, pega as melhores disponíveis (FALLBACK)
-        if len(valid_opts) < 4:
-            valid_opts = all_opts[:6] # Pega as top 6, independente da %
+        if len(valid_opts) < 4: valid_opts = all_opts[:6]
         
         main_labels = [s['label'] for s in sels]
         
-        # --- HEDGE 1: Opções diferentes das principais ---
         h1_candidates = [o for o in valid_opts if o['label'] not in main_labels]
-        # Pega as 2 melhores
         current_h1 = h1_candidates[:2]
-        
-        # Garante 2 opções (mesmo que tenha que repetir se estiver desesperado)
         if len(current_h1) < 2:
             remaining = [o for o in valid_opts if o not in current_h1]
             current_h1.extend(remaining[:2-len(current_h1)])
@@ -366,16 +345,15 @@ def generate_dual_hedges(main_slip: List[Dict], stats: Dict, refs_db: Dict):
         for opt in current_h1:
             hedge1.append({**opt, 'game_id': gid, 'home': home, 'away': away, 'type': 'Variação'})
             
-        # --- HEDGE 2: Opções diferentes de H1 (pode repetir Main se for >80%) ---
         h1_labels = [o['label'] for o in current_h1]
         h2_candidates = []
         for o in valid_opts:
-            if o['label'] in h1_labels: continue # Evita H1
-            if o['label'] in main_labels and o['prob'] < 80: continue # Evita Main fraca
+            if o['label'] in h1_labels: continue
+            if o['label'] in main_labels and o['prob'] < 80: continue
             h2_candidates.append(o)
             
         current_h2 = h2_candidates[:2]
-        if len(current_h2) < 2: # Completa se faltar
+        if len(current_h2) < 2:
              remaining = [o for o in valid_opts if o not in current_h2 and o not in current_h1]
              current_h2.extend(remaining[:2-len(current_h2)])
              
@@ -386,15 +364,12 @@ def generate_dual_hedges(main_slip: List[Dict], stats: Dict, refs_db: Dict):
 
 def render_bet_builder_tab(stats, refs_db):
     st.markdown("## 🎰 Bet Builder (Structure Mirror)")
-    st.caption("Cada jogo do principal terá 2 coberturas nos Hedges (Total de Cartões incluído)")
-    
     if 'main_slip' not in st.session_state: st.session_state.main_slip = []
     
     lista_times = sorted(list(stats.keys()))
     num_games = st.number_input("Quantos Jogos?", 1, 5, 3)
     
     temp_slip = []
-    
     for i in range(num_games):
         st.markdown(f"---")
         st.markdown(f"### ⚽ Jogo {i+1}")
@@ -423,7 +398,6 @@ def render_bet_builder_tab(stats, refs_db):
         h1, h2 = generate_dual_hedges(st.session_state.main_slip, stats, refs_db)
         
         st.success("✅ Hedges Gerados!")
-        
         c_main, c_h1, c_h2 = st.columns(3)
         
         with c_main:
@@ -466,7 +440,23 @@ def render_result_v14_5(res, all_dfs):
     st.markdown("---")
     st.subheader(f"🏠 {res['home']} vs ✈️ {res['away']}")
     
-    # MÉTRICAS DE ESCANTEIOS
+    # Exibir Árbitro
+    if res.get('referee'):
+        st.caption(f"👮 Árbitro: {res['referee']} | Rigidez: {m['strict_val']}x | Red Rate: {m['red_rate']:.2f}")
+    
+    # 🆕 RADAR DE RISCO (Novo Recurso)
+    risk_alerts = []
+    if m['strict_val'] < 1.05 and m['prob_red'] > 8:
+        risk_alerts.append("⚠️ Conflito: Times violentos com árbitro leniente. Cuidado com Over Cartões.")
+    if m['shots_h'] < 4.0 and probs['corners']['home']['Over 4.5'] > 60:
+        risk_alerts.append("⚠️ Alerta: Probabilidade de escanteios alta sem chutes no gol (Sorte?).")
+    
+    if risk_alerts:
+        with st.expander("🛡️ Radar de Risco (Evite Red)", expanded=True):
+            for alert in risk_alerts:
+                st.error(alert)
+    
+    # Métricas de Escanteios
     st.info("🏁 **Escanteios Individuais**")
     c1, c2 = st.columns(2)
     
@@ -475,7 +465,8 @@ def render_result_v14_5(res, all_dfs):
         for line in [3.5, 4.5, 5.5]:
             p = probs['corners']['home'].get(f'Over {line}', 0)
             h = get_native_history(res['home'], res['league_h'], 'corners', line, 'home', all_dfs)
-            color = "green" if p >= 70 else "black"
+            # FIX COLOR BUG: Usar red em vez de black
+            color = "green" if p >= 70 else "red"
             st.markdown(f"Over {line}: :{color}[**{p:.0f}%**] | Hist: {h}")
             
     with c2:
@@ -483,12 +474,12 @@ def render_result_v14_5(res, all_dfs):
         for line in [3.5, 4.5, 5.5]:
             p = probs['corners']['away'].get(f'Over {line}', 0)
             h = get_native_history(res['away'], res['league_a'], 'corners', line, 'away', all_dfs)
-            color = "green" if p >= 70 else "black"
+            color = "green" if p >= 70 else "red"
             st.markdown(f"Over {line}: :{color}[**{p:.0f}%**] | Hist: {h}")
 
     st.markdown("---")
 
-    # MÉTRICAS DE CARTÕES
+    # Métricas de Cartões
     st.warning("🟨 **Cartões Individuais**")
     c3, c4 = st.columns(2)
     
@@ -497,7 +488,7 @@ def render_result_v14_5(res, all_dfs):
         for line in [1.5, 2.5]:
             p = probs['cards']['home'].get(f'Over {line}', 0)
             h = get_native_history(res['home'], res['league_h'], 'cards', line, 'home', all_dfs)
-            color = "green" if p >= 70 else "black"
+            color = "green" if p >= 70 else "red"
             st.markdown(f"Over {line}: :{color}[**{p:.0f}%**] | Hist: {h}")
             
     with c4:
@@ -505,11 +496,11 @@ def render_result_v14_5(res, all_dfs):
         for line in [1.5, 2.5]:
             p = probs['cards']['away'].get(f'Over {line}', 0)
             h = get_native_history(res['away'], res['league_a'], 'cards', line, 'away', all_dfs)
-            color = "green" if p >= 70 else "black"
+            color = "green" if p >= 70 else "gray"
             st.markdown(f"Over {line}: :{color}[**{p:.0f}%**] | Hist: {h}")
 
 def main():
-    st.title("⚽ FutPrevisão V14.9.2 (Detailed Lines)")
+    st.title("⚽ FutPrevisão V14.9.3 (Risk Radar)")
     
     with st.spinner("Carregando..."):
         DEBUG_LOGS.clear()
@@ -538,12 +529,17 @@ def main():
                     if 'error' not in res: render_result_v14_5(res, all_dfs)
 
     with tab2:
-        l = sorted(list(stats.keys()))
-        c1, c2 = st.columns(2)
-        h = c1.selectbox("Casa", l, index=0)
-        a = c2.selectbox("Fora", l, index=1)
+        l_times = sorted(list(stats.keys()))
+        l_refs = ["Neutro"] + sorted(list(refs.keys()))
+        
+        c1, c2, c3 = st.columns(3)
+        h = c1.selectbox("Casa", l_times, index=0)
+        a = c2.selectbox("Fora", l_times, index=1)
+        r = c3.selectbox("Árbitro", l_refs) # 🆕 Árbitro adicionado
+        
         if st.button("Simular"):
-            res = calcular_jogo_v14(h, a, stats, None, refs)
+            rf = None if r == "Neutro" else r
+            res = calcular_jogo_v14(h, a, stats, rf, refs)
             if 'error' not in res: render_result_v14_5(res, all_dfs)
             
     with tab3:
