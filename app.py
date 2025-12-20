@@ -1,13 +1,13 @@
 """
 ╔═══════════════════════════════════════════════════════════════════════════╗
-║       FUTPREVISÃO V14.15 - SAFETY SHIELD (DNB + FAIR ODDS)                ║
+║       FUTPREVISÃO V14.16 - FINAL FIX (HEDGE MIX & SIMULATION UI)          ║
 ║                          Sistema de Análise de Apostas                     ║
 ║                                                                            ║
-║  Versão: V14.15                                                           ║
+║  Versão: V14.16                                                           ║
 ║  Data: Dezembro 2025                                                      ║
-║  Refinamento:                                                             ║
-║  1. Inclusão de Empate Anula Aposta (DNB) nos Hedges de Segurança.        ║
-║  2. Cálculo e exibição da Odd Justa (Min Odd) para evitar prejuízo.       ║
+║  Correções:                                                               ║
+║  1. Hedge 2 OBRIGADO a misturar mercados (Canto+Canto PROIBIDO).          ║
+║  2. Aba Simulação agora mostra Mandante e Visitante lado a lado.          ║
 ╚═══════════════════════════════════════════════════════════════════════════╝
 """
 
@@ -22,7 +22,7 @@ from datetime import datetime
 
 # Configuração da Página
 st.set_page_config(
-    page_title="FutPrevisão V14.15",
+    page_title="FutPrevisão V14.16",
     page_icon="⚽",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -249,7 +249,6 @@ def calcular_jogo_v14(home: str, away: str, stats: Dict, ref: Optional[str], ref
     prob_red = ((s_h['red_cards_avg'] + s_a['red_cards_avg']) / 2) * rr * 100
     pr_lbl = "ALTA 🔴" if prob_red > 12 else "MÉDIA 🟠" if prob_red > 8 else "BAIXA 🟡"
 
-    # xG para Dupla Chance / DNB
     xg_home = (s_h['goals_f'] * s_a['goals_a']) / 1.3
     xg_away = (s_a['goals_f'] * s_h['goals_a']) / 1.3
 
@@ -280,7 +279,6 @@ def get_detailed_probs(pred: Dict) -> Dict:
         p_away = xG_A / (total_strength * 1.2)
     p_draw = max(0, 1 - (p_home + p_away))
     
-    # DNB (Empate Anula) = P(Win) / (P(Win) + P(Loss))
     dnb_home = (p_home / (p_home + p_away)) * 100 if (p_home + p_away) > 0 else 50
     dnb_away = (p_away / (p_home + p_away)) * 100 if (p_home + p_away) > 0 else 50
     
@@ -305,11 +303,10 @@ def get_detailed_probs(pred: Dict) -> Dict:
     }
 
 # ═══════════════════════════════════════════════════════════════════════════
-# 3. LÓGICA DE BET BUILDER & HEDGE (SAFETY SHIELD)
+# 3. LÓGICA DE BET BUILDER & HEDGE (SAFETY SHIELD + STRICT MIX)
 # ═══════════════════════════════════════════════════════════════════════════
 
 def get_fair_odd(prob_percent: float) -> float:
-    """Calcula a Odd Justa (Sem Margem) para referência de segurança."""
     if prob_percent <= 0: return 99.0
     return round(100 / prob_percent, 2)
 
@@ -337,8 +334,7 @@ def generate_bet_options(home_team: str, away_team: str, probs: Dict) -> List[Di
         p = probs['cards']['total'].get(f'Over {int(line)}.5', 0)
         options.append({'label': f"Total Over {line} cartões", 'prob': p, 'market':'cards', 'side':'total', 'min_odd': get_fair_odd(p)})
 
-    # 3. RESULTADO (Dupla Chance & DNB)
-    # DNB (Empate Anula) - Mais seguro se a prob for alta
+    # 3. RESULTADO
     if probs['chance']['DNB_1'] >= 70:
         p = probs['chance']['DNB_1']
         options.append({'label': f"Empate Anula: {home_team}", 'prob': p, 'market':'chance', 'side':'home', 'min_odd': get_fair_odd(p)})
@@ -375,76 +371,78 @@ def generate_dual_hedges(main_slip: List[Dict], stats: Dict, refs_db: Dict):
         
         probs = get_detailed_probs(res)
         all_opts = generate_bet_options(home, away, probs)
-        
-        # Filtro de Segurança
         valid_opts = [o for o in all_opts if o['prob'] >= 65]
         if len(valid_opts) < 6: valid_opts = all_opts[:10]
         
         main_labels = [s['label'] for s in sels]
         
-        # ══════════════════════════════════════════════════════════════════
-        # HEDGE 1: TEMPLATE [RESULTADO (DNB/DC)] + [STAT]
-        # ══════════════════════════════════════════════════════════════════
+        # ══════════════════════════════════════════════════════
+        # HEDGE 1: TEMPLATE [RESULTADO] + [STAT] (Safety)
+        # ══════════════════════════════════════════════════════
         h1_pair = []
         
-        # Slot 1: Resultado (DNB ou DC) - Prioridade para DNB (Empate Anula)
+        # 1. Resultado
         chance_opts = [o for o in valid_opts if o['market'] == 'chance' and o['label'] not in main_labels]
-        if chance_opts:
-            h1_pair.append(chance_opts[0])
+        if chance_opts: h1_pair.append(chance_opts[0])
         else:
             # Fallback
-            alt_opts = [o for o in valid_opts if o['label'] not in main_labels]
-            if alt_opts: h1_pair.append(alt_opts[0])
+            alt = [o for o in valid_opts if o['label'] not in main_labels]
+            if alt: h1_pair.append(alt[0])
             
-        # Slot 2: Stat complementar
+        # 2. Stat (Corner/Card)
         stat_opts = [o for o in valid_opts if o['market'] in ['corners', 'cards'] and o['label'] not in main_labels and o not in h1_pair]
-        if stat_opts:
-            h1_pair.append(stat_opts[0])
+        if stat_opts: h1_pair.append(stat_opts[0])
             
         if len(h1_pair) < 2:
             leftover = [o for o in valid_opts if o['label'] not in main_labels and o not in h1_pair]
-            count = 2 - len(h1_pair)
-            h1_pair.extend(leftover[:count])
+            h1_pair.extend(leftover[:2-len(h1_pair)])
             
         for opt in h1_pair:
             hedge1.append({**opt, 'game_id': gid, 'home': home, 'away': away, 'type': 'Safety'})
 
-        # ══════════════════════════════════════════════════════════════════
-        # HEDGE 2: STRICT MIX [CANTO] + [CARTÃO]
-        # ══════════════════════════════════════════════════════════════════
+        # ══════════════════════════════════════════════════════
+        # HEDGE 2: STRICT MIX [CANTO] + [CARTÃO/CHANCE]
+        # TRAVA: Se escolheu Canto, o próximo NÃO PODE ser Canto
+        # ══════════════════════════════════════════════════════
         h2_pair = []
         
         used_labels = main_labels + [o['label'] for o in h1_pair]
         avail_opts = [o for o in valid_opts if o['label'] not in used_labels]
         
+        # Tenta pegar 1 Canto
         corn_opts = [o for o in avail_opts if o['market'] == 'corners']
-        card_opts = [o for o in avail_opts if o['market'] == 'cards']
-        
-        if corn_opts and card_opts:
+        if corn_opts:
             h2_pair.append(corn_opts[0])
-            h2_pair.append(card_opts[0])
-        elif corn_opts:
-            h2_pair.append(corn_opts[0])
-            # Se só tem canto, busca Chance (evita Canto+Canto)
-            bkp = [o for o in avail_opts if o['market'] == 'chance' and o not in h2_pair]
-            if bkp: h2_pair.append(bkp[0])
-        elif card_opts:
-            h2_pair.append(card_opts[0])
-            bkp = [o for o in avail_opts if o['market'] == 'chance' and o not in h2_pair]
-            if bkp: h2_pair.append(bkp[0])
             
+            # OBRIGA O PRÓXIMO A NÃO SER CANTO
+            non_corn_opts = [o for o in avail_opts if o['market'] != 'corners' and o not in h2_pair]
+            if non_corn_opts:
+                h2_pair.append(non_corn_opts[0])
+            else:
+                # Se não tem nada além de canto, tenta pegar algo do H1 (fallback desesperado)
+                pass 
+                
+        else:
+            # Se não tem Canto, pega 1 Cartão e 1 Chance
+            card_opts = [o for o in avail_opts if o['market'] == 'cards']
+            if card_opts: h2_pair.append(card_opts[0])
+            
+            chance_opts = [o for o in avail_opts if o['market'] == 'chance' and o not in h2_pair]
+            if chance_opts: h2_pair.append(chance_opts[0])
+            
+        # Fallback final se não completou 2
         if len(h2_pair) < 2:
             leftover = [o for o in avail_opts if o not in h2_pair]
             h2_pair.extend(leftover[:2-len(h2_pair)])
             
         for opt in h2_pair:
-            hedge2.append({**opt, 'game_id': gid, 'home': home, 'away': away, 'type': 'Mix'})
+            hedge2.append({**opt, 'game_id': gid, 'home': home, 'away': away, 'type': 'Strict Mix'})
             
     return hedge1, hedge2
 
 def render_bet_builder_tab(stats, refs_db):
-    st.markdown("## 🎰 Bet Builder (Safety Shield)")
-    st.caption("Proteção com Odd Mínima e Empate Anula")
+    st.markdown("## 🎰 Bet Builder (Strict Mix)")
+    st.caption("Hedge 2 agora obriga mistura de mercados (Nunca Canto+Canto)")
     
     if 'main_slip' not in st.session_state: st.session_state.main_slip = []
     
@@ -475,7 +473,7 @@ def render_bet_builder_tab(stats, refs_db):
     
     st.session_state.main_slip = temp_slip
     
-    if st.button("🔮 Gerar Hedges (Safety)", type="primary"):
+    if st.button("🔮 Gerar Hedges (Final)", type="primary"):
         h1, h2 = generate_dual_hedges(st.session_state.main_slip, stats, refs_db)
         
         st.success("✅ Hedges Gerados!")
@@ -490,7 +488,7 @@ def render_bet_builder_tab(stats, refs_db):
                     st.caption(f"{s['home']} x {s['away']}")
                     games_seen.append(s['game_id'])
                 st.write(f"- {s['label']}")
-                st.caption(f"Min Odd: {s['min_odd']}") # Exibe Odd Justa
+                st.caption(f"Min Odd: {s['min_odd']}")
             st.metric("Prob Comb.", f"{calculate_combined_probability(st.session_state.main_slip):.1f}%")
             
         with c_h1:
@@ -534,10 +532,11 @@ def render_result_v14_5(res, all_dfs):
         with st.expander("🛡️ Radar de Risco", expanded=True):
             for r in risk: st.error(r)
     
+    # CORREÇÃO UI SIMULAÇÃO
     c1, c2 = st.columns(2)
     with c1:
-        st.info("🏁 **Escanteios Individuais**")
-        st.markdown(f"**🏠 {res['home']}**")
+        st.info(f"🏁 **Escanteios**")
+        st.caption(f"{res['home']} (Mandante)")
         for line in [3.5, 4.5, 5.5]:
             p = probs['corners']['home'].get(f'Over {line}', 0)
             h = get_native_history(res['home'], res['league_h'], 'corners', line, 'home', all_dfs)
@@ -545,16 +544,35 @@ def render_result_v14_5(res, all_dfs):
             st.markdown(f"Over {line}: :{c}[**{p:.0f}%**] | Hist: {h}")
             
     with c2:
-        st.warning("🟨 **Cartões Individuais**")
-        st.markdown(f"**🏠 {res['home']}**")
+        st.caption(f"{res['away']} (Visitante)")
+        for line in [3.5, 4.5, 5.5]:
+            p = probs['corners']['away'].get(f'Over {line}', 0)
+            h = get_native_history(res['away'], res['league_a'], 'corners', line, 'away', all_dfs)
+            c = "green" if p >= 70 else "gray"
+            st.markdown(f"Over {line}: :{c}[**{p:.0f}%**] | Hist: {h}")
+
+    st.markdown("---")
+
+    c3, c4 = st.columns(2)
+    with c3:
+        st.warning(f"🟨 **Cartões**")
+        st.caption(f"{res['home']} (Mandante)")
         for line in [1.5, 2.5]:
             p = probs['cards']['home'].get(f'Over {line}', 0)
             h = get_native_history(res['home'], res['league_h'], 'cards', line, 'home', all_dfs)
             c = "green" if p >= 70 else "gray"
             st.markdown(f"Over {line}: :{c}[**{p:.0f}%**] | Hist: {h}")
+            
+    with c4:
+        st.caption(f"{res['away']} (Visitante)")
+        for line in [1.5, 2.5]:
+            p = probs['cards']['away'].get(f'Over {line}', 0)
+            h = get_native_history(res['away'], res['league_a'], 'cards', line, 'away', all_dfs)
+            c = "green" if p >= 70 else "gray"
+            st.markdown(f"Over {line}: :{c}[**{p:.0f}%**] | Hist: {h}")
 
 def main():
-    st.title("⚽ FutPrevisão V14.15 (Safety Shield)")
+    st.title("⚽ FutPrevisão V14.16 (Final Fix)")
     
     with st.spinner("Carregando..."):
         DEBUG_LOGS.clear()
