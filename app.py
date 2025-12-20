@@ -1,9 +1,9 @@
 """
 ╔═══════════════════════════════════════════════════════════════════════════╗
-║          FUTPREVISÃO V14.8 - STABLE MANUAL (DUAL SELECTION)               ║
+║          FUTPREVISÃO V14.9 - STRUCTURE MIRROR (HEDGE PERFEITO)            ║
 ║                          Sistema de Análise de Apostas                     ║
 ║                                                                            ║
-║  Versão: V14.8 (Sem OCR - Foco em Hedge de 2 Seleções por Jogo)           ║
+║  Versão: V14.9 (Correção de Hedge e Linhas de Cartões Totais)             ║
 ║  Data: Dezembro 2025                                                      ║
 ╚═══════════════════════════════════════════════════════════════════════════╝
 """
@@ -13,22 +13,22 @@ import pandas as pd
 import math
 import numpy as np
 import os
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any
 from difflib import get_close_matches
 from datetime import datetime
 
-# ═══════════════════════════════════════════════════════════════════════════
-# CONFIGURAÇÕES GLOBAIS
-# ═══════════════════════════════════════════════════════════════════════════
-
+# Configuração da Página
 st.set_page_config(
-    page_title="FutPrevisão V14.8",
+    page_title="FutPrevisão V14.9",
     page_icon="⚽",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Constantes
+# ═══════════════════════════════════════════════════════════════════════════
+# CONSTANTES
+# ═══════════════════════════════════════════════════════════════════════════
+
 THRESHOLDS = {
     'fouls_violent': 12.5, 'shots_pressure_high': 6.0, 'shots_pressure_medium': 4.5,
     'red_rate_strict_high': 0.12, 'red_rate_strict_medium': 0.08,
@@ -57,7 +57,7 @@ def log_status(msg: str, status: str = "info"):
     DEBUG_LOGS.append(f"{icon} {msg}")
 
 # ═══════════════════════════════════════════════════════════════════════════
-# 1. CARREGAMENTO DE DADOS (SAFE MODE)
+# 1. CARREGAMENTO DE DADOS
 # ═══════════════════════════════════════════════════════════════════════════
 
 @st.cache_data(ttl=3600)
@@ -194,7 +194,7 @@ def load_calendar_safe() -> pd.DataFrame:
 # 2. MOTOR DE CÁLCULO
 # ═══════════════════════════════════════════════════════════════════════════
 
-def normalize_name(name: str, db_keys: list) -> Optional[str]:
+def normalize_name(name: str, db_keys: list) -> str:
     if not name: return None
     if name in NAME_MAPPING: name = NAME_MAPPING[name]
     if name in db_keys: return name
@@ -269,7 +269,7 @@ def get_detailed_probs(pred: Dict) -> Dict:
             'away': {'Over 3.5': (1-p(3, cA))*100, 'Over 4.5': (1-p(4, cA))*100}
         },
         'cards': {
-            'total': {f"Over {i}.5": (1-p(i, kH+kA))*100 for i in range(3, 6)},
+            'total': {f"Over {i}.5": (1-p(i, kH+kA))*100 for i in range(2, 6)}, # Agora inclui 2.5
             'home': {'Over 1.5': (1-p(1, kH))*100, 'Over 2.5': (1-p(2, kH))*100},
             'away': {'Over 1.5': (1-p(1, kA))*100, 'Over 2.5': (1-p(2, kA))*100}
         }
@@ -288,10 +288,18 @@ def generate_bet_options(home_team: str, away_team: str, probs: Dict) -> List[Di
         options.append({'label': f"{away_team} Over {line} cantos", 'prob': probs['corners']['away'].get(f'Over {line}', 0), 'market':'corners'})
     for line in [8.5, 9.5, 10.5]:
         options.append({'label': f"Total Over {line} cantos", 'prob': probs['corners']['total'].get(f'Over {int(line)}.5', 0), 'market':'corners'})
-    # Cards
+    
+    # Cards (Incluindo Totais)
     for line in [1.5, 2.5]:
         options.append({'label': f"{home_team} Over {line} cartões", 'prob': probs['cards']['home'].get(f'Over {line}', 0), 'market':'cards'})
         options.append({'label': f"{away_team} Over {line} cartões", 'prob': probs['cards']['away'].get(f'Over {line}', 0), 'market':'cards'})
+    
+    # NOVAS LINHAS DE TOTAIS DE CARTÕES
+    for line in [2.5, 3.5, 4.5, 5.5]:
+        key = f'Over {int(line)}.5'
+        val = probs['cards']['total'].get(key, 0)
+        options.append({'label': f"Total Over {line} cartões", 'prob': val, 'market':'cards'})
+
     options.sort(key=lambda x: x['prob'], reverse=True)
     return options
 
@@ -312,31 +320,38 @@ def generate_dual_hedges(main_slip: List[Dict], stats: Dict, refs_db: Dict):
         if gid not in games: games[gid] = []
         games[gid].append(sel)
         
-    # Para cada jogo, gerar 2 opções Hedge 1 e 2 opções Hedge 2
+    # Para cada jogo do bilhete principal...
     for gid, sels in games.items():
-        # Recalcula opções para este jogo
         home, away = sels[0]['home'], sels[0]['away']
         res = calcular_jogo_v14(home, away, stats, None, refs_db)
         if 'error' in res: continue
         
         probs = get_detailed_probs(res)
         all_opts = generate_bet_options(home, away, probs)
+        
+        # 1. Tenta filtrar opções >= 70%
         valid_opts = [o for o in all_opts if o['prob'] >= 70]
+        
+        # 2. Se não tiver opções suficientes, pega as melhores disponíveis (FALLBACK)
+        if len(valid_opts) < 4:
+            valid_opts = all_opts[:6] # Pega as top 6, independente da %
         
         main_labels = [s['label'] for s in sels]
         
-        # Hedge 1: Opções diferentes das principais
+        # --- HEDGE 1: Opções diferentes das principais ---
         h1_candidates = [o for o in valid_opts if o['label'] not in main_labels]
         # Pega as 2 melhores
         current_h1 = h1_candidates[:2]
-        # Se faltar, repete (segurança)
+        
+        # Garante 2 opções (mesmo que tenha que repetir se estiver desesperado)
         if len(current_h1) < 2:
-            current_h1.extend([o for o in valid_opts if o not in current_h1][:2-len(current_h1)])
+            remaining = [o for o in valid_opts if o not in current_h1]
+            current_h1.extend(remaining[:2-len(current_h1)])
             
         for opt in current_h1:
             hedge1.append({**opt, 'game_id': gid, 'home': home, 'away': away, 'type': 'Variação'})
             
-        # Hedge 2: Opções diferentes de H1 (pode repetir Main se for muito seguro >80%)
+        # --- HEDGE 2: Opções diferentes de H1 (pode repetir Main se for >80%) ---
         h1_labels = [o['label'] for o in current_h1]
         h2_candidates = []
         for o in valid_opts:
@@ -346,7 +361,8 @@ def generate_dual_hedges(main_slip: List[Dict], stats: Dict, refs_db: Dict):
             
         current_h2 = h2_candidates[:2]
         if len(current_h2) < 2: # Completa se faltar
-             current_h2.extend([o for o in valid_opts if o not in current_h2 and o not in current_h1][:2-len(current_h2)])
+             remaining = [o for o in valid_opts if o not in current_h2 and o not in current_h1]
+             current_h2.extend(remaining[:2-len(current_h2)])
              
         for opt in current_h2:
             hedge2.append({**opt, 'game_id': gid, 'home': home, 'away': away, 'type': 'Alternativa'})
@@ -354,8 +370,8 @@ def generate_dual_hedges(main_slip: List[Dict], stats: Dict, refs_db: Dict):
     return hedge1, hedge2
 
 def render_bet_builder_tab(stats, refs_db):
-    st.markdown("## 🎰 Bet Builder Manual (Dual Selection)")
-    st.caption("Escolha 2 opções por jogo para o bilhete principal. O sistema gerará Hedges no mesmo padrão.")
+    st.markdown("## 🎰 Bet Builder (Structure Mirror)")
+    st.caption("Cada jogo do principal terá 2 coberturas nos Hedges (Total de Cartões incluído)")
     
     if 'main_slip' not in st.session_state: st.session_state.main_slip = []
     
@@ -380,15 +396,15 @@ def render_bet_builder_tab(stats, refs_db):
         opts = generate_bet_options(h, a, probs)
         opt_fmt = [f"{o['label']} ({o['prob']:.0f}%)" for o in opts]
         
-        s1 = st.selectbox(f"Seleção 1 (Jogo {i+1})", range(len(opts)), format_func=lambda x: opt_fmt[x], key=f"s1_{i}")
-        s2 = st.selectbox(f"Seleção 2 (Jogo {i+1})", range(len(opts)), format_func=lambda x: opt_fmt[x], key=f"s2_{i}", index=min(1, len(opts)-1))
+        s1 = st.selectbox(f"Seleção 1", range(len(opts)), format_func=lambda x: opt_fmt[x], key=f"s1_{i}")
+        s2 = st.selectbox(f"Seleção 2", range(len(opts)), format_func=lambda x: opt_fmt[x], key=f"s2_{i}", index=min(1, len(opts)-1))
         
         temp_slip.append({**opts[s1], 'game_id': i, 'home': h, 'away': a})
         temp_slip.append({**opts[s2], 'game_id': i, 'home': h, 'away': a})
     
     st.session_state.main_slip = temp_slip
     
-    if st.button("🔮 Gerar Hedges (Padrão Duplo)", type="primary"):
+    if st.button("🔮 Gerar Hedges (Espelho)", type="primary"):
         h1, h2 = generate_dual_hedges(st.session_state.main_slip, stats, refs_db)
         
         st.success("✅ Hedges Gerados!")
@@ -397,19 +413,31 @@ def render_bet_builder_tab(stats, refs_db):
         
         with c_main:
             st.info("📋 **Principal**")
+            games_seen = []
             for s in st.session_state.main_slip:
+                if s['game_id'] not in games_seen:
+                    st.caption(f"{s['home']} x {s['away']}")
+                    games_seen.append(s['game_id'])
                 st.write(f"- {s['label']}")
             st.metric("Prob Comb.", f"{calculate_combined_probability(st.session_state.main_slip):.1f}%")
             
         with c_h1:
-            st.warning("🛡️ **Hedge #1 (Segurança)**")
+            st.warning("🛡️ **Hedge #1**")
+            games_seen = []
             for s in h1:
+                if s['game_id'] not in games_seen:
+                    st.caption(f"{s['home']} x {s['away']}")
+                    games_seen.append(s['game_id'])
                 st.write(f"- {s['label']}")
             st.metric("Prob Comb.", f"{calculate_combined_probability(h1):.1f}%")
 
         with c_h2:
-            st.success("🔄 **Hedge #2 (Inverso)**")
+            st.success("🔄 **Hedge #2**")
+            games_seen = []
             for s in h2:
+                if s['game_id'] not in games_seen:
+                    st.caption(f"{s['home']} x {s['away']}")
+                    games_seen.append(s['game_id'])
                 st.write(f"- {s['label']}")
             st.metric("Prob Comb.", f"{calculate_combined_probability(h2):.1f}%")
 
@@ -446,7 +474,7 @@ def render_result_v14_5(res, all_dfs):
         st.write(f"🏠 Over 1.5: {p15h:.0f}% | Hist: {h15}")
 
 def main():
-    st.title("⚽ FutPrevisão V14.8 (Manual Dual)")
+    st.title("⚽ FutPrevisão V14.9 (Structure Mirror)")
     
     with st.spinner("Carregando..."):
         DEBUG_LOGS.clear()
