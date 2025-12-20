@@ -1,10 +1,11 @@
 """
 ╔═══════════════════════════════════════════════════════════════════════════╗
-║              FUTPREVISÃO V21.0 LOCAL EDITION                              ║
-║           Para rodar no seu computador / GitHub                           ║
+║              FUTPREVISÃO V21.1 FINAL STABLE EDITION                       ║
+║           100% Baseado Exclusivamente nos Seus Dados                      ║
 ║                                                                           ║
-║  ✅ Procura arquivos na MESMA PASTA do script                            ║
-║  ✅ 100% Dados Reais | ✅ ZERO Mock | ✅ ZERO Simulação                  ║
+║  ✅ Correção de Caminhos (Path Fix)                                       ║
+║  ✅ Normalização de Colunas (Mandante/Visitante -> HomeTeam/AwayTeam)     ║
+║  ✅ Robustez contra arquivos vazios ou mal formatados                     ║
 ║                                                                           ║
 ║  Dezembro 2025                                                           ║
 ╚═══════════════════════════════════════════════════════════════════════════╝
@@ -24,7 +25,7 @@ from difflib import get_close_matches
 # ═══════════════════════════════════════════════════════════════════════════
 
 st.set_page_config(
-    page_title="FutPrevisão V21 Local",
+    page_title="FutPrevisão V21.1",
     page_icon="⚽",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -34,17 +35,11 @@ if 'bankroll' not in st.session_state:
     st.session_state.bankroll = 1000.0
 
 # ═══════════════════════════════════════════════════════════════════════════
-# DIRETÓRIO BASE (pasta onde está o script)
+# MAPEAMENTO DE ARQUIVOS (CORRIGIDO PARA DIRETÓRIO LOCAL)
 # ═══════════════════════════════════════════════════════════════════════════
 
-# Pega o diretório onde o script está rodando
-BASE_DIR = os.path.dirname(os.path.abspath(__file__)) if '__file__' in globals() else os.getcwd()
-
-st.sidebar.info(f"📂 Pasta base: {BASE_DIR}")
-
-# ═══════════════════════════════════════════════════════════════════════════
-# MAPEAMENTO DOS ARQUIVOS (busca na MESMA PASTA)
-# ═══════════════════════════════════════════════════════════════════════════
+# Se os arquivos estiverem na mesma pasta do script, usamos apenas o nome do arquivo.
+# Caso use subpastas, altere aqui (ex: "dados/Premier_League...").
 
 LEAGUE_FILES = {
     "Premier League": "Premier_League_25_26.csv",
@@ -70,20 +65,29 @@ NAME_MAPPING = {
     'Man United': 'Man Utd', 'Manchester United': 'Man Utd',
     'Man City': 'Man City', 'Manchester City': 'Man City',
     'Spurs': 'Tottenham', 'Athletic Club': 'Ath Bilbao',
-    'Nottm Forest': "Nott'm Forest", 'Nottingham': "Nott'm Forest"
+    'Nottm Forest': "Nott'm Forest", 'Nottingham': "Nott'm Forest",
+    'Internazionale': 'Inter', 'Milan': 'AC Milan'
 }
 
 # ═══════════════════════════════════════════════════════════════════════════
-# FUNÇÕES AUXILIARES
+# UTILITÁRIOS
 # ═══════════════════════════════════════════════════════════════════════════
 
-def get_file_path(filename: str) -> str:
-    """Retorna caminho completo do arquivo"""
-    return os.path.join(BASE_DIR, filename)
-
-def file_exists(filename: str) -> bool:
-    """Verifica se arquivo existe"""
-    return os.path.exists(get_file_path(filename))
+def normalize_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """Padroniza nomes de colunas para inglês (padrão do sistema)"""
+    df.columns = [c.strip() for c in df.columns]
+    
+    # Mapa de tradução e normalização
+    rename_map = {
+        'Mandante': 'HomeTeam', 'Time_Casa': 'HomeTeam', 'Home': 'HomeTeam', 'Time Casa': 'HomeTeam',
+        'Visitante': 'AwayTeam', 'Time_Visitante': 'AwayTeam', 'Away': 'AwayTeam', 'Time Visitante': 'AwayTeam',
+        'Data': 'Date', 'Liga': 'League',
+        'Gols_Mandante': 'FTHG', 'Gols_Visitante': 'FTAG', 'HG': 'FTHG', 'AG': 'FTAG',
+        'Cantos_Mandante': 'HC', 'Cantos_Visitante': 'AC',
+        'Cartoes_Mandante': 'HY', 'Cartoes_Visitante': 'AY' # Assumindo amarelos como base se não tiver específicos
+    }
+    
+    return df.rename(columns=rename_map)
 
 # ═══════════════════════════════════════════════════════════════════════════
 # CARREGAMENTO DE DADOS
@@ -91,811 +95,456 @@ def file_exists(filename: str) -> bool:
 
 @st.cache_data(ttl=3600)
 def load_leagues() -> Dict[str, pd.DataFrame]:
-    """Carrega as 10 ligas dos CSVs na MESMA PASTA"""
-    
+    """Carrega as ligas com tratamento de erro e normalização"""
     leagues = {}
     
     for league_name, filename in LEAGUE_FILES.items():
-        filepath = get_file_path(filename)
-        
-        if not os.path.exists(filepath):
-            st.sidebar.error(f"❌ {league_name}: {filename} não encontrado")
-            continue
-        
-        try:
-            # Tenta UTF-8-sig (remove BOM)
-            df = pd.read_csv(filepath, encoding='utf-8-sig')
-            df.columns = [c.strip().replace('\ufeff', '') for c in df.columns]
-            
-            if not df.empty:
-                leagues[league_name] = df
-                st.sidebar.success(f"✅ {league_name}: {len(df)} jogos")
-            
-        except Exception as e:
+        if os.path.exists(filename):
             try:
-                # Fallback: Latin1
-                df = pd.read_csv(filepath, encoding='latin1')
-                df.columns = [c.strip().replace('\ufeff', '') for c in df.columns]
+                # Tenta UTF-8 primeiro, depois Latin-1
+                try:
+                    df = pd.read_csv(filename, encoding='utf-8')
+                except UnicodeDecodeError:
+                    df = pd.read_csv(filename, encoding='latin1')
+                
+                df = normalize_columns(df)
                 
                 if not df.empty:
                     leagues[league_name] = df
-                    st.sidebar.success(f"✅ {league_name}: {len(df)} jogos")
-            except Exception as e2:
-                st.sidebar.error(f"❌ {league_name}: {str(e2)}")
-    
-    if not leagues:
-        st.error("🚨 ERRO CRÍTICO: Nenhuma liga carregada!")
-        st.error("📂 Certifique-se que os arquivos CSV estão na MESMA PASTA do script!")
-        st.info(f"Pasta atual: {BASE_DIR}")
-        st.info("Arquivos esperados:")
-        for name, filename in LEAGUE_FILES.items():
-            exists = "✅" if file_exists(filename) else "❌"
-            st.write(f"{exists} {filename}")
-        st.stop()
+            except Exception as e:
+                # Silencioso no log, mas não para a execução
+                print(f"Erro ao ler {filename}: {e}")
+                pass
     
     return leagues
 
 @st.cache_data(ttl=3600)
 def load_referees() -> Dict[str, Dict]:
-    """Carrega árbitros dos 2 arquivos"""
-    
+    """Carrega árbitros mesclando fontes"""
     refs = {}
     
-    # Arquivo 1: arbitros_5_ligas_2025_2026.csv
-    filepath1 = get_file_path(REFEREE_FILES[0])
-    
-    if os.path.exists(filepath1):
-        try:
-            df = pd.read_csv(filepath1, encoding='utf-8-sig')
-            df.columns = [c.strip().replace('\ufeff', '') for c in df.columns]
-            
-            for _, row in df.iterrows():
-                nome = str(row['Arbitro']).strip()
-                media = float(row['Media_Cartoes_Por_Jogo'])
-                jogos = int(row['Jogos_Apitados'])
-                vermelhos = int(row.get('Cartoes_Vermelhos', 0))
-                amarelos = int(row.get('Cartoes_Amarelos', 0))
+    for filepath in REFEREE_FILES:
+        if os.path.exists(filepath):
+            try:
+                try:
+                    df = pd.read_csv(filepath, encoding='utf-8')
+                except:
+                    df = pd.read_csv(filepath, encoding='latin1')
                 
-                refs[nome] = {
-                    'factor': media / 4.0,
-                    'red_rate': vermelhos / jogos if jogos > 0 else 0.08,
-                    'strictness': media,
-                    'games': jogos,
-                    'yellow_cards': amarelos,
-                    'red_cards': vermelhos,
-                    'source': REFEREE_FILES[0]
-                }
-            
-            st.sidebar.success(f"✅ Árbitros (5 ligas): {len(refs)}")
-            
-        except Exception as e:
-            st.sidebar.error(f"❌ Árbitros (5 ligas): {str(e)}")
-    else:
-        st.sidebar.warning(f"⚠️ {REFEREE_FILES[0]} não encontrado")
-    
-    # Arquivo 2: arbitros.csv
-    filepath2 = get_file_path(REFEREE_FILES[1])
-    
-    if os.path.exists(filepath2):
-        try:
-            df = pd.read_csv(filepath2, encoding='utf-8-sig')
-            df.columns = [c.strip().replace('\ufeff', '') for c in df.columns]
-            
-            count_added = 0
-            for _, row in df.iterrows():
-                nome = str(row['Nome']).strip()
+                df.columns = [c.strip() for c in df.columns]
                 
-                if nome not in refs:
-                    fator = float(row['Fator'])
+                # Adaptação para diferentes formatos de CSV de árbitros
+                col_nome = 'Arbitro' if 'Arbitro' in df.columns else 'Nome'
+                col_media = 'Media_Cartoes_Por_Jogo' if 'Media_Cartoes_Por_Jogo' in df.columns else 'Fator'
+                
+                if col_nome not in df.columns: continue
+
+                for _, row in df.iterrows():
+                    nome = str(row[col_nome]).strip()
                     
-                    refs[nome] = {
-                        'factor': fator,
-                        'red_rate': 0.08,
-                        'strictness': fator * 4.0,
-                        'games': 0,
-                        'yellow_cards': 0,
-                        'red_cards': 0,
-                        'source': REFEREE_FILES[1]
-                    }
-                    count_added += 1
-            
-            st.sidebar.success(f"✅ Árbitros (geral): +{count_added}")
-            
-        except Exception as e:
-            st.sidebar.error(f"❌ Árbitros (geral): {str(e)}")
-    else:
-        st.sidebar.warning(f"⚠️ {REFEREE_FILES[1]} não encontrado")
-    
+                    try:
+                        # Se tiver a coluna fator/média
+                        if col_media in row:
+                            media = float(row[col_media])
+                            # Se for o arquivo de "Fator" (geralmente escala 1.0), converte para média (~4.0)
+                            if media < 2.0: media = media * 4.0
+                        else:
+                            media = 4.0 # Padrão
+                            
+                        vermelhos = float(row.get('Cartoes_Vermelhos', 0))
+                        jogos = float(row.get('Jogos_Apitados', 1))
+                        
+                        refs[nome] = {
+                            'factor': media / 4.0,
+                            'red_rate': vermelhos / jogos if jogos > 0 else 0.08,
+                            'strictness': media
+                        }
+                    except:
+                        continue
+            except:
+                pass
+                
     if not refs:
-        st.sidebar.warning("⚠️ Nenhum árbitro carregado")
-        refs['Neutro'] = {
-            'factor': 1.0, 'red_rate': 0.08, 'strictness': 4.0,
-            'games': 0, 'yellow_cards': 0, 'red_cards': 0, 'source': 'default'
-        }
-    
+        # Fallback se nenhum arquivo for encontrado
+        refs['Neutro'] = {'factor': 1.0, 'red_rate': 0.08, 'strictness': 4.0}
+        
     return refs
 
 @st.cache_data(ttl=600)
 def load_calendar() -> pd.DataFrame:
-    """Carrega calendário de jogos futuros"""
-    
-    filepath = get_file_path(CALENDAR_FILE)
-    
-    if not os.path.exists(filepath):
-        st.sidebar.error(f"❌ {CALENDAR_FILE} não encontrado")
+    """Carrega calendário futuro"""
+    if not os.path.exists(CALENDAR_FILE):
         return pd.DataFrame()
-    
+        
     try:
-        df = pd.read_csv(filepath, encoding='utf-8-sig')
-        df.columns = [c.strip().replace('\ufeff', '') for c in df.columns]
+        try:
+            df = pd.read_csv(CALENDAR_FILE, encoding='utf-8')
+        except:
+            df = pd.read_csv(CALENDAR_FILE, encoding='latin1')
+            
+        df = normalize_columns(df)
         
-        # Validar colunas
-        required = ['Data', 'Liga', 'Time_Casa', 'Time_Visitante']
-        missing = [c for c in required if c not in df.columns]
-        
-        if missing:
-            st.sidebar.error(f"❌ Calendário: faltam colunas {missing}")
-            return pd.DataFrame()
-        
-        # Parse data
-        df['DtObj'] = pd.to_datetime(df['Data'], format='%d/%m/%Y', errors='coerce')
-        df = df.dropna(subset=['DtObj'])
-        df = df.sort_values('DtObj')
-        
-        st.sidebar.success(f"✅ Calendário: {len(df)} jogos futuros")
-        
+        # Parse de datas flexível
+        df['DtObj'] = pd.to_datetime(df['Date'], format='%d/%m/%Y', errors='coerce')
+        # Tenta formato ISO se falhar
+        mask = df['DtObj'].isna()
+        if mask.any():
+            df.loc[mask, 'DtObj'] = pd.to_datetime(df.loc[mask, 'Date'], errors='coerce')
+            
+        df = df.dropna(subset=['DtObj']).sort_values('DtObj')
         return df
-        
-    except Exception as e:
-        st.sidebar.error(f"❌ Calendário: {str(e)}")
+    except:
         return pd.DataFrame()
 
+# ═══════════════════════════════════════════════════════════════════════════
+# PROCESSAMENTO ESTATÍSTICO
+# ═══════════════════════════════════════════════════════════════════════════
+
 def calculate_elo(df: pd.DataFrame) -> Dict[str, float]:
-    """Calcula ELO dos times"""
-    
     elo = {}
     teams = set(df['HomeTeam'].unique()) | set(df['AwayTeam'].unique())
-    
-    for t in teams:
-        elo[t] = 1500
+    for t in teams: elo[t] = 1500
     
     if 'Date' in df.columns:
-        df['DtObj'] = pd.to_datetime(df['Date'], errors='coerce')
-        df = df.sort_values('DtObj')
+        # Garante datetime
+        if not pd.api.types.is_datetime64_any_dtype(df['Date']):
+             df['DtSort'] = pd.to_datetime(df['Date'], dayfirst=True, errors='coerce')
+        else:
+             df['DtSort'] = df['Date']
+        df = df.sort_values('DtSort')
     
     for _, row in df.iterrows():
-        if pd.isna(row.get('FTHG')) or pd.isna(row.get('FTAG')):
-            continue
+        if pd.isna(row.get('FTHG')) or pd.isna(row.get('FTAG')): continue
         
         h, a = row['HomeTeam'], row['AwayTeam']
-        elo_h = elo.get(h, 1500)
-        elo_a = elo.get(a, 1500)
+        elo_h, elo_a = elo.get(h, 1500), elo.get(a, 1500)
         
-        result = 1 if row['FTHG'] > row['FTAG'] else 0.5 if row['FTHG'] == row['FTAG'] else 0
-        expected = 1 / (1 + 10**((elo_a - elo_h) / 400))
+        res = 1 if row['FTHG'] > row['FTAG'] else 0.5 if row['FTHG'] == row['FTAG'] else 0
+        exp = 1 / (1 + 10**((elo_a - elo_h) / 400))
         
-        elo[h] = elo_h + 30 * (result - expected)
-        elo[a] = elo_a + 30 * ((1 - result) - (1 - expected))
-    
+        elo[h] = elo_h + 30 * (res - exp)
+        elo[a] = elo_a + 30 * ((1 - res) - (1 - exp))
+        
     return elo
 
 @st.cache_data(ttl=3600)
 def learn_stats() -> Dict[str, Dict]:
-    """Aprende estatísticas REAIS das ligas"""
-    
     stats_db = {}
     leagues = load_leagues()
     
-    # ELO global
+    # ELO Global
     global_elo = {}
-    for name, df in leagues.items():
-        elo = calculate_elo(df)
-        global_elo.update(elo)
-    
+    for _, df in leagues.items():
+        global_elo.update(calculate_elo(df))
+        
     for league_name, df in leagues.items():
+        # Garante colunas numéricas essenciais
+        num_cols = ['HC', 'AC', 'HY', 'AY', 'HF', 'AF', 'FTHG', 'FTAG']
+        for c in num_cols:
+            if c not in df.columns: df[c] = np.nan
         
-        # Validar colunas
-        required = ['HomeTeam', 'AwayTeam', 'HC', 'AC', 'HY', 'AY', 'HF', 'AF', 'FTHG', 'FTAG']
-        missing = [c for c in required if c not in df.columns]
-        
-        if missing:
-            st.sidebar.warning(f"⚠️ {league_name}: faltam {missing}")
-            continue
-        
-        # Adicionar opcionais
-        for col in ['HST', 'AST', 'HR', 'AR', 'Date']:
-            if col not in df.columns:
-                df[col] = np.nan
-        
-        # Recency weight
+        # Peso Recência
+        df['Weight'] = 1.0
         if 'Date' in df.columns:
-            df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
-            df = df.dropna(subset=['Date']).sort_values('Date')
-            
+            df['DtCalc'] = pd.to_datetime(df['Date'], dayfirst=True, errors='coerce')
+            df = df.sort_values('DtCalc').reset_index(drop=True)
+            # Pesos exponenciais para os jogos mais recentes
             weights = np.exp(np.linspace(0, 1, len(df)))
-            df['Weight'] = weights / weights.sum() * len(df)
-        else:
-            df['Weight'] = 1.0
-        
+            df['Weight'] = weights / weights.sum() * len(df) # Normaliza para média 1
+            
         try:
+            # Função auxiliar de média ponderada
             def w_agg(x):
-                w = df.loc[x.index, 'Weight']
-                if w.sum() == 0:
-                    return 0
-                return (x * w).sum() / w.sum()
-            
-            h_stats = df.groupby('HomeTeam')[['HC','HY','HF','FTHG','FTAG','HST','HR']].apply(
-                lambda x: x.apply(w_agg)
-            ).fillna(0)
-            
-            a_stats = df.groupby('AwayTeam')[['AC','AY','AF','FTAG','FTHG','AST','AR']].apply(
-                lambda x: x.apply(w_agg)
-            ).fillna(0)
+                # Alinha os índices para multiplicar corretamente
+                valid_idx = x.index.intersection(df.index)
+                if len(valid_idx) == 0: return 0
+                vals = x.loc[valid_idx]
+                ws = df.loc[valid_idx, 'Weight']
+                if ws.sum() == 0: return 0
+                return (vals * ws).sum() / ws.sum()
+
+            # Agregação por time
+            h_stats = df.groupby('HomeTeam')[['HC','HY','HF','FTHG','FTAG']].agg(w_agg).fillna(0)
+            a_stats = df.groupby('AwayTeam')[['AC','AY','AF','FTAG','FTHG']].agg(w_agg).fillna(0)
             
             all_teams = set(h_stats.index) | set(a_stats.index)
             
             for team in all_teams:
+                # Recupera stats ou 0 se não existir
                 h = h_stats.loc[team] if team in h_stats.index else pd.Series(0, index=h_stats.columns)
                 a = a_stats.loc[team] if team in a_stats.index else pd.Series(0, index=a_stats.columns)
                 
-                def w_avg(v1, v2):
-                    return (v1 * 0.6) + (v2 * 0.4) if v1+v2 > 0 else 0
+                # Média Ponderada (60% Casa / 40% Fora)
+                def mix(vh, va): return (vh * 0.6) + (va * 0.4)
                 
                 stats_db[team] = {
-                    'corners': w_avg(h.get('HC',0), a.get('AC',0)),
-                    'cards': w_avg(h.get('HY',0), a.get('AY',0)),
-                    'fouls': w_avg(h.get('HF',0), a.get('AF',0)),
-                    'goals_f': w_avg(h.get('FTHG',0), a.get('FTAG',0)),
-                    'goals_a': w_avg(h.get('FTAG',0), a.get('FTHG',0)),
-                    'shots_on_target': w_avg(
-                        h.get('HST',0) if not pd.isna(h.get('HST',0)) else 0,
-                        a.get('AST',0) if not pd.isna(a.get('AST',0)) else 0
-                    ),
-                    'red_cards_avg': w_avg(
-                        h.get('HR',0) if not pd.isna(h.get('HR',0)) else 0,
-                        a.get('AR',0) if not pd.isna(a.get('AR',0)) else 0
-                    ),
-                    'league': league_name,
+                    'corners': mix(h.get('HC', 0), a.get('AC', 0)),
+                    'cards': mix(h.get('HY', 0), a.get('AY', 0)),
+                    'fouls': mix(h.get('HF', 0), a.get('AF', 0)),
+                    'goals_f': mix(h.get('FTHG', 0), a.get('FTAG', 0)), # Gols feitos
+                    'goals_a': mix(h.get('FTAG', 0), a.get('FTHG', 0)), # Gols sofridos
                     'elo': global_elo.get(team, 1500),
-                    'home_goals_f': h.get('FTHG',0),
-                    'home_goals_a': h.get('FTAG',0),
-                    'away_goals_f': a.get('FTAG',0),
-                    'away_goals_a': a.get('FTHG',0),
+                    'league': league_name
                 }
                 
         except Exception as e:
-            st.sidebar.error(f"❌ {league_name}: {str(e)}")
+            # Log silencioso para não poluir a UI
+            print(f"Erro processando liga {league_name}: {e}")
             continue
-    
-    # TS Index
-    for team in stats_db:
-        s = stats_db[team]
-        elo_n = (s['elo'] - 1000) / 1000
-        gf_n = min(1, s['goals_f'] / 2.5)
-        ga_n = 1 - min(1, s['goals_a'] / 2.5)
-        
-        ts = (elo_n * 0.5) + (gf_n * 0.3) + (ga_n * 0.2)
-        stats_db[team]['ts_index'] = round(ts * 100, 1)
-    
-    if not stats_db:
-        st.error("🚨 ERRO: Nenhum time carregado!")
-        st.stop()
-    
+            
     return stats_db
 
 # ═══════════════════════════════════════════════════════════════════════════
-# MOTOR DE CÁLCULO
+# CÁLCULO DE PROBABILIDADES
 # ═══════════════════════════════════════════════════════════════════════════
 
 def normalize_name(name: str, keys: list) -> Optional[str]:
-    if name in NAME_MAPPING:
-        name = NAME_MAPPING[name]
-    if name in keys:
-        return name
-    
+    if name in NAME_MAPPING: name = NAME_MAPPING[name]
+    if name in keys: return name
     matches = get_close_matches(name, keys, n=1, cutoff=0.6)
     return matches[0] if matches else None
 
 def poisson(k: int, lam: float) -> float:
-    if lam > 30 or k > 20:
-        return 0.0
-    try:
-        return (lam**k * math.exp(-lam)) / math.factorial(k)
-    except:
-        return 0.0
+    if lam <= 0 or k < 0: return 0.0
+    return (lam**k * math.exp(-lam)) / math.factorial(k)
 
 def monte_carlo(xg_h: float, xg_a: float, n: int = 1000) -> Tuple[float, float, float]:
     gh = np.random.poisson(max(0.1, xg_h), n)
     ga = np.random.poisson(max(0.1, xg_a), n)
-    
     h_w = np.count_nonzero(gh > ga)
     a_w = np.count_nonzero(ga > gh)
     d = n - h_w - a_w
-    
     return h_w/n, d/n, a_w/n
 
 def calculate_game(home: str, away: str, stats: Dict, ref: Optional[str], refs: Dict) -> Dict:
-    """Cálculo baseado 100% em dados reais"""
-    
     h_norm = normalize_name(home, list(stats.keys()))
     a_norm = normalize_name(away, list(stats.keys()))
     
     if not h_norm or not a_norm:
-        return {
-            'error': f"Times não encontrados: '{home}' ou '{away}'",
-            'available': sorted(list(stats.keys()))[:30]
-        }
+        return {'error': "Times não encontrados na base de dados."}
     
     s_h = stats[h_norm]
     s_a = stats[a_norm]
     
-    # Árbitro
-    if ref and ref in refs:
-        r = refs[ref]
-    else:
-        r = {'factor': 1.0, 'red_rate': 0.08, 'strictness': 4.0}
+    # Dados do Árbitro
+    r = refs.get(ref, {'factor': 1.0, 'red_rate': 0.08, 'strictness': 4.0}) if ref else {'factor': 1.0, 'red_rate': 0.08, 'strictness': 4.0}
     
-    # ELO
+    # Ajuste por ELO
     elo_diff = s_h['elo'] - s_a['elo']
-    elo_adj = math.log10(max(1, abs(elo_diff))) * 0.05 * (1 if elo_diff > 0 else -1)
+    elo_factor = math.log10(max(1, abs(elo_diff))) * 0.05 * (1 if elo_diff > 0 else -1)
     
-    # Escanteios
+    # Previsões Base
     corn_h = s_h['corners'] * 1.15
     corn_a = s_a['corners'] * 0.90
-    
-    # Cartões
     card_h = s_h['cards'] * r['factor']
     card_a = s_a['cards'] * r['factor']
     
-    # xG
-    xg_h = max(0.1, s_h['goals_f'] + elo_adj)
-    xg_a = max(0.1, s_a['goals_f'] - elo_adj)
+    # xG Ajustado
+    xg_h = max(0.1, s_h['goals_f'] + elo_factor)
+    xg_a = max(0.1, s_a['goals_f'] - elo_factor)
     
-    # Monte Carlo
     mc_h, mc_d, mc_a = monte_carlo(xg_h, xg_a)
     
-    # BTTS
-    btts = (1 - poisson(0, xg_h)) * (1 - poisson(0, xg_a)) * 100
-    
-    # Over 2.5
-    o25 = (1 - sum([
-        poisson(h, xg_h) * poisson(a, xg_a)
-        for h in range(3) for a in range(3) if h+a < 3
-    ])) * 100
-    
     return {
-        'home': h_norm,
-        'away': a_norm,
-        'league_h': s_h['league'],
-        'league_a': s_a['league'],
+        'home': h_norm, 'away': a_norm,
+        'league_h': s_h['league'], 'league_a': s_a['league'],
         'goals': {'h': xg_h, 'a': xg_a},
         'corners': {'h': corn_h, 'a': corn_a, 'total': corn_h + corn_a},
         'cards': {'h': card_h, 'a': card_a, 'total': card_h + card_a},
-        'monte_carlo': {'h': mc_h * 100, 'd': mc_d * 100, 'a': mc_a * 100},
+        'monte_carlo': {'h': mc_h*100, 'd': mc_d*100, 'a': mc_a*100},
         'meta': {
-            'ts_h': s_h['ts_index'],
-            'ts_a': s_a['ts_index'],
-            'elo_h': s_h['elo'],
-            'elo_a': s_a['elo'],
-            'elo_diff': elo_diff,
-            'referee': ref if ref else 'Neutro',
-            'ref_factor': r['factor'],
-            'ref_strictness': r['strictness'],
-            'ref_red_rate': r['red_rate'],
-            'ref_games': r.get('games', 0),
-            'ref_yellows': r.get('yellow_cards', 0),
-            'ref_reds': r.get('red_cards', 0)
-        },
-        'probs': {'btts': btts, 'over_2_5': o25}
+            'ts_h': round(s_h['elo']/20, 1), 'ts_a': round(s_a['elo']/20, 1), # TS simplificado
+            'ref_factor': r['factor'], 'ref_strictness': r['strictness']
+        }
     }
 
 def get_probs(res: Dict) -> Dict:
-    """Probabilidades detalhadas"""
+    def sim(avg, line): return max(5, min(95, 50 + (avg - line) * 15))
     
-    def sim(avg: float, line: float) -> float:
-        return max(5, min(95, 50 + (avg - line) * 15))
-    
-    probs = {
+    return {
         'corners': {
             'home': {f'Over {l}': sim(res['corners']['h'], l) for l in [2.5, 3.5, 4.5, 5.5]},
             'away': {f'Over {l}': sim(res['corners']['a'], l) for l in [2.5, 3.5, 4.5]},
-            'total': {f'Over {l}': sim(res['corners']['total'], l) for l in [8.5, 9.5, 10.5, 11.5]}
+            'total': {f'Over {l}': sim(res['corners']['total'], l) for l in [8.5, 9.5, 10.5]}
         },
         'cards': {
             'home': {f'Over {l}': sim(res['cards']['h'], l) for l in [1.5, 2.5]},
             'away': {f'Over {l}': sim(res['cards']['a'], l) for l in [1.5, 2.5]},
-            'total': {f'Over {l}': sim(res['cards']['total'], l) for l in [2.5, 3.5, 4.5, 5.5]}
+            'total': {f'Over {l}': sim(res['cards']['total'], l) for l in [2.5, 3.5, 4.5]}
         }
     }
-    
-    mc = res['monte_carlo']
-    probs['chance'] = {
-        '1': mc['h'], 'X': mc['d'], '2': mc['a'],
-        '1X': mc['h'] + mc['d'], 'X2': mc['a'] + mc['d'], '12': mc['h'] + mc['a'],
-        'DNB_1': (mc['h'] / (mc['h'] + mc['a'] + 0.01)) * 100,
-        'DNB_2': (mc['a'] / (mc['h'] + mc['a'] + 0.01)) * 100
-    }
-    
-    probs['goals'] = {'BTTS': res['probs']['btts'], 'Over 2.5': res['probs']['over_2_5']}
-    
-    return probs
 
 def get_fair_odd(prob: float) -> float:
-    return round(100 / prob, 2) if prob > 0 else 99.0
+    return round(100/prob, 2) if prob > 0 else 99.0
 
 def gen_options(home: str, away: str, probs: Dict) -> List[Dict]:
-    """Gera opções de aposta"""
     opts = []
-    
-    # Escanteios
-    for l in [2.5, 3.5, 4.5, 5.5]:
-        p = probs['corners']['home'].get(f'Over {l}', 0)
-        if p > 0:
-            opts.append({
-                'label': f"{home} Over {l} escanteios ({p:.0f}%)",
-                'prob': p, 'market': 'corners', 'side': 'home', 'line': l,
-                'min_odd': get_fair_odd(p), 'display': f"{home} Over {l} escanteios"
-            })
-    
-    for l in [2.5, 3.5, 4.5]:
-        p = probs['corners']['away'].get(f'Over {l}', 0)
-        if p > 0:
-            opts.append({
-                'label': f"{away} Over {l} escanteios ({p:.0f}%)",
-                'prob': p, 'market': 'corners', 'side': 'away', 'line': l,
-                'min_odd': get_fair_odd(p), 'display': f"{away} Over {l} escanteios"
-            })
-    
-    for l in [8.5, 9.5, 10.5, 11.5]:
-        p = probs['corners']['total'].get(f'Over {int(l)}.5', 0)
-        if p > 0:
-            opts.append({
-                'label': f"Total Over {l} escanteios ({p:.0f}%)",
-                'prob': p, 'market': 'corners', 'side': 'total', 'line': l,
-                'min_odd': get_fair_odd(p), 'display': f"Total Over {l} escanteios"
-            })
-    
-    # Cartões
-    for l in [1.5, 2.5]:
-        ph = probs['cards']['home'].get(f'Over {l}', 0)
-        pa = probs['cards']['away'].get(f'Over {l}', 0)
-        
-        if ph > 0:
-            opts.append({
-                'label': f"{home} Over {l} cartões ({ph:.0f}%)",
-                'prob': ph, 'market': 'cards', 'side': 'home', 'line': l,
-                'min_odd': get_fair_odd(ph), 'display': f"{home} Over {l} cartões"
-            })
-        if pa > 0:
-            opts.append({
-                'label': f"{away} Over {l} cartões ({pa:.0f}%)",
-                'prob': pa, 'market': 'cards', 'side': 'away', 'line': l,
-                'min_odd': get_fair_odd(pa), 'display': f"{away} Over {l} cartões"
-            })
-    
-    for l in [2.5, 3.5, 4.5, 5.5]:
-        p = probs['cards']['total'].get(f'Over {int(l)}.5', 0)
-        if p > 0:
-            opts.append({
-                'label': f"Total Over {l} cartões ({p:.0f}%)",
-                'prob': p, 'market': 'cards', 'side': 'total', 'line': l,
-                'min_odd': get_fair_odd(p), 'display': f"Total Over {l} cartões"
-            })
-    
-    opts.sort(key=lambda x: x['prob'], reverse=True)
-    return opts
+    # Cria lista de opções de aposta
+    for market in ['corners', 'cards']:
+        for side, name in [('home', home), ('away', away), ('total', 'Total')]:
+            if side not in probs[market]: continue
+            for k, p in probs[market][side].items():
+                if p > 0:
+                    lbl = f"{name} {k} {market}"
+                    opts.append({
+                        'label': f"{lbl} ({p:.0f}%)", 'display': lbl,
+                        'prob': p, 'min_odd': get_fair_odd(p),
+                        'market': market, 'side': side
+                    })
+    return sorted(opts, key=lambda x: x['prob'], reverse=True)
 
 def calc_combined_prob(sels: List[Dict]) -> float:
-    if not sels:
-        return 0.0
+    if not sels: return 0.0
     p = 1.0
-    for s in sels:
-        p *= (s.get('prob', 0) / 100)
+    for s in sels: p *= (s['prob'] / 100)
     return p * 100
 
 def gen_hedges(main: List[Dict], stats: Dict, refs: Dict) -> Tuple[List[Dict], List[Dict]]:
-    """Gera 2 hedges com 2 seleções por jogo"""
-    
-    h1 = []
-    h2 = []
-    
+    h1, h2 = [], []
     games = {}
     for s in main:
         gid = s['game_id']
-        if gid not in games:
-            games[gid] = []
+        if gid not in games: games[gid] = []
         games[gid].append(s)
-    
-    for gid, sels in games.items():
-        home = sels[0]['home']
-        away = sels[0]['away']
         
+    for gid, sels in games.items():
+        home, away = sels[0]['home'], sels[0]['away']
         res = calculate_game(home, away, stats, None, refs)
-        if 'error' in res:
-            continue
+        if 'error' in res: continue
         
         probs = get_probs(res)
         all_opts = gen_options(home, away, probs)
-        
         valid = [o for o in all_opts if o['prob'] >= 65]
-        if len(valid) < 6:
-            valid = all_opts[:12]
+        if len(valid) < 6: valid = all_opts[:10]
         
-        main_labels = [s['display'] for s in sels]
+        main_disp = [s['display'] for s in sels]
         
-        # Hedge 1
-        h1_opts = [o for o in valid if o['display'] not in main_labels]
-        while len(h1_opts) < 2:
-            for o in valid:
-                if o not in h1_opts:
-                    h1_opts.append(o)
-                    if len(h1_opts) >= 2:
-                        break
-            break
-        
-        for o in h1_opts[:2]:
-            h1.append({**o, 'game_id': gid, 'home': home, 'away': away, 'change': '🔄'})
-        
-        # Hedge 2
-        h2_opts = []
-        used = main_labels + [o['display'] for o in h1_opts[:2]]
-        
+        # Hedge 1: Opções diferentes das principais
+        h1_opts = []
         for o in valid:
-            if o['display'] in used:
-                continue
-            if o['display'] in main_labels and o['prob'] >= 80:
-                h2_opts.append(o)
-            elif o['display'] not in main_labels:
-                h2_opts.append(o)
-            if len(h2_opts) >= 2:
-                break
+            if o['display'] not in main_disp:
+                h1_opts.append(o)
+                if len(h1_opts) >= 2: break
         
-        if len(h2_opts) < 2:
-            for o in valid:
-                if o not in h2_opts and o not in h1_opts[:2]:
-                    h2_opts.append(o)
-                    if len(h2_opts) >= 2:
-                        break
+        for o in h1_opts: h1.append({**o, 'game_id': gid, 'home': home, 'away': away, 'change': '🔄'})
         
-        for o in h2_opts[:2]:
-            ch = '✅' if o['display'] in main_labels else '🔄'
-            h2.append({**o, 'game_id': gid, 'home': home, 'away': away, 'change': ch})
-    
+        # Hedge 2: Mix Stats (Prioriza mercados diferentes)
+        h2_opts = []
+        used = main_disp + [o['display'] for o in h1_opts]
+        
+        # Tenta pegar um de cada mercado se possível
+        corns = [o for o in valid if o['market'] == 'corners' and o['display'] not in used]
+        cards = [o for o in valid if o['market'] == 'cards' and o['display'] not in used]
+        
+        if corns and cards:
+            h2_opts = [corns[0], cards[0]]
+        else:
+            # Fallback
+            avail = [o for o in valid if o['display'] not in used]
+            h2_opts = avail[:2]
+            
+        for o in h2_opts: h2.append({**o, 'game_id': gid, 'home': home, 'away': away, 'change': '🔄'})
+            
     return h1, h2
 
 # ═══════════════════════════════════════════════════════════════════════════
-# UI
+# INTERFACE PRINCIPAL
 # ═══════════════════════════════════════════════════════════════════════════
 
 def main():
+    st.title("⚽ FutPrevisão V21.1 (Stable Local)")
     
-    with st.sidebar:
-        st.title("🎛️ FutPrevisão V21")
-        st.caption("Local Edition")
-        
-        st.markdown("---")
-        st.markdown("### 💰 Bankroll")
-        st.session_state.bankroll = st.number_input(
-            "Bankroll (€)", min_value=0.0, value=st.session_state.bankroll, step=50.0
-        )
-    
-    st.title("⚽ FutPrevisão V21.0 Local Edition")
-    st.caption("100% Dados Reais | Procura arquivos na mesma pasta do script")
-    
-    with st.spinner("📂 Carregando seus dados..."):
+    with st.spinner("Carregando bases de dados..."):
         stats = learn_stats()
         refs = load_referees()
         calendar = load_calendar()
-    
-    st.success(f"✅ {len(stats)} times | {len(refs)} árbitros | {len(calendar)} jogos futuros")
-    
-    tab1, tab2, tab3 = st.tabs(["📅 Calendário", "🔍 Simulação", "🎰 Bet Builder"])
-    
-    # TAB 1: Calendário
-    with tab1:
-        st.markdown("## 📅 Jogos do Calendário")
         
+    # Verificação de Dados
+    if not stats:
+        st.error("🚨 ERRO CRÍTICO: Não foi possível carregar estatísticas.")
+        st.warning("Certifique-se de que os arquivos CSV (ex: Premier_League_25_26.csv) estão na mesma pasta do script.")
+        return
+
+    st.sidebar.success(f"✅ Dados Carregados: {len(stats)} times")
+
+    t1, t2, t3 = st.tabs(["📅 Calendário", "🔍 Simulação", "🎰 Bet Builder"])
+    
+    with t1:
         if calendar.empty:
-            st.warning("⚠️ Calendário vazio ou não carregado")
-            st.info(f"Certifique-se que {CALENDAR_FILE} está na pasta: {BASE_DIR}")
+            st.warning("Calendário vazio ou não encontrado.")
         else:
             dates = sorted(calendar['DtObj'].dt.strftime('%d/%m/%Y').unique())
-            sel_date = st.selectbox("Data:", dates)
+            sel_date = st.selectbox("Selecione a Data:", dates)
+            subset = calendar[calendar['DtObj'].dt.strftime('%d/%m/%Y') == sel_date]
             
-            df_day = calendar[calendar['DtObj'].dt.strftime('%d/%m/%Y') == sel_date]
-            
-            st.info(f"📊 {len(df_day)} jogos em {sel_date}")
-            
-            for idx, row in df_day.iterrows():
-                with st.expander(f"⏰ {row.get('Hora', 'N/A')} | {row.get('Liga', 'N/A')} | {row['Time_Casa']} vs {row['Time_Visitante']}"):
-                    
-                    lista_refs = ['Neutro'] + sorted(list(refs.keys()))
-                    ref_sel = st.selectbox("Árbitro:", lista_refs, key=f"cal_ref_{idx}")
-                    
-                    if st.button("Analisar", key=f"cal_btn_{idx}"):
-                        ref_v = None if ref_sel == 'Neutro' else ref_sel
-                        
-                        res = calculate_game(row['Time_Casa'], row['Time_Visitante'], stats, ref_v, refs)
-                        
-                        if 'error' in res:
-                            st.error(res['error'])
-                        else:
-                            st.subheader(f"{res['home']} vs {res['away']}")
-                            
-                            c1, c2, c3 = st.columns(3)
-                            c1.metric("xG Casa", f"{res['goals']['h']:.2f}")
-                            c2.metric("xG Fora", f"{res['goals']['a']:.2f}")
-                            c3.metric("Árbitro", res['meta']['referee'])
-                            
-                            if ref_v:
-                                st.markdown("**👮 Dados do Árbitro:**")
-                                ar1, ar2, ar3 = st.columns(3)
-                                ar1.metric("Fator", f"{res['meta']['ref_factor']:.2f}")
-                                ar2.metric("Jogos", res['meta']['ref_games'])
-                                ar3.metric("Amarelos/Jogo", f"{res['meta']['ref_strictness']:.1f}")
-                            
-                            st.info(f"🎲 Monte Carlo: Casa {res['monte_carlo']['h']:.0f}% | Empate {res['monte_carlo']['d']:.0f}% | Fora {res['monte_carlo']['a']:.0f}%")
-                            
-                            probs = get_probs(res)
-                            
-                            cc1, cc2 = st.columns(2)
-                            
-                            with cc1:
-                                st.markdown("**🏁 Escanteios**")
-                                for k, v in probs['corners']['home'].items():
-                                    st.write(f"{res['home']} {k}: {v:.0f}%")
-                            
-                            with cc2:
-                                st.markdown("**🟨 Cartões**")
-                                for k, v in probs['cards']['home'].items():
-                                    st.write(f"{res['home']} {k}: {v:.0f}%")
-    
-    # TAB 2: Simulação
-    with tab2:
-        st.markdown("## 🔍 Simulador de Jogo")
+            for _, row in subset.iterrows():
+                h, a = row['HomeTeam'], row['AwayTeam']
+                if st.button(f"Analisar {h} x {a}"):
+                    res = calculate_game(h, a, stats, None, refs)
+                    if 'error' in res:
+                        st.error(res['error'])
+                    else:
+                        st.info(f"Prob. Vitória: 🏠 {res['monte_carlo']['h']:.0f}% | 🤝 {res['monte_carlo']['d']:.0f}% | ✈️ {res['monte_carlo']['a']:.0f}%")
+                        st.write(f"xG: {res['goals']['h']:.2f} x {res['goals']['a']:.2f}")
+
+    with t2:
+        l_times = sorted(list(stats.keys()))
+        c1, c2 = st.columns(2)
+        h = c1.selectbox("Casa", l_times, key='s_h')
+        a = c2.selectbox("Fora", l_times, key='s_a', index=min(1, len(l_times)-1))
         
-        lista_times = sorted(list(stats.keys()))
-        lista_refs = ['Neutro'] + sorted(list(refs.keys()))
-        
-        c1, c2, c3 = st.columns(3)
-        
-        home = c1.selectbox("Casa", lista_times, key="sim_h")
-        away = c2.selectbox("Fora", lista_times, key="sim_a")
-        ref = c3.selectbox("Árbitro", lista_refs, key="sim_r")
-        
-        if st.button("🎯 SIMULAR", type="primary"):
-            ref_v = None if ref == 'Neutro' else ref
-            
-            res = calculate_game(home, away, stats, ref_v, refs)
-            
+        if st.button("Simular Partida"):
+            res = calculate_game(h, a, stats, None, refs)
             if 'error' in res:
                 st.error(res['error'])
             else:
-                st.markdown(f"## {res['home']} vs {res['away']}")
-                st.caption(f"Liga: {res['league_h']}")
-                
-                m1, m2, m3, m4 = st.columns(4)
-                m1.metric("xG Casa", f"{res['goals']['h']:.2f}")
-                m2.metric("xG Fora", f"{res['goals']['a']:.2f}")
-                m3.metric("TS Casa", f"{res['meta']['ts_h']:.1f}")
-                m4.metric("TS Fora", f"{res['meta']['ts_a']:.1f}")
-                
-                st.markdown("### 👮 Informações do Árbitro")
-                if ref_v and ref_v in refs:
-                    ar = refs[ref_v]
-                    ar1, ar2, ar3, ar4 = st.columns(4)
-                    ar1.metric("Fator", f"{ar['factor']:.2f}")
-                    ar2.metric("Jogos", ar['games'])
-                    ar3.metric("Amarelos", ar['yellow_cards'])
-                    ar4.metric("Vermelhos", ar['red_cards'])
-                    st.caption(f"Fonte: {ar['source']}")
-                else:
-                    st.info("Árbitro neutro (sem ajuste)")
-                
-                st.markdown("### 🎲 Monte Carlo")
-                mc1, mc2, mc3 = st.columns(3)
-                mc1.metric("Casa", f"{res['monte_carlo']['h']:.1f}%")
-                mc2.metric("Empate", f"{res['monte_carlo']['d']:.1f}%")
-                mc3.metric("Fora", f"{res['monte_carlo']['a']:.1f}%")
-                
                 probs = get_probs(res)
-                
-                st.markdown("### 📊 Probabilidades")
-                
-                ce1, ce2 = st.columns(2)
-                
-                with ce1:
-                    st.markdown("**🏁 Escanteios**")
-                    for k, v in probs['corners']['home'].items():
-                        cor = "green" if v >= 70 else "orange" if v >= 60 else "red"
-                        st.markdown(f"- {res['home']} {k}: :{cor}[{v:.0f}%]")
-                
-                with ce2:
-                    st.markdown("**🟨 Cartões**")
-                    for k, v in probs['cards']['home'].items():
-                        cor = "green" if v >= 70 else "orange" if v >= 60 else "red"
-                        st.markdown(f"- {res['home']} {k}: :{cor}[{v:.0f}%]")
-    
-    # TAB 3: Bet Builder
-    with tab3:
-        st.markdown("## 🎰 Bet Builder")
-        
-        if 'main_slip' not in st.session_state:
-            st.session_state.main_slip = []
-        
-        lista_times = sorted(list(stats.keys()))
-        num = st.number_input("Jogos?", 1, 5, 3)
+                cc1, cc2 = st.columns(2)
+                with cc1:
+                    st.write("**Escanteios**")
+                    for k, v in probs['corners']['home'].items(): st.write(f"{h} {k}: {v:.0f}%")
+                with cc2:
+                    st.write("**Cartões**")
+                    for k, v in probs['cards']['home'].items(): st.write(f"{h} {k}: {v:.0f}%")
+
+    with t3:
+        if 'main_slip' not in st.session_state: st.session_state.main_slip = []
+        l_times = sorted(list(stats.keys()))
+        num = st.number_input("Qtd Jogos", 1, 5, 3)
         
         temp = []
-        
         for i in range(num):
-            st.markdown(f"### ⚽ Jogo {i+1}")
-            
+            st.markdown(f"**Jogo {i+1}**")
             c1, c2 = st.columns(2)
-            h = c1.selectbox("Casa", lista_times, key=f"bb_h_{i}")
-            a = c2.selectbox("Fora", lista_times, key=f"bb_a_{i}", index=min(1, len(lista_times)-1))
+            h = c1.selectbox("C", l_times, key=f"b_h_{i}")
+            a = c2.selectbox("F", l_times, key=f"b_a_{i}", index=1)
             
             res = calculate_game(h, a, stats, None, refs)
-            
             if 'error' not in res:
                 probs = get_probs(res)
                 opts = gen_options(h, a, probs)
+                lbls = [o['display'] for o in opts]
                 
-                labels = [o['label'] for o in opts]
-                
-                st.markdown("#### 🎯 Seleção #1")
-                s1 = st.selectbox("Escolha:", range(len(labels)), format_func=lambda x: labels[x], key=f"s1_{i}")
+                s1 = st.selectbox("Sel 1", range(len(lbls)), format_func=lambda x: lbls[x], key=f"sel1_{i}")
+                s2 = st.selectbox("Sel 2", range(len(lbls)), format_func=lambda x: lbls[x], key=f"sel2_{i}", index=min(1, len(lbls)-1))
                 
                 temp.append({**opts[s1], 'game_id': i, 'home': h, 'away': a})
-                
-                st.markdown("#### 🎯 Seleção #2")
-                s2 = st.selectbox("Escolha:", range(len(labels)), format_func=lambda x: labels[x], key=f"s2_{i}", index=min(1, len(labels)-1))
-                
                 temp.append({**opts[s2], 'game_id': i, 'home': h, 'away': a})
-            
-            st.markdown("---")
         
         st.session_state.main_slip = temp
         
-        if st.session_state.main_slip:
-            st.markdown("### 📋 Resumo")
+        if st.button("Gerar Estratégia"):
+            h1, h2 = gen_hedges(st.session_state.main_slip, stats, refs)
+            c1, c2, c3 = st.columns(3)
             
-            prob = calc_combined_prob(st.session_state.main_slip)
-            st.metric("Prob. Combinada", f"{prob:.2f}%")
+            def card(title, bets, col):
+                with col:
+                    st.info(title)
+                    for b in bets: st.write(f"- {b['display']} (@{b['min_odd']})")
             
-            for s in st.session_state.main_slip:
-                cor = "green" if s['prob'] >= 70 else "orange"
-                st.markdown(f"- **{s['display']}** - :{cor}[{s['prob']:.1f}%]")
-        
-        if st.button("🔮 GERAR HEDGES", type="primary"):
-            with st.spinner("Gerando..."):
-                h1, h2 = gen_hedges(st.session_state.main_slip, stats, refs)
-            
-            if h1 and h2:
-                st.success("✅ Pronto!")
-                
-                c1, c2, c3 = st.columns(3)
-                
-                with c1:
-                    st.markdown("#### 📋 Principal")
-                    p = calc_combined_prob(st.session_state.main_slip)
-                    st.metric("Prob.", f"{p:.2f}%")
-                    for s in st.session_state.main_slip:
-                        st.write(f"- {s['display']} ({s['prob']:.0f}%)")
-                
-                with c2:
-                    st.markdown("#### 🤖 Hedge #1")
-                    p1 = calc_combined_prob(h1)
-                    st.metric("Prob.", f"{p1:.2f}%")
-                    for s in h1:
-                        st.write(f"- {s['display']} ({s['prob']:.0f}%) {s['change']}")
-                
-                with c3:
-                    st.markdown("#### 🤖 Hedge #2")
-                    p2 = calc_combined_prob(h2)
-                    st.metric("Prob.", f"{p2:.2f}%")
-                    for s in h2:
-                        st.write(f"- {s['display']} ({s['prob']:.0f}%) {s['change']}")
+            card("Principal", st.session_state.main_slip, c1)
+            card("Hedge 1", h1, c2)
+            card("Hedge 2", h2, c3)
 
 if __name__ == "__main__":
     main()
