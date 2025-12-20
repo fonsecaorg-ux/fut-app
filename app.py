@@ -1,9 +1,9 @@
 """
 ╔═══════════════════════════════════════════════════════════════════════════╗
-║          FUTPREVISÃO V14.9 - STRUCTURE MIRROR (HEDGE PERFEITO)            ║
+║       FUTPREVISÃO V14.9.1 - STRUCTURE MIRROR (HOTFIX IMPORTS)             ║
 ║                          Sistema de Análise de Apostas                     ║
 ║                                                                            ║
-║  Versão: V14.9 (Correção de Hedge e Linhas de Cartões Totais)             ║
+║  Versão: V14.9.1 (Correção de NameError + Hedge Estrutural)               ║
 ║  Data: Dezembro 2025                                                      ║
 ╚═══════════════════════════════════════════════════════════════════════════╝
 """
@@ -13,13 +13,13 @@ import pandas as pd
 import math
 import numpy as np
 import os
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional  # <--- CORREÇÃO AQUI (Adicionado Optional)
 from difflib import get_close_matches
 from datetime import datetime
 
 # Configuração da Página
 st.set_page_config(
-    page_title="FutPrevisão V14.9",
+    page_title="FutPrevisão V14.9.1",
     page_icon="⚽",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -194,7 +194,7 @@ def load_calendar_safe() -> pd.DataFrame:
 # 2. MOTOR DE CÁLCULO
 # ═══════════════════════════════════════════════════════════════════════════
 
-def normalize_name(name: str, db_keys: list) -> str:
+def normalize_name(name: str, db_keys: list) -> Optional[str]:
     if not name: return None
     if name in NAME_MAPPING: name = NAME_MAPPING[name]
     if name in db_keys: return name
@@ -474,7 +474,7 @@ def render_result_v14_5(res, all_dfs):
         st.write(f"🏠 Over 1.5: {p15h:.0f}% | Hist: {h15}")
 
 def main():
-    st.title("⚽ FutPrevisão V14.9 (Structure Mirror)")
+    st.title("⚽ FutPrevisão V14.9.1 (Structure Mirror)")
     
     with st.spinner("Carregando..."):
         DEBUG_LOGS.clear()
