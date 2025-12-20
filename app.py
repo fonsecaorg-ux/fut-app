@@ -42,7 +42,6 @@ if 'bankroll' not in st.session_state:
 # Caso use subpastas, altere aqui (ex: "dados/Premier_League...").
 
 LEAGUE_FILES = {
-    "Premier League": "Premier_League_25_26.csv",
     "La Liga": "La_Liga_25_26.csv",
     "Serie A": "Serie_A_25_26.csv",
     "Bundesliga": "Bundesliga_25_26.csv",
