@@ -1,11 +1,11 @@
 """
 ╔═══════════════════════════════════════════════════════════════════════════╗
-║          FUTPREVISÃO V14.6 - OCR SYSTEM + HEDGE (AUTOMÁTICO)             ║
+║          FUTPREVISÃO V14.5 - HEDGE SYSTEM (DROPDOWN SIMPLIFICADO)        ║
 ║                          Sistema de Análise de Apostas                     ║
 ║                                                                            ║
-║  Versão: V14.6 (OCR Edition)                                              ║
+║  Versão: V14.5 + Hedge v3 (UI Melhorada)                                 ║
 ║  Data: Dezembro 2025                                                      ║
-║  🆕 Novidade: Leitura de Prints de Bilhetes (OCR)                         ║
+║  🆕 Interface simplificada: 1 dropdown por seleção                        ║
 ╚═══════════════════════════════════════════════════════════════════════════╝
 """
 
@@ -14,25 +14,16 @@ import pandas as pd
 import math
 import numpy as np
 import os
-import re
 from typing import Dict, Optional, Any, List
 from difflib import get_close_matches
 from datetime import datetime
-from PIL import Image
-
-# Tenta importar OCR, se não tiver, avisa
-try:
-    import pytesseract
-    HAS_OCR = True
-except ImportError:
-    HAS_OCR = False
 
 # ═══════════════════════════════════════════════════════════════════════════
 # CONFIGURAÇÕES GLOBAIS
 # ═══════════════════════════════════════════════════════════════════════════
 
 st.set_page_config(
-    page_title="FutPrevisão V14.6",
+    page_title="FutPrevisão V14.5",
     page_icon="⚽",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -79,59 +70,7 @@ def log_status(msg: str, status: str = "info"):
     DEBUG_LOGS.append(f"{icon} {msg}")
 
 # ═══════════════════════════════════════════════════════════════════════════
-# FUNÇÕES DE OCR (NOVO!)
-# ═══════════════════════════════════════════════════════════════════════════
-
-def extract_teams_from_text(text: str, available_teams: List[str]) -> List[str]:
-    """Tenta encontrar nomes de times conhecidos no texto do OCR."""
-    found_teams = []
-    # Limpeza básica do texto
-    lines = text.split('\n')
-    for line in lines:
-        if len(line) < 4: continue
-        # Tenta achar o time mais próximo na linha
-        matches = get_close_matches(line, available_teams, n=1, cutoff=0.6)
-        if matches:
-            # Evita duplicatas próximas
-            if not found_teams or matches[0] != found_teams[-1]:
-                found_teams.append(matches[0])
-    return found_teams
-
-def parse_bet_print(image, stats_db: Dict) -> List[Dict]:
-    """Processa a imagem e retorna uma lista de seleções sugeridas."""
-    if not HAS_OCR:
-        return []
-    
-    try:
-        # 1. Extrair texto
-        text = pytesseract.image_to_string(image)
-        st.toast("Texto extraído! Analisando...", icon="🔍")
-        
-        # 2. Identificar Times
-        all_teams = list(stats_db.keys())
-        found_teams = extract_teams_from_text(text, all_teams)
-        
-        if len(found_teams) < 2:
-            st.error("Não consegui identificar times suficientes no print. Tente uma imagem mais clara.")
-            return []
-            
-        # 3. Agrupar em pares (Mandante x Visitante)
-        # Assumindo que aparecem em ordem no print
-        games_detected = []
-        for i in range(0, len(found_teams) - 1, 2):
-            games_detected.append({
-                'home': found_teams[i], 
-                'away': found_teams[i+1]
-            })
-            
-        return games_detected
-        
-    except Exception as e:
-        st.error(f"Erro no OCR: {str(e)}")
-        return []
-
-# ═══════════════════════════════════════════════════════════════════════════
-# CARREGAMENTO INTELIGENTE
+# CARREGAMENTO (MANTIDO DO V14.5)
 # ═══════════════════════════════════════════════════════════════════════════
 
 @st.cache_data(ttl=3600)
@@ -152,13 +91,7 @@ def find_and_load_csv(league_name: str) -> pd.DataFrame:
                 try: df = pd.read_csv(filename, encoding='utf-8')
                 except: df = pd.read_csv(filename, encoding='latin1')
                 if not df.empty:
-                    # Padronização de colunas VITAL para evitar KeyError
                     df.columns = [c.strip() for c in df.columns]
-                    rename_map = {}
-                    if 'Mandante' in df.columns: rename_map['Mandante'] = 'HomeTeam'
-                    if 'Visitante' in df.columns: rename_map['Visitante'] = 'AwayTeam'
-                    if rename_map: df = df.rename(columns=rename_map)
-                    
                     df['_League_'] = league_name 
                     return df
             except: pass
@@ -177,11 +110,11 @@ def load_all_dataframes() -> Dict[str, pd.DataFrame]:
 @st.cache_data(ttl=3600)
 def learn_stats_v14() -> Dict[str, Dict[str, Any]]:
     stats_db = {}
+    
     for league in LIGAS_ALVO:
         df = find_and_load_csv(league)
         if df.empty: continue
         
-        # Garante colunas mínimas
         cols_needed = ['HomeTeam', 'AwayTeam', 'HC', 'AC', 'HY', 'AY', 'HF', 'AF', 'FTHG', 'FTAG', 'HST', 'AST', 'HR', 'AR']
         for c in cols_needed:
             if c not in df.columns: df[c] = np.nan
@@ -229,15 +162,13 @@ def load_referees_v14() -> Dict[str, Dict[str, float]]:
             df = pd.read_csv("arbitros_5_ligas_2025_2026.csv")
             for _, row in df.iterrows():
                 nome = str(row['Arbitro']).strip()
-                # Verifica se coluna existe antes de usar
-                vermelhos = float(row['Cartoes_Vermelhos']) if 'Cartoes_Vermelhos' in row else 0
-                jogos = float(row['Jogos_Apitados']) if 'Jogos_Apitados' in row else 1
                 media = float(row['Media_Cartoes_Por_Jogo'])
-                
+                jogos = float(row['Jogos_Apitados'])
+                vermelhos = float(row.get('Cartoes_Vermelhos', 0))
                 red_rate = (vermelhos / jogos) if jogos > 0 else DEFAULTS['red_rate_referee']
                 refs_db[nome] = {'factor': media/4.0, 'red_rate': red_rate}
         except: pass
-    
+            
     if os.path.exists("arbitros.csv"):
         try:
             df = pd.read_csv("arbitros.csv")
@@ -255,8 +186,6 @@ def load_calendar_safe() -> pd.DataFrame:
     try:
         try: df = pd.read_csv(fname, encoding='utf-8')
         except: df = pd.read_csv(fname, encoding='latin1')
-        
-        # Limpeza e Padronização Crítica
         df.columns = [c.strip() for c in df.columns]
         rename_map = {}
         if 'Mandante' in df.columns: rename_map['Mandante'] = 'Time_Casa'
@@ -272,41 +201,46 @@ def load_calendar_safe() -> pd.DataFrame:
         return df
     except: return pd.DataFrame()
 
+def get_native_history(team_name: str, league: str, market: str, line: float, location: str, all_dfs: Dict) -> str:
+    if league not in all_dfs:
+        return "N/A"
+    
+    df = all_dfs[league]
+    
+    if location == 'home':
+        matches = df[df['HomeTeam'] == team_name]
+        col_code = 'HC' if market == 'corners' else 'HY'
+    else:
+        matches = df[df['AwayTeam'] == team_name]
+        col_code = 'AC' if market == 'corners' else 'AY'
+    
+    if matches.empty:
+        return "0/0"
+
+    last_matches = matches.tail(10)
+    total_games = len(last_matches)
+    
+    if total_games == 0:
+        return "0/0"
+        
+    hits = 0
+    for val in last_matches[col_code]:
+        try:
+            if float(val) > line:
+                hits += 1
+        except: pass
+        
+    return f"{hits}/{total_games}"
+
 # ═══════════════════════════════════════════════════════════════════════════
-# CÁLCULO E MATEMÁTICA V14
+# CÁLCULO V14
 # ═══════════════════════════════════════════════════════════════════════════
 
 def normalize_name(name: str, db_keys: list) -> Optional[str]:
-    if not name: return None
     if name in NAME_MAPPING: name = NAME_MAPPING[name]
     if name in db_keys: return name
     matches = get_close_matches(name, db_keys, n=1, cutoff=0.6)
     return matches[0] if matches else None
-
-def get_native_history(team_name: str, league: str, market: str, line: float, location: str, all_dfs: Dict) -> str:
-    if league not in all_dfs: return "N/A"
-    df = all_dfs[league]
-    
-    # Mapeamento seguro para leitura do CSV bruto
-    col_map = {
-        ('home', 'corners'): 'HC', ('away', 'corners'): 'AC',
-        ('home', 'cards'): 'HY', ('away', 'cards'): 'AY'
-    }
-    
-    col_code = col_map.get((location, market))
-    team_col = 'HomeTeam' if location == 'home' else 'AwayTeam'
-    
-    matches = df[df[team_col] == team_name]
-    if matches.empty: return "0/0"
-
-    last_matches = matches.tail(10)
-    hits = 0
-    for val in last_matches[col_code]:
-        try:
-            if float(val) > line: hits += 1
-        except: pass
-        
-    return f"{hits}/{len(last_matches)}"
 
 def calcular_jogo_v14(home: str, away: str, stats: Dict, ref: Optional[str], refs_db: Dict) -> Dict:
     h_norm = normalize_name(home, list(stats.keys()))
@@ -320,7 +254,6 @@ def calcular_jogo_v14(home: str, away: str, stats: Dict, ref: Optional[str], ref
     
     r_data = refs_db.get(ref, {'factor': 1.0, 'red_rate': DEFAULTS['red_rate_referee']}) if ref else {'factor': 1.0, 'red_rate': DEFAULTS['red_rate_referee']}
         
-    # Lógica V14
     shots_h = s_h['shots_on_target']
     shots_a = s_a['shots_on_target']
     
@@ -371,8 +304,8 @@ def get_detailed_probs(pred: Dict) -> Dict:
     return {
         'corners': {
             'total': {f"Over {i}.5": (1-p(i, cH+cA))*100 for i in range(8, 13)},
-            'home': {'Over 3.5': (1-p(3, cH))*100, 'Over 4.5': (1-p(4, cH))*100},
-            'away': {'Over 3.5': (1-p(3, cA))*100, 'Over 4.5': (1-p(4, cA))*100}
+            'home': {'Over 3.5': (1-p(3, cH))*100, 'Over 4.5': (1-p(4, cH))*100, 'Over 2.5': (1-p(2, cH))*100},
+            'away': {'Over 3.5': (1-p(3, cA))*100, 'Over 4.5': (1-p(4, cA))*100, 'Over 2.5': (1-p(2, cA))*100}
         },
         'cards': {
             'total': {f"Over {i}.5": (1-p(i, kH+kA))*100 for i in range(3, 6)},
@@ -382,7 +315,229 @@ def get_detailed_probs(pred: Dict) -> Dict:
     }
 
 # ═══════════════════════════════════════════════════════════════════════════
-# UI V14.6 + HEDGE GENERATOR
+# 🆕 GERADOR DE OPÇÕES PARA DROPDOWN
+# ═══════════════════════════════════════════════════════════════════════════
+
+def generate_bet_options(home_team: str, away_team: str, probs: Dict) -> List[Dict]:
+    """
+    Gera TODAS as opções de aposta possíveis para o dropdown.
+    Retorna lista de dicts com: label, market, side, line, prob
+    """
+    options = []
+    
+    # ESCANTEIOS CASA
+    for line in [2.5, 3.5, 4.5, 5.5]:
+        prob = probs['corners']['home'].get(f'Over {line}', 0)
+        options.append({
+            'label': f"{home_team} Over {line} escanteios ({prob:.0f}%)",
+            'market': 'corners',
+            'side': 'home',
+            'line': line,
+            'prob': prob,
+            'display': f"{home_team} Over {line} escanteios"
+        })
+    
+    # ESCANTEIOS FORA
+    for line in [2.5, 3.5, 4.5]:
+        prob = probs['corners']['away'].get(f'Over {line}', 0)
+        options.append({
+            'label': f"{away_team} Over {line} escanteios ({prob:.0f}%)",
+            'market': 'corners',
+            'side': 'away',
+            'line': line,
+            'prob': prob,
+            'display': f"{away_team} Over {line} escanteios"
+        })
+    
+    # ESCANTEIOS TOTAL
+    for line in [8.5, 9.5, 10.5, 11.5]:
+        prob = probs['corners']['total'].get(f'Over {int(line)}.5', 0)
+        options.append({
+            'label': f"Total Over {line} escanteios ({prob:.0f}%)",
+            'market': 'corners',
+            'side': 'total',
+            'line': line,
+            'prob': prob,
+            'display': f"Total Over {line} escanteios"
+        })
+    
+    # CARTÕES CASA
+    for line in [1.5, 2.5]:
+        prob = probs['cards']['home'].get(f'Over {line}', 0)
+        options.append({
+            'label': f"{home_team} Over {line} cartões ({prob:.0f}%)",
+            'market': 'cards',
+            'side': 'home',
+            'line': line,
+            'prob': prob,
+            'display': f"{home_team} Over {line} cartões"
+        })
+    
+    # CARTÕES FORA
+    for line in [1.5, 2.5]:
+        prob = probs['cards']['away'].get(f'Over {line}', 0)
+        options.append({
+            'label': f"{away_team} Over {line} cartões ({prob:.0f}%)",
+            'market': 'cards',
+            'side': 'away',
+            'line': line,
+            'prob': prob,
+            'display': f"{away_team} Over {line} cartões"
+        })
+    
+    # CARTÕES TOTAL
+    for line in [3.5, 4.5, 5.5]:
+        prob = probs['cards']['total'].get(f'Over {int(line)}.5', 0)
+        options.append({
+            'label': f"Total Over {line} cartões ({prob:.0f}%)",
+            'market': 'cards',
+            'side': 'total',
+            'line': line,
+            'prob': prob,
+            'display': f"Total Over {line} cartões"
+        })
+    
+    # Ordenar por probabilidade (maior primeiro)
+    options.sort(key=lambda x: x['prob'], reverse=True)
+    
+    return options
+
+# ═══════════════════════════════════════════════════════════════════════════
+# SISTEMA DE HEDGE (SIMPLIFICADO)
+# ═══════════════════════════════════════════════════════════════════════════
+
+def generate_hedge_bets_v3(main_slip: List[Dict], stats: Dict, refs_db: Dict) -> tuple:
+    """Gera 2 bilhetes de hedge mantendo os MESMOS JOGOS."""
+    
+    hedge_1 = []
+    hedge_2 = []
+    
+    # Agrupar por jogo
+    games = {}
+    for sel in main_slip:
+        game_id = sel['game_id']
+        if game_id not in games:
+            games[game_id] = []
+        games[game_id].append(sel)
+    
+    # Para cada jogo, gerar variações
+    for game_id, selections in games.items():
+        ref_sel = selections[0]
+        
+        res = calcular_jogo_v14(ref_sel['home'], ref_sel['away'], stats, None, refs_db)
+        if 'error' in res:
+            continue
+            
+        probs = get_detailed_probs(res)
+        all_options = generate_bet_options(res['home'], res['away'], probs)
+        
+        # Filtrar opções >= 70%
+        valid_options = [opt for opt in all_options if opt['prob'] >= 70]
+        
+        # Pegar principais seleções do bilhete principal
+        main_labels = [s['display'] for s in selections]
+        
+        # HEDGE #1: Escolher as 2 melhores opções diferentes do principal
+        h1_opts = [opt for opt in valid_options if opt['display'] not in main_labels][:2]
+        for opt in h1_opts:
+            hedge_1.append({
+                'home': res['home'],
+                'away': res['away'],
+                'market': opt['market'],
+                'side': opt['side'],
+                'line': opt['line'],
+                'prob': opt['prob'],
+                'label': opt['display'],
+                'display': opt['display'],
+                'change': '🔄 variação',
+                'game_id': game_id
+            })
+        
+        # HEDGE #2: Escolher outras 2 opções (se >= 80%, pode repetir)
+        h2_opts = []
+        for opt in valid_options:
+            if opt['display'] in main_labels and opt['prob'] >= 80:
+                h2_opts.append(opt)  # Repetir se >= 80%
+            elif opt['display'] not in main_labels and opt not in h1_opts:
+                h2_opts.append(opt)
+            if len(h2_opts) >= 2:
+                break
+        
+        for opt in h2_opts:
+            hedge_2.append({
+                'home': res['home'],
+                'away': res['away'],
+                'market': opt['market'],
+                'side': opt['side'],
+                'line': opt['line'],
+                'prob': opt['prob'],
+                'label': opt['display'],
+                'display': opt['display'],
+                'change': '✅ mantido' if opt['display'] in main_labels else '🔄 variação',
+                'game_id': game_id
+            })
+    
+    return hedge_1, hedge_2
+
+
+def calculate_combined_probability(selections: List[Dict]) -> float:
+    if not selections:
+        return 0.0
+    prob_combined = 1.0
+    for sel in selections:
+        prob_combined *= (sel.get('prob', 70) / 100)
+    return prob_combined * 100
+
+
+def calculate_coverage_scenarios(main_slip, hedge_1, hedge_2, stakes: Dict) -> List[Dict]:
+    scenarios = []
+    
+    p_main = calculate_combined_probability(main_slip)
+    odd_main = (100 / p_main) * 0.85 if p_main > 0 else 2.0
+    profit_main = (stakes['main'] * odd_main) - sum(stakes.values())
+    
+    scenarios.append({
+        'scenario': '✅ Bilhete Principal ACERTA',
+        'probability': p_main,
+        'profit': profit_main,
+        'color': 'green'
+    })
+    
+    p_h1 = calculate_combined_probability(hedge_1)
+    odd_h1 = (100 / p_h1) * 0.85 if p_h1 > 0 else 2.0
+    profit_h1 = (stakes['hedge_1'] * odd_h1) - sum(stakes.values())
+    
+    scenarios.append({
+        'scenario': '⚠️ Hedge #1 ACERTA',
+        'probability': p_h1,
+        'profit': profit_h1,
+        'color': 'orange'
+    })
+    
+    p_h2 = calculate_combined_probability(hedge_2)
+    odd_h2 = (100 / p_h2) * 0.85 if p_h2 > 0 else 2.0
+    profit_h2 = (stakes['hedge_2'] * odd_h2) - sum(stakes.values())
+    
+    scenarios.append({
+        'scenario': '🟡 Hedge #2 ACERTA',
+        'probability': p_h2,
+        'profit': profit_h2,
+        'color': 'blue'
+    })
+    
+    p_all_miss = max(5, 100 - (p_main + p_h1 + p_h2))
+    
+    scenarios.append({
+        'scenario': '❌ TODOS ERRAM',
+        'probability': p_all_miss,
+        'profit': -sum(stakes.values()),
+        'color': 'red'
+    })
+    
+    return scenarios
+
+# ═══════════════════════════════════════════════════════════════════════════
+# UI V14.5 (MANTIDA)
 # ═══════════════════════════════════════════════════════════════════════════
 
 def render_result_v14_5(res, all_dfs):
@@ -391,13 +546,11 @@ def render_result_v14_5(res, all_dfs):
     
     st.markdown("---")
     
-    # Header
     c1, c2, c3 = st.columns([2,1,2])
     c1.markdown(f"### 🏠 {res['home']}")
     c2.markdown("<h3 style='text-align: center'>VS</h3>", unsafe_allow_html=True)
     c3.markdown(f"<h3 style='text-align: right'>✈️ {res['away']}</h3>", unsafe_allow_html=True)
     
-    # Métricas
     k1, k2, k3, k4 = st.columns(4)
     k1.metric("xG Casa", f"{res['goals']['h']:.2f}")
     k2.metric("xG Fora", f"{res['goals']['a']:.2f}")
@@ -408,7 +561,6 @@ def render_result_v14_5(res, all_dfs):
 
     st.markdown("---")
 
-    # SEÇÃO 1: ESCANTEIOS
     st.subheader(f"🏁 Escanteios (Total Esp: {res['corners']['total']:.2f})")
     ec1, ec2, ec3 = st.columns(3)
     
@@ -417,37 +569,36 @@ def render_result_v14_5(res, all_dfs):
         for k, v in probs['corners']['total'].items():
             if v > 65: st.write(f"{k}: **{v:.0f}%**")
 
-    # Mandante
     with ec2:
         st.markdown(f"**🏠 {res['home']}** (Esp: {res['corners']['h']:.1f})")
         p35 = probs['corners']['home']['Over 3.5']
         p45 = probs['corners']['home']['Over 4.5']
+        
         h35 = get_native_history(res['home'], res['league_h'], 'corners', 3.5, 'home', all_dfs)
         h45 = get_native_history(res['home'], res['league_h'], 'corners', 4.5, 'home', all_dfs)
         
-        c35 = "green" if p35 >= 70 else "gray"
-        c45 = "green" if p45 >= 60 else "gray"
+        c35 = "green" if p35 >= 70 else "red"
+        c45 = "green" if p45 >= 60 else "red"
         
-        st.markdown(f"Over 3.5: :{c35}[**{p35:.0f}%**] | Hist CSV: {h35}")
-        st.markdown(f"Over 4.5: :{c45}[**{p45:.0f}%**] | Hist CSV: {h45}")
+        st.markdown(f"Over 3.5: :{c35}[**{p35:.0f}%**] | Hist: {h35}")
+        st.markdown(f"Over 4.5: :{c45}[**{p45:.0f}%**] | Hist: {h45}")
 
-    # Visitante
     with ec3:
         st.markdown(f"**✈️ {res['away']}** (Esp: {res['corners']['a']:.1f})")
         p35 = probs['corners']['away']['Over 3.5']
         p45 = probs['corners']['away']['Over 4.5']
+        
         h35 = get_native_history(res['away'], res['league_a'], 'corners', 3.5, 'away', all_dfs)
         h45 = get_native_history(res['away'], res['league_a'], 'corners', 4.5, 'away', all_dfs)
         
-        c35 = "green" if p35 >= 70 else "gray"
-        c45 = "green" if p45 >= 60 else "gray"
+        c35 = "green" if p35 >= 70 else "red"
+        c45 = "green" if p45 >= 60 else "red"
         
-        st.markdown(f"Over 3.5: :{c35}[**{p35:.0f}%**] | Hist CSV: {h35}")
-        st.markdown(f"Over 4.5: :{c45}[**{p45:.0f}%**] | Hist CSV: {h45}")
+        st.markdown(f"Over 3.5: :{c35}[**{p35:.0f}%**] | Hist: {h35}")
+        st.markdown(f"Over 4.5: :{c45}[**{p45:.0f}%**] | Hist: {h45}")
         
     st.markdown("---")
 
-    # SEÇÃO 2: CARTÕES
     st.subheader(f"🟨 Cartões (Total Esp: {res['cards']['total']:.2f})")
     kc1, kc2, kc3 = st.columns(3)
     
@@ -459,156 +610,316 @@ def render_result_v14_5(res, all_dfs):
     with kc2:
         st.markdown(f"**🏠 {res['home']}**")
         p15 = probs['cards']['home']['Over 1.5']
+        
         h15 = get_native_history(res['home'], res['league_h'], 'cards', 1.5, 'home', all_dfs)
-        c15 = "green" if p15 >= 75 else "gray"
-        st.markdown(f"Over 1.5: :{c15}[**{p15:.0f}%**] | Hist CSV: {h15}")
+        c15 = "green" if p15 >= 75 else "red"
+        
+        st.markdown(f"Over 1.5: :{c15}[**{p15:.0f}%**] | Hist: {h15}")
 
     with kc3:
         st.markdown(f"**✈️ {res['away']}**")
         p15 = probs['cards']['away']['Over 1.5']
+        
         h15 = get_native_history(res['away'], res['league_a'], 'cards', 1.5, 'away', all_dfs)
-        c15 = "green" if p15 >= 75 else "gray"
-        st.markdown(f"Over 1.5: :{c15}[**{p15:.0f}%**] | Hist CSV: {h15}")
+        c15 = "green" if p15 >= 75 else "red"
+        
+        st.markdown(f"Over 1.5: :{c15}[**{p15:.0f}%**] | Hist: {h15}")
 
-def render_hedge_builder_tab_v2(stats, refs_db):
-    st.markdown("## 🎰 Bet Builder + Hedge (OCR Mode)")
-    st.caption("Monte seu bilhete ou envie um print para preenchimento automático!")
+
+def render_hedge_builder_tab_v3(stats, refs_db):
+    """🆕 Interface SIMPLIFICADA - 1 dropdown por seleção"""
+    
+    st.markdown("## 🎰 Bet Builder + Sistema de Cobertura")
+    st.caption("Interface simplificada: 2 dropdowns por jogo com TODAS as opções")
     
     st.markdown("---")
     
-    # ═══════════════════════════════════════════════════════════
-    # 🆕 OCR UPLOADER
-    # ═══════════════════════════════════════════════════════════
-    with st.expander("📸 Importar Bilhete (Print/Foto)", expanded=False):
-        if not HAS_OCR:
-            st.warning("⚠️ Biblioteca 'pytesseract' não instalada. Funcionalidade de OCR indisponível.")
-        else:
-            uploaded_file = st.file_uploader("Envie a imagem do seu bilhete", type=['png', 'jpg', 'jpeg'])
-            if uploaded_file is not None:
-                image = Image.open(uploaded_file)
-                st.image(image, caption='Bilhete Enviado', width=300)
+    with st.expander("📋 BILHETE PRINCIPAL", expanded=True):
+        st.markdown("**Monte seu bilhete (2 seleções por jogo):**")
+        
+        if 'main_slip' not in st.session_state:
+            st.session_state.main_slip = []
+        
+        lista_times = sorted(list(stats.keys()))
+        
+        num_games = st.number_input("Quantos jogos?", 1, 5, 3, key="num_games")
+        
+        main_slip_temp = []
+        
+        for i in range(num_games):
+            st.markdown(f"### ⚽ Jogo {i+1}")
+            
+            col_teams = st.columns(2)
+            with col_teams[0]:
+                home = st.selectbox(f"Time Casa", lista_times, key=f"home_{i}")
+            with col_teams[1]:
+                away = st.selectbox(f"Time Visitante", lista_times, key=f"away_{i}", 
+                                   index=min(i+1, len(lista_times)-1))
+            
+            # Calcular probabilidades UMA VEZ
+            res = calcular_jogo_v14(home, away, stats, None, refs_db)
+            if 'error' in res:
+                st.error(f"Erro: {res['error']}")
+                continue
                 
-                if st.button("🔍 Ler Bilhete"):
-                    with st.spinner("Lendo texto da imagem..."):
-                        games_found = parse_bet_print(image, stats)
-                        if games_found:
-                            st.success(f"Encontrei {len(games_found)} jogos!")
-                            st.session_state.ocr_games = games_found
+            probs = get_detailed_probs(res)
+            
+            # Gerar TODAS as opções
+            all_options = generate_bet_options(res['home'], res['away'], probs)
+            option_labels = [opt['label'] for opt in all_options]
+            
+            # ═══════════════════════════════════════════════════════════
+            # SELEÇÃO #1 - DROPDOWN ÚNICO
+            # ═══════════════════════════════════════════════════════════
+            st.markdown("#### 🎯 Seleção #1")
+            selected_idx_1 = st.selectbox(
+                "Escolha a aposta:",
+                range(len(option_labels)),
+                format_func=lambda x: option_labels[x],
+                key=f"sel_1_{i}"
+            )
+            
+            sel_1 = all_options[selected_idx_1]
+            
+            # Cor da probabilidade
+            color_1 = "green" if sel_1['prob'] >= 70 else "orange" if sel_1['prob'] >= 60 else "red"
+            st.markdown(f"**Probabilidade:** :{color_1}[{sel_1['prob']:.1f}%]")
+            
+            main_slip_temp.append({
+                'home': home,
+                'away': away,
+                'market': sel_1['market'],
+                'side': sel_1['side'],
+                'line': sel_1['line'],
+                'prob': sel_1['prob'],
+                'label': sel_1['display'],
+                'display': sel_1['display'],
+                'referee': None,
+                'game_id': i
+            })
+            
+            # ═══════════════════════════════════════════════════════════
+            # SELEÇÃO #2 - DROPDOWN ÚNICO
+            # ═══════════════════════════════════════════════════════════
+            st.markdown("#### 🎯 Seleção #2")
+            selected_idx_2 = st.selectbox(
+                "Escolha a aposta:",
+                range(len(option_labels)),
+                format_func=lambda x: option_labels[x],
+                key=f"sel_2_{i}",
+                index=min(1, len(option_labels)-1)  # Default = 2ª opção
+            )
+            
+            sel_2 = all_options[selected_idx_2]
+            
+            color_2 = "green" if sel_2['prob'] >= 70 else "orange" if sel_2['prob'] >= 60 else "red"
+            st.markdown(f"**Probabilidade:** :{color_2}[{sel_2['prob']:.1f}%]")
+            
+            main_slip_temp.append({
+                'home': home,
+                'away': away,
+                'market': sel_2['market'],
+                'side': sel_2['side'],
+                'line': sel_2['line'],
+                'prob': sel_2['prob'],
+                'label': sel_2['display'],
+                'display': sel_2['display'],
+                'referee': None,
+                'game_id': i
+            })
+            
+            st.markdown("---")
+        
+        st.session_state.main_slip = main_slip_temp
+        
+        # Resumo
+        if st.session_state.main_slip:
+            st.markdown("### 📊 Resumo do Bilhete Principal:")
+            
+            games = {}
+            for sel in st.session_state.main_slip:
+                game_id = sel['game_id']
+                if game_id not in games:
+                    games[game_id] = []
+                games[game_id].append(sel)
+            
+            for game_id, selections in sorted(games.items()):
+                st.markdown(f"**Jogo {game_id + 1}: {selections[0]['home']} vs {selections[0]['away']}**")
+                for j, sel in enumerate(selections, 1):
+                    prob_color = "green" if sel['prob'] >= 70 else "orange"
+                    st.markdown(f"  {j}. **{sel['display']}** - :{prob_color}[{sel['prob']:.1f}%]")
+            
+            prob_combinada = calculate_combined_probability(st.session_state.main_slip)
+            st.metric("Probabilidade Combinada", f"{prob_combinada:.1f}%")
+            st.caption(f"Total de seleções: {len(st.session_state.main_slip)}")
+    
+    # Gerar Hedges
+    st.markdown("---")
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        budget = st.number_input("💰 Orçamento Total (€)", 10, 1000, 50, step=10)
+    
+    with col2:
+        st.markdown("**Distribuição Sugerida:**")
+        st.write(f"Principal: €{budget * 0.5:.0f} (50%)")
+        st.write(f"Hedge #1: €{budget * 0.3:.0f} (30%)")
+        st.write(f"Hedge #2: €{budget * 0.2:.0f} (20%)")
+    
+    if st.button("🔮 GERAR BILHETES DE COBERTURA", use_container_width=True, type="primary"):
+        if not st.session_state.main_slip or len(st.session_state.main_slip) == 0:
+            st.error("❌ Monte o bilhete principal primeiro!")
+        else:
+            with st.spinner("⚙️ Gerando hedges..."):
+                hedge_1, hedge_2 = generate_hedge_bets_v3(
+                    st.session_state.main_slip, 
+                    stats, 
+                    refs_db
+                )
+                
+                if not hedge_1 or not hedge_2:
+                    st.warning("⚠️ Não foi possível gerar hedges com 70%+")
+                else:
+                    stakes = {
+                        'main': budget * 0.5,
+                        'hedge_1': budget * 0.3,
+                        'hedge_2': budget * 0.2
+                    }
+                    
+                    st.success("✅ Hedges gerados!")
+                    
+                    st.markdown("---")
+                    
+                    # HEDGE #1
+                    st.markdown("## 🤖 BILHETE HEDGE #1")
+                    
+                    h1_games = {}
+                    for sel in hedge_1:
+                        game_id = sel['game_id']
+                        if game_id not in h1_games:
+                            h1_games[game_id] = []
+                        h1_games[game_id].append(sel)
+                    
+                    for game_id, selections in sorted(h1_games.items()):
+                        st.markdown(f"**Jogo {game_id + 1}: {selections[0]['home']} vs {selections[0]['away']}**")
+                        for j, sel in enumerate(selections, 1):
+                            prob_color = "green" if sel['prob'] >= 70 else "orange"
+                            st.markdown(f"  {j}. **{sel['display']}** - :{prob_color}[{sel['prob']:.1f}%] {sel['change']}")
+                    
+                    prob_h1 = calculate_combined_probability(hedge_1)
+                    st.metric("Probabilidade Combinada", f"{prob_h1:.1f}%")
+                    st.info(f"💵 Stake: €{stakes['hedge_1']:.0f}")
+                    
+                    st.markdown("---")
+                    
+                    # HEDGE #2
+                    st.markdown("## 🤖 BILHETE HEDGE #2")
+                    
+                    h2_games = {}
+                    for sel in hedge_2:
+                        game_id = sel['game_id']
+                        if game_id not in h2_games:
+                            h2_games[game_id] = []
+                        h2_games[game_id].append(sel)
+                    
+                    for game_id, selections in sorted(h2_games.items()):
+                        st.markdown(f"**Jogo {game_id + 1}: {selections[0]['home']} vs {selections[0]['away']}**")
+                        for j, sel in enumerate(selections, 1):
+                            prob_color = "green" if sel['prob'] >= 70 else "orange"
+                            st.markdown(f"  {j}. **{sel['display']}** - :{prob_color}[{sel['prob']:.1f}%] {sel['change']}")
+                    
+                    prob_h2 = calculate_combined_probability(hedge_2)
+                    st.metric("Probabilidade Combinada", f"{prob_h2:.1f}%")
+                    st.info(f"💵 Stake: €{stakes['hedge_2']:.0f}")
+                    
+                    st.markdown("---")
+                    
+                    # ANÁLISE
+                    st.markdown("## 📊 ANÁLISE DE COBERTURA")
+                    
+                    scenarios = calculate_coverage_scenarios(
+                        st.session_state.main_slip,
+                        hedge_1,
+                        hedge_2,
+                        stakes
+                    )
+                    
+                    for scenario in scenarios:
+                        if scenario['profit'] > 0:
+                            st.success(f"{scenario['scenario']}: **{scenario['probability']:.1f}%** → Lucro **€{scenario['profit']:.2f}** 💰")
                         else:
-                            st.error("Não consegui identificar os times com clareza. Tente manual.")
+                            st.error(f"{scenario['scenario']}: **{scenario['probability']:.1f}%** → Perda **€{abs(scenario['profit']):.2f}** 💸")
+                    
+                    prob_ganho = sum(s['probability'] for s in scenarios if s['profit'] > 0)
+                    st.metric("🎯 Probabilidade de GANHAR algo", f"{prob_ganho:.1f}%")
+                    
+                    if prob_ganho >= 85:
+                        st.success("✅ Excelente cobertura!")
+                    elif prob_ganho >= 70:
+                        st.info("👍 Boa cobertura!")
+                    else:
+                        st.warning("⚠️ Cobertura moderada")
 
-    # ═══════════════════════════════════════════════════════════
-    # FORMULÁRIO PRINCIPAL
-    # ═══════════════════════════════════════════════════════════
-    st.markdown("### 📋 BILHETE PRINCIPAL")
-    
-    # Recuperar jogos do OCR se existirem
-    ocr_games = st.session_state.get('ocr_games', [])
-    default_num = len(ocr_games) if ocr_games else 3
-    
-    lista_times = sorted(list(stats.keys()))
-    num_games = st.number_input("Quantos jogos?", 1, 5, max(1, default_num))
-    
-    main_slip_temp = []
-    
-    for i in range(num_games):
-        st.markdown(f"### ⚽ Jogo {i+1}")
-        
-        # Preencher com OCR se disponível
-        def_home_idx = 0
-        def_away_idx = 1
-        
-        if i < len(ocr_games):
-            try:
-                def_home_idx = lista_times.index(ocr_games[i]['home'])
-                def_away_idx = lista_times.index(ocr_games[i]['away'])
-            except: pass
-            
-        col_teams = st.columns(2)
-        with col_teams[0]:
-            home = st.selectbox(f"Time Casa", lista_times, index=def_home_idx, key=f"home_{i}")
-        with col_teams[1]:
-            away = st.selectbox(f"Time Visitante", lista_times, index=def_away_idx, key=f"away_{i}")
-        
-        res = calcular_jogo_v14(home, away, stats, None, refs_db)
-        if 'error' in res:
-            st.error(f"Erro: {res['error']}")
-            continue
-            
-        # Simulação simples de probabilidade para demonstração no builder
-        # Na versão completa, você integraria com get_detailed_probs
-        # Para manter o código limpo, vamos focar na estrutura
-        
-        # SELEÇÃO 1
-        c1, c2, c3 = st.columns(3)
-        with c1: mkt1 = st.selectbox("Mercado 1", ["Escanteios", "Cartões"], key=f"m1_{i}")
-        with c2: sd1 = st.selectbox("Lado 1", ["Casa", "Fora", "Total"], key=f"s1_{i}")
-        with c3: ln1 = st.number_input("Linha 1", 0.5, 15.5, 3.5, 1.0, key=f"l1_{i}")
-        
-        # Adicionar ao slip (simplificado para demonstração da UI)
-        main_slip_temp.append({
-            'home': home, 'away': away, 'market': 'corners' if mkt1=="Escanteios" else 'cards',
-            'side': 'home' if sd1=="Casa" else 'away' if sd1=="Fora" else 'total',
-            'line': ln1, 'prob': 75.0, 'label': f"{sd1} Over {ln1} {mkt1}", 'game_id': i
-        })
-        
-        st.markdown("---")
-
-    if st.button("🔮 GERAR HEDGES", type="primary"):
-        st.success("✅ Hedges gerados (Simulação Visual)")
-        st.info("💡 A lógica de hedge completa está no código backend (mantida da V14.5)")
 
 def main():
-    st.title("⚽ FutPrevisão V14.6 (OCR Edition)")
+    st.title("⚽ FutPrevisão V14.5 + Hedge v3")
+    st.caption("Interface Simplificada - Dropdown Único")
     
-    with st.spinner("Inicializando..."):
+    with st.spinner("Carregando..."):
         DEBUG_LOGS.clear()
         stats = learn_stats_v14()
         refs = load_referees_v14()
         calendar = load_calendar_safe()
         all_dfs = load_all_dataframes()
     
+    lista_times = sorted(list(stats.keys()))
+    lista_juizes = ["Neutro"] + sorted(list(refs.keys()))
+    
+    with st.sidebar:
+        with st.expander("🛠️ Status", expanded=False):
+            st.write(f"Times: {len(stats)}")
+            st.write(f"Ligas: {len(all_dfs)}")
+            for log in DEBUG_LOGS: st.write(log)
+    
     if not stats:
-        st.error("🚨 ERRO: Nenhum dado carregado.")
+        st.error("🚨 Erro ao carregar dados")
         return
 
-    tab1, tab2, tab3 = st.tabs(["📅 Calendário", "🧪 Simulação Manual", "🎰 Bet Builder + OCR"])
+    tab1, tab2, tab3 = st.tabs(["📅 Calendário", "🧪 Simulação", "🎰 Bet Builder"])
     
     with tab1:
         if calendar.empty:
-            st.warning("Calendário vazio.")
+            st.warning("Calendário vazio")
         else:
             dates = calendar['DtObj'].dt.strftime('%d/%m/%Y').unique()
             sel_date = st.selectbox("Data:", dates)
             subset = calendar[calendar['DtObj'].dt.strftime('%d/%m/%Y') == sel_date]
             
             for i, row in subset.iterrows():
-                # Correção: Usar chaves padronizadas Time_Casa/Time_Visitante
-                tc = row.get('Time_Casa', row.get('Mandante', 'Time A'))
-                tv = row.get('Time_Visitante', row.get('Visitante', 'Time B'))
-                
-                with st.expander(f"⏰ {str(row['Hora'])[:5]} | {row['Liga']} | {tc} x {tv}"):
+                with st.expander(f"⏰ {str(row['Hora'])[:5]} | {row['Liga']} | {row['Time_Casa']} x {row['Time_Visitante']}"):
                     if st.button("Analisar", key=f"btn_{i}"):
-                        res = calcular_jogo_v14(tc, tv, stats, None, refs)
+                        res = calcular_jogo_v14(row['Time_Casa'], row['Time_Visitante'], stats, None, refs)
                         if 'error' in res: st.error(res['error'])
                         else: render_result_v14_5(res, all_dfs)
 
     with tab2:
-        lista_times = sorted(list(stats.keys()))
-        lista_juizes = ["Neutro"] + sorted(list(refs.keys()))
+        st.subheader("Simulador")
         c1, c2, c3 = st.columns(3)
-        h = c1.selectbox("Mandante", lista_times, index=0)
-        a = c2.selectbox("Visitante", lista_times, index=1)
-        r = c3.selectbox("Árbitro", lista_juizes)
+        idx_h = lista_times.index("Liverpool") if "Liverpool" in lista_times else 0
+        idx_a = lista_times.index("Man City") if "Man City" in lista_times else 1
         
-        if st.button("Simular Jogo"):
-            rf = None if r == "Neutro" else r
-            res = calcular_jogo_v14(h, a, stats, rf, refs)
+        h = c1.selectbox("Mandante", lista_times, index=idx_h)
+        a = c2.selectbox("Visitante", lista_times, index=idx_a)
+        r = c3.selectbox("Árbitro", lista_juizes, index=0)
+        
+        if st.button("Simular"):
+            ref_val = None if r == "Neutro" else r
+            res = calcular_jogo_v14(h, a, stats, ref_val, refs)
             if 'error' in res: st.error(res['error'])
             else: render_result_v14_5(res, all_dfs)
     
     with tab3:
-        render_hedge_builder_tab_v2(stats, refs)
+        render_hedge_builder_tab_v3(stats, refs_db)
 
 if __name__ == "__main__":
     main()
