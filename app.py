@@ -1,11 +1,12 @@
 """
 ╔═══════════════════════════════════════════════════════════════════════════╗
-║       FUTPREVISÃO V14.12 - TEMPLATE HEDGE (DUPLA CHANCE & MIX)            ║
+║       FUTPREVISÃO V14.13 - CROSS-MARKET TEMPLATES (HEDGE REFINADO)        ║
 ║                          Sistema de Análise de Apostas                     ║
 ║                                                                            ║
-║  Versão: V14.12                                                           ║
+║  Versão: V14.13                                                           ║
 ║  Data: Dezembro 2025                                                      ║
-║  Novidade: Hedges baseados em Templates (DC+Stat ou Canto+Cartão)         ║
+║  Refinamento: Templates rígidos para Hedge (DC+Stat / Canto+Cartão)       ║
+║  Filtro: Reduzido para 65% para garantir cobertura                        ║
 ╚═══════════════════════════════════════════════════════════════════════════╝
 """
 
@@ -20,7 +21,7 @@ from datetime import datetime
 
 # Configuração da Página
 st.set_page_config(
-    page_title="FutPrevisão V14.12",
+    page_title="FutPrevisão V14.13",
     page_icon="⚽",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -297,7 +298,7 @@ def get_detailed_probs(pred: Dict) -> Dict:
     }
 
 # ═══════════════════════════════════════════════════════════════════════════
-# 3. LÓGICA DE HEDGE REFINADA (TEMPLATES)
+# 3. LÓGICA DE BET BUILDER (SMART HEDGE V2)
 # ═══════════════════════════════════════════════════════════════════════════
 
 def generate_bet_options(home_team: str, away_team: str, probs: Dict) -> List[Dict]:
@@ -351,73 +352,82 @@ def generate_dual_hedges(main_slip: List[Dict], stats: Dict, refs_db: Dict):
         probs = get_detailed_probs(res)
         all_opts = generate_bet_options(home, away, probs)
         
-        # Filtra opções viáveis (>55% para hedge é ok se for dupla chance)
-        valid_opts = [o for o in all_opts if o['prob'] >= 55]
+        # Filtro reduzido para 65% para garantir opções de hedge
+        valid_opts = [o for o in all_opts if o['prob'] >= 65]
+        if len(valid_opts) < 6: valid_opts = all_opts[:10] # Fallback expandido
         
         main_labels = [s['label'] for s in sels]
         
         # ══════════════════════════════════════════════════════════════════
-        # HEDGE #1: TEMPLATE [DUPLA CHANCE] + [ESTATÍSTICA (Cartão/Canto)]
-        # Foco: Segurança do Resultado
+        # HEDGE 1: TEMPLATE [DUPLA CHANCE] + [ESTATÍSTICA (Qualquer)]
+        # Regra: Não repetir aposta do Principal
         # ══════════════════════════════════════════════════════════════════
         h1_pair = []
         
-        # 1. Achar melhor Dupla Chance (que não esteja no principal)
+        # Slot 1: Dupla Chance (Prioridade Absoluta)
         dc_opts = [o for o in valid_opts if o['market'] == 'chance' and o['label'] not in main_labels]
         if dc_opts:
             h1_pair.append(dc_opts[0])
         else:
-            # Fallback: Se não tem DC, pega a aposta mais segura de qualquer tipo
-            safe_opts = [o for o in valid_opts if o['label'] not in main_labels]
-            if safe_opts: h1_pair.append(safe_opts[0])
+            # Se não tem DC bom, pega o melhor não usado
+            alt_opts = [o for o in valid_opts if o['label'] not in main_labels]
+            if alt_opts: h1_pair.append(alt_opts[0])
             
-        # 2. Achar estatística complementar (Total Cartões, Total Cantos, Individual)
-        # Tenta evitar o mesmo mercado da Principal se possível, mas prioriza probabilidade
-        stat_opts = [o for o in valid_opts if o['market'] in ['corners', 'cards'] and o['label'] not in main_labels and o not in h1_pair]
+        # Slot 2: Estatística Complementar (Não pode ser igual ao Slot 1)
+        stat_opts = [o for o in valid_opts if o['market'] in ['corners', 'cards'] and o['label'] not in main_labels]
+        # Remove se já foi escolhido no Slot 1
+        stat_opts = [o for o in stat_opts if o not in h1_pair]
         
-        # Filtra para evitar conflito direto (ex: Over 9.5 cantos se principal já tem Over Cantos)
-        # Mas aqui vamos permitir desde que não seja a mesma aposta
         if stat_opts:
             h1_pair.append(stat_opts[0])
-            
+        
         # Adicionar ao Hedge 1
         for opt in h1_pair:
             hedge1.append({**opt, 'game_id': gid, 'home': home, 'away': away, 'type': 'Safety'})
 
         # ══════════════════════════════════════════════════════════════════
-        # HEDGE #2: TEMPLATE [CANTO] + [CARTÃO] (Cruzamento Estatístico)
-        # Foco: Diversificação de Mercados
+        # HEDGE 2: TEMPLATE [CANTO] + [CARTÃO] (Obrigatório Mix)
+        # Regra: Um de cada mercado. Se Principal for Canto, Hedge evita Canto.
         # ══════════════════════════════════════════════════════════════════
         h2_pair = []
         
-        # Usados até agora (Main + H1)
-        used_labels = main_labels + [o['label'] for o in h1_pair]
+        # Identificar mercados do principal
+        main_mkts = [s['market'] for s in sels]
         
-        # 1. Pegar melhor de Escanteios (que não foi usado)
-        corn_opts = [o for o in valid_opts if o['market'] == 'corners' and o['label'] not in used_labels]
-        if corn_opts:
+        # Candidatos disponíveis (não usados em Main nem em H1)
+        used_labels = main_labels + [o['label'] for o in h1_pair]
+        avail_opts = [o for o in valid_opts if o['label'] not in used_labels]
+        
+        # Slot 1: Escanteios (Se possível)
+        corn_opts = [o for o in avail_opts if o['market'] == 'corners']
+        
+        # Slot 2: Cartões (Se possível)
+        card_opts = [o for o in avail_opts if o['market'] == 'cards']
+        
+        # Montagem inteligente
+        if corn_opts and card_opts:
             h2_pair.append(corn_opts[0])
-            
-        # 2. Pegar melhor de Cartões (que não foi usado)
-        card_opts = [o for o in valid_opts if o['market'] == 'cards' and o['label'] not in used_labels]
-        if card_opts:
             h2_pair.append(card_opts[0])
-            
-        # Fallback: Se faltou um dos dois, completa com o que tiver melhor
-        if len(h2_pair) < 2:
-            leftover = [o for o in valid_opts if o['label'] not in used_labels and o not in h2_pair]
-            count_needed = 2 - len(h2_pair)
-            h2_pair.extend(leftover[:count_needed])
+        elif corn_opts and len(corn_opts) >= 2:
+            # Só tem cantos? Pega os 2 melhores (mas tenta evitar o mesmo lado)
+            h2_pair.append(corn_opts[0])
+            h2_pair.append(corn_opts[1])
+        elif card_opts and len(card_opts) >= 2:
+            # Só tem cartões?
+            h2_pair.append(card_opts[0])
+            h2_pair.append(card_opts[1])
+        else:
+            # Completa com o que tiver (Fallback final)
+            if avail_opts: h2_pair.extend(avail_opts[:2])
             
         # Adicionar ao Hedge 2
-        for opt in h2_pair:
+        for opt in h2_pair[:2]: # Garante max 2
             hedge2.append({**opt, 'game_id': gid, 'home': home, 'away': away, 'type': 'Mix'})
             
     return hedge1, hedge2
 
 def render_bet_builder_tab(stats, refs_db):
     st.markdown("## 🎰 Bet Builder (Template Hedge)")
-    st.caption("Geração de Hedges com estrutura fixa: Dupla Chance + Stat | Canto + Cartão")
     
     if 'main_slip' not in st.session_state: st.session_state.main_slip = []
     
@@ -499,8 +509,9 @@ def render_result_v14_5(res, all_dfs):
     st.markdown("---")
     st.subheader(f"🏠 {res['home']} vs ✈️ {res['away']}")
     
+    # Exibir Árbitro
     if res.get('referee'):
-        st.caption(f"👮 Árbitro: {res['referee']} | Rigidez: {m['strict_val']}x")
+        st.caption(f"👮 Árbitro: {res['referee']} | Rigidez: {m['strict_val']}x | Red Rate: {m['red_rate']:.2f}")
     
     # 🆕 RADAR DE RISCO
     risk = []
@@ -520,16 +531,37 @@ def render_result_v14_5(res, all_dfs):
             st.markdown(f"Over {line}: :{c}[**{p:.0f}%**] | Hist: {h}")
             
     with c2:
-        st.warning("🟨 **Cartões Individuais**")
+        st.markdown(f"**✈️ {res['away']}**")
+        for line in [3.5, 4.5, 5.5]:
+            p = probs['corners']['away'].get(f'Over {line}', 0)
+            h = get_native_history(res['away'], res['league_a'], 'corners', line, 'away', all_dfs)
+            c = "green" if p >= 70 else "gray"
+            st.markdown(f"Over {line}: :{c}[**{p:.0f}%**] | Hist: {h}")
+
+    st.markdown("---")
+
+    # Métricas de Cartões
+    st.warning("🟨 **Cartões Individuais**")
+    c3, c4 = st.columns(2)
+    
+    with c3:
         st.markdown(f"**🏠 {res['home']}**")
         for line in [1.5, 2.5]:
             p = probs['cards']['home'].get(f'Over {line}', 0)
             h = get_native_history(res['home'], res['league_h'], 'cards', line, 'home', all_dfs)
             c = "green" if p >= 70 else "gray"
             st.markdown(f"Over {line}: :{c}[**{p:.0f}%**] | Hist: {h}")
+            
+    with c4:
+        st.markdown(f"**✈️ {res['away']}**")
+        for line in [1.5, 2.5]:
+            p = probs['cards']['away'].get(f'Over {line}', 0)
+            h = get_native_history(res['away'], res['league_a'], 'cards', line, 'away', all_dfs)
+            c = "green" if p >= 70 else "gray"
+            st.markdown(f"Over {line}: :{c}[**{p:.0f}%**] | Hist: {h}")
 
 def main():
-    st.title("⚽ FutPrevisão V14.12 (Template Hedge)")
+    st.title("⚽ FutPrevisão V14.13 (Templates)")
     
     with st.spinner("Carregando..."):
         DEBUG_LOGS.clear()
@@ -560,6 +592,7 @@ def main():
     with tab2:
         l_times = sorted(list(stats.keys()))
         l_refs = ["Neutro"] + sorted(list(refs.keys()))
+        
         c1, c2, c3 = st.columns(3)
         h = c1.selectbox("Casa", l_times, index=0)
         a = c2.selectbox("Fora", l_times, index=1)
