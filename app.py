@@ -86,9 +86,15 @@ def load_leagues() -> Dict[str, pd.DataFrame]:
     leagues = {}
     
     for league_name, filepath in LEAGUE_FILES.items():
+        
+        if not os.path.exists(filepath):
+            st.sidebar.error(f"❌ Arquivo não existe: {filepath}")
+            continue
+        
         try:
-            df = pd.read_csv(filepath, encoding='utf-8')
-            df.columns = [c.strip() for c in df.columns]
+            # Tenta UTF-8 com BOM removal
+            df = pd.read_csv(filepath, encoding='utf-8-sig')
+            df.columns = [c.strip().replace('\ufeff', '') for c in df.columns]
             
             if not df.empty:
                 leagues[league_name] = df
@@ -96,17 +102,23 @@ def load_leagues() -> Dict[str, pd.DataFrame]:
             
         except Exception as e:
             try:
+                # Fallback: Latin1
                 df = pd.read_csv(filepath, encoding='latin1')
-                df.columns = [c.strip() for c in df.columns]
+                df.columns = [c.strip().replace('\ufeff', '') for c in df.columns]
                 
                 if not df.empty:
                     leagues[league_name] = df
                     st.sidebar.success(f"✅ {league_name}: {len(df)} jogos")
-            except:
-                st.sidebar.error(f"❌ Erro: {league_name}")
+            except Exception as e2:
+                st.sidebar.error(f"❌ Erro {league_name}: {str(e2)}")
     
     if not leagues:
-        st.error("🚨 ERRO: Nenhuma liga carregada!")
+        st.error("🚨 ERRO CRÍTICO: Nenhuma liga carregada!")
+        st.error("Verifique se os arquivos CSV estão em /mnt/project/")
+        st.info("Arquivos esperados:")
+        for name, path in LEAGUE_FILES.items():
+            exists = "✅" if os.path.exists(path) else "❌"
+            st.write(f"{exists} {path}")
         st.stop()
     
     return leagues
@@ -118,61 +130,65 @@ def load_referees() -> Dict[str, Dict]:
     refs = {}
     
     # Arquivo 1: arbitros_5_ligas_2025_2026.csv (PRIORIDADE)
-    try:
-        df = pd.read_csv(REFEREE_FILES[0])
-        
-        for _, row in df.iterrows():
-            nome = str(row['Arbitro']).strip()
-            media = float(row['Media_Cartoes_Por_Jogo'])
-            jogos = int(row['Jogos_Apitados'])
-            vermelhos = int(row.get('Cartoes_Vermelhos', 0))
-            amarelos = int(row.get('Cartoes_Amarelos', 0))
+    if os.path.exists(REFEREE_FILES[0]):
+        try:
+            df = pd.read_csv(REFEREE_FILES[0], encoding='utf-8-sig')
+            df.columns = [c.strip().replace('\ufeff', '') for c in df.columns]
             
-            refs[nome] = {
-                'factor': media / 4.0,
-                'red_rate': vermelhos / jogos if jogos > 0 else 0.08,
-                'strictness': media,
-                'games': jogos,
-                'yellow_cards': amarelos,
-                'red_cards': vermelhos,
-                'source': 'arbitros_5_ligas_2025_2026.csv'
-            }
-        
-        st.sidebar.success(f"✅ Árbitros (5 ligas): {len(refs)}")
-        
-    except Exception as e:
-        st.sidebar.error(f"❌ Erro ao carregar árbitros 5 ligas: {str(e)}")
-    
-    # Arquivo 2: arbitros.csv (COMPLEMENTAR)
-    try:
-        df = pd.read_csv(REFEREE_FILES[1])
-        
-        count_added = 0
-        for _, row in df.iterrows():
-            nome = str(row['Nome']).strip()
-            
-            # Só adiciona se NÃO existir
-            if nome not in refs:
-                fator = float(row['Fator'])
+            for _, row in df.iterrows():
+                nome = str(row['Arbitro']).strip()
+                media = float(row['Media_Cartoes_Por_Jogo'])
+                jogos = int(row['Jogos_Apitados'])
+                vermelhos = int(row.get('Cartoes_Vermelhos', 0))
+                amarelos = int(row.get('Cartoes_Amarelos', 0))
                 
                 refs[nome] = {
-                    'factor': fator,
-                    'red_rate': 0.08,
-                    'strictness': fator * 4.0,
-                    'games': 0,
-                    'yellow_cards': 0,
-                    'red_cards': 0,
-                    'source': 'arbitros.csv'
+                    'factor': media / 4.0,
+                    'red_rate': vermelhos / jogos if jogos > 0 else 0.08,
+                    'strictness': media,
+                    'games': jogos,
+                    'yellow_cards': amarelos,
+                    'red_cards': vermelhos,
+                    'source': 'arbitros_5_ligas_2025_2026.csv'
                 }
-                count_added += 1
-        
-        st.sidebar.success(f"✅ Árbitros (geral): +{count_added}")
-        
-    except Exception as e:
-        st.sidebar.error(f"❌ Erro ao carregar árbitros gerais: {str(e)}")
+            
+            st.sidebar.success(f"✅ Árbitros (5 ligas): {len(refs)}")
+            
+        except Exception as e:
+            st.sidebar.error(f"❌ Erro árbitros 5 ligas: {str(e)}")
+    
+    # Arquivo 2: arbitros.csv (COMPLEMENTAR)
+    if os.path.exists(REFEREE_FILES[1]):
+        try:
+            df = pd.read_csv(REFEREE_FILES[1], encoding='utf-8-sig')
+            df.columns = [c.strip().replace('\ufeff', '') for c in df.columns]
+            
+            count_added = 0
+            for _, row in df.iterrows():
+                nome = str(row['Nome']).strip()
+                
+                # Só adiciona se NÃO existir
+                if nome not in refs:
+                    fator = float(row['Fator'])
+                    
+                    refs[nome] = {
+                        'factor': fator,
+                        'red_rate': 0.08,
+                        'strictness': fator * 4.0,
+                        'games': 0,
+                        'yellow_cards': 0,
+                        'red_cards': 0,
+                        'source': 'arbitros.csv'
+                    }
+                    count_added += 1
+            
+            st.sidebar.success(f"✅ Árbitros (geral): +{count_added}")
+            
+        except Exception as e:
+            st.sidebar.error(f"❌ Erro árbitros geral: {str(e)}")
     
     if not refs:
-        st.error("🚨 ERRO: Nenhum árbitro carregado!")
+        st.sidebar.warning("⚠️ Nenhum árbitro carregado")
         refs['Neutro'] = {
             'factor': 1.0, 'red_rate': 0.08, 'strictness': 4.0,
             'games': 0, 'yellow_cards': 0, 'red_cards': 0, 'source': 'default'
@@ -184,9 +200,13 @@ def load_referees() -> Dict[str, Dict]:
 def load_calendar() -> pd.DataFrame:
     """Carrega os 1054 jogos futuros do seu arquivo"""
     
+    if not os.path.exists(CALENDAR_FILE):
+        st.sidebar.error(f"❌ Calendário não encontrado: {CALENDAR_FILE}")
+        return pd.DataFrame()
+    
     try:
-        df = pd.read_csv(CALENDAR_FILE)
-        df.columns = [c.strip() for c in df.columns]
+        df = pd.read_csv(CALENDAR_FILE, encoding='utf-8-sig')
+        df.columns = [c.strip().replace('\ufeff', '') for c in df.columns]
         
         # Validar colunas
         required = ['Data', 'Liga', 'Time_Casa', 'Time_Visitante']
@@ -194,6 +214,7 @@ def load_calendar() -> pd.DataFrame:
         
         if missing:
             st.sidebar.error(f"❌ Calendário: colunas faltando {missing}")
+            st.sidebar.info(f"Colunas encontradas: {list(df.columns)}")
             return pd.DataFrame()
         
         # Parse data
