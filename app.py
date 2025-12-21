@@ -1,11 +1,11 @@
 """
 ╔═══════════════════════════════════════════════════════════════════════════╗
-║       FUTPREVISÃO V25.8 - STABILITY FIX & WHITE THEME                     ║
+║       FUTPREVISÃO V27.0 - DYNAMIC HEDGE ENGINE                            ║
 ║                                                                            ║
-║  ✅ FIX MENU: Congelamento de Odds (Impede reset ao clicar)               ║
-║  ✅ TEMA: Branco Forçado (CSS Injetado)                                   ║
-║  ✅ ESTABILIDADE: Cache de sessão para o jogo selecionado                 ║
-║  ✅ ODDS: Visitante Over 1.5 Cartões fixado em ~1.45                      ║
+║  ✅ NOVO: Otimizador Dinâmico de Linhas (Sobe a linha se a odd for baixa) ║
+║  ✅ HEDGE PRO: Busca automaticamente odds melhores (Elasticidade)         ║
+║  ✅ MANTIDO: Filtro EV+, Menu Fixo, Tema Branco, Odds Reais               ║
+║  ✅ CORREÇÃO: Probabilidade ajustada dinamicamente ao subir a linha       ║
 ║                                                                            ║
 ║  Dezembro 2025                                                           ║
 ╚═══════════════════════════════════════════════════════════════════════════╝
@@ -25,8 +25,8 @@ from difflib import get_close_matches
 # ═══════════════════════════════════════════════════════════════════════════
 
 st.set_page_config(
-    page_title="FutPrevisão V25.8 Stable",
-    page_icon="⚽",
+    page_title="FutPrevisão V27.0 Dynamic",
+    page_icon="💎",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -47,13 +47,20 @@ st.markdown("""
         p, h1, h2, h3 {
             color: #000000 !important;
         }
+        .ev-badge {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
     </style>
 """, unsafe_allow_html=True)
 
 # Session State
 if 'bankroll' not in st.session_state: st.session_state.bankroll = 1000.0
 if 'current_ticket' not in st.session_state: st.session_state.current_ticket = []
-# Cache para o jogo manual atual (Evita recálculo e reset do menu)
 if 'manual_game_cache' not in st.session_state: st.session_state.manual_game_cache = {}
 
 # Mapeamentos
@@ -72,39 +79,35 @@ LIGAS_ALVO = [
     "Championship", "Bundesliga 2", "Pro League", "Süper Lig", "Scottish Premiership"
 ]
 
-# TABELA DE PREÇOS REAIS (V25.8)
+# TABELA DE PREÇOS REAIS (MERCADO)
 REAL_ODDS = {
     # Mandante Escanteios
     ('home', 'corners', 3.5): 1.34,
     ('home', 'corners', 4.5): 1.62,
     ('home', 'corners', 5.5): 2.10,
-    
     # Visitante Escanteios
     ('away', 'corners', 2.5): 1.40,
     ('away', 'corners', 3.5): 1.75,
     ('away', 'corners', 4.5): 2.50,
-    
     # Mandante Cartões
     ('home', 'cards', 0.5): 1.20,
     ('home', 'cards', 1.5): 1.52,
     ('home', 'cards', 2.5): 2.25,
-    
-    # Visitante Cartões (CALIBRADO @1.45)
+    # Visitante Cartões
     ('away', 'cards', 0.5): 1.18,
     ('away', 'cards', 1.5): 1.45,  
     ('away', 'cards', 2.5): 2.30,
-    
     # Totais Escanteios
     ('total', 'corners', 7.5): 1.35,
     ('total', 'corners', 8.5): 1.57,
     ('total', 'corners', 9.5): 1.90,
     ('total', 'corners', 10.5): 2.30,
-    
     # Totais Cartões
     ('total', 'cards', 2.5): 1.38,
     ('total', 'cards', 3.5): 1.65,
     ('total', 'cards', 4.5): 2.10,
-    
+    ('total', 'cards', 5.5): 2.60, # Adicionado para dinâmica
+    ('total', 'cards', 6.5): 3.20, # Adicionado para dinâmica
     # Dupla Chance
     ('home', 'dc'): 1.25,
     ('away', 'dc'): 1.60
@@ -202,7 +205,7 @@ def load_calendar_safe() -> pd.DataFrame:
     except: return pd.DataFrame()
 
 # ═══════════════════════════════════════════════════════════════════════════
-# CÁLCULOS
+# CÁLCULOS MATEMÁTICOS & OTIMIZADOR
 # ═══════════════════════════════════════════════════════════════════════════
 
 def normalize_name(name: str, db_keys: list) -> Optional[str]:
@@ -223,7 +226,6 @@ def get_market_price(location: str, market_type: str, line: float, prob_calculat
     return get_fair_odd(prob_calculated)
 
 def monte_carlo(xg_h: float, xg_a: float, n: int = 1000) -> Tuple[float, float, float]:
-    # Fixando semente para estabilidade do menu manual
     np.random.seed(42) 
     gh = np.random.poisson(max(0.1, xg_h), n)
     ga = np.random.poisson(max(0.1, xg_a), n)
@@ -271,7 +273,7 @@ def get_detailed_probs(res: Dict) -> Dict:
         'cards': {
             'home': {f'Over {l}': sim_prob(res['cards']['h'], l) for l in [0.5, 1.5, 2.5]},
             'away': {f'Over {l}': sim_prob(res['cards']['a'], l) for l in [0.5, 1.5, 2.5]},
-            'total': {f'Over {l}': sim_prob(res['cards']['total'], l) for l in [1.5, 2.5, 3.5, 4.5, 5.5, 6.5]}
+            'total': {f'Over {l}': sim_prob(res['cards']['total'], l) for l in [1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5]}
         }
     }
     mc = res['monte_carlo']
@@ -279,60 +281,75 @@ def get_detailed_probs(res: Dict) -> Dict:
     return probs
 
 def get_available_markets_for_game(res: Dict, probs: Dict) -> List[Dict]:
-    """Helper para modo manual - LISTA TUDO COM PREÇOS REAIS"""
     markets = []
-    
     # --- ESCANTEIOS ---
     for l in [3.5, 4.5, 5.5]:
         p = probs['corners']['home'].get(f'Over {l}', 0)
         odd = get_market_price('home', 'corners', l, p)
         if p > 0: markets.append({'mercado': f"{res['home']} Over {l} Escanteios", 'prob': p, 'odd': odd, 'type': 'Escanteios'})
-    
     for l in [2.5, 3.5, 4.5]:
         p = probs['corners']['away'].get(f'Over {l}', 0)
         odd = get_market_price('away', 'corners', l, p)
         if p > 0: markets.append({'mercado': f"{res['away']} Over {l} Escanteios", 'prob': p, 'odd': odd, 'type': 'Escanteios'})
-        
     # --- CARTÕES ---
     for l in [1.5, 2.5]:
         p1 = probs['cards']['home'].get(f'Over {l}', 0)
         odd1 = get_market_price('home', 'cards', l, p1)
         if p1 > 0: markets.append({'mercado': f"{res['home']} Over {l} Cartões", 'prob': p1, 'odd': odd1, 'type': 'Cartões'})
-        
         p2 = probs['cards']['away'].get(f'Over {l}', 0)
         odd2 = get_market_price('away', 'cards', l, p2)
         if p2 > 0: markets.append({'mercado': f"{res['away']} Over {l} Cartões", 'prob': p2, 'odd': odd2, 'type': 'Cartões'})
-
     # --- TOTAIS ---
     for l in [7.5, 8.5, 9.5]:
         p = probs['corners']['total'].get(f'Over {l}', 0)
         odd = get_market_price('total', 'corners', l, p)
         if p > 0: markets.append({'mercado': f"Total Jogo Over {l} Escanteios", 'prob': p, 'odd': odd, 'type': 'TotalEscanteios'})
-        
     for l in [2.5, 3.5, 4.5]:
         p = probs['cards']['total'].get(f'Over {l}', 0)
         odd = get_market_price('total', 'cards', l, p)
         if p > 0: markets.append({'mercado': f"Total Jogo Over {l} Cartões", 'prob': p, 'odd': odd, 'type': 'TotalCartões'})
-        
     # --- DUPLA CHANCE ---
     p1x = probs['chance']['1X']
     odd1x = get_market_price('home', 'dc', 0, p1x)
     markets.append({'mercado': f"DC {res['home']} ou Empate", 'prob': p1x, 'odd': odd1x, 'type': 'DC'})
-    
     px2 = probs['chance']['X2']
     oddx2 = get_market_price('away', 'dc', 0, px2)
     markets.append({'mercado': f"DC {res['away']} ou Empate", 'prob': px2, 'odd': oddx2, 'type': 'DC'})
-
     return markets
 
 # ═══════════════════════════════════════════════════════════════════════════
-# LÓGICA V25 - SCANNER E HEDGES
+# LÓGICA V27 - SCANNER INVESTOR (EV+) E HEDGES DINÂMICOS
 # ═══════════════════════════════════════════════════════════════════════════
+
+def optimize_market_line(probs_dict: Dict, market_scope: str, market_type: str, start_line: float, min_odd: float, max_line: float) -> Tuple[float, float]:
+    """
+    Motor de Elasticidade V27.
+    Sobe a linha (3.5 -> 4.5 -> 5.5) até encontrar uma odd > min_odd.
+    """
+    curr_line = start_line
+    last_valid_odd = 1.0
+    
+    while curr_line <= max_line:
+        # Pega a probabilidade DA LINHA ATUAL (Dinâmica)
+        # Ex: Prob de Over 4.5 será menor que Over 3.5
+        prob_key = f'Over {curr_line}'
+        prob = probs_dict.get(prob_key, 0)
+        
+        odd = get_market_price(market_scope, market_type, curr_line, prob)
+        last_valid_odd = odd
+        
+        # Regra de Segurança: Só aceita se a probabilidade ainda for > 30%
+        # Não adianta pegar odd 5.00 se a chance é 5%
+        if odd >= min_odd and prob > 30:
+            return curr_line, odd
+            
+        curr_line += 1.0
+        
+    return curr_line - 1.0, last_valid_odd
 
 def generate_smart_ticket_v23(calendar: pd.DataFrame, stats: Dict, refs: Dict, all_dfs: Dict, date_str: str, 
                               target_leagues: List[str] = None, target_games: List[str] = None) -> Dict:
-    """Scanner V25 - DOUBLE LOCK + REAL ODDS"""
-    
+    """Scanner V26 - EV+"""
     df_day = calendar[calendar['DtObj'].dt.strftime('%d/%m/%Y') == date_str].copy()
     if target_leagues: df_day = df_day[df_day['Liga'].isin(target_leagues)]
     df_day['GameID'] = df_day['Time_Casa'] + ' vs ' + df_day['Time_Visitante']
@@ -346,35 +363,32 @@ def generate_smart_ticket_v23(calendar: pd.DataFrame, stats: Dict, refs: Dict, a
     for _, row in df_day.iterrows():
         home, away = row['Time_Casa'], row['Time_Visitante']
         liga, hora = row.get('Liga', 'N/A'), row.get('Hora', 'N/A')
-        
         res = calcular_jogo_v23(home, away, stats, None, refs, all_dfs)
         if 'error' in res: continue
         probs = get_detailed_probs(res)
-        
         candidates = []
         
-        # 1. Escanteios
+        def add_candidate(mercado, prob, odd, tipo):
+            ev_ratio = (prob / 100) * odd
+            if ev_ratio >= 1.05 or prob >= 80:
+                candidates.append({'mercado': mercado, 'prob': prob, 'odd': odd, 'type': tipo, 'ev': round((ev_ratio - 1) * 100, 1)})
+
         for loc, name in [('home', res['home']), ('away', res['away'])]:
             for l in [3.5, 4.5]:
                 p = probs['corners'][loc].get(f'Over {l}', 0)
                 odd = get_market_price(loc, 'corners', l, p)
-                if p >= 65: candidates.append({'mercado': f"{name} Over {l} Escanteios", 'prob': p, 'odd': odd, 'type': 'Escanteios'})
-        
-        # 2. Cartões
+                add_candidate(f"{name} Over {l} Escanteios", p, odd, 'Escanteios')
         for loc, name in [('home', res['home']), ('away', res['away'])]:
             p = probs['cards'][loc].get('Over 1.5', 0)
             odd = get_market_price(loc, 'cards', 1.5, p)
-            if p >= 60: candidates.append({'mercado': f"{name} Over 1.5 Cartões", 'prob': p, 'odd': odd, 'type': 'Cartões'})
-        
-        # 3. Totais
+            add_candidate(f"{name} Over 1.5 Cartões", p, odd, 'Cartões')
         p_card_tot = probs['cards']['total'].get('Over 3.5', 0)
         odd_card_tot = get_market_price('total', 'cards', 3.5, p_card_tot)
-        if p_card_tot >= 65: candidates.append({'mercado': "Total Jogo Over 3.5 Cartões", 'prob': p_card_tot, 'odd': odd_card_tot, 'type': 'TotalCartões'})
+        add_candidate("Total Jogo Over 3.5 Cartões", p_card_tot, odd_card_tot, 'TotalCartões')
 
-        candidates.sort(key=lambda x: x['prob'], reverse=True)
+        candidates.sort(key=lambda x: x['ev'], reverse=True)
         selected = []
         types_used = set()
-        
         for cand in candidates:
             if len(selected) >= 2: break
             if cand['type'] not in types_used or cand['prob'] > 80:
@@ -382,26 +396,22 @@ def generate_smart_ticket_v23(calendar: pd.DataFrame, stats: Dict, refs: Dict, a
                     item = {
                         'type': 'auto_dual', 'jogo': f"{home} vs {away}",
                         'mercado': cand['mercado'], 'prob': cand['prob'], 'odd': cand['odd'],
-                        'liga': liga, 'hora': hora
+                        'liga': liga, 'hora': hora, 'ev': cand['ev']
                     }
                     selected.append(item)
                     types_used.add(cand['type'])
-        
         for item in selected:
-            if curr_odd * item['odd'] <= 80.0:
+            if curr_odd * item['odd'] <= 100.0:
                 ticket.append(item)
                 curr_odd *= item['odd']
-
     return {'ticket': ticket, 'total_odd': round(curr_odd, 2), 'num_selections': len(ticket)}
 
 def generate_hedges_for_user_ticket(ticket: List[Dict], stats: Dict, refs: Dict, all_dfs: Dict) -> Dict:
-    """Hedge V25.1 - MIRROR + SAFETY + REAL ODDS"""
+    """Hedge V27.0 - DYNAMIC ENGINE"""
     
     games_map = {}
     for item in ticket:
-        game_name = item['jogo']
-        if game_name not in games_map: games_map[game_name] = []
-        games_map[game_name].append(item)
+        games_map.setdefault(item['jogo'], []).append(item)
         
     principal_display = []
     hedge1 = []
@@ -412,7 +422,6 @@ def generate_hedges_for_user_ticket(ticket: List[Dict], stats: Dict, refs: Dict,
         if game_name in processed_games: continue
         try: parts = game_name.split(' vs '); h, a = parts[0], parts[1]
         except: continue
-        
         res = calcular_jogo_v23(h, a, stats, None, refs, all_dfs)
         if 'error' in res: continue
         probs = get_detailed_probs(res)
@@ -421,60 +430,58 @@ def generate_hedges_for_user_ticket(ticket: List[Dict], stats: Dict, refs: Dict,
         for it in items:
             desc = it.get('mercado', it.get('selection', 'Aposta'))
             if it.get('type') == 'fusion': desc = " + ".join(it.get('mercados', []))
-            principal_display.append({'jogo': it['jogo'], 'selecao': desc, 'odd': it['odd']})
+            ev_badge = f" [EV +{it['ev']}%]" if 'ev' in it and it['ev'] > 0 else ""
+            principal_display.append({'jogo': it['jogo'], 'selecao': desc + ev_badge, 'odd': it['odd']})
             principal_desc_str += desc + " "
             
-        prob_corn_h_react = probs['corners']['home']['Over 4.5']
-        prob_corn_a_react = probs['corners']['away']['Over 3.5']
-        prob_card_safe = probs['cards']['total']['Over 2.5']
-        prob_corn_safe = probs['corners']['total']['Over 7.5']
-        
-        odd_corn_h_react = get_market_price('home', 'corners', 4.5, prob_corn_h_react)
-        odd_corn_a_react = get_market_price('away', 'corners', 3.5, prob_corn_a_react)
-        odd_card_tot_35 = get_market_price('total', 'cards', 3.5, probs['cards']['total']['Over 3.5'])
-        
-        # === HEDGE 1: ESPELHO ===
+        # OTIMIZAÇÃO DINÂMICA (A MÁGICA DA V27)
+        # Tenta Over 3.5, se odd for < 1.60, tenta Over 4.5, etc.
+        card_line_h1, card_odd_h1 = optimize_market_line(
+            probs['cards']['total'], 'total', 'cards', 
+            start_line=3.5, min_odd=1.60, max_line=6.5
+        )
+
         has_home_corn = h in principal_desc_str and "Escanteios" in principal_desc_str
         has_away_corn = a in principal_desc_str and "Escanteios" in principal_desc_str
         
-        h1_sel = ""
-        h1_odd = 1.0
-        
+        # === HEDGE 1: ESPELHO DINÂMICO ===
         if has_home_corn:
-            h1_sel = f"{a} Over 3.5 Escanteios + Total Over 3.5 Cartões"
-            h1_odd = round(odd_corn_a_react * odd_card_tot_35 * 0.9, 2)
+            odd_corn = get_market_price('away', 'corners', 3.5, probs['corners']['away']['Over 3.5'])
+            h1_sel = f"{a} Over 3.5 Escanteios + Total Over {card_line_h1} Cartões"
+            h1_odd = round(odd_corn * card_odd_h1 * 0.9, 2)
         elif has_away_corn:
-            h1_sel = f"{h} Over 4.5 Escanteios + Total Over 3.5 Cartões"
-            h1_odd = round(odd_corn_h_react * odd_card_tot_35 * 0.9, 2)
+            odd_corn = get_market_price('home', 'corners', 4.5, probs['corners']['home']['Over 4.5'])
+            h1_sel = f"{h} Over 4.5 Escanteios + Total Over {card_line_h1} Cartões"
+            h1_odd = round(odd_corn * card_odd_h1 * 0.9, 2)
         else:
             if res['monte_carlo']['h'] > res['monte_carlo']['a']:
                 odd_dc = get_market_price('away', 'dc', 0, probs['chance']['X2'])
-                h1_sel = f"DC {a} ou Empate + Total Over 3.5 Cartões"
-                h1_odd = round(odd_dc * odd_card_tot_35 * 0.9, 2)
+                h1_sel = f"DC {a} ou Empate + Total Over {card_line_h1} Cartões"
             else:
                 odd_dc = get_market_price('home', 'dc', 0, probs['chance']['1X'])
-                h1_sel = f"DC {h} ou Empate + Total Over 3.5 Cartões"
-                h1_odd = round(odd_dc * odd_card_tot_35 * 0.9, 2)
-        
+                h1_sel = f"DC {h} ou Empate + Total Over {card_line_h1} Cartões"
+            h1_odd = round(odd_dc * card_odd_h1 * 0.9, 2)
         hedge1.append({'jogo': game_name, 'selecao': h1_sel, 'odd': h1_odd})
         
-        # === HEDGE 2: SEGURANÇA ===
+        # === HEDGE 2: SEGURANÇA DINÂMICA ===
         fav_home = res['monte_carlo']['h'] > res['monte_carlo']['a']
-        if fav_home:
-            dc_sel = f"DC {h} ou Empate"
-            dc_odd = get_market_price('home', 'dc', 0, probs['chance']['1X'])
-        else:
-            dc_sel = f"DC {a} ou Empate"
-            dc_odd = get_market_price('away', 'dc', 0, probs['chance']['X2'])
+        dc_sel = f"DC {h} ou Empate" if fav_home else f"DC {a} ou Empate"
+        dc_odd = get_market_price('home', 'dc', 0, probs['chance']['1X']) if fav_home else get_market_price('away', 'dc', 0, probs['chance']['X2'])
         
-        safe_card_odd = get_market_price('total', 'cards', 2.5, prob_card_safe)
-        h2_sel = f"{dc_sel} + Total Over 2.5 Cartões"
-        h2_odd = round(dc_odd * safe_card_odd * 0.95, 2)
+        # Otimiza a linha de cartões de segurança (começa em 2.5)
+        # Busca odd mínima de 1.45 para valer a pena
+        card_line_h2, card_odd_h2 = optimize_market_line(
+            probs['cards']['total'], 'total', 'cards',
+            start_line=2.5, min_odd=1.45, max_line=5.5
+        )
+        
+        h2_sel = f"{dc_sel} + Total Over {card_line_h2} Cartões"
+        h2_odd = round(dc_odd * card_odd_h2 * 0.95, 2)
         
         if h2_odd < 1.80:
-            safe_corn_odd = get_market_price('total', 'corners', 7.5, prob_corn_safe)
+            corn_odd = get_market_price('total', 'corners', 7.5, probs['corners']['total']['Over 7.5'])
             h2_sel += " + Over 7.5 Cantos"
-            h2_odd = round(h2_odd * safe_corn_odd * 0.95, 2)
+            h2_odd = round(h2_odd * corn_odd * 0.95, 2)
             
         hedge2.append({'jogo': game_name, 'selecao': h2_sel, 'odd': h2_odd})
         processed_games.add(game_name)
@@ -490,18 +497,17 @@ def generate_hedges_for_user_ticket(ticket: List[Dict], stats: Dict, refs: Dict,
 # ═══════════════════════════════════════════════════════════════════════════
 
 def main():
-    # Carregamento
     with st.spinner("Carregando bases..."):
         stats = learn_stats_v23()
         refs = load_referees_v23()
         calendar = load_calendar_safe()
         all_dfs = load_all_dataframes()
         
-    st.title("⚽ FutPrevisão V25.8 Stable")
+    st.title("💎 FutPrevisão V27.0 Dynamic")
     tab1, tab2, tab3, tab4, tab5 = st.tabs(["📅 Calendário", "🔍 Simulação", "🎯 Scanner/Manual", "🛡️ Hedges", "📊 Radares"])
     
     with tab3:
-        st.header("🎫 Construtor de Bilhetes")
+        st.header("🎫 Construtor de Bilhetes (EV+)")
         modo = st.radio("Modo:", ["🤖 Robô Scanner", "✍️ Manual"], horizontal=True)
         st.markdown("---")
         
@@ -513,26 +519,23 @@ def main():
             if "Robô" in modo:
                 avail_leagues = sorted(df_day['Liga'].unique())
                 sel_leagues = st.multiselect("Ligas:", avail_leagues, default=avail_leagues)
-                if st.button("🚀 GERAR BILHETE", type="primary"):
+                if st.button("🚀 GERAR BILHETE DE VALOR", type="primary"):
                     res = generate_smart_ticket_v23(calendar, stats, refs, all_dfs, sel_date, target_leagues=sel_leagues)
                     if res['ticket']:
                         st.session_state.current_ticket = res['ticket']
-                        st.success(f"Gerado com {len(res['ticket'])} apostas!")
-                    else: st.warning("Nada encontrado.")
+                        st.success(f"Encontradas {len(res['ticket'])} apostas de valor!")
+                    else: st.warning("Nenhuma aposta com Valor Esperado positivo encontrada hoje.")
             else:
                 games = sorted((df_day['Time_Casa'] + ' vs ' + df_day['Time_Visitante']).unique())
-                # KEY ÚNICA PARA JOGO
                 sel_game = st.selectbox("Jogo:", games, key="sel_game_manual")
                 
                 if sel_game:
-                    # LÓGICA DE CACHE: Se o jogo mudou ou não existe cache, calcula. Senão, usa o cache.
                     if sel_game not in st.session_state.manual_game_cache:
                         row = df_day[(df_day['Time_Casa'] + ' vs ' + df_day['Time_Visitante']) == sel_game].iloc[0]
                         res = calcular_jogo_v23(row['Time_Casa'], row['Time_Visitante'], stats, None, refs, all_dfs)
                         if 'error' not in res:
                             probs = get_detailed_probs(res)
                             mkts = get_available_markets_for_game(res, probs)
-                            # Mapeamento para evitar duplicatas
                             options_map = {}
                             for m in mkts:
                                 label = f"{m['mercado']} (@{m['odd']})"
@@ -540,13 +543,9 @@ def main():
                             sorted_labels = sorted(options_map.keys())
                             st.session_state.manual_game_cache[sel_game] = (options_map, sorted_labels)
                     
-                    # Recupera do cache (garante que odds não mudem e menu não resete)
                     if sel_game in st.session_state.manual_game_cache:
                         options_map, sorted_labels = st.session_state.manual_game_cache[sel_game]
-                        
-                        # USAR KEY DINÂMICA baseada no jogo impede conflito entre jogos diferentes
                         sel_mkt_label = st.selectbox("Mercado:", sorted_labels, key=f"mkt_select_{sel_game}")
-                        
                         if st.button("➕ Adicionar"):
                             if sel_mkt_label in options_map:
                                 obj = options_map[sel_mkt_label]
@@ -560,18 +559,20 @@ def main():
                 st.markdown("### 🎫 Bilhete Atual")
                 if st.button("🗑️ Limpar"): st.session_state.current_ticket = []; st.rerun()
                 for it in st.session_state.current_ticket:
-                    st.write(f"✅ {it['jogo']} - {it.get('mercado')} (@{it['odd']})")
+                    extra = f" <span class='ev-badge'>EV +{it['ev']}%</span>" if 'ev' in it and it['ev'] > 0 else ""
+                    st.markdown(f"✅ {it['jogo']} - {it.get('mercado')} (@{it['odd']}){extra}", unsafe_allow_html=True)
 
     with tab4:
-        st.header("🛡️ Sistema de Proteção V25")
+        st.header("🛡️ Sistema de Proteção V27 (Dynamic)")
         if st.session_state.current_ticket:
-            if st.button("🛡️ CALCULAR HEDGES (Real Odds)", type="primary"):
+            if st.button("🛡️ CALCULAR HEDGES (Dynamic Odds)", type="primary"):
                 hedges = generate_hedges_for_user_ticket(st.session_state.current_ticket, stats, refs, all_dfs)
                 c1, c2, c3 = st.columns(3)
                 with c1:
                     st.subheader("📋 Principal")
                     st.metric("Odd", f"@{hedges['principal']['odd']}")
-                    for i in hedges['principal']['itens']: st.caption(f"{i['jogo']} - {i['selecao']}")
+                    for i in hedges['principal']['itens']: 
+                        st.markdown(f"{i['jogo']} - {i['selecao']}", unsafe_allow_html=True)
                 with c2:
                     st.subheader("🛡️ Hedge 1 (Espelho)")
                     st.metric("Odd", f"@{hedges['hedge1']['odd']}")
