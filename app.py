@@ -287,119 +287,184 @@ def get_detailed_probs(res: Dict) -> Dict:
     }
 
 # ═══════════════════════════════════════════════════════════════════════════
-# SCANNER V24 (COM FILTROS E MIX)
+# LÓGICA V24.1 - SCANNER DIVERSIFICADO E HEDGE INTELIGENTE
 # ═══════════════════════════════════════════════════════════════════════════
 
-def scan_day_for_radars(calendar: pd.DataFrame, stats: Dict, refs: Dict, all_dfs: Dict, date_str: str) -> Dict:
-    df_day = calendar[calendar['DtObj'].dt.strftime('%d/%m/%Y') == date_str]
-    radar = {'corners_individual': [], 'cards_individual': [], 'corners_total': [], 'cards_total': []}
+def generate_smart_ticket_v23(calendar: pd.DataFrame, stats: Dict, refs: Dict, all_dfs: Dict, date_str: str, 
+                              target_leagues: List[str] = None, target_games: List[str] = None) -> Dict:
+    """
+    Scanner V24.1 - Smart Ticket (Diversidade Forçada)
+    ✅ Garante mix de Escanteios e Cartões (não deixa um dominar)
+    ✅ Filtra Odd mínima para valor
+    """
+    
+    df_day = calendar[calendar['DtObj'].dt.strftime('%d/%m/%Y') == date_str].copy()
+    
+    # Filtros
+    if target_leagues: df_day = df_day[df_day['Liga'].isin(target_leagues)]
+    df_day['GameID'] = df_day['Time_Casa'] + ' vs ' + df_day['Time_Visitante']
+    if target_games: df_day = df_day[df_day['GameID'].isin(target_games)]
+    
+    # Listas separadas para garantir diversidade
+    anchors_corners = []
+    anchors_cards = []
+    fusions = []
     
     for _, row in df_day.iterrows():
         home, away = row['Time_Casa'], row['Time_Visitante']
+        liga, hora = row.get('Liga', 'N/A'), row.get('Hora', 'N/A')
+        
         res = calcular_jogo_v23(home, away, stats, None, refs, all_dfs)
         if 'error' in res: continue
         probs = get_detailed_probs(res)
         
-        # Individual
-        for line in [3.5, 4.5]:
-            ph = probs['corners']['home'].get(f'Over {line}', 0)
-            if ph >= THRESHOLDS['radar_corners']:
-                radar['corners_individual'].append({'time': res['home'], 'mercado': f"{res['home']} Over {line} Cantos", 'prob': ph, 'media': res['corners']['h'], 'consistencia': res['consistency']['corners_h'], 'location': 'Casa'})
-            if line <= 4.5:
-                pa = probs['corners']['away'].get(f'Over {line}', 0)
-                if pa >= THRESHOLDS['radar_corners']:
-                    radar['corners_individual'].append({'time': res['away'], 'mercado': f"{res['away']} Over {line} Cantos", 'prob': pa, 'media': res['corners']['a'], 'consistencia': res['consistency']['corners_a'], 'location': 'Fora'})
-        
-        for line in [1.5, 2.5]:
-            ph = probs['cards']['home'].get(f'Over {line}', 0)
-            if ph >= THRESHOLDS['radar_cards']:
-                radar['cards_individual'].append({'time': res['home'], 'mercado': f"{res['home']} Over {line} Cartões", 'prob': ph, 'media': res['cards']['h'], 'location': 'Casa'})
-                
-    return radar
+        # 1. ÂNCORAS - ESCANTEIOS
+        for loc, name in [('home', res['home']), ('away', res['away'])]:
+            for l in [3.5, 4.5]:
+                p = probs['corners'][loc].get(f'Over {l}', 0)
+                if p >= 65:
+                    odd = get_fair_odd(p)
+                    if 1.25 <= odd <= 1.55: # Odd mínima de 1.25
+                        anchors_corners.append({
+                            'type': 'anchor', 'jogo': f"{res['home']} vs {res['away']}",
+                            'mercado': f"{name} Over {l} Escanteios", 'prob': p, 'odd': odd, 'liga': liga, 'hora': hora, 'cat': 'corn'
+                        })
 
-def generate_3_tickets_system(calendar: pd.DataFrame, stats: Dict, refs: Dict, all_dfs: Dict, date_str: str, num_games: int = 1) -> Dict:
-    """
-    Sistema Hedges V24.2 - MATRIX COVERAGE (Todos os bilhetes são Mistos)
-    Cobre:
-    1. Ataque + Violência (Over/Over)
-    2. Ataque + Limpeza (Over/Under)
-    3. Travado + Violência (Under/Over)
-    """
+        # 2. ÂNCORAS - CARTÕES
+        for loc, name in [('home', res['home']), ('away', res['away'])]:
+            p_card = probs['cards'][loc].get('Over 1.5', 0)
+            if p_card >= 60: # Cartão é mais difícil, aceita 60%
+                odd = get_fair_odd(p_card)
+                if 1.25 <= odd <= 1.65:
+                    anchors_cards.append({
+                        'type': 'anchor', 'jogo': f"{res['home']} vs {res['away']}",
+                        'mercado': f"{name} Over 1.5 Cartões", 'prob': p_card, 'odd': odd, 'liga': liga, 'hora': hora, 'cat': 'card'
+                    })
+
+        # 3. FUSÕES
+        corn_prob = probs['corners']['home'].get('Over 3.5', 0)
+        card_prob = probs['cards']['total'].get('Over 1.5', 0)
+        if corn_prob >= 65 and card_prob >= 65:
+            p_comb = (corn_prob/100 * card_prob/100 * 0.90) * 100
+            odd_comb = get_fair_odd(p_comb)
+            if 1.60 <= odd_comb <= 2.40:
+                fusions.append({
+                    'type': 'fusion', 'jogo': f"{res['home']} vs {res['away']}",
+                    'team': res['home'],
+                    'mercados': [f"{res['home']} Over 3.5 Escanteios", "Total Jogo Over 1.5 Cartões"],
+                    'prob_combined': p_comb, 'odd': odd_comb, 'liga': liga, 'hora': hora, 'cat': 'mix'
+                })
+
+    # MONTAGEM INTELIGENTE (Alternada)
+    ticket = []
+    curr_odd = 1.0
+    used_games = set()
     
-    df_day = calendar[calendar['DtObj'].dt.strftime('%d/%m/%Y') == date_str]
+    # Ordena todos pela qualidade
+    anchors_corners.sort(key=lambda x: x['prob'], reverse=True)
+    anchors_cards.sort(key=lambda x: x['prob'], reverse=True)
+    fusions.sort(key=lambda x: x['prob_combined'], reverse=True)
     
-    # Encontrar o MELHOR jogo para essa estratégia (Jogo com tendência de favorito)
-    best_game = None
-    best_score = -1
+    # Loop de preenchimento forçando mix
+    # Tenta pegar: 1 Canto -> 1 Cartão -> 1 Fusão -> Repete
+    max_len = max(len(anchors_corners), len(anchors_cards), len(fusions))
     
-    for _, row in df_day.iterrows():
-        home, away = row['Time_Casa'], row['Time_Visitante']
-        res = calcular_jogo_v23(home, away, stats, None, refs, all_dfs)
-        if 'error' in res: continue
+    for i in range(max_len):
+        if len(ticket) >= 6: break
         
-        # Score baseado na força do mandante (queremos um favorito claro para ditar o ritmo)
-        score = res['corners']['h'] + res['goals']['h']
-        if score > best_score:
-            best_score = score
-            best_game = {
-                'res': res,
-                'liga': row.get('Liga', 'N/A'),
-                'hora': row.get('Hora', 'N/A'),
-                'home': home, 'away': away
-            }
+        # Tenta Canto
+        if i < len(anchors_corners):
+            item = anchors_corners[i]
+            if item['jogo'] not in used_games and curr_odd * item['odd'] <= 8.0:
+                ticket.append(item); curr_odd *= item['odd']; used_games.add(item['jogo'])
+        
+        if len(ticket) >= 6: break
+        
+        # Tenta Cartão
+        if i < len(anchors_cards):
+            item = anchors_cards[i]
+            if item['jogo'] not in used_games and curr_odd * item['odd'] <= 8.0:
+                ticket.append(item); curr_odd *= item['odd']; used_games.add(item['jogo'])
+                
+        if len(ticket) >= 6: break
+        
+        # Tenta Fusão
+        if i < len(fusions):
+            item = fusions[i]
+            if item['jogo'] not in used_games and curr_odd * item['odd'] <= 8.0:
+                ticket.append(item); curr_odd *= item['odd']; used_games.add(item['jogo'])
             
-    if not best_game:
-        return {} # Não achou jogo
+    return {'ticket': ticket, 'total_odd': round(curr_odd, 2), 'num_selections': len(ticket)}
+
+def generate_hedges_for_user_ticket(ticket: List[Dict], stats: Dict, refs: Dict, all_dfs: Dict) -> Dict:
+    """
+    Hedge V24.1 - Inteligência Contextual
+    ✅ Hedge 1: Safety (DC) ou Under Gols (Jogo Travado)
+    ✅ Hedge 2: Inverso do Principal (Se Canto -> Cartão / Se Cartão -> Canto)
+    """
+    principal, hedge1, hedge2 = [], [], []
+    processed = set()
+    
+    for item in ticket:
+        try: parts = item['jogo'].split(' vs '); h, a = parts[0], parts[1]
+        except: continue
+        if f"{h}vs{a}" in processed: continue
         
-    res = best_game['res']
-    probs = get_detailed_probs(res)
-    h_name = res['home']
-    
-    # Linhas Dinâmicas (baseadas na média)
-    # Cantos: Arredonda média para o .5 mais próximo
-    line_corn = 5.5 if res['corners']['h'] > 6 else 4.5
-    # Cartões: Padrão 3.5 ou 4.5 pro jogo
-    line_card = 4.5 if res['cards']['total'] > 4 else 3.5
-    
-    # 1. PRINCIPAL (Over Canto + Over Cartão)
-    # Cenário: Jogo Movimentado e Pegado
-    principal = [{
-        'jogo': f"{h_name} vs {res['away']}",
-        'mercado': f"Criar Aposta: {h_name} Over {line_corn} Cantos + Jogo Over {line_card} Cartões",
-        'prob': (probs['corners']['home'][f'Over {line_corn}']/100 * probs['cards']['total'][f'Over {line_card}']/100) * 100,
-        'odd': get_fair_odd((probs['corners']['home'][f'Over {line_corn}']/100 * probs['cards']['total'][f'Over {line_card}']/100) * 100 * 0.9), # Ajuste combo
-        'tipo': 'Ataque + Guerra'
-    }]
-    
-    # 2. HEDGE 1 (Over Canto + UNDER Cartão)
-    # Cenário: Jogo Técnico (Ataque flui, mas sem violência/faltas)
-    # O Under Cartão protege caso o jogo seja "limpo demais"
-    prob_under_card = 100 - probs['cards']['total'][f'Over {line_card}']
-    hedge1 = [{
-        'jogo': f"{h_name} vs {res['away']}",
-        'mercado': f"Criar Aposta: {h_name} Over {line_corn} Cantos + Jogo UNDER {line_card} Cartões",
-        'prob': (probs['corners']['home'][f'Over {line_corn}']/100 * prob_under_card/100) * 100,
-        'odd': get_fair_odd((probs['corners']['home'][f'Over {line_corn}']/100 * prob_under_card/100) * 100 * 0.9),
-        'tipo': 'Ataque Técnico (Safety)'
-    }]
-    
-    # 3. HEDGE 2 (UNDER Canto + Over Cartão)
-    # Cenário: Jogo Travado/Frustração (Favorito não infiltra, jogo vira faltoso)
-    # O Under Canto protege caso o favorito jogue mal, e o Over Cartão lucra na "cera/briga"
-    prob_under_corn = 100 - probs['corners']['home'][f'Over {line_corn}']
-    hedge2 = [{
-        'jogo': f"{h_name} vs {res['away']}",
-        'mercado': f"Criar Aposta: {h_name} UNDER {line_corn} Cantos + Jogo Over {line_card} Cartões",
-        'prob': (prob_under_corn/100 * probs['cards']['total'][f'Over {line_card}']/100) * 100,
-        'odd': get_fair_odd((prob_under_corn/100 * probs['cards']['total'][f'Over {line_card}']/100) * 100 * 0.9),
-        'tipo': 'Jogo Travado/Guerra (Caos)'
-    }]
-    
-    # Recalcula odds totais (simples, pois é 1 seleção composta por bilhete)
+        res = calcular_jogo_v23(h, a, stats, None, refs, all_dfs)
+        if 'error' in res: continue
+        probs = get_detailed_probs(res)
+        
+        # 1. PRINCIPAL (Cópia)
+        desc = item.get('mercado', item.get('selection'))
+        if item.get('type') == 'fusion': desc = " + ".join(item['mercados'])
+        principal.append({'jogo': item['jogo'], 'selecao': desc, 'odd': item['odd']})
+        
+        # Análise do Tipo de Aposta Principal para decidir os Hedges
+        is_corner_bet = 'Escanteios' in str(desc)
+        is_card_bet = 'Cartões' in str(desc)
+        
+        # 2. HEDGE 1 (Safety/Resultado)
+        mc = res['monte_carlo']
+        
+        if is_card_bet and not is_corner_bet:
+            # Se aposta principal é cartão, proteja com "Jogo Morto" (Under Gols)
+            h1_sel = "Total Under 3.5 Gols"
+            h1_odd = 1.35 
+        else:
+            # Padrão: Proteção de Resultado (DC)
+            favorito_casa = mc['h'] > mc['a']
+            h1_sel = f"DC {h} ou Empate" if favorito_casa else f"DC {a} ou Empate"
+            h1_odd = get_fair_odd(probs['chance']['1X'] if favorito_casa else probs['chance']['X2'])
+            
+        hedge1.append({'jogo': item['jogo'], 'selecao': h1_sel, 'odd': h1_odd})
+        
+        # 3. HEDGE 2 (Caos/Correlação Inversa)
+        
+        if is_corner_bet:
+            # Se apostei em Cantos, o Hedge 2 é Cartões
+            if probs['cards']['total']['Over 4.5'] > 50:
+                h2_sel = "Total Over 4.5 Cartões (Guerra)"
+                h2_odd = get_fair_odd(probs['cards']['total']['Over 4.5'])
+            else:
+                h2_sel = "Total Over 3.5 Cartões (Guerra)"
+                h2_odd = get_fair_odd(probs['cards']['total']['Over 3.5'])
+                
+        elif is_card_bet:
+            # Se apostei em Cartões, o Hedge 2 é Fluxo (Cantos/Gols)
+            h2_sel = "Total Over 8.5 Cantos (Jogo Limpo)"
+            h2_odd = get_fair_odd(probs['corners']['total']['Over 8.5'])
+            
+        else:
+            h2_sel = "Total Over 3.5 Cartões"
+            h2_odd = get_fair_odd(probs['cards']['total']['Over 3.5'])
+
+        hedge2.append({'jogo': item['jogo'], 'selecao': h2_sel, 'odd': h2_odd})
+        processed.add(f"{h}vs{a}")
+        
     return {
-        'principal': {'selections': principal, 'odd_total': principal[0]['odd'], 'allocation': 50},
-        'hedge1': {'selections': hedge1, 'odd_total': hedge1[0]['odd'], 'allocation': 30},
-        'hedge2': {'selections': hedge2, 'odd_total': hedge2[0]['odd'], 'allocation': 20}
+        'principal': {'itens': principal, 'odd': round(np.prod([x['odd'] for x in principal]), 2)},
+        'hedge1': {'itens': hedge1, 'odd': round(np.prod([x['odd'] for x in hedge1]), 2)},
+        'hedge2': {'itens': hedge2, 'odd': round(np.prod([x['odd'] for x in hedge2]), 2)}
     }
 
 # ═══════════════════════════════════════════════════════════════════════════
