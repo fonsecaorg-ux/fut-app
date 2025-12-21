@@ -232,21 +232,43 @@ def get_detailed_probs(res: Dict) -> Dict:
     return probs
 
 def get_available_markets_for_game(res: Dict, probs: Dict) -> List[Dict]:
-    """Helper para modo manual"""
+    """Helper para modo manual - LISTA TUDO SEM FILTROS"""
     markets = []
-    # Cantos
-    for l in [3.5, 4.5, 5.5]:
+    
+    # --- ESCANTEIOS INDIVIDUAIS ---
+    # Home
+    for l in [2.5, 3.5, 4.5, 5.5, 6.5, 7.5]:
         p = probs['corners']['home'].get(f'Over {l}', 0)
-        markets.append({'mercado': f"{res['home']} Over {l} Escanteios", 'prob': p, 'odd': get_fair_odd(p), 'type': 'Escanteios'})
-    for l in [2.5, 3.5, 4.5]:
+        if p > 0: markets.append({'mercado': f"{res['home']} Over {l} Escanteios", 'prob': p, 'odd': get_fair_odd(p), 'type': 'Escanteios'})
+    # Away
+    for l in [2.5, 3.5, 4.5, 5.5, 6.5]:
         p = probs['corners']['away'].get(f'Over {l}', 0)
-        markets.append({'mercado': f"{res['away']} Over {l} Escanteios", 'prob': p, 'odd': get_fair_odd(p), 'type': 'Escanteios'})
-    # Cartões
-    for l in [1.5, 2.5]:
+        if p > 0: markets.append({'mercado': f"{res['away']} Over {l} Escanteios", 'prob': p, 'odd': get_fair_odd(p), 'type': 'Escanteios'})
+        
+    # --- CARTÕES INDIVIDUAIS ---
+    for l in [0.5, 1.5, 2.5, 3.5]:
+        # Home
         p1 = probs['cards']['home'].get(f'Over {l}', 0)
-        markets.append({'mercado': f"{res['home']} Over {l} Cartões", 'prob': p1, 'odd': get_fair_odd(p1), 'type': 'Cartões'})
+        if p1 > 0: markets.append({'mercado': f"{res['home']} Over {l} Cartões", 'prob': p1, 'odd': get_fair_odd(p1), 'type': 'Cartões'})
+        # Away
         p2 = probs['cards']['away'].get(f'Over {l}', 0)
-        markets.append({'mercado': f"{res['away']} Over {l} Cartões", 'prob': p2, 'odd': get_fair_odd(p2), 'type': 'Cartões'})
+        if p2 > 0: markets.append({'mercado': f"{res['away']} Over {l} Cartões", 'prob': p2, 'odd': get_fair_odd(p2), 'type': 'Cartões'})
+
+    # --- TOTAIS DO JOGO (NOVO!) ---
+    # Escanteios Totais
+    for l in [7.5, 8.5, 9.5, 10.5, 11.5, 12.5]:
+        p = probs['corners']['total'].get(f'Over {l}', 0)
+        if p > 0: markets.append({'mercado': f"Total Jogo Over {l} Escanteios", 'prob': p, 'odd': get_fair_odd(p), 'type': 'TotalEscanteios'})
+        
+    # Cartões Totais
+    for l in [2.5, 3.5, 4.5, 5.5, 6.5]:
+        p = probs['cards']['total'].get(f'Over {l}', 0)
+        if p > 0: markets.append({'mercado': f"Total Jogo Over {l} Cartões", 'prob': p, 'odd': get_fair_odd(p), 'type': 'TotalCartões'})
+        
+    # --- DUPLA CHANCE ---
+    markets.append({'mercado': f"DC {res['home']} ou Empate", 'prob': probs['chance']['1X'], 'odd': get_fair_odd(probs['chance']['1X']), 'type': 'DC'})
+    markets.append({'mercado': f"DC {res['away']} ou Empate", 'prob': probs['chance']['X2'], 'odd': get_fair_odd(probs['chance']['X2']), 'type': 'DC'})
+
     return markets
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -447,13 +469,38 @@ def main():
                     res = calcular_jogo_v23(row['Time_Casa'], row['Time_Visitante'], stats, None, refs, all_dfs)
                     if 'error' not in res:
                         mkts = get_available_markets_for_game(res, get_detailed_probs(res))
-                        opts = [f"{m['mercado']} (@{m['odd']})" for m in mkts if m['prob']>50]
-                        sel_mkt = st.selectbox("Mercado:", opts)
+                       else:
+                # MODO MANUAL
+                games = sorted((df_day['Time_Casa'] + ' vs ' + df_day['Time_Visitante']).unique())
+                sel_game = st.selectbox("Jogo:", games)
+                
+                if sel_game:
+                    row = df_day[(df_day['Time_Casa'] + ' vs ' + df_day['Time_Visitante']) == sel_game].iloc[0]
+                    res = calcular_jogo_v23(row['Time_Casa'], row['Time_Visitante'], stats, None, refs, all_dfs)
+                    
+                    if 'error' not in res:
+                        # 1. Pega TODAS as probabilidades
+                        probs_manual = get_detailed_probs(res)
+                        
+                        # 2. Gera a lista expandida
+                        mkts = get_available_markets_for_game(res, probs_manual)
+                        
+                        # 3. MOSTRA TUDO (Removido filtro if m['prob']>50)
+                        # Ordena por nome para ficar fácil achar
+                        opts = sorted([f"{m['mercado']} (@{m['odd']})" for m in mkts])
+                        
+                        sel_mkt_str = st.selectbox("Mercado:", opts)
+                        
                         if st.button("➕ Adicionar"):
-                            obj = next(m for m in mkts if f"{m['mercado']} (@{m['odd']})" == sel_mkt)
+                            # Recupera o objeto original
+                            obj = next(m for m in mkts if f"{m['mercado']} (@{m['odd']})" == sel_mkt_str)
+                            
                             st.session_state.current_ticket.append({
-                                'type': 'manual', 'jogo': sel_game, 'mercado': obj['mercado'], 
-                                'odd': obj['odd'], 'prob': obj['prob']
+                                'type': 'manual', 
+                                'jogo': sel_game, 
+                                'mercado': obj['mercado'], 
+                                'odd': obj['odd'], 
+                                'prob': obj['prob']
                             })
                             st.success("Adicionado!")
 
