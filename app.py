@@ -381,9 +381,10 @@ def generate_smart_ticket_v23(calendar: pd.DataFrame, stats: Dict, refs: Dict, a
                                   
 def generate_hedges_for_user_ticket(ticket: List[Dict], stats: Dict, refs: Dict, all_dfs: Dict) -> Dict:
     """
-    Hedge V24.9 - TRUE MIRROR (Espelho Real)
-    ✅ Correção: O Hedge agora olha para QUEM VOCÊ APOSTOU, não para quem é favorito.
-    ✅ Garante que se você foi de Villa, o Hedge vai de United (e vice-versa).
+    Hedge V25.0 - PROBABILISTIC SCENARIOS (O Cérebro Matemático)
+    ✅ Não usa regras fixas (Safety/Caos).
+    ✅ Calcula a probabilidade real de 3 cenários (Reação, Intensidade, Pressão Extra).
+    ✅ Escolhe os 2 cenários com maior chance matemática de acontecer para cobrir o principal.
     """
     
     # 1. Agrupar por jogo
@@ -409,91 +410,107 @@ def generate_hedges_for_user_ticket(ticket: List[Dict], stats: Dict, refs: Dict,
         probs = get_detailed_probs(res)
         
         # Display Principal
+        user_bet_desc = []
         for it in items:
             desc = it.get('mercado', it.get('selection', 'Aposta'))
             if it.get('type') == 'fusion': desc = " + ".join(it.get('mercados', []))
             principal_display.append({'jogo': it['jogo'], 'selecao': desc, 'odd': it['odd']})
+            user_bet_desc.append(desc)
             
-        # --- ANÁLISE DO JOGO ---
-        mc = res['monte_carlo']
-        fav_is_home = mc['h'] > mc['a']
+        # --- CÁLCULO DE PROBABILIDADES REAIS PARA CENÁRIOS ---
         
-        # Identifica em qual time você apostou (pelo texto do mercado)
-        user_bet_on_home = any(h in x.get('mercado', '') for x in items)
-        user_bet_on_away = any(a in x.get('mercado', '') for x in items)
+        # Identifica quem é o time da aposta principal (para saber quem é o "Oponente")
+        user_bet_on_home = any(h in d for d in user_bet_desc)
+        user_bet_on_away = any(a in d for d in user_bet_desc)
         
-        # Probabilidades Base
-        prob_corn_h = probs['corners']['home']['Over 4.5']
-        prob_corn_a = probs['corners']['away']['Over 3.5']
-        prob_card_total = probs['cards']['total']['Over 3.5']
-        prob_card_total_high = probs['cards']['total']['Over 4.5']
+        # Se não der pra identificar (ex: apostou em totais), assume o favorito como "Time da Aposta"
+        if not user_bet_on_home and not user_bet_on_away:
+            fav_h = res['monte_carlo']['h'] > res['monte_carlo']['a']
+            user_bet_on_home = fav_h
+            user_bet_on_away = not fav_h
+
+        # Definição de Atores
+        my_team = h if user_bet_on_home else a
+        op_team = a if user_bet_on_home else h
         
-        # ==============================================================================
-        # HEDGE 1: O "ESPELHO REAL" (Aposta no Oponente)
-        # ==============================================================================
+        # Probabilidades Chave (Extraídas do Motor)
+        prob_op_corn = probs['corners']['away' if user_bet_on_home else 'home']['Over 3.5']
+        prob_my_corn_high = probs['corners']['home' if user_bet_on_home else 'away']['Over 4.5'] # Linha maior
         
-        if user_bet_on_home:
-            # Se você foi de Casa (Villa), Hedge vai no Visitante (Man Utd)
-            sel_corn_h1 = f"{a} Over 3.5 Escanteios"
-            odd_corn_h1 = get_fair_odd(prob_corn_a)
-        elif user_bet_on_away:
-            # Se você foi de Visitante, Hedge vai no Casa
-            sel_corn_h1 = f"{h} Over 4.5 Escanteios"
-            odd_corn_h1 = get_fair_odd(prob_corn_h)
-        else:
-            # Se não dá pra saber (ex: apostou só em cartões), usa a lógica do favorito reverso
-            if fav_is_home:
-                sel_corn_h1 = f"{a} Over 3.5 Escanteios"
-                odd_corn_h1 = get_fair_odd(prob_corn_a)
-            else:
-                sel_corn_h1 = f"{h} Over 4.5 Escanteios"
-                odd_corn_h1 = get_fair_odd(prob_corn_h)
-            
-        # Cartão Geral
-        sel_card_h1 = "Total Over 3.5 Cartões"
-        odd_card_h1 = get_fair_odd(prob_card_total)
+        prob_card_game = probs['cards']['total']['Over 3.5']
+        prob_corn_game = probs['corners']['total']['Over 8.5']
         
-        hedge1.append({
-            'jogo': game_name,
-            'selecao': f"{sel_corn_h1} + {sel_card_h1}",
-            'odd': round(odd_corn_h1 * odd_card_h1 * 0.9, 2)
+        prob_op_card = probs['cards']['away' if user_bet_on_home else 'home']['Over 1.5']
+        prob_my_card = probs['cards']['home' if user_bet_on_home else 'away']['Over 1.5']
+        
+        # --- MONTAGEM DOS COMBOS POSSÍVEIS ---
+        
+        scenarios = []
+        
+        # Cenário A: REAÇÃO DO OPONENTE (Oponente Cantos + Jogo Cartões)
+        # "Se o meu time não bater, é porque o outro está jogando"
+        score_a = (prob_op_corn + prob_card_game) / 2
+        scenarios.append({
+            'desc': f"{op_team} Over 3.5 Escanteios + Total Over 3.5 Cartões",
+            'odd': round(get_fair_odd(prob_op_corn) * get_fair_odd(prob_card_game) * 0.9, 2),
+            'score': score_a,
+            'type': 'Reação'
         })
         
-        # ==============================================================================
-        # HEDGE 2: A BASE (Resultado + Intensidade)
-        # ==============================================================================
-        
-        # Dupla Chance (Se você apostou no time, protegemos com DC dele mesmo ou empate anula)
-        # Aqui mantemos a lógica de proteger o favorito estatístico ou o time da aposta?
-        # Melhor proteger o Favorito Estatístico (Segurança Real)
-        
-        if fav_is_home:
-            sel_dc = f"DC {h} ou Empate"
-            prob_dc = probs['chance']['1X']
-        else:
-            sel_dc = f"DC {a} ou Empate"
-            prob_dc = probs['chance']['X2']
-        odd_dc = get_fair_odd(prob_dc)
-        
-        if prob_card_total_high > 55:
-            sel_comp = "Total Over 4.5 Cartões"
-            odd_comp = get_fair_odd(prob_card_total_high)
-        else:
-            sel_comp = "Total Over 8.5 Escanteios"
-            odd_comp = get_fair_odd(probs['corners']['total']['Over 8.5'])
-            
-        hedge2.append({
-            'jogo': game_name,
-            'selecao': f"{sel_dc} + {sel_comp}",
-            'odd': round(odd_dc * odd_comp * 0.9, 2)
+        # Cenário B: INTENSIDADE DO JOGO (Total Cantos + Total Cartões)
+        # "O jogo é lá e cá, não importa quem ganha"
+        score_b = (prob_corn_game + prob_card_game) / 2
+        scenarios.append({
+            'desc': f"Total Jogo Over 8.5 Cantos + Total Jogo Over 3.5 Cartões",
+            'odd': round(get_fair_odd(prob_corn_game) * get_fair_odd(prob_card_game) * 0.85, 2),
+            'score': score_b,
+            'type': 'Intensidade'
         })
+        
+        # Cenário C: PRESSÃO EXTRA (Meu Time Linha Maior + Meu Time Cartão)
+        # "Meu time vai amassar tanto que vai bater linha alta e fazer falta de ataque"
+        score_c = (prob_my_corn_high + prob_my_card) / 2
+        scenarios.append({
+            'desc': f"{my_team} Over 4.5 Escanteios + {my_team} Over 1.5 Cartões",
+            'odd': round(get_fair_odd(prob_my_corn_high) * get_fair_odd(prob_my_card) * 0.9, 2),
+            'score': score_c,
+            'type': 'Pressão Extra'
+        })
+        
+        # Cenário D: Oponente Agressivo (Oponente Canto + Oponente Cartão)
+        score_d = (prob_op_corn + prob_op_card) / 2
+        scenarios.append({
+            'desc': f"{op_team} Over 3.5 Escanteios + {op_team} Over 1.5 Cartões",
+            'odd': round(get_fair_odd(prob_op_corn) * get_fair_odd(prob_op_card) * 0.9, 2),
+            'score': score_d,
+            'type': 'Oponente Full'
+        })
+
+        # --- SELEÇÃO INTELIGENTE ---
+        # Ordena os cenários pela PROBABILIDADE REAL (Score)
+        # O robô escolhe os 2 cenários mais prováveis matematicamente
+        scenarios.sort(key=lambda x: x['score'], reverse=True)
+        
+        # Hedge 1: A Melhor Alternativa Estatística
+        best_1 = scenarios[0]
+        hedge1.append({'jogo': game_name, 'selecao': best_1['desc'], 'odd': best_1['odd']})
+        
+        # Hedge 2: A Segunda Melhor (Garante cobertura diferente)
+        # Pega o próximo da lista
+        best_2 = scenarios[1]
+        hedge2.append({'jogo': game_name, 'selecao': best_2['desc'], 'odd': best_2['odd']})
 
         processed_games.add(game_name)
 
+    # Retorno
+    odd_p = np.prod([x['odd'] for x in principal_display])
+    odd_h1 = np.prod([x['odd'] for x in hedge1])
+    odd_h2 = np.prod([x['odd'] for x in hedge2])
+    
     return {
-        'principal': {'itens': principal_display, 'odd': round(np.prod([x['odd'] for x in principal_display]), 2)},
-        'hedge1': {'itens': hedge1, 'odd': round(np.prod([x['odd'] for x in hedge1]), 2)},
-        'hedge2': {'itens': hedge2, 'odd': round(np.prod([x['odd'] for x in hedge2]), 2)}
+        'principal': {'itens': principal_display, 'odd': round(odd_p, 2)},
+        'hedge1': {'itens': hedge1, 'odd': round(odd_h1, 2)},
+        'hedge2': {'itens': hedge2, 'odd': round(odd_h2, 2)}
     }
 # ═══════════════════════════════════════════════════════════════════════════
 # UI PRINCIPAL
