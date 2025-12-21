@@ -1,11 +1,10 @@
 """
 ╔═══════════════════════════════════════════════════════════════════════════╗
-║       FUTPREVISÃO V27.0 - DYNAMIC HEDGE ENGINE                            ║
+║       FUTPREVISÃO V27.1 - FULL SUITE (VISUAL + MATH)                      ║
 ║                                                                            ║
-║  ✅ NOVO: Otimizador Dinâmico de Linhas (Sobe a linha se a odd for baixa) ║
-║  ✅ HEDGE PRO: Busca automaticamente odds melhores (Elasticidade)         ║
-║  ✅ MANTIDO: Filtro EV+, Menu Fixo, Tema Branco, Odds Reais               ║
-║  ✅ CORREÇÃO: Probabilidade ajustada dinamicamente ao subir a linha       ║
+║  ✅ MATH: Engine V27 (Dynamic Hedge + EV+ Scanner)                        ║
+║  ✅ VISUAL: Abas 'Simulação' e 'Radares' restauradas e funcionais         ║
+║  ✅ UI: Tema Branco Forçado + Menus Travados                              ║
 ║                                                                            ║
 ║  Dezembro 2025                                                           ║
 ╚═══════════════════════════════════════════════════════════════════════════╝
@@ -17,6 +16,7 @@ import math
 import numpy as np
 import os
 import plotly.graph_objects as go
+import plotly.express as px
 from typing import Dict, List, Any, Optional, Tuple
 from difflib import get_close_matches
 
@@ -25,26 +25,27 @@ from difflib import get_close_matches
 # ═══════════════════════════════════════════════════════════════════════════
 
 st.set_page_config(
-    page_title="FutPrevisão V27.0 Dynamic",
+    page_title="FutPrevisão V27.1 Full",
     page_icon="💎",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# CSS PARA FORÇAR TEMA CLARO (WHITE MODE)
+# CSS PARA FORÇAR TEMA CLARO E ESTABILIDADE
 st.markdown("""
     <style>
         .stApp {
             background-color: #FFFFFF !important;
             color: #000000 !important;
         }
-        .stSelectbox label, .stRadio label, .stMultiSelect label {
+        .stSelectbox label, .stRadio label, .stMultiSelect label, .stSlider label {
             color: #000000 !important;
+            font-weight: bold;
         }
         div[data-testid="stMetricValue"] {
             color: #000000 !important;
         }
-        p, h1, h2, h3 {
+        p, h1, h2, h3, h4, h5, h6 {
             color: #000000 !important;
         }
         .ev-badge {
@@ -81,36 +82,13 @@ LIGAS_ALVO = [
 
 # TABELA DE PREÇOS REAIS (MERCADO)
 REAL_ODDS = {
-    # Mandante Escanteios
-    ('home', 'corners', 3.5): 1.34,
-    ('home', 'corners', 4.5): 1.62,
-    ('home', 'corners', 5.5): 2.10,
-    # Visitante Escanteios
-    ('away', 'corners', 2.5): 1.40,
-    ('away', 'corners', 3.5): 1.75,
-    ('away', 'corners', 4.5): 2.50,
-    # Mandante Cartões
-    ('home', 'cards', 0.5): 1.20,
-    ('home', 'cards', 1.5): 1.52,
-    ('home', 'cards', 2.5): 2.25,
-    # Visitante Cartões
-    ('away', 'cards', 0.5): 1.18,
-    ('away', 'cards', 1.5): 1.45,  
-    ('away', 'cards', 2.5): 2.30,
-    # Totais Escanteios
-    ('total', 'corners', 7.5): 1.35,
-    ('total', 'corners', 8.5): 1.57,
-    ('total', 'corners', 9.5): 1.90,
-    ('total', 'corners', 10.5): 2.30,
-    # Totais Cartões
-    ('total', 'cards', 2.5): 1.38,
-    ('total', 'cards', 3.5): 1.65,
-    ('total', 'cards', 4.5): 2.10,
-    ('total', 'cards', 5.5): 2.60, # Adicionado para dinâmica
-    ('total', 'cards', 6.5): 3.20, # Adicionado para dinâmica
-    # Dupla Chance
-    ('home', 'dc'): 1.25,
-    ('away', 'dc'): 1.60
+    ('home', 'corners', 3.5): 1.34, ('home', 'corners', 4.5): 1.62, ('home', 'corners', 5.5): 2.10,
+    ('away', 'corners', 2.5): 1.40, ('away', 'corners', 3.5): 1.75, ('away', 'corners', 4.5): 2.50,
+    ('home', 'cards', 0.5): 1.20, ('home', 'cards', 1.5): 1.52, ('home', 'cards', 2.5): 2.25,
+    ('away', 'cards', 0.5): 1.18, ('away', 'cards', 1.5): 1.45, ('away', 'cards', 2.5): 2.30,
+    ('total', 'corners', 7.5): 1.35, ('total', 'corners', 8.5): 1.57, ('total', 'corners', 9.5): 1.90, ('total', 'corners', 10.5): 2.30,
+    ('total', 'cards', 2.5): 1.38, ('total', 'cards', 3.5): 1.65, ('total', 'cards', 4.5): 2.10, ('total', 'cards', 5.5): 2.60, ('total', 'cards', 6.5): 3.20,
+    ('home', 'dc'): 1.25, ('away', 'dc'): 1.60
 }
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -205,7 +183,7 @@ def load_calendar_safe() -> pd.DataFrame:
     except: return pd.DataFrame()
 
 # ═══════════════════════════════════════════════════════════════════════════
-# CÁLCULOS MATEMÁTICOS & OTIMIZADOR
+# CÁLCULOS & MATH ENGINE
 # ═══════════════════════════════════════════════════════════════════════════
 
 def normalize_name(name: str, db_keys: list) -> Optional[str]:
@@ -219,10 +197,8 @@ def get_fair_odd(prob: float) -> float:
     return round(100/prob, 2) if prob > 0 else 99.0
 
 def get_market_price(location: str, market_type: str, line: float, prob_calculated: float) -> float:
-    """Busca preço real ou calcula fair odd."""
     real_price = REAL_ODDS.get((location, market_type, line))
-    if real_price and prob_calculated >= 40:
-        return real_price
+    if real_price and prob_calculated >= 40: return real_price
     return get_fair_odd(prob_calculated)
 
 def monte_carlo(xg_h: float, xg_a: float, n: int = 1000) -> Tuple[float, float, float]:
@@ -318,31 +294,22 @@ def get_available_markets_for_game(res: Dict, probs: Dict) -> List[Dict]:
     return markets
 
 # ═══════════════════════════════════════════════════════════════════════════
-# LÓGICA V27 - SCANNER INVESTOR (EV+) E HEDGES DINÂMICOS
+# SCANNER & HEDGE ENGINE V27
 # ═══════════════════════════════════════════════════════════════════════════
 
 def optimize_market_line(probs_dict: Dict, market_scope: str, market_type: str, start_line: float, min_odd: float, max_line: float) -> Tuple[float, float]:
-    """
-    Motor de Elasticidade V27.
-    Sobe a linha (3.5 -> 4.5 -> 5.5) até encontrar uma odd > min_odd.
-    """
+    """Motor de Elasticidade V27."""
     curr_line = start_line
     last_valid_odd = 1.0
     
     while curr_line <= max_line:
-        # Pega a probabilidade DA LINHA ATUAL (Dinâmica)
-        # Ex: Prob de Over 4.5 será menor que Over 3.5
         prob_key = f'Over {curr_line}'
         prob = probs_dict.get(prob_key, 0)
-        
         odd = get_market_price(market_scope, market_type, curr_line, prob)
         last_valid_odd = odd
         
-        # Regra de Segurança: Só aceita se a probabilidade ainda for > 30%
-        # Não adianta pegar odd 5.00 se a chance é 5%
         if odd >= min_odd and prob > 30:
             return curr_line, odd
-            
         curr_line += 1.0
         
     return curr_line - 1.0, last_valid_odd
@@ -434,17 +401,12 @@ def generate_hedges_for_user_ticket(ticket: List[Dict], stats: Dict, refs: Dict,
             principal_display.append({'jogo': it['jogo'], 'selecao': desc + ev_badge, 'odd': it['odd']})
             principal_desc_str += desc + " "
             
-        # OTIMIZAÇÃO DINÂMICA (A MÁGICA DA V27)
-        # Tenta Over 3.5, se odd for < 1.60, tenta Over 4.5, etc.
-        card_line_h1, card_odd_h1 = optimize_market_line(
-            probs['cards']['total'], 'total', 'cards', 
-            start_line=3.5, min_odd=1.60, max_line=6.5
-        )
+        # OTIMIZAÇÃO DINÂMICA
+        card_line_h1, card_odd_h1 = optimize_market_line(probs['cards']['total'], 'total', 'cards', start_line=3.5, min_odd=1.60, max_line=6.5)
 
         has_home_corn = h in principal_desc_str and "Escanteios" in principal_desc_str
         has_away_corn = a in principal_desc_str and "Escanteios" in principal_desc_str
         
-        # === HEDGE 1: ESPELHO DINÂMICO ===
         if has_home_corn:
             odd_corn = get_market_price('away', 'corners', 3.5, probs['corners']['away']['Over 3.5'])
             h1_sel = f"{a} Over 3.5 Escanteios + Total Over {card_line_h1} Cartões"
@@ -463,18 +425,11 @@ def generate_hedges_for_user_ticket(ticket: List[Dict], stats: Dict, refs: Dict,
             h1_odd = round(odd_dc * card_odd_h1 * 0.9, 2)
         hedge1.append({'jogo': game_name, 'selecao': h1_sel, 'odd': h1_odd})
         
-        # === HEDGE 2: SEGURANÇA DINÂMICA ===
         fav_home = res['monte_carlo']['h'] > res['monte_carlo']['a']
         dc_sel = f"DC {h} ou Empate" if fav_home else f"DC {a} ou Empate"
         dc_odd = get_market_price('home', 'dc', 0, probs['chance']['1X']) if fav_home else get_market_price('away', 'dc', 0, probs['chance']['X2'])
         
-        # Otimiza a linha de cartões de segurança (começa em 2.5)
-        # Busca odd mínima de 1.45 para valer a pena
-        card_line_h2, card_odd_h2 = optimize_market_line(
-            probs['cards']['total'], 'total', 'cards',
-            start_line=2.5, min_odd=1.45, max_line=5.5
-        )
-        
+        card_line_h2, card_odd_h2 = optimize_market_line(probs['cards']['total'], 'total', 'cards', start_line=2.5, min_odd=1.45, max_line=5.5)
         h2_sel = f"{dc_sel} + Total Over {card_line_h2} Cartões"
         h2_odd = round(dc_odd * card_odd_h2 * 0.95, 2)
         
@@ -503,9 +458,54 @@ def main():
         calendar = load_calendar_safe()
         all_dfs = load_all_dataframes()
         
-    st.title("💎 FutPrevisão V27.0 Dynamic")
+    st.title("💎 FutPrevisão V27.1 Full")
     tab1, tab2, tab3, tab4, tab5 = st.tabs(["📅 Calendário", "🔍 Simulação", "🎯 Scanner/Manual", "🛡️ Hedges", "📊 Radares"])
     
+    # ─── TAB 1: CALENDÁRIO ───
+    with tab1:
+        st.header("📅 Jogos da Semana")
+        if not calendar.empty:
+            dates = sorted(calendar['DtObj'].dt.strftime('%d/%m/%Y').unique())
+            sel_date_cal = st.selectbox("Selecione a Data:", dates, key="cal_date")
+            df_cal_show = calendar[calendar['DtObj'].dt.strftime('%d/%m/%Y') == sel_date_cal].copy()
+            st.dataframe(df_cal_show[['Hora', 'Liga', 'Time_Casa', 'Time_Visitante']], hide_index=True, use_container_width=True)
+        else:
+            st.warning("Nenhum calendário carregado.")
+
+    # ─── TAB 2: SIMULAÇÃO ───
+    with tab2:
+        st.header("🔍 Simulador de Monte Carlo")
+        if not calendar.empty:
+            dates_sim = sorted(calendar['DtObj'].dt.strftime('%d/%m/%Y').unique())
+            sel_date_sim = st.selectbox("Data do Jogo:", dates_sim, key="sim_date")
+            df_day_sim = calendar[calendar['DtObj'].dt.strftime('%d/%m/%Y') == sel_date_sim]
+            games_sim = sorted((df_day_sim['Time_Casa'] + ' vs ' + df_day_sim['Time_Visitante']).unique())
+            sel_game_sim = st.selectbox("Selecione o Jogo:", games_sim, key="sim_game")
+            
+            if sel_game_sim:
+                row_sim = df_day_sim[(df_day_sim['Time_Casa'] + ' vs ' + df_day_sim['Time_Visitante']) == sel_game_sim].iloc[0]
+                res_sim = calcular_jogo_v23(row_sim['Time_Casa'], row_sim['Time_Visitante'], stats, None, refs, all_dfs)
+                
+                if 'error' not in res_sim:
+                    c1, c2, c3 = st.columns(3)
+                    c1.metric("Vitória Casa", f"{res_sim['monte_carlo']['h']:.1f}%")
+                    c2.metric("Empate", f"{res_sim['monte_carlo']['d']:.1f}%")
+                    c3.metric("Vitória Visitante", f"{res_sim['monte_carlo']['a']:.1f}%")
+                    
+                    st.subheader("Médias Esperadas")
+                    cm1, cm2, cm3 = st.columns(3)
+                    cm1.info(f"Escanteios: {res_sim['corners']['total']:.1f}")
+                    cm2.info(f"Cartões: {res_sim['cards']['total']:.1f}")
+                    cm3.info(f"Gols Esperados (xG): {res_sim['goals']['h']:.2f} x {res_sim['goals']['a']:.2f}")
+                    
+                    # Gráfico de Pizza
+                    labels = [res_sim['home'], 'Empate', res_sim['away']]
+                    values = [res_sim['monte_carlo']['h'], res_sim['monte_carlo']['d'], res_sim['monte_carlo']['a']]
+                    fig_pie = go.Figure(data=[go.Pie(labels=labels, values=values, hole=.3)])
+                    fig_pie.update_layout(height=300, margin=dict(t=20, b=20, l=20, r=20))
+                    st.plotly_chart(fig_pie, use_container_width=True)
+
+    # ─── TAB 3: SCANNER/MANUAL ───
     with tab3:
         st.header("🎫 Construtor de Bilhetes (EV+)")
         modo = st.radio("Modo:", ["🤖 Robô Scanner", "✍️ Manual"], horizontal=True)
@@ -562,6 +562,7 @@ def main():
                     extra = f" <span class='ev-badge'>EV +{it['ev']}%</span>" if 'ev' in it and it['ev'] > 0 else ""
                     st.markdown(f"✅ {it['jogo']} - {it.get('mercado')} (@{it['odd']}){extra}", unsafe_allow_html=True)
 
+    # ─── TAB 4: HEDGES ───
     with tab4:
         st.header("🛡️ Sistema de Proteção V27 (Dynamic)")
         if st.session_state.current_ticket:
@@ -582,6 +583,32 @@ def main():
                     st.metric("Odd", f"@{hedges['hedge2']['odd']}")
                     for i in hedges['hedge2']['itens']: st.caption(f"{i['jogo']} - {i['selecao']}")
         else: st.warning("Adicione jogos na Aba 3 primeiro.")
+
+    # ─── TAB 5: RADARES ───
+    with tab5:
+        st.header("📊 Comparador de Times")
+        all_teams = sorted(list(stats.keys()))
+        t1 = st.selectbox("Time 1:", all_teams, key="radar_t1")
+        t2 = st.selectbox("Time 2 (Opcional):", ["Nenhum"] + all_teams, key="radar_t2")
+        
+        if t1:
+            s1 = stats[t1]
+            categories = ['Escanteios', 'Cartões', 'Gols Pro', 'Gols Sofridos', 'Chutes Gol']
+            val1 = [s1['corners'], s1['cards'], s1['goals_f'], s1['goals_a'], s1['shots_on_target']]
+            # Normalização simples para o gráfico (0-10)
+            val1_norm = [min(10, v * 1.5) for v in val1]
+            
+            fig = go.Figure()
+            fig.add_trace(go.Scatterpolar(r=val1_norm, theta=categories, fill='toself', name=t1))
+            
+            if t2 != "Nenhum":
+                s2 = stats[t2]
+                val2 = [s2['corners'], s2['cards'], s2['goals_f'], s2['goals_a'], s2['shots_on_target']]
+                val2_norm = [min(10, v * 1.5) for v in val2]
+                fig.add_trace(go.Scatterpolar(r=val2_norm, theta=categories, fill='toself', name=t2))
+            
+            fig.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0, 10])), showlegend=True)
+            st.plotly_chart(fig, use_container_width=True)
 
 if __name__ == "__main__":
     main()
