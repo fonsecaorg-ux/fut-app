@@ -502,7 +502,7 @@ def main():
                                 'odd': obj['odd'], 
                                 'prob': obj['prob']
                             })
-                            st.success("Adicionado!")
+                            st.success("Adicionado!");
 
             if st.session_state.current_ticket:
                 st.markdown("### 🎫 Bilhete Atual")
