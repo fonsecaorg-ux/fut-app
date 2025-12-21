@@ -353,127 +353,52 @@ def generate_smart_ticket_v23(calendar: pd.DataFrame, stats: Dict, refs: Dict, a
 
     return {'ticket': ticket, 'total_odd': round(curr_odd, 2), 'num_selections': len(ticket)}
 
-def generate_hedges_for_user_ticket(ticket: List[Dict], stats: Dict, refs: Dict, all_dfs: Dict) -> Dict:
+def get_detailed_probs(res: Dict) -> Dict:
     """
-    Hedge V25.1 - MIRROR STRATEGY (Espelho + Segurança)
-    ✅ Hedge 1 (Espelho): Se Principal tem Villa Cantos, Hedge 1 tem United Cantos.
-    ✅ Hedge 2 (Segurança): Dupla Chance + Totais Baixos (Over 2.5 Cards / 7.5 Corners).
-    ✅ Cobre: Ação do Mandante vs Ação do Visitante vs Jogo Morno.
+    Gera probabilidades detalhadas para várias linhas.
+    ✅ ATUALIZADO: Inclui linhas baixas (Safety) como Over 6.5/7.5 Cantos.
     """
     
-    games_map = {}
-    for item in ticket:
-        game_name = item['jogo']
-        if game_name not in games_map: games_map[game_name] = []
-        games_map[game_name].append(item)
-        
-    principal_display = []
-    hedge1 = []
-    hedge2 = []
-    processed_games = set()
+    def sim_prob(avg: float, line: float) -> float:
+        # Fórmula de Simulação Logística Simples
+        diff = avg - line
+        # Se a média for muito maior que a linha, prob tende a 99%
+        # Se a média for muito menor, prob tende a 1%
+        # Ajuste de sensibilidade (15)
+        prob = 50 + (diff * 15)
+        return max(1.0, min(99.0, prob))
     
-    for game_name, items in games_map.items():
-        if game_name in processed_games: continue
-        try: parts = game_name.split(' vs '); h, a = parts[0], parts[1]
-        except: continue
-        
-        res = calcular_jogo_v23(h, a, stats, None, refs, all_dfs)
-        if 'error' in res: continue
-        probs = get_detailed_probs(res)
-        
-        # Display Principal
-        principal_desc_str = ""
-        for it in items:
-            desc = it.get('mercado', it.get('selection', 'Aposta'))
-            if it.get('type') == 'fusion': desc = " + ".join(it.get('mercados', []))
-            principal_display.append({'jogo': it['jogo'], 'selecao': desc, 'odd': it['odd']})
-            principal_desc_str += desc + " "
-            
-        # --- ANÁLISE DO ESPELHO (QUEM ESTÁ NO PRINCIPAL?) ---
-        # Verifica se apostamos em Cantos para o Mandante ou Visitante
-        has_home_corn = h in principal_desc_str and "Escanteios" in principal_desc_str
-        has_away_corn = a in principal_desc_str and "Escanteios" in principal_desc_str
-        
-        # Probabilidades para o Espelho
-        prob_corn_h_react = probs['corners']['home']['Over 4.5']
-        prob_corn_a_react = probs['corners']['away']['Over 3.5']
-        
-        # Probabilidades para Segurança (Linhas Baixas)
-        prob_card_safe = probs['cards']['total']['Over 2.5'] # Linha baixíssima (Segurança)
-        prob_corn_safe = probs['corners']['total']['Over 7.5'] # Linha baixíssima
-        
-        # ==============================================================================
-        # HEDGE 1: O ESPELHO (Inverte a Pressão)
-        # ==============================================================================
-        h1_sel = ""
-        h1_odd = 1.0
-        
-        # Se Principal = Casa Pressiona -> Hedge = Visitante Pressiona + Casa Bate
-        if has_home_corn:
-            # Espelho: Visitante Cantos + Total Cartões (ou Casa Cartões se tiver prob)
-            sel_mirror_corn = f"{a} Over 3.5 Escanteios"
-            odd_mirror_corn = get_fair_odd(prob_corn_a_react)
-            
-            # Combina com Cartões (Geralmente Over 3.5 Geral para garantir)
-            sel_mirror_card = "Total Over 3.5 Cartões"
-            odd_mirror_card = get_fair_odd(probs['cards']['total']['Over 3.5'])
-            
-            h1_sel = f"{sel_mirror_corn} + {sel_mirror_card}"
-            h1_odd = round(odd_mirror_corn * odd_mirror_card * 0.9, 2)
-
-        # Se Principal = Visitante Pressiona -> Hedge = Casa Pressiona
-        elif has_away_corn:
-            sel_mirror_corn = f"{h} Over 4.5 Escanteios"
-            odd_mirror_corn = get_fair_odd(prob_corn_h_react)
-            
-            sel_mirror_card = "Total Over 3.5 Cartões"
-            odd_mirror_card = get_fair_odd(probs['cards']['total']['Over 3.5'])
-            
-            h1_sel = f"{sel_mirror_corn} + {sel_mirror_card}"
-            h1_odd = round(odd_mirror_corn * odd_mirror_card * 0.9, 2)
-            
-        else:
-            # Se não tem cantos definidos, faz o Espelho de Resultado (Zebra)
-            if res['monte_carlo']['h'] > res['monte_carlo']['a']:
-                h1_sel = f"DC {a} ou Empate + Total Over 3.5 Cartões"
-                h1_odd = round(get_fair_odd(probs['chance']['X2']) * get_fair_odd(probs['cards']['total']['Over 3.5']) * 0.9, 2)
-            else:
-                h1_sel = f"DC {h} ou Empate + Total Over 3.5 Cartões"
-                h1_odd = round(get_fair_odd(probs['chance']['1X']) * get_fair_odd(probs['cards']['total']['Over 3.5']) * 0.9, 2)
-        
-        hedge1.append({'jogo': game_name, 'selecao': h1_sel, 'odd': h1_odd})
-        
-        # ==============================================================================
-        # HEDGE 2: A SEGURANÇA (Base + Totais Baixos)
-        # Igual ao seu 3º Bilhete (DC + Over 2.5 Cartões)
-        # ==============================================================================
-        
-        # 1. Dupla Chance no Favorito Estatístico (Segurar o resultado provável)
-        fav_home = res['monte_carlo']['h'] > res['monte_carlo']['a']
-        dc_sel = f"DC {h} ou Empate" if fav_home else f"DC {a} ou Empate"
-        dc_odd = get_fair_odd(probs['chance']['1X'] if fav_home else probs['chance']['X2'])
-        
-        # 2. Linha Baixa de Cartões (Over 2.5 é muito seguro)
-        safe_card_sel = "Total Over 2.5 Cartões"
-        safe_card_odd = get_fair_odd(prob_card_safe)
-        
-        # 3. Se a odd ficar muito baixa (< 1.8), adiciona Cantos Over 7.5
-        h2_sel = f"{dc_sel} + {safe_card_sel}"
-        h2_odd = round(dc_odd * safe_card_odd * 0.95, 2)
-        
-        if h2_odd < 1.80:
-            safe_corn_odd = get_fair_odd(prob_corn_safe)
-            h2_sel += " + Over 7.5 Cantos"
-            h2_odd = round(h2_odd * safe_corn_odd * 0.95, 2)
-            
-        hedge2.append({'jogo': game_name, 'selecao': h2_sel, 'odd': h2_odd})
-        processed_games.add(game_name)
-
-    return {
-        'principal': {'itens': principal_display, 'odd': round(np.prod([x['odd'] for x in principal_display]), 2)},
-        'hedge1': {'itens': hedge1, 'odd': round(np.prod([x['odd'] for x in hedge1]), 2)},
-        'hedge2': {'itens': hedge2, 'odd': round(np.prod([x['odd'] for x in hedge2]), 2)}
+    probs = {
+        'corners': {
+            'home': {f'Over {l}': sim_prob(res['corners']['h'], l) for l in [2.5, 3.5, 4.5, 5.5, 6.5]},
+            'away': {f'Over {l}': sim_prob(res['corners']['a'], l) for l in [2.5, 3.5, 4.5, 5.5]},
+            # GERA LINHAS DE SEGURANÇA (6.5 e 7.5) ATÉ LINHAS ALTAS
+            'total': {f'Over {l}': sim_prob(res['corners']['total'], l) for l in [6.5, 7.5, 8.5, 9.5, 10.5, 11.5, 12.5]}
+        },
+        'cards': {
+            'home': {f'Over {l}': sim_prob(res['cards']['h'], l) for l in [0.5, 1.5, 2.5]},
+            'away': {f'Over {l}': sim_prob(res['cards']['a'], l) for l in [0.5, 1.5, 2.5]},
+            # GERA LINHAS DE SEGURANÇA (1.5 e 2.5)
+            'total': {f'Over {l}': sim_prob(res['cards']['total'], l) for l in [1.5, 2.5, 3.5, 4.5, 5.5, 6.5]}
+        }
     }
+    
+    mc = res['monte_carlo']
+    probs['chance'] = {
+        '1': mc['h'],
+        'X': mc['d'],
+        '2': mc['a'],
+        '1X': mc['h'] + mc['d'],
+        'X2': mc['a'] + mc['d'],
+        '12': mc['h'] + mc['a']
+    }
+    
+    probs['goals'] = {
+        'BTTS': res['probs']['btts'],
+        'Over 2.5': res['probs']['over_2_5']
+    }
+    
+    return probs
 # ═══════════════════════════════════════════════════════════════════════════
 # UI PRINCIPAL
 # ═══════════════════════════════════════════════════════════════════════════
