@@ -714,171 +714,103 @@ def scan_day_for_radars(calendar: pd.DataFrame, stats: Dict, refs: Dict, all_dfs
 
 def generate_smart_ticket_v23(calendar: pd.DataFrame, stats: Dict, refs: Dict, all_dfs: Dict, date_str: str) -> Dict:
     """
-    Scanner V23 - Smart Ticket
-    Gera bilhete inteligente com Âncoras + Fusões
+    Scanner V23.4 - Smart Ticket (Aggressive Fill)
+    Meta: Encher o bilhete com 6 seleções para bater Odd ~5.00
     """
     
     df_day = calendar[calendar['DtObj'].dt.strftime('%d/%m/%Y') == date_str]
     
-    anchors = []  # Tipo A: Âncoras de Segurança (prob > 85%)
-    fusions = []  # Tipo B: Fusões de Valor (cantos + cartões no mesmo jogo)
+    anchors = []  # Tipo A: Segurança (Odd 1.20 - 1.45)
+    fusions = []  # Tipo B: Valor (Odd 1.50 - 2.10)
     
     for _, row in df_day.iterrows():
-        home = row['Time_Casa']
-        away = row['Time_Visitante']
+        home, away = row['Time_Casa'], row['Time_Visitante']
         liga = row.get('Liga', 'N/A')
         hora = row.get('Hora', 'N/A')
         
         res = calcular_jogo_v23(home, away, stats, None, refs, all_dfs)
-        
-        if 'error' in res:
-            continue
-        
+        if 'error' in res: continue
         probs = get_detailed_probs(res)
         
-        # Procurar âncoras
-        for location, location_name in [('home', res['home']), ('away', res['away'])]:
-            # Escanteios
-            for line in [3.5, 4.5]:
-                if location == 'home':
-                    prob = probs['corners']['home'].get(f'Over {line}', 0)
-                else:
-                    prob = probs['corners']['away'].get(f'Over {line}', 0)
-                
-                if prob >= THRESHOLDS['anchor_safety']:
-                    fair_odd = get_fair_odd(prob)
-                    if 1.20 <= fair_odd <= 1.40:
+        # 1. ÂNCORAS (Relaxado para > 75% para ter volume)
+        for loc, name in [('home', res['home']), ('away', res['away'])]:
+            # Cantos
+            for l in [3.5, 4.5]:
+                p = probs['corners'][loc].get(f'Over {l}', 0)
+                if p >= 75: # Antes era 85
+                    odd = get_fair_odd(p)
+                    if 1.20 <= odd <= 1.45:
                         anchors.append({
-                            'type': 'anchor',
-                            'jogo': f"{res['home']} vs {res['away']}",
-                            'team': location_name,
-                            'mercado': f"{location_name} Over {line} Escanteios",
-                            'prob': prob,
-                            'odd': fair_odd,
-                            'liga': liga,
-                            'hora': hora
+                            'type': 'anchor', 'jogo': f"{res['home']} vs {res['away']}",
+                            'selection': f"{name} Over {l} Escanteios",
+                            'prob': p, 'odd': odd, 'liga': liga, 'hora': hora
                         })
-            
             # Cartões
-            for line in [1.5]:
-                if location == 'home':
-                    prob = probs['cards']['home'].get(f'Over {line}', 0)
-                else:
-                    prob = probs['cards']['away'].get(f'Over {line}', 0)
-                
-                if prob >= THRESHOLDS['anchor_safety']:
-                    fair_odd = get_fair_odd(prob)
-                    if 1.20 <= fair_odd <= 1.40:
-                        anchors.append({
-                            'type': 'anchor',
-                            'jogo': f"{res['home']} vs {res['away']}",
-                            'team': location_name,
-                            'mercado': f"{location_name} Over {line} Cartões",
-                            'prob': prob,
-                            'odd': fair_odd,
-                            'liga': liga,
-                            'hora': hora
-                        })
-        
-        # Procurar fusões (combo cantos + cartões)
-        for location, location_name in [('home', res['home']), ('away', res['away'])]:
-            best_corner_prob = 0
-            best_corner_line = 0
-            
-            for line in [3.5, 4.5]:
-                if location == 'home':
-                    prob = probs['corners']['home'].get(f'Over {line}', 0)
-                else:
-                    prob = probs['corners']['away'].get(f'Over {line}', 0)
-                
-                if prob > best_corner_prob and prob >= 70:
-                    best_corner_prob = prob
-                    best_corner_line = line
-            
-            best_card_prob = 0
-            best_card_line = 0
-            
-            for line in [1.5, 2.5]:
-                if location == 'home':
-                    prob = probs['cards']['home'].get(f'Over {line}', 0)
-                else:
-                    prob = probs['cards']['away'].get(f'Over {line}', 0)
-                
-                if prob > best_card_prob and prob >= 65:
-                    best_card_prob = prob
-                    best_card_line = line
-            
-            # Se tem ambos os mercados bons, cria fusão
-            if best_corner_prob > 0 and best_card_prob > 0:
-                # Probabilidade combinada com fator de correlação
-                combined_prob = (best_corner_prob / 100) * (best_card_prob / 100) * 0.85 * 100
-                combined_odd = get_fair_odd(combined_prob)
-                
-                if 1.60 <= combined_odd <= 2.50 and combined_prob >= 50:
-                    fusions.append({
-                        'type': 'fusion',
-                        'jogo': f"{res['home']} vs {res['away']}",
-                        'team': location_name,
-                        'mercados': [
-                            f"Over {best_corner_line} Escanteios",
-                            f"Over {best_card_line} Cartões"
-                        ],
-                        'probs': [best_corner_prob, best_card_prob],
-                        'prob_combined': combined_prob,
-                        'odd': combined_odd,
-                        'liga': liga,
-                        'hora': hora
+            p_card = probs['cards'][loc].get('Over 1.5', 0)
+            if p_card >= 72: # Antes era 80
+                odd = get_fair_odd(p_card)
+                if 1.22 <= odd <= 1.50:
+                    anchors.append({
+                        'type': 'anchor', 'jogo': f"{res['home']} vs {res['away']}",
+                        'selection': f"{name} Over 1.5 Cartões",
+                        'prob': p_card, 'odd': odd, 'liga': liga, 'hora': hora
                     })
-    
-    # Montar bilhete inteligente
+
+        # 2. FUSÕES (Mantido critério de qualidade)
+        corn_prob = probs['corners']['home'].get('Over 3.5', 0)
+        card_prob = probs['cards']['total'].get('Over 1.5', 0) # Total é mais seguro
+        
+        if corn_prob >= 70 and card_prob >= 70:
+            p_comb = (corn_prob/100 * card_prob/100 * 0.90) * 100
+            odd_comb = get_fair_odd(p_comb)
+            
+            if 1.50 <= odd_comb <= 2.20:
+                fusions.append({
+                    'type': 'fusion', 'jogo': f"{res['home']} vs {res['away']}",
+                    'team': res['home'],
+                    'mercados': [f"{res['home']} Over 3.5 Escanteios", "Total Jogo Over 1.5 Cartões"],
+                    'prob_combined': p_comb, 'odd': odd_comb, 'liga': liga, 'hora': hora
+                })
+
+    # MONTAGEM DO BILHETE (Priority Queue)
     ticket = []
-    total_odd = 1.0
-    
-    # Priorizar âncoras primeiro
-    anchors_sorted = sorted(anchors, key=lambda x: x['prob'], reverse=True)
-    fusions_sorted = sorted(fusions, key=lambda x: x['prob_combined'], reverse=True)
-    
-    # Estratégia: Mix de âncoras e fusões
+    curr_odd = 1.0
     used_games = set()
     
-    # Adicionar 1-2 âncoras
-    for anchor in anchors_sorted[:2]:
-        if anchor['jogo'] not in used_games:
-            ticket.append(anchor)
-            total_odd *= anchor['odd']
-            used_games.add(anchor['jogo'])
+    # Ordena por Probabilidade (Segurança primeiro)
+    anchors.sort(key=lambda x: x['prob'], reverse=True)
+    fusions.sort(key=lambda x: x['prob_combined'], reverse=True)
     
-    # Adicionar fusões até atingir odd meta
-    for fusion in fusions_sorted:
-        if len(ticket) >= 6:
-            break
+    # ESTRATÉGIA DE PREENCHIMENTO (FILL 6 SLOTS)
+    
+    # Slot 1 & 2: As Melhores Âncoras (Base Sólida)
+    for a in anchors:
+        if len(ticket) >= 2: break
+        if a['jogo'] not in used_games:
+            ticket.append(a); curr_odd *= a['odd']; used_games.add(a['jogo'])
+            
+    # Slot 3 & 4: As Melhores Fusões (Alavancagem)
+    for f in fusions:
+        if len(ticket) >= 4: break
+        if f['jogo'] not in used_games:
+            ticket.append(f); curr_odd *= f['odd']; used_games.add(f['jogo'])
+            
+    # Slot 5 & 6 (e extras): Completar até bater Odd 4.50+ ou encher 6 espaços
+    # Junta o que sobrou de tudo
+    leftovers = [x for x in (anchors + fusions) if x['jogo'] not in used_games]
+    leftovers.sort(key=lambda x: x['prob'] if 'prob' in x else x['prob_combined'], reverse=True)
+    
+    for item in leftovers:
+        if len(ticket) >= 6: break # Limite máximo de seleções
         
-        if fusion['jogo'] not in used_games:
-            if total_odd * fusion['odd'] <= THRESHOLDS['smart_ticket_max']:
-                ticket.append(fusion)
-                total_odd *= fusion['odd']
-                used_games.add(fusion['jogo'])
-    
-    # Se ainda não atingiu odd mínima, adiciona mais âncoras
-    if total_odd < THRESHOLDS['smart_ticket_min']:
-        for anchor in anchors_sorted[2:]:
-            if len(ticket) >= 6:
-                break
-            if anchor['jogo'] not in used_games:
-                ticket.append(anchor)
-                total_odd *= anchor['odd']
-                used_games.add(anchor['jogo'])
-                
-                if total_odd >= THRESHOLDS['smart_ticket_min']:
-                    break
-    
-    return {
-        'ticket': ticket,
-        'total_odd': round(total_odd, 2),
-        'num_selections': len(ticket),
-        'all_anchors': len(anchors),
-        'all_fusions': len(fusions)
-    }
+        # Só adiciona se não estourar a odd máxima (segurança contra zebras)
+        if curr_odd * item['odd'] <= 7.0: 
+            ticket.append(item)
+            curr_odd *= item['odd']
+            used_games.add(item['jogo'])
+            
+    return {'ticket': ticket, 'total_odd': round(curr_odd, 2), 'num_selections': len(ticket), 'all_anchors': len(anchors), 'all_fusions': len(fusions)
+           }
 
 def generate_3_tickets_system(calendar: pd.DataFrame, stats: Dict, refs: Dict, all_dfs: Dict, date_str: str, num_games: int = 3) -> Dict:
     """
