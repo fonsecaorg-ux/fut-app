@@ -1401,50 +1401,231 @@ def main():
                 om1.metric("BTTS", f"{probs['goals']['BTTS']:.1f}%")
                 om2.metric("Over 2.5 Gols", f"{probs['goals']['Over 2.5']:.1f}%")
     
-    # TAB 3: SCANNER V23 SMART TICKET (NOVO!)
-    with tab3:
-        st.markdown("## 🎯 Scanner V23 - Smart Ticket")
-        st.caption("Gerador automático de bilhetes com Âncoras + Fusões")
+  # ═══════════════════════════════════════════════════════════════════════════
+# NOVAS FUNCIONALIDADES V23 (RADAR + SMART TICKET MOLDE "CRIAR APOSTA")
+# ═══════════════════════════════════════════════════════════════════════════
+
+def scan_day_for_radars(calendar: pd.DataFrame, stats: Dict, refs: Dict, all_dfs: Dict, date_str: str) -> Dict:
+    """
+    Scanner de Alta Frequência - Radares de Cantos e Cartões
+    """
+    df_day = calendar[calendar['DtObj'].dt.strftime('%d/%m/%Y') == date_str]
+    
+    radar_corners_individual = []
+    radar_cards_individual = []
+    radar_corners_total = []
+    radar_cards_total = []
+    
+    for _, row in df_day.iterrows():
+        home = row['Time_Casa']
+        away = row['Time_Visitante']
+        liga = row.get('Liga', 'N/A')
+        hora = row.get('Hora', 'N/A')
         
-        if calendar.empty:
-            st.warning("⚠️ Calendário não carregado")
-        else:
-            dates = sorted(calendar['DtObj'].dt.strftime('%d/%m/%Y').unique())
-            sel_date_smart = st.selectbox("Selecione a data:", dates, key="smart_date")
+        res = calcular_jogo_v23(home, away, stats, None, refs, all_dfs)
+        if 'error' in res: continue
+        probs = get_detailed_probs(res)
+        
+        # Radar Cantos Individual (Foco: Over 3.5 e 4.5)
+        for line in [3.5, 4.5, 5.5]:
+            # Casa
+            ph = probs['corners']['home'].get(f'Over {line}', 0)
+            if ph >= THRESHOLDS['radar_corners']:
+                radar_corners_individual.append({
+                    'time': res['home'], 'adversario': res['away'], 'liga': liga, 'hora': hora,
+                    'mercado': f"{res['home']} Over {line} Escanteios",
+                    'prob': ph, 'media': res['corners']['h'], 'consistencia': res['consistency']['corners_h'], 'location': 'Casa'
+                })
+            # Fora (Linhas menores para visitante)
+            if line <= 4.5:
+                pa = probs['corners']['away'].get(f'Over {line}', 0)
+                if pa >= THRESHOLDS['radar_corners']:
+                    radar_corners_individual.append({
+                        'time': res['away'], 'adversario': res['home'], 'liga': liga, 'hora': hora,
+                        'mercado': f"{res['away']} Over {line} Escanteios",
+                        'prob': pa, 'media': res['corners']['a'], 'consistencia': res['consistency']['corners_a'], 'location': 'Fora'
+                    })
+        
+        # Radar Cartões Individual
+        for line in [1.5, 2.5]:
+            ph = probs['cards']['home'].get(f'Over {line}', 0)
+            if ph >= THRESHOLDS['radar_cards']:
+                radar_cards_individual.append({
+                    'time': res['home'], 'adversario': res['away'], 'liga': liga, 'hora': hora,
+                    'mercado': f"{res['home']} Over {line} Cartões",
+                    'prob': ph, 'media': res['cards']['h'], 'consistencia': res['consistency']['cards_h'], 'location': 'Casa'
+                })
+            pa = probs['cards']['away'].get(f'Over {line}', 0)
+            if pa >= THRESHOLDS['radar_cards']:
+                radar_cards_individual.append({
+                    'time': res['away'], 'adversario': res['home'], 'liga': liga, 'hora': hora,
+                    'mercado': f"{res['away']} Over {line} Cartões",
+                    'prob': pa, 'media': res['cards']['a'], 'consistencia': res['consistency']['cards_a'], 'location': 'Fora'
+                })
+        
+        # Radares Totais (Jogo Aberto ou Jogo Pegado)
+        if probs['corners']['total'].get('Over 9.5', 0) >= THRESHOLDS['radar_corners']:
+            radar_corners_total.append({'jogo': f"{res['home']} vs {res['away']}", 'liga': liga, 'hora': hora, 'mercado': "Over 9.5 Cantos Total", 'prob': probs['corners']['total']['Over 9.5'], 'media': res['corners']['total']})
             
-            if st.button("🚀 GERAR SMART TICKET", type="primary"):
-                with st.spinner("Analisando todos os jogos..."):
-                    result = generate_smart_ticket_v23(calendar, stats, refs, all_dfs, sel_date_smart)
+        if probs['cards']['total'].get('Over 4.5', 0) >= THRESHOLDS['radar_cards']:
+            radar_cards_total.append({'jogo': f"{res['home']} vs {res['away']}", 'liga': liga, 'hora': hora, 'mercado': "Over 4.5 Cartões Total", 'prob': probs['cards']['total']['Over 4.5'], 'media': res['cards']['total']})
+
+    return {
+        'corners_individual': radar_corners_individual, 'cards_individual': radar_cards_individual,
+        'corners_total': radar_corners_total, 'cards_total': radar_cards_total
+    }
+
+def generate_smart_ticket_v23(calendar: pd.DataFrame, stats: Dict, refs: Dict, all_dfs: Dict, date_str: str) -> Dict:
+    """
+    Scanner V23 - MOLDE "CRIAR APOSTA" + ÂNCORAS
+    Objetivo: Gerar 1 bilhete misturando odds 1.25 (segurança) com odds 1.60-1.90 (combos).
+    """
+    df_day = calendar[calendar['DtObj'].dt.strftime('%d/%m/%Y') == date_str]
+    
+    anchors = []  # Tipo A: Segurança (Ex: Villa Over 3.5 Cantos @ 1.25)
+    fusions = []  # Tipo B: Criar Aposta (Ex: Mainz Canto+Cartão @ 1.60)
+    
+    for _, row in df_day.iterrows():
+        home, away = row['Time_Casa'], row['Time_Visitante']
+        liga = row.get('Liga', 'N/A')
+        hora = row.get('Hora', 'N/A')
+        
+        res = calcular_jogo_v23(home, away, stats, None, refs, all_dfs)
+        if 'error' in res: continue
+        probs = get_detailed_probs(res)
+        
+        # 1. BUSCAR ÂNCORAS (Simples e Seguras)
+        # Foco: Escanteios Over 3.5/4.5 e Cartões Over 1.5
+        for loc, name in [('home', res['home']), ('away', res['away'])]:
+            # Escanteios Âncora
+            for line in [3.5, 4.5]:
+                p_key = 'corners'
+                p = probs[p_key][loc].get(f'Over {line}', 0)
                 
-                if result['num_selections'] == 0:
-                    st.warning("Nenhuma seleção encontrada para os critérios definidos.")
-                else:
-                    st.success(f"✅ Bilhete gerado com {result['num_selections']} seleções!")
-                    
-                    st.markdown(f"### 🎫 BILHETE SUGERIDO V23")
-                    st.metric("Odd Total", f"@{result['total_odd']}", delta=f"{result['num_selections']} seleções")
-                    
-                    st.info(f"📊 Disponíveis: {result['all_anchors']} âncoras | {result['all_fusions']} fusões")
-                    
-                    st.markdown("---")
-                    
-                    for i, sel in enumerate(result['ticket'], 1):
-                        if sel['type'] == 'anchor':
-                            st.markdown(f"**{i}. 🔴 [ÂNCORA - Segurança]**")
-                            st.write(f"   **Jogo:** {sel['jogo']}")
-                            st.write(f"   **Mercado:** {sel['mercado']}")
-                            st.write(f"   **Probabilidade:** {sel['prob']:.1f}% | **Odd:** @{sel['odd']}")
-                            st.caption(f"{sel['liga']} | {sel['hora']}")
-                        else:  # fusion
-                            st.markdown(f"**{i}. 🔗 [CRIAR APOSTA - Combo Duplo]**")
-                            st.write(f"   **Jogo:** {sel['jogo']}")
-                            st.write(f"   **Time:** {sel['team']}")
-                            for j, merc in enumerate(sel['mercados']):
-                                st.write(f"   ✓ {merc} ({sel['probs'][j]:.0f}%)")
-                            st.write(f"   **Prob. Combinada:** {sel['prob_combined']:.1f}% | **Odd:** @{sel['odd']}")
-                            st.caption(f"{sel['liga']} | {sel['hora']}")
-                        
-                        st.markdown("---")
+                # Critério Rigoroso de Probabilidade para Âncora
+                if p >= 85: 
+                    odd = get_fair_odd(p)
+                    # ODD ALVO DO USUÁRIO: 1.22 a 1.38 (Segurança)
+                    if 1.22 <= odd <= 1.38:
+                        anchors.append({
+                            'type': 'anchor', 'jogo': f"{res['home']} vs {res['away']}",
+                            'selection': f"{name} Over {line} Escanteios",
+                            'prob': p, 'odd': odd, 'liga': liga, 'hora': hora
+                        })
+            
+            # Cartões Âncora
+            p_card = probs['cards'][loc].get('Over 1.5', 0)
+            if p_card >= 80:
+                odd = get_fair_odd(p_card)
+                if 1.25 <= odd <= 1.45:
+                    anchors.append({
+                        'type': 'anchor', 'jogo': f"{res['home']} vs {res['away']}",
+                        'selection': f"{name} Over 1.5 Cartões",
+                        'prob': p_card, 'odd': odd, 'liga': liga, 'hora': hora
+                    })
+
+        # 2. BUSCAR FUSÕES (Criar Aposta)
+        # Foco: Jogo onde o MESMO time bate canto e o jogo tem cartão
+        
+        # Identificar melhor linha de Canto do Mandante
+        best_corn_prob = 0
+        best_corn_line = 0
+        for l in [3.5, 4.5]:
+            p = probs['corners']['home'].get(f'Over {l}', 0)
+            if p > best_corn_prob: best_corn_prob = p; best_corn_line = l
+            
+        # Identificar Cartão (Do time ou Total do Jogo)
+        # Vamos usar Total do Jogo para Cartões na fusão, é mais seguro e comum em "Criar Aposta"
+        # Ou Cartão do time se for muito alto. O exemplo do usuário usou "Total de Cartões" no jogo Mainz/Sassuolo.
+        
+        p_card_total_high = probs['cards']['total'].get('Over 2.5', 0)
+        p_card_total_safe = probs['cards']['total'].get('Over 1.5', 0) # Linha mais baixa para garantir green
+        
+        # Lógica de Fusão:
+        # Se Mandante tem probabilidade alta de Canto (>75%) E o jogo é pegado (>70% Over Cartão)
+        if best_corn_prob >= 75 and p_card_total_safe >= 75:
+            # Calcular Odd Combinada (com leve desconto de correlação)
+            prob_comb = (best_corn_prob/100) * (p_card_total_safe/100) * 0.90 * 100
+            odd_comb = get_fair_odd(prob_comb)
+            
+            # ODD ALVO DO USUÁRIO: 1.55 a 2.00 (Valor)
+            if 1.55 <= odd_comb <= 2.10:
+                fusions.append({
+                    'type': 'fusion', 'jogo': f"{res['home']} vs {res['away']}",
+                    'team': res['home'], # Time foco do escanteio
+                    'mercados': [f"{res['home']} Over {best_corn_line} Escanteios", f"Total Jogo Over 1.5 Cartões"], # Moldando ao exemplo
+                    'prob_combined': prob_comb, 'odd': odd_comb, 'liga': liga, 'hora': hora
+                })
+        
+        # Mesma checagem para Visitante
+        best_corn_prob_a = 0
+        best_corn_line_a = 0
+        for l in [2.5, 3.5]: # Visitante linha menor
+            p = probs['corners']['away'].get(f'Over {l}', 0)
+            if p > best_corn_prob_a: best_corn_prob_a = p; best_corn_line_a = l
+            
+        if best_corn_prob_a >= 75 and p_card_total_safe >= 75:
+            prob_comb = (best_corn_prob_a/100) * (p_card_total_safe/100) * 0.90 * 100
+            odd_comb = get_fair_odd(prob_comb)
+            if 1.55 <= odd_comb <= 2.10:
+                fusions.append({
+                    'type': 'fusion', 'jogo': f"{res['home']} vs {res['away']}",
+                    'team': res['away'],
+                    'mercados': [f"{res['away']} Over {best_corn_line_a} Escanteios", f"Total Jogo Over 1.5 Cartões"],
+                    'prob_combined': prob_comb, 'odd': odd_comb, 'liga': liga, 'hora': hora
+                })
+
+    # 3. MONTAGEM DO BILHETE PERFEITO
+    # Regra: 2 Âncoras + 2 Fusões (ou até bater odd 4.60)
+    
+    anchors.sort(key=lambda x: x['prob'], reverse=True)
+    fusions.sort(key=lambda x: x['prob_combined'], reverse=True)
+    
+    ticket = []
+    current_odd = 1.0
+    used_games = set()
+    
+    # Passo 1: Pegar as 2 melhores Âncoras (Odds ~1.25)
+    for a in anchors:
+        if len(ticket) >= 2: break
+        if a['jogo'] not in used_games:
+            ticket.append(a)
+            current_odd *= a['odd']
+            used_games.add(a['jogo'])
+            
+    # Passo 2: Pegar as 2 melhores Fusões (Odds ~1.60-1.90)
+    for f in fusions:
+        if len(ticket) >= 4: break # Queremos 4-5 seleções no total
+        if f['jogo'] not in used_games:
+            ticket.append(f)
+            current_odd *= f['odd']
+            used_games.add(f['jogo'])
+            
+    # Passo 3: Se odd < 4.50, adicionar mais uma Âncora ou Fusão
+    if current_odd < 4.50:
+        # Tenta mais uma fusão primeiro
+        for f in fusions:
+            if f not in ticket and f['jogo'] not in used_games:
+                ticket.append(f)
+                current_odd *= f['odd']
+                used_games.add(f['jogo'])
+                break
+        # Se ainda não deu, tenta âncora
+        if current_odd < 4.50:
+            for a in anchors:
+                if a not in ticket and a['jogo'] not in used_games:
+                    ticket.append(a)
+                    current_odd *= a['odd']
+                    used_games.add(a['jogo'])
+                    break
+
+    return {
+        'ticket': ticket,
+        'total_odd': round(current_odd, 2),
+        'num_selections': len(ticket),
+        'all_anchors': len(anchors),
+        'all_fusions': len(fusions)
+    }
     
     # TAB 4: SISTEMA 3 BILHETES (NOVO!)
     with tab4:
