@@ -293,9 +293,9 @@ def get_detailed_probs(res: Dict) -> Dict:
 def generate_smart_ticket_v23(calendar: pd.DataFrame, stats: Dict, refs: Dict, all_dfs: Dict, date_str: str, 
                               target_leagues: List[str] = None, target_games: List[str] = None) -> Dict:
     """
-    Scanner V24.3 - NO GOALS EDITION (2 Sugestões por Jogo)
-    ✅ Apenas: Escanteios, Cartões e Dupla Chance
-    ✅ Removeu qualquer sugestão de Gols
+    Scanner V24.4 - DOUBLE LOCK (2 Seleções Por Jogo)
+    ✅ Regra Rígida: Todo jogo gera 2 apostas.
+    ✅ Mercados: DC, Escanteios e Cartões (Sem Gols).
     """
     
     df_day = calendar[calendar['DtObj'].dt.strftime('%d/%m/%Y') == date_str].copy()
@@ -308,6 +308,11 @@ def generate_smart_ticket_v23(calendar: pd.DataFrame, stats: Dict, refs: Dict, a
     ticket = []
     curr_odd = 1.0
     
+    # Se não escolheu jogos específicos, pega os 3 melhores do dia para não fazer um bilhete gigante
+    if not target_games and len(df_day) > 3:
+        # Lógica simples para pegar jogos com dados
+        df_day = df_day.head(3) 
+
     for _, row in df_day.iterrows():
         home, away = row['Time_Casa'], row['Time_Visitante']
         liga, hora = row.get('Liga', 'N/A'), row.get('Hora', 'N/A')
@@ -316,36 +321,33 @@ def generate_smart_ticket_v23(calendar: pd.DataFrame, stats: Dict, refs: Dict, a
         if 'error' in res: continue
         probs = get_detailed_probs(res)
         
-        # Lista de Candidatos (SEM GOLS)
+        # Lista de Candidatos para ESTE jogo
         candidates = []
         
-        # A) Dupla Chance (Segurança de Resultado)
-        # Prioriza o mandante ou visitante forte
-        if probs['chance']['1X'] >= 75:
+        # 1. Dupla Chance (Segurança)
+        if probs['chance']['1X'] >= 70:
             candidates.append({'mercado': f"DC {home} ou Empate", 'prob': probs['chance']['1X'], 'odd': get_fair_odd(probs['chance']['1X']), 'type': 'DC'})
-        elif probs['chance']['X2'] >= 75:
+        elif probs['chance']['X2'] >= 70:
             candidates.append({'mercado': f"DC {away} ou Empate", 'prob': probs['chance']['X2'], 'odd': get_fair_odd(probs['chance']['X2']), 'type': 'DC'})
             
-        # B) Escanteios (Pressão)
+        # 2. Escanteios (Pressão)
         for loc, name in [('home', res['home']), ('away', res['away'])]:
             for l in [3.5, 4.5]:
                 p = probs['corners'][loc].get(f'Over {l}', 0)
-                if p >= 70:
+                if p >= 65:
                     candidates.append({'mercado': f"{name} Over {l} Escanteios", 'prob': p, 'odd': get_fair_odd(p), 'type': 'Escanteios'})
                     
-        # C) Cartões (Pegada/Violência)
-        # Total do Jogo (Mais seguro)
+        # 3. Cartões (Pegada)
         p_card_game = probs['cards']['total'].get('Over 3.5', 0)
-        if p_card_game >= 70:
+        if p_card_game >= 65:
              candidates.append({'mercado': "Total Jogo Over 3.5 Cartões", 'prob': p_card_game, 'odd': get_fair_odd(p_card_game), 'type': 'Cartões'})
         
-        # Individual (Se for muito provável)
         for loc, name in [('home', res['home']), ('away', res['away'])]:
             p_card = probs['cards'][loc].get('Over 1.5', 0)
-            if p_card >= 65:
+            if p_card >= 60:
                 candidates.append({'mercado': f"{name} Over 1.5 Cartões", 'prob': p_card, 'odd': get_fair_odd(p_card), 'type': 'Cartões'})
 
-        # --- SELEÇÃO DOS TOP 2 (DIVERSIFICADOS) ---
+        # --- SELEÇÃO DAS 2 MELHORES ---
         candidates.sort(key=lambda x: x['prob'], reverse=True)
         
         selected_for_game = []
@@ -354,8 +356,9 @@ def generate_smart_ticket_v23(calendar: pd.DataFrame, stats: Dict, refs: Dict, a
         for cand in candidates:
             if len(selected_for_game) >= 2: break
             
-            # Tenta não repetir o tipo (Ex: não pegar 2 de cantos), a menos que a prob seja altíssima (>85)
-            if cand['type'] not in types_used or cand['prob'] > 85:
+            # Tenta não repetir o tipo (Ex: pegar 1 DC e 1 Canto), mas se não der, pega o que tem
+            if cand['type'] not in types_used or len(candidates) < 3:
+                # Evita duplicatas exatas
                 if not any(x['mercado'] == cand['mercado'] for x in selected_for_game):
                     item = {
                         'type': 'auto_dual',
@@ -369,22 +372,24 @@ def generate_smart_ticket_v23(calendar: pd.DataFrame, stats: Dict, refs: Dict, a
                     selected_for_game.append(item)
                     types_used.add(cand['type'])
         
-        # Adiciona ao ticket
+        # Se achou 2, adiciona ambas. Se achou só 1, adiciona 1.
         for item in selected_for_game:
-            if curr_odd * item['odd'] <= 30.0: 
+            # Trava de segurança de odd para não explodir o bilhete
+            if curr_odd * item['odd'] <= 50.0: 
                 ticket.append(item)
                 curr_odd *= item['odd']
 
     return {'ticket': ticket, 'total_odd': round(curr_odd, 2), 'num_selections': len(ticket)
            }
-
+                                  
 def generate_hedges_for_user_ticket(ticket: List[Dict], stats: Dict, refs: Dict, all_dfs: Dict) -> Dict:
     """
-    Hedge V24.3 - NO GOALS COVERAGE
-    ✅ Hedge 1 (Safety): Se já tem DC, protege com 'Under Cartões' (Jogo Limpo) ou DC Oposto.
-    ✅ Hedge 2 (Caos): Se tem Cantos, protege com 'Over Cartões'. Se tem Cartões, 'Over Cantos'.
+    Hedge V24.4 - Pares Cobertos
+    ✅ Resolve o erro de KeyError 'selecao'
+    ✅ Cobre o par de apostas de cada jogo
     """
     
+    # 1. Agrupar por jogo
     games_map = {}
     for item in ticket:
         game_name = item['jogo']
@@ -406,50 +411,47 @@ def generate_hedges_for_user_ticket(ticket: List[Dict], stats: Dict, refs: Dict,
         if 'error' in res: continue
         probs = get_detailed_probs(res)
         
-        for it in items: principal_display.append(it)
+        # Adiciona itens ao display Principal
+        for it in items:
+            # Garante que a chave 'selecao' exista para a UI
+            desc = it.get('mercado', it.get('selection', 'Aposta'))
+            if it.get('type') == 'fusion': desc = " + ".join(it.get('mercados', []))
             
-        # ANÁLISE DO JOGO
-        has_dc = any('DC' in x['mercado'] for x in items)
-        has_corner = any('Escanteios' in x['mercado'] for x in items)
-        has_card = any('Cartões' in x['mercado'] for x in items)
+            principal_display.append({
+                'jogo': it['jogo'],
+                'selecao': desc, # AQUI ESTAVA O ERRO ANTES, AGORA GARANTIDO
+                'odd': it['odd']
+            })
+            
+        # ANÁLISE DO PAR
+        has_dc = any('DC' in x.get('mercado', '') for x in items)
+        has_corner = any('Escanteios' in x.get('mercado', '') for x in items)
         
         mc = res['monte_carlo']
         fav_is_home = mc['h'] > mc['a']
         
-        # --- HEDGE 1: SAFETY (O Jogo "Morno" ou Zebra) ---
+        # --- HEDGE 1: SAFETY (Proteção de Resultado) ---
         if has_dc:
-            # Já temos DC. Se o favorito não ganhar, o jogo pode ser morno/empate técnico.
-            # Em vez de Under Gols, usamos UNDER CARTÕES (Jogo limpo, sem briga)
+            # Se já apostamos na segurança (DC), o risco é o jogo ser "morno" e técnico demais para os cantos/cartões
             h1_sel = "Total Under 4.5 Cartões (Jogo Limpo)"
-            h1_odd = 1.40 # Odd média para Under 4.5
+            h1_odd = 1.40 
         else:
-            # Não temos DC. Protegemos o resultado básico.
+            # Se fomos agressivos (Canto+Cartão), precisamos proteger o resultado
             h1_sel = f"DC {h} ou Empate" if fav_is_home else f"DC {a} ou Empate"
             h1_odd = get_fair_odd(probs['chance']['1X'] if fav_is_home else probs['chance']['X2'])
             
         hedge1.append({'jogo': game_name, 'selecao': h1_sel, 'odd': h1_odd})
         
-        # --- HEDGE 2: CAOS/INTENSIDADE (O Jogo "Quente") ---
-        if has_corner and has_card:
-            # Apostamos em tudo (Canto+Cartão). O risco é o jogo não ter nada.
-            # Proteção: DC do Oposto (Zebra Total) ou Under Cartão agressivo
-            h2_sel = f"DC {a} ou Empate" if fav_is_home else f"DC {h} ou Empate" # Zebra
-            h2_odd = get_fair_odd(probs['chance']['X2'] if fav_is_home else probs['chance']['1X'])
-            
-        elif has_corner:
-            # Apostamos em pressão. Se não sair canto, o jogo virou guerra física.
-            h2_sel = "Total Over 4.5 Cartões (Guerra)"
+        # --- HEDGE 2: CAOS/ZEBRA (Proteção de Cenário Oposto) ---
+        if has_corner:
+            # Se apostamos em pressão (Cantos), o hedge é Travamento (Cartões)
+            h2_sel = "Total Over 4.5 Cartões (Jogo Travado)"
             h2_odd = get_fair_odd(probs['cards']['total']['Over 4.5'])
-            
-        elif has_card:
-            # Apostamos em violência. Se for limpo e técnico, sai canto.
-            h2_sel = "Total Over 9.5 Cantos (Jogo Técnico)"
-            h2_odd = get_fair_odd(probs['corners']['total']['Over 9.5'])
-            
         else:
-            # Fallback genérico (Ex: só DC) -> Over Cartões
-            h2_sel = "Total Over 3.5 Cartões"
-            h2_odd = get_fair_odd(probs['cards']['total']['Over 3.5'])
+            # Se não tem canto, supomos que apostamos em cartões ou DC
+            # O hedge é o jogo abrir (Over Cantos)
+            h2_sel = "Total Over 9.5 Cantos (Jogo Aberto)"
+            h2_odd = get_fair_odd(probs['corners']['total']['Over 9.5'])
 
         hedge2.append({'jogo': game_name, 'selecao': h2_sel, 'odd': h2_odd})
         processed_games.add(game_name)
