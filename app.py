@@ -1,11 +1,11 @@
 """
 ╔═══════════════════════════════════════════════════════════════════════════╗
-║       FUTPREVISÃO V25.6 - UI FIX & MARKET CALIBRATION                     ║
+║       FUTPREVISÃO V25.7 - WHITE THEME & UI FIX                            ║
 ║                                                                            ║
-║  ✅ FIX CRÍTICO: Menu travado resolvido (Mapeamento Único)                ║
+║  ✅ TEMA: Tela Branca (Modo Claro ativado por padrão)                     ║
+║  ✅ FIX MENU: Seletor não reseta mais ao clicar (Adicionado key única)    ║
 ║  ✅ ODDS CALIBRADAS: Visitante Over 1.5 Cartões fixado em ~1.45           ║
-║  ✅ PRECIFICAÇÃO: Tabela de preços reais expandida                        ║
-║  ✅ Scanner & Hedges: Totalmente funcionais                               ║
+║  ✅ INTEGRIDADE: Prevenção de duplicatas no menu manual                   ║
 ║                                                                            ║
 ║  Dezembro 2025                                                           ║
 ╚═══════════════════════════════════════════════════════════════════════════╝
@@ -25,7 +25,7 @@ from difflib import get_close_matches
 # ═══════════════════════════════════════════════════════════════════════════
 
 st.set_page_config(
-    page_title="FutPrevisão V25.6",
+    page_title="FutPrevisão V25.7 White",
     page_icon="⚽",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -34,7 +34,8 @@ st.set_page_config(
 # Session State
 if 'bankroll' not in st.session_state: st.session_state.bankroll = 1000.0
 if 'current_ticket' not in st.session_state: st.session_state.current_ticket = []
-if 'theme' not in st.session_state: st.session_state.theme = 'dark'
+# TEMA PADRÃO DEFINIDO PARA LIGHT (CLARO)
+if 'theme' not in st.session_state: st.session_state.theme = 'light'
 if 'bet_history' not in st.session_state: st.session_state.bet_history = []
 
 # Mapeamentos
@@ -53,8 +54,7 @@ LIGAS_ALVO = [
     "Championship", "Bundesliga 2", "Pro League", "Süper Lig", "Scottish Premiership"
 ]
 
-# TABELA DE PREÇOS REAIS (CALIBRADA V25.6)
-# Ajustada para refletir médias reais e evitar odds altas irreais para favoritos
+# TABELA DE PREÇOS REAIS (V25.7)
 REAL_ODDS = {
     # Mandante Escanteios
     ('home', 'corners', 3.5): 1.34,
@@ -71,9 +71,9 @@ REAL_ODDS = {
     ('home', 'cards', 1.5): 1.52,
     ('home', 'cards', 2.5): 2.25,
     
-    # Visitante Cartões (AJUSTADO: MÉDIA BAIXA)
+    # Visitante Cartões (CALIBRADO @1.45)
     ('away', 'cards', 0.5): 1.18,
-    ('away', 'cards', 1.5): 1.45,  # Fixado em 1.45 conforme pedido
+    ('away', 'cards', 1.5): 1.45,  
     ('away', 'cards', 2.5): 2.30,
     
     # Totais Escanteios
@@ -200,7 +200,6 @@ def get_fair_odd(prob: float) -> float:
 def get_market_price(location: str, market_type: str, line: float, prob_calculated: float) -> float:
     """Busca preço real ou calcula fair odd."""
     real_price = REAL_ODDS.get((location, market_type, line))
-    # Só usa preço real se a probabilidade for razoável (>40%) para evitar distorções
     if real_price and prob_calculated >= 40:
         return real_price
     return get_fair_odd(prob_calculated)
@@ -471,8 +470,7 @@ def generate_hedges_for_user_ticket(ticket: List[Dict], stats: Dict, refs: Dict,
 # ═══════════════════════════════════════════════════════════════════════════
 
 def main():
-    if st.session_state.theme == 'dark':
-        st.markdown("<style>.stApp {background-color: #0E1117; color: #FAFAFA;}</style>", unsafe_allow_html=True)
+    # REMOVIDO CSS ESCURO. AGORA O TEMA É CLARO (PADRÃO)
     
     with st.spinner("Carregando bases..."):
         stats = learn_stats_v23()
@@ -480,7 +478,7 @@ def main():
         calendar = load_calendar_safe()
         all_dfs = load_all_dataframes()
         
-    st.title("⚽ FutPrevisão V25.6")
+    st.title("⚽ FutPrevisão V25.7 White")
     tab1, tab2, tab3, tab4, tab5 = st.tabs(["📅 Calendário", "🔍 Simulação", "🎯 Scanner/Manual", "🛡️ Hedges", "📊 Radares"])
     
     with tab3:
@@ -504,35 +502,32 @@ def main():
                     else: st.warning("Nada encontrado.")
             else:
                 games = sorted((df_day['Time_Casa'] + ' vs ' + df_day['Time_Visitante']).unique())
-                sel_game = st.selectbox("Jogo:", games)
+                # KEY ÚNICA PARA JOGO
+                sel_game = st.selectbox("Jogo:", games, key="sel_game_manual")
+                
                 if sel_game:
                     row = df_day[(df_day['Time_Casa'] + ' vs ' + df_day['Time_Visitante']) == sel_game].iloc[0]
                     res = calcular_jogo_v23(row['Time_Casa'], row['Time_Visitante'], stats, None, refs, all_dfs)
                     if 'error' not in res:
                         mkts = get_available_markets_for_game(res, get_detailed_probs(res))
                         
-                        # --- FIX CRÍTICO: MAPEAMENTO ÚNICO ---
-                        # Cria um dicionário { "Nome da Aposta": ObjetoAposta }
-                        # Isso impede DUPLICATAS no selectbox
+                        # MAPEAMENTO ÚNICO PARA EVITAR DUPLICATAS
                         options_map = {}
                         for m in mkts:
                             label = f"{m['mercado']} (@{m['odd']})"
                             options_map[label] = m
                         
-                        # Lista apenas as chaves (labels únicos) ordenados
                         sorted_labels = sorted(options_map.keys())
                         
-                        sel_mkt_label = st.selectbox("Mercado:", sorted_labels)
+                        # KEY ÚNICA PARA MERCADO PARA EVITAR RESET
+                        sel_mkt_label = st.selectbox("Mercado:", sorted_labels, key="sel_mkt_manual")
                         
                         if st.button("➕ Adicionar"):
                             if sel_mkt_label in options_map:
                                 obj = options_map[sel_mkt_label]
                                 st.session_state.current_ticket.append({
-                                    'type': 'manual', 
-                                    'jogo': sel_game, 
-                                    'mercado': obj['mercado'], 
-                                    'odd': obj['odd'], 
-                                    'prob': obj['prob']
+                                    'type': 'manual', 'jogo': sel_game, 'mercado': obj['mercado'], 
+                                    'odd': obj['odd'], 'prob': obj['prob']
                                 })
                                 st.success("Adicionado!")
 
