@@ -381,15 +381,12 @@ def generate_smart_ticket_v23(calendar: pd.DataFrame, stats: Dict, refs: Dict, a
                                   
 def generate_hedges_for_user_ticket(ticket: List[Dict], stats: Dict, refs: Dict, all_dfs: Dict) -> Dict:
     """
-    Hedge V24.8 - DYNAMIC COVERAGE (Cobertura de Cenários Reais)
-    
-    Lógica:
-    - Principal: Aposta Personalizada (Ex: Villa Canto + Man Utd Cartão).
-    - Hedge 1 (Espelho): Inverte o protagonista (Man Utd Canto + Total Cartão).
-    - Hedge 2 (Estrutural): Garante o resultado (DC) + Intensidade Geral (Total Cartão/Canto).
+    Hedge V24.9 - TRUE MIRROR (Espelho Real)
+    ✅ Correção: O Hedge agora olha para QUEM VOCÊ APOSTOU, não para quem é favorito.
+    ✅ Garante que se você foi de Villa, o Hedge vai de United (e vice-versa).
     """
     
-    # 1. Agrupar por jogo para manter contexto
+    # 1. Agrupar por jogo
     games_map = {}
     for item in ticket:
         game_name = item['jogo']
@@ -417,36 +414,45 @@ def generate_hedges_for_user_ticket(ticket: List[Dict], stats: Dict, refs: Dict,
             if it.get('type') == 'fusion': desc = " + ".join(it.get('mercados', []))
             principal_display.append({'jogo': it['jogo'], 'selecao': desc, 'odd': it['odd']})
             
-        # --- ANÁLISE DO JOGO PARA OS HEDGES ---
+        # --- ANÁLISE DO JOGO ---
         mc = res['monte_carlo']
         fav_is_home = mc['h'] > mc['a']
         
-        # Probabilidades Base para consulta
-        prob_corn_h = probs['corners']['home']['Over 4.5']
-        prob_corn_a = probs['corners']['away']['Over 3.5'] # Visitante linha menor
+        # Identifica em qual time você apostou (pelo texto do mercado)
+        user_bet_on_home = any(h in x.get('mercado', '') for x in items)
+        user_bet_on_away = any(a in x.get('mercado', '') for x in items)
         
+        # Probabilidades Base
+        prob_corn_h = probs['corners']['home']['Over 4.5']
+        prob_corn_a = probs['corners']['away']['Over 3.5']
         prob_card_total = probs['cards']['total']['Over 3.5']
         prob_card_total_high = probs['cards']['total']['Over 4.5']
         
         # ==============================================================================
-        # HEDGE 1: O "ESPELHO" (Aposta na Reação/Outro Lado)
-        # Se você apostou no Favorito, aqui apostamos na Zebra reagindo ou Jogo Geral
+        # HEDGE 1: O "ESPELHO REAL" (Aposta no Oponente)
         # ==============================================================================
         
-        # Seleção de Canto Alternativo (O time que NÃO é o favorito absoluto na aposta principal)
-        # Lógica: Se o favorito é casa, o hedge busca o visitante (e vice-versa)
-        if fav_is_home:
+        if user_bet_on_home:
+            # Se você foi de Casa (Villa), Hedge vai no Visitante (Man Utd)
             sel_corn_h1 = f"{a} Over 3.5 Escanteios"
             odd_corn_h1 = get_fair_odd(prob_corn_a)
-        else:
+        elif user_bet_on_away:
+            # Se você foi de Visitante, Hedge vai no Casa
             sel_corn_h1 = f"{h} Over 4.5 Escanteios"
             odd_corn_h1 = get_fair_odd(prob_corn_h)
+        else:
+            # Se não dá pra saber (ex: apostou só em cartões), usa a lógica do favorito reverso
+            if fav_is_home:
+                sel_corn_h1 = f"{a} Over 3.5 Escanteios"
+                odd_corn_h1 = get_fair_odd(prob_corn_a)
+            else:
+                sel_corn_h1 = f"{h} Over 4.5 Escanteios"
+                odd_corn_h1 = get_fair_odd(prob_corn_h)
             
-        # Seleção de Cartão Geral (Para cobrir qualquer cenário de briga)
+        # Cartão Geral
         sel_card_h1 = "Total Over 3.5 Cartões"
         odd_card_h1 = get_fair_odd(prob_card_total)
         
-        # Monta Hedge 1 (Espelho + Intensidade)
         hedge1.append({
             'jogo': game_name,
             'selecao': f"{sel_corn_h1} + {sel_card_h1}",
@@ -455,10 +461,12 @@ def generate_hedges_for_user_ticket(ticket: List[Dict], stats: Dict, refs: Dict,
         
         # ==============================================================================
         # HEDGE 2: A BASE (Resultado + Intensidade)
-        # Cobre o cenário onde o jogo é "Normal" (Favorito não perde + Cartões normais)
         # ==============================================================================
         
-        # 1. Dupla Chance (Segurança Máxima de Resultado)
+        # Dupla Chance (Se você apostou no time, protegemos com DC dele mesmo ou empate anula)
+        # Aqui mantemos a lógica de proteger o favorito estatístico ou o time da aposta?
+        # Melhor proteger o Favorito Estatístico (Segurança Real)
+        
         if fav_is_home:
             sel_dc = f"DC {h} ou Empate"
             prob_dc = probs['chance']['1X']
@@ -467,8 +475,6 @@ def generate_hedges_for_user_ticket(ticket: List[Dict], stats: Dict, refs: Dict,
             prob_dc = probs['chance']['X2']
         odd_dc = get_fair_odd(prob_dc)
         
-        # 2. Complemento de Intensidade (Cartão Forte ou Canto Total)
-        # Se o jogo tende a ser muito pegado, usa cartão over 4.5. Se não, usa canto total.
         if prob_card_total_high > 55:
             sel_comp = "Total Over 4.5 Cartões"
             odd_comp = get_fair_odd(prob_card_total_high)
@@ -476,7 +482,6 @@ def generate_hedges_for_user_ticket(ticket: List[Dict], stats: Dict, refs: Dict,
             sel_comp = "Total Over 8.5 Escanteios"
             odd_comp = get_fair_odd(probs['corners']['total']['Over 8.5'])
             
-        # Monta Hedge 2
         hedge2.append({
             'jogo': game_name,
             'selecao': f"{sel_dc} + {sel_comp}",
@@ -485,15 +490,10 @@ def generate_hedges_for_user_ticket(ticket: List[Dict], stats: Dict, refs: Dict,
 
         processed_games.add(game_name)
 
-    # Cálculo final das Odds
-    odd_p = np.prod([x['odd'] for x in principal_display])
-    odd_h1 = np.prod([x['odd'] for x in hedge1])
-    odd_h2 = np.prod([x['odd'] for x in hedge2])
-    
     return {
-        'principal': {'itens': principal_display, 'odd': round(odd_p, 2)},
-        'hedge1': {'itens': hedge1, 'odd': round(odd_h1, 2)},
-        'hedge2': {'itens': hedge2, 'odd': round(odd_h2, 2)}
+        'principal': {'itens': principal_display, 'odd': round(np.prod([x['odd'] for x in principal_display]), 2)},
+        'hedge1': {'itens': hedge1, 'odd': round(np.prod([x['odd'] for x in hedge1]), 2)},
+        'hedge2': {'itens': hedge2, 'odd': round(np.prod([x['odd'] for x in hedge2]), 2)}
     }
 # ═══════════════════════════════════════════════════════════════════════════
 # UI PRINCIPAL
