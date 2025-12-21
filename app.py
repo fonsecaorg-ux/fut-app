@@ -383,13 +383,13 @@ def generate_hedges_for_user_ticket(ticket: List[Dict], stats: Dict, refs: Dict,
     """
     Hedge V24.8 - DYNAMIC COVERAGE (Cobertura de Cenários Reais)
     
-    Lógica Baseada no Pedido do Usuário:
+    Lógica:
     - Principal: Aposta Personalizada (Ex: Villa Canto + Man Utd Cartão).
     - Hedge 1 (Espelho): Inverte o protagonista (Man Utd Canto + Total Cartão).
     - Hedge 2 (Estrutural): Garante o resultado (DC) + Intensidade Geral (Total Cartão/Canto).
     """
     
-    # 1. Agrupar por jogo
+    # 1. Agrupar por jogo para manter contexto
     games_map = {}
     for item in ticket:
         game_name = item['jogo']
@@ -421,7 +421,7 @@ def generate_hedges_for_user_ticket(ticket: List[Dict], stats: Dict, refs: Dict,
         mc = res['monte_carlo']
         fav_is_home = mc['h'] > mc['a']
         
-        # Probabilidades Base
+        # Probabilidades Base para consulta
         prob_corn_h = probs['corners']['home']['Over 4.5']
         prob_corn_a = probs['corners']['away']['Over 3.5'] # Visitante linha menor
         
@@ -433,13 +433,12 @@ def generate_hedges_for_user_ticket(ticket: List[Dict], stats: Dict, refs: Dict,
         # Se você apostou no Favorito, aqui apostamos na Zebra reagindo ou Jogo Geral
         # ==============================================================================
         
-        # Seleção de Canto Alternativo (O time que NÃO é o favorito absoluto ou o oponente)
+        # Seleção de Canto Alternativo (O time que NÃO é o favorito absoluto na aposta principal)
+        # Lógica: Se o favorito é casa, o hedge busca o visitante (e vice-versa)
         if fav_is_home:
-            # Se casa é favorito, Hedge aposta no Visitante reagindo
             sel_corn_h1 = f"{a} Over 3.5 Escanteios"
             odd_corn_h1 = get_fair_odd(prob_corn_a)
         else:
-            # Se visitante é favorito, Hedge aposta no Casa pressionando
             sel_corn_h1 = f"{h} Over 4.5 Escanteios"
             odd_corn_h1 = get_fair_odd(prob_corn_h)
             
@@ -447,11 +446,11 @@ def generate_hedges_for_user_ticket(ticket: List[Dict], stats: Dict, refs: Dict,
         sel_card_h1 = "Total Over 3.5 Cartões"
         odd_card_h1 = get_fair_odd(prob_card_total)
         
-        # Monta Hedge 1
+        # Monta Hedge 1 (Espelho + Intensidade)
         hedge1.append({
             'jogo': game_name,
             'selecao': f"{sel_corn_h1} + {sel_card_h1}",
-            'odd': round(odd_corn_h1 * odd_card_h1 * 0.9, 2) # 0.9 fator de correlação
+            'odd': round(odd_corn_h1 * odd_card_h1 * 0.9, 2)
         })
         
         # ==============================================================================
@@ -459,7 +458,7 @@ def generate_hedges_for_user_ticket(ticket: List[Dict], stats: Dict, refs: Dict,
         # Cobre o cenário onde o jogo é "Normal" (Favorito não perde + Cartões normais)
         # ==============================================================================
         
-        # 1. Dupla Chance (Segurança Máxima)
+        # 1. Dupla Chance (Segurança Máxima de Resultado)
         if fav_is_home:
             sel_dc = f"DC {h} ou Empate"
             prob_dc = probs['chance']['1X']
@@ -468,13 +467,12 @@ def generate_hedges_for_user_ticket(ticket: List[Dict], stats: Dict, refs: Dict,
             prob_dc = probs['chance']['X2']
         odd_dc = get_fair_odd(prob_dc)
         
-        # 2. Complemento de Intensidade (Cartão ou Canto Total)
-        # Se o jogo tende a ter cartões, usa cartão. Se não, usa canto total.
+        # 2. Complemento de Intensidade (Cartão Forte ou Canto Total)
+        # Se o jogo tende a ser muito pegado, usa cartão over 4.5. Se não, usa canto total.
         if prob_card_total_high > 55:
             sel_comp = "Total Over 4.5 Cartões"
             odd_comp = get_fair_odd(prob_card_total_high)
         else:
-            # Jogo mais limpo -> Canto Total
             sel_comp = "Total Over 8.5 Escanteios"
             odd_comp = get_fair_odd(probs['corners']['total']['Over 8.5'])
             
