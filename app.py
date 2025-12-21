@@ -1,11 +1,11 @@
 """
 ╔═══════════════════════════════════════════════════════════════════════════╗
-║       FUTPREVISÃO V25.2 - FINAL STABLE                                    ║
+║       FUTPREVISÃO V25.4 - REAL ODDS EDITION                               ║
 ║                                                                            ║
-║  ✅ FIX: Erro 'KeyError Over 7.5' resolvido (Calculadora expandida)       ║
-║  ✅ Hedge V25.1: Estratégia Espelho + Segurança Ativa                     ║
-║  ✅ Scanner: 2 Seleções por Jogo (Foco em Stats)                          ║
-║  📊 Base de Dados: V23 Preservada                                         ║
+║  ✅ PRECIFICAÇÃO REAL: Baseada no arquivo 'média de odds.txt'             ║
+║  ✅ FIX: Erro de indentação resolvido                                     ║
+║  ✅ Scanner: Usa odds de mercado para montar bilhetes @4.50-@6.00         ║
+║  ✅ Hedges: Espelho + Segurança (Preços calibrados)                       ║
 ║                                                                            ║
 ║  Dezembro 2025                                                           ║
 ╚═══════════════════════════════════════════════════════════════════════════╝
@@ -25,7 +25,7 @@ from difflib import get_close_matches
 # ═══════════════════════════════════════════════════════════════════════════
 
 st.set_page_config(
-    page_title="FutPrevisão V25.2 Stable",
+    page_title="FutPrevisão V25.4 Real Odds",
     page_icon="⚽",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -52,6 +52,37 @@ LIGAS_ALVO = [
     "Premier League", "La Liga", "Serie A", "Bundesliga", "Ligue 1",
     "Championship", "Bundesliga 2", "Pro League", "Süper Lig", "Scottish Premiership"
 ]
+
+# TABELA DE PREÇOS REAIS (Baseada no seu arquivo)
+# Usamos a média do range para ser realista
+REAL_ODDS = {
+    # Mandante Escanteios
+    ('home', 'corners', 3.5): 1.34,  # 1.30-1.38
+    ('home', 'corners', 4.5): 1.62,  # 1.55-1.70
+    # Visitante Escanteios
+    ('away', 'corners', 2.5): 1.40,  # 1.35-1.45
+    ('away', 'corners', 3.5): 1.75,  # 1.65-1.85
+    ('away', 'corners', 4.5): 2.50,  # 2.30-2.70
+    # Mandante Cartões
+    ('home', 'cards', 0.5): 1.21,
+    ('home', 'cards', 1.5): 1.52,  # 1.45-1.60
+    ('home', 'cards', 2.5): 2.25,
+    # Visitante Cartões
+    ('away', 'cards', 0.5): 1.26,
+    ('away', 'cards', 1.5): 1.65,  # 1.55-1.75
+    ('away', 'cards', 2.5): 2.50,
+    # Totais Escanteios
+    ('total', 'corners', 7.5): 1.35,
+    ('total', 'corners', 8.5): 1.57,  # 1.50-1.65
+    ('total', 'corners', 9.5): 1.90,
+    # Totais Cartões
+    ('total', 'cards', 2.5): 1.42,  # 1.35-1.50
+    ('total', 'cards', 3.5): 1.72,  # 1.60-1.85
+    ('total', 'cards', 4.5): 2.12,  # 1.95-2.30
+    # Dupla Chance (Estimativa baseada no favorito)
+    ('home', 'dc'): 1.24, # 1.18-1.30
+    ('away', 'dc'): 1.60  # 1.45-1.75
+}
 
 # ═══════════════════════════════════════════════════════════════════════════
 # CARREGAMENTO DE DADOS
@@ -145,7 +176,7 @@ def load_calendar_safe() -> pd.DataFrame:
     except: return pd.DataFrame()
 
 # ═══════════════════════════════════════════════════════════════════════════
-# CÁLCULOS E PROBABILIDADES
+# CÁLCULOS
 # ═══════════════════════════════════════════════════════════════════════════
 
 def normalize_name(name: str, db_keys: list) -> Optional[str]:
@@ -157,6 +188,24 @@ def normalize_name(name: str, db_keys: list) -> Optional[str]:
 
 def get_fair_odd(prob: float) -> float:
     return round(100/prob, 2) if prob > 0 else 99.0
+
+def get_market_price(location: str, market_type: str, line: float, prob_calculated: float) -> float:
+    """
+    Retorna o PREÇO DE MERCADO REAL se disponível, 
+    caso contrário usa a odd matemática (Fair Odd).
+    """
+    # Tenta buscar no dicionário de odds reais
+    real_price = REAL_ODDS.get((location, market_type, line))
+    
+    # Se achou preço real, usa ele (mas verifica se a probabilidade calculada não é absurda)
+    if real_price:
+        # Só usa o preço real se a probabilidade calculada for decente (>50%)
+        # Isso evita sugerir odds de 1.30 para times que não tem chance nenhuma
+        if prob_calculated >= 50:
+            return real_price
+            
+    # Fallback: Cálculo matemático
+    return get_fair_odd(prob_calculated)
 
 def monte_carlo(xg_h: float, xg_a: float, n: int = 1000) -> Tuple[float, float, float]:
     gh = np.random.poisson(max(0.1, xg_h), n)
@@ -193,10 +242,7 @@ def calcular_jogo_v23(home: str, away: str, stats: Dict, ref: Optional[str], ref
     }
 
 def get_detailed_probs(res: Dict) -> Dict:
-    """
-    Gera probabilidades detalhadas para várias linhas.
-    ✅ FIX: Inclui linhas baixas (6.5/7.5) para evitar KeyError no Hedge.
-    """
+    """Gera probabilidades detalhadas."""
     def sim_prob(avg: float, line: float) -> float:
         return max(5, min(95, 50 + (avg - line) * 15))
     
@@ -204,7 +250,6 @@ def get_detailed_probs(res: Dict) -> Dict:
         'corners': {
             'home': {f'Over {l}': sim_prob(res['corners']['h'], l) for l in [2.5, 3.5, 4.5, 5.5, 6.5]},
             'away': {f'Over {l}': sim_prob(res['corners']['a'], l) for l in [2.5, 3.5, 4.5]},
-            # GERA LINHAS DE 6.5 a 12.5 PARA COBRIR TUDO
             'total': {f'Over {l}': sim_prob(res['corners']['total'], l) for l in [6.5, 7.5, 8.5, 9.5, 10.5, 11.5, 12.5]}
         },
         'cards': {
@@ -213,61 +258,54 @@ def get_detailed_probs(res: Dict) -> Dict:
             'total': {f'Over {l}': sim_prob(res['cards']['total'], l) for l in [1.5, 2.5, 3.5, 4.5, 5.5, 6.5]}
         }
     }
-    
     mc = res['monte_carlo']
-    probs['chance'] = {
-        '1': mc['h'],
-        'X': mc['d'],
-        '2': mc['a'],
-        '1X': mc['h'] + mc['d'],
-        'X2': mc['a'] + mc['d'],
-        '12': mc['h'] + mc['a']
-    }
-    
-    probs['goals'] = {
-        'BTTS': res['probs']['btts'],
-        'Over 2.5': res['probs']['over_2_5']
-    }
-    
+    probs['chance'] = {'1': mc['h'], 'X': mc['d'], '2': mc['a'], '1X': mc['h'] + mc['d'], 'X2': mc['a'] + mc['d']}
     return probs
 
 def get_available_markets_for_game(res: Dict, probs: Dict) -> List[Dict]:
-    """Helper para modo manual - LISTA TUDO SEM FILTROS"""
+    """Helper para modo manual - LISTA TUDO COM PREÇOS REAIS"""
     markets = []
     
-    # --- ESCANTEIOS INDIVIDUAIS ---
-    # Home
-    for l in [2.5, 3.5, 4.5, 5.5, 6.5, 7.5]:
+    # --- ESCANTEIOS ---
+    for l in [3.5, 4.5, 5.5]:
         p = probs['corners']['home'].get(f'Over {l}', 0)
-        if p > 0: markets.append({'mercado': f"{res['home']} Over {l} Escanteios", 'prob': p, 'odd': get_fair_odd(p), 'type': 'Escanteios'})
-    # Away
-    for l in [2.5, 3.5, 4.5, 5.5, 6.5]:
+        odd = get_market_price('home', 'corners', l, p)
+        if p > 0: markets.append({'mercado': f"{res['home']} Over {l} Escanteios", 'prob': p, 'odd': odd, 'type': 'Escanteios'})
+    
+    for l in [2.5, 3.5, 4.5]:
         p = probs['corners']['away'].get(f'Over {l}', 0)
-        if p > 0: markets.append({'mercado': f"{res['away']} Over {l} Escanteios", 'prob': p, 'odd': get_fair_odd(p), 'type': 'Escanteios'})
+        odd = get_market_price('away', 'corners', l, p)
+        if p > 0: markets.append({'mercado': f"{res['away']} Over {l} Escanteios", 'prob': p, 'odd': odd, 'type': 'Escanteios'})
         
-    # --- CARTÕES INDIVIDUAIS ---
-    for l in [0.5, 1.5, 2.5, 3.5]:
-        # Home
+    # --- CARTÕES ---
+    for l in [1.5, 2.5]:
         p1 = probs['cards']['home'].get(f'Over {l}', 0)
-        if p1 > 0: markets.append({'mercado': f"{res['home']} Over {l} Cartões", 'prob': p1, 'odd': get_fair_odd(p1), 'type': 'Cartões'})
-        # Away
-        p2 = probs['cards']['away'].get(f'Over {l}', 0)
-        if p2 > 0: markets.append({'mercado': f"{res['away']} Over {l} Cartões", 'prob': p2, 'odd': get_fair_odd(p2), 'type': 'Cartões'})
-
-    # --- TOTAIS DO JOGO (NOVO!) ---
-    # Escanteios Totais
-    for l in [7.5, 8.5, 9.5, 10.5, 11.5, 12.5]:
-        p = probs['corners']['total'].get(f'Over {l}', 0)
-        if p > 0: markets.append({'mercado': f"Total Jogo Over {l} Escanteios", 'prob': p, 'odd': get_fair_odd(p), 'type': 'TotalEscanteios'})
+        odd1 = get_market_price('home', 'cards', l, p1)
+        if p1 > 0: markets.append({'mercado': f"{res['home']} Over {l} Cartões", 'prob': p1, 'odd': odd1, 'type': 'Cartões'})
         
-    # Cartões Totais
-    for l in [2.5, 3.5, 4.5, 5.5, 6.5]:
+        p2 = probs['cards']['away'].get(f'Over {l}', 0)
+        odd2 = get_market_price('away', 'cards', l, p2)
+        if p2 > 0: markets.append({'mercado': f"{res['away']} Over {l} Cartões", 'prob': p2, 'odd': odd2, 'type': 'Cartões'})
+
+    # --- TOTAIS ---
+    for l in [7.5, 8.5, 9.5]:
+        p = probs['corners']['total'].get(f'Over {l}', 0)
+        odd = get_market_price('total', 'corners', l, p)
+        if p > 0: markets.append({'mercado': f"Total Jogo Over {l} Escanteios", 'prob': p, 'odd': odd, 'type': 'TotalEscanteios'})
+        
+    for l in [2.5, 3.5, 4.5]:
         p = probs['cards']['total'].get(f'Over {l}', 0)
-        if p > 0: markets.append({'mercado': f"Total Jogo Over {l} Cartões", 'prob': p, 'odd': get_fair_odd(p), 'type': 'TotalCartões'})
+        odd = get_market_price('total', 'cards', l, p)
+        if p > 0: markets.append({'mercado': f"Total Jogo Over {l} Cartões", 'prob': p, 'odd': odd, 'type': 'TotalCartões'})
         
     # --- DUPLA CHANCE ---
-    markets.append({'mercado': f"DC {res['home']} ou Empate", 'prob': probs['chance']['1X'], 'odd': get_fair_odd(probs['chance']['1X']), 'type': 'DC'})
-    markets.append({'mercado': f"DC {res['away']} ou Empate", 'prob': probs['chance']['X2'], 'odd': get_fair_odd(probs['chance']['X2']), 'type': 'DC'})
+    p1x = probs['chance']['1X']
+    odd1x = get_market_price('home', 'dc', 0, p1x) # 0 é dummy line
+    markets.append({'mercado': f"DC {res['home']} ou Empate", 'prob': p1x, 'odd': odd1x, 'type': 'DC'})
+    
+    px2 = probs['chance']['X2']
+    oddx2 = get_market_price('away', 'dc', 0, px2)
+    markets.append({'mercado': f"DC {res['away']} ou Empate", 'prob': px2, 'odd': oddx2, 'type': 'DC'})
 
     return markets
 
@@ -277,7 +315,7 @@ def get_available_markets_for_game(res: Dict, probs: Dict) -> List[Dict]:
 
 def generate_smart_ticket_v23(calendar: pd.DataFrame, stats: Dict, refs: Dict, all_dfs: Dict, date_str: str, 
                               target_leagues: List[str] = None, target_games: List[str] = None) -> Dict:
-    """Scanner V25 - DOUBLE LOCK (2 Seleções Por Jogo)"""
+    """Scanner V25 - DOUBLE LOCK + REAL ODDS"""
     
     df_day = calendar[calendar['DtObj'].dt.strftime('%d/%m/%Y') == date_str].copy()
     if target_leagues: df_day = df_day[df_day['Liga'].isin(target_leagues)]
@@ -303,16 +341,20 @@ def generate_smart_ticket_v23(calendar: pd.DataFrame, stats: Dict, refs: Dict, a
         for loc, name in [('home', res['home']), ('away', res['away'])]:
             for l in [3.5, 4.5]:
                 p = probs['corners'][loc].get(f'Over {l}', 0)
-                if p >= 65: candidates.append({'mercado': f"{name} Over {l} Escanteios", 'prob': p, 'odd': get_fair_odd(p), 'type': 'Escanteios'})
+                # Usa preço real
+                odd = get_market_price(loc, 'corners', l, p)
+                if p >= 65: candidates.append({'mercado': f"{name} Over {l} Escanteios", 'prob': p, 'odd': odd, 'type': 'Escanteios'})
         
         # 2. Cartões (Times)
         for loc, name in [('home', res['home']), ('away', res['away'])]:
             p = probs['cards'][loc].get('Over 1.5', 0)
-            if p >= 60: candidates.append({'mercado': f"{name} Over 1.5 Cartões", 'prob': p, 'odd': get_fair_odd(p), 'type': 'Cartões'})
+            odd = get_market_price(loc, 'cards', 1.5, p)
+            if p >= 60: candidates.append({'mercado': f"{name} Over 1.5 Cartões", 'prob': p, 'odd': odd, 'type': 'Cartões'})
         
         # 3. Totais
         p_card_tot = probs['cards']['total'].get('Over 3.5', 0)
-        if p_card_tot >= 65: candidates.append({'mercado': "Total Jogo Over 3.5 Cartões", 'prob': p_card_tot, 'odd': get_fair_odd(p_card_tot), 'type': 'TotalCartões'})
+        odd_card_tot = get_market_price('total', 'cards', 3.5, p_card_tot)
+        if p_card_tot >= 65: candidates.append({'mercado': "Total Jogo Over 3.5 Cartões", 'prob': p_card_tot, 'odd': odd_card_tot, 'type': 'TotalCartões'})
 
         candidates.sort(key=lambda x: x['prob'], reverse=True)
         selected = []
@@ -331,18 +373,15 @@ def generate_smart_ticket_v23(calendar: pd.DataFrame, stats: Dict, refs: Dict, a
                     types_used.add(cand['type'])
         
         for item in selected:
-            if curr_odd * item['odd'] <= 60.0:
+            # Trava mais alta pois odds reais podem ser menores
+            if curr_odd * item['odd'] <= 80.0:
                 ticket.append(item)
                 curr_odd *= item['odd']
 
     return {'ticket': ticket, 'total_odd': round(curr_odd, 2), 'num_selections': len(ticket)}
 
 def generate_hedges_for_user_ticket(ticket: List[Dict], stats: Dict, refs: Dict, all_dfs: Dict) -> Dict:
-    """
-    Hedge V25.1 - MIRROR + SAFETY
-    ✅ Espelho: Inverte o time que pressiona.
-    ✅ Segurança: DC + Totais Baixos (Over 7.5 Cantos / 2.5 Cartões).
-    """
+    """Hedge V25.1 - MIRROR + SAFETY + REAL ODDS"""
     
     games_map = {}
     for item in ticket:
@@ -371,48 +410,59 @@ def generate_hedges_for_user_ticket(ticket: List[Dict], stats: Dict, refs: Dict,
             principal_display.append({'jogo': it['jogo'], 'selecao': desc, 'odd': it['odd']})
             principal_desc_str += desc + " "
             
-        # ANÁLISE DO ESPELHO
-        has_home_corn = h in principal_desc_str and "Escanteios" in principal_desc_str
-        has_away_corn = a in principal_desc_str and "Escanteios" in principal_desc_str
-        
+        # PROBABILIDADES
         prob_corn_h_react = probs['corners']['home']['Over 4.5']
         prob_corn_a_react = probs['corners']['away']['Over 3.5']
         
-        # PROBS SAFETY (Agora existem!)
         prob_card_safe = probs['cards']['total']['Over 2.5']
         prob_corn_safe = probs['corners']['total']['Over 7.5']
         
+        # PREÇOS REAIS
+        odd_corn_h_react = get_market_price('home', 'corners', 4.5, prob_corn_h_react)
+        odd_corn_a_react = get_market_price('away', 'corners', 3.5, prob_corn_a_react)
+        odd_card_tot_35 = get_market_price('total', 'cards', 3.5, probs['cards']['total']['Over 3.5'])
+        
         # === HEDGE 1: ESPELHO ===
+        has_home_corn = h in principal_desc_str and "Escanteios" in principal_desc_str
+        has_away_corn = a in principal_desc_str and "Escanteios" in principal_desc_str
+        
         h1_sel = ""
         h1_odd = 1.0
         
         if has_home_corn:
             h1_sel = f"{a} Over 3.5 Escanteios + Total Over 3.5 Cartões"
-            h1_odd = round(get_fair_odd(prob_corn_a_react) * get_fair_odd(probs['cards']['total']['Over 3.5']) * 0.9, 2)
+            h1_odd = round(odd_corn_a_react * odd_card_tot_35 * 0.9, 2)
         elif has_away_corn:
             h1_sel = f"{h} Over 4.5 Escanteios + Total Over 3.5 Cartões"
-            h1_odd = round(get_fair_odd(prob_corn_h_react) * get_fair_odd(probs['cards']['total']['Over 3.5']) * 0.9, 2)
+            h1_odd = round(odd_corn_h_react * odd_card_tot_35 * 0.9, 2)
         else:
             if res['monte_carlo']['h'] > res['monte_carlo']['a']:
+                odd_dc = get_market_price('away', 'dc', 0, probs['chance']['X2'])
                 h1_sel = f"DC {a} ou Empate + Total Over 3.5 Cartões"
-                h1_odd = round(get_fair_odd(probs['chance']['X2']) * get_fair_odd(probs['cards']['total']['Over 3.5']) * 0.9, 2)
+                h1_odd = round(odd_dc * odd_card_tot_35 * 0.9, 2)
             else:
+                odd_dc = get_market_price('home', 'dc', 0, probs['chance']['1X'])
                 h1_sel = f"DC {h} ou Empate + Total Over 3.5 Cartões"
-                h1_odd = round(get_fair_odd(probs['chance']['1X']) * get_fair_odd(probs['cards']['total']['Over 3.5']) * 0.9, 2)
+                h1_odd = round(odd_dc * odd_card_tot_35 * 0.9, 2)
         
         hedge1.append({'jogo': game_name, 'selecao': h1_sel, 'odd': h1_odd})
         
         # === HEDGE 2: SEGURANÇA ===
         fav_home = res['monte_carlo']['h'] > res['monte_carlo']['a']
-        dc_sel = f"DC {h} ou Empate" if fav_home else f"DC {a} ou Empate"
-        dc_odd = get_fair_odd(probs['chance']['1X'] if fav_home else probs['chance']['X2'])
         
-        safe_card_odd = get_fair_odd(prob_card_safe)
+        if fav_home:
+            dc_sel = f"DC {h} ou Empate"
+            dc_odd = get_market_price('home', 'dc', 0, probs['chance']['1X'])
+        else:
+            dc_sel = f"DC {a} ou Empate"
+            dc_odd = get_market_price('away', 'dc', 0, probs['chance']['X2'])
+        
+        safe_card_odd = get_market_price('total', 'cards', 2.5, prob_card_safe)
         h2_sel = f"{dc_sel} + Total Over 2.5 Cartões"
         h2_odd = round(dc_odd * safe_card_odd * 0.95, 2)
         
         if h2_odd < 1.80:
-            safe_corn_odd = get_fair_odd(prob_corn_safe)
+            safe_corn_odd = get_market_price('total', 'corners', 7.5, prob_corn_safe)
             h2_sel += " + Over 7.5 Cantos"
             h2_odd = round(h2_odd * safe_corn_odd * 0.95, 2)
             
@@ -439,7 +489,7 @@ def main():
         calendar = load_calendar_safe()
         all_dfs = load_all_dataframes()
         
-    st.title("⚽ FutPrevisão V25.2 Stable")
+    st.title("⚽ FutPrevisão V25.4 Real Odds")
     tab1, tab2, tab3, tab4, tab5 = st.tabs(["📅 Calendário", "🔍 Simulação", "🎯 Scanner/Manual", "🛡️ Hedges", "📊 Radares"])
     
     with tab3:
@@ -469,40 +519,15 @@ def main():
                     res = calcular_jogo_v23(row['Time_Casa'], row['Time_Visitante'], stats, None, refs, all_dfs)
                     if 'error' not in res:
                         mkts = get_available_markets_for_game(res, get_detailed_probs(res))
-                       else:
-                # MODO MANUAL
-                games = sorted((df_day['Time_Casa'] + ' vs ' + df_day['Time_Visitante']).unique())
-                sel_game = st.selectbox("Jogo:", games)
-                
-                if sel_game:
-                    row = df_day[(df_day['Time_Casa'] + ' vs ' + df_day['Time_Visitante']) == sel_game].iloc[0]
-                    res = calcular_jogo_v23(row['Time_Casa'], row['Time_Visitante'], stats, None, refs, all_dfs)
-                    
-                    if 'error' not in res:
-                        # 1. Pega TODAS as probabilidades
-                        probs_manual = get_detailed_probs(res)
-                        
-                        # 2. Gera a lista expandida
-                        mkts = get_available_markets_for_game(res, probs_manual)
-                        
-                        # 3. MOSTRA TUDO (Removido filtro if m['prob']>50)
-                        # Ordena por nome para ficar fácil achar
                         opts = sorted([f"{m['mercado']} (@{m['odd']})" for m in mkts])
-                        
-                        sel_mkt_str = st.selectbox("Mercado:", opts)
-                        
+                        sel_mkt = st.selectbox("Mercado:", opts)
                         if st.button("➕ Adicionar"):
-                            # Recupera o objeto original
-                            obj = next(m for m in mkts if f"{m['mercado']} (@{m['odd']})" == sel_mkt_str)
-                            
+                            obj = next(m for m in mkts if f"{m['mercado']} (@{m['odd']})" == sel_mkt)
                             st.session_state.current_ticket.append({
-                                'type': 'manual', 
-                                'jogo': sel_game, 
-                                'mercado': obj['mercado'], 
-                                'odd': obj['odd'], 
-                                'prob': obj['prob']
+                                'type': 'manual', 'jogo': sel_game, 'mercado': obj['mercado'], 
+                                'odd': obj['odd'], 'prob': obj['prob']
                             })
-                            st.success("Adicionado!");
+                            st.success("Adicionado!")
 
             if st.session_state.current_ticket:
                 st.markdown("### 🎫 Bilhete Atual")
@@ -513,7 +538,7 @@ def main():
     with tab4:
         st.header("🛡️ Sistema de Proteção V25")
         if st.session_state.current_ticket:
-            if st.button("🛡️ CALCULAR HEDGES (Mirror + Safety)", type="primary"):
+            if st.button("🛡️ CALCULAR HEDGES (Real Odds)", type="primary"):
                 hedges = generate_hedges_for_user_ticket(st.session_state.current_ticket, stats, refs, all_dfs)
                 c1, c2, c3 = st.columns(3)
                 with c1:
