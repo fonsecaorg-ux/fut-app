@@ -714,14 +714,15 @@ def scan_day_for_radars(calendar: pd.DataFrame, stats: Dict, refs: Dict, all_dfs
 
 def generate_smart_ticket_v23(calendar: pd.DataFrame, stats: Dict, refs: Dict, all_dfs: Dict, date_str: str) -> Dict:
     """
-    Scanner V23.4 - Smart Ticket (Aggressive Fill)
-    Meta: Encher o bilhete com 6 seleções para bater Odd ~5.00
+    Scanner V23.5 - Smart Ticket (High Volume Fix)
+    ✅ Correção de Erro: Usa chave 'mercado' para compatibilidade com UI.
+    ✅ Ajuste: Filtro relaxado para 65% para encontrar mais oportunidades.
     """
     
     df_day = calendar[calendar['DtObj'].dt.strftime('%d/%m/%Y') == date_str]
     
-    anchors = []  # Tipo A: Segurança (Odd 1.20 - 1.45)
-    fusions = []  # Tipo B: Valor (Odd 1.50 - 2.10)
+    anchors = []  # Tipo A: Segurança
+    fusions = []  # Tipo B: Valor
     
     for _, row in df_day.iterrows():
         home, away = row['Time_Casa'], row['Time_Visitante']
@@ -732,39 +733,40 @@ def generate_smart_ticket_v23(calendar: pd.DataFrame, stats: Dict, refs: Dict, a
         if 'error' in res: continue
         probs = get_detailed_probs(res)
         
-        # 1. ÂNCORAS (Relaxado para > 75% para ter volume)
+        # 1. ÂNCORAS (Filtro relaxado para > 65%)
         for loc, name in [('home', res['home']), ('away', res['away'])]:
             # Cantos
             for l in [3.5, 4.5]:
                 p = probs['corners'][loc].get(f'Over {l}', 0)
-                if p >= 75: # Antes era 85
+                if p >= 65: # AJUSTADO PARA 65%
                     odd = get_fair_odd(p)
-                    if 1.20 <= odd <= 1.45:
+                    if 1.20 <= odd <= 1.50:
                         anchors.append({
                             'type': 'anchor', 'jogo': f"{res['home']} vs {res['away']}",
-                            'selection': f"{name} Over {l} Escanteios",
+                            'mercado': f"{name} Over {l} Escanteios", # CORRIGIDO: 'mercado' em vez de 'selection'
                             'prob': p, 'odd': odd, 'liga': liga, 'hora': hora
                         })
             # Cartões
             p_card = probs['cards'][loc].get('Over 1.5', 0)
-            if p_card >= 72: # Antes era 80
+            if p_card >= 65: # AJUSTADO PARA 65%
                 odd = get_fair_odd(p_card)
-                if 1.22 <= odd <= 1.50:
+                if 1.22 <= odd <= 1.55:
                     anchors.append({
                         'type': 'anchor', 'jogo': f"{res['home']} vs {res['away']}",
-                        'selection': f"{name} Over 1.5 Cartões",
+                        'mercado': f"{name} Over 1.5 Cartões", # CORRIGIDO
                         'prob': p_card, 'odd': odd, 'liga': liga, 'hora': hora
                     })
 
-        # 2. FUSÕES (Mantido critério de qualidade)
+        # 2. FUSÕES (Filtro relaxado para > 65% combinada)
         corn_prob = probs['corners']['home'].get('Over 3.5', 0)
-        card_prob = probs['cards']['total'].get('Over 1.5', 0) # Total é mais seguro
+        card_prob = probs['cards']['total'].get('Over 1.5', 0)
         
-        if corn_prob >= 70 and card_prob >= 70:
+        # Se Mandante é forte em canto E jogo tem tendência de cartão
+        if corn_prob >= 65 and card_prob >= 65:
             p_comb = (corn_prob/100 * card_prob/100 * 0.90) * 100
             odd_comb = get_fair_odd(p_comb)
             
-            if 1.50 <= odd_comb <= 2.20:
+            if 1.50 <= odd_comb <= 2.30:
                 fusions.append({
                     'type': 'fusion', 'jogo': f"{res['home']} vs {res['away']}",
                     'team': res['home'],
@@ -772,39 +774,37 @@ def generate_smart_ticket_v23(calendar: pd.DataFrame, stats: Dict, refs: Dict, a
                     'prob_combined': p_comb, 'odd': odd_comb, 'liga': liga, 'hora': hora
                 })
 
-    # MONTAGEM DO BILHETE (Priority Queue)
+    # MONTAGEM DO BILHETE (Preenchimento Agressivo)
     ticket = []
     curr_odd = 1.0
     used_games = set()
     
-    # Ordena por Probabilidade (Segurança primeiro)
+    # Ordena: As melhores oportunidades primeiro
     anchors.sort(key=lambda x: x['prob'], reverse=True)
     fusions.sort(key=lambda x: x['prob_combined'], reverse=True)
     
-    # ESTRATÉGIA DE PREENCHIMENTO (FILL 6 SLOTS)
-    
-    # Slot 1 & 2: As Melhores Âncoras (Base Sólida)
+    # 1. Pega as 2 Melhores Âncoras
     for a in anchors:
         if len(ticket) >= 2: break
         if a['jogo'] not in used_games:
             ticket.append(a); curr_odd *= a['odd']; used_games.add(a['jogo'])
             
-    # Slot 3 & 4: As Melhores Fusões (Alavancagem)
+    # 2. Pega as 2 Melhores Fusões
     for f in fusions:
         if len(ticket) >= 4: break
         if f['jogo'] not in used_games:
             ticket.append(f); curr_odd *= f['odd']; used_games.add(f['jogo'])
             
-    # Slot 5 & 6 (e extras): Completar até bater Odd 4.50+ ou encher 6 espaços
-    # Junta o que sobrou de tudo
+    # 3. Completa com o que tiver (Âncoras ou Fusões) até 6 seleções
     leftovers = [x for x in (anchors + fusions) if x['jogo'] not in used_games]
-    leftovers.sort(key=lambda x: x['prob'] if 'prob' in x else x['prob_combined'], reverse=True)
+    # Ordena o resto pela probabilidade para pegar os mais seguros
+    leftovers.sort(key=lambda x: x.get('prob', x.get('prob_combined', 0)), reverse=True)
     
     for item in leftovers:
-        if len(ticket) >= 6: break # Limite máximo de seleções
+        if len(ticket) >= 6: break
         
-        # Só adiciona se não estourar a odd máxima (segurança contra zebras)
-        if curr_odd * item['odd'] <= 7.0: 
+        # Trava de segurança de odd máxima (para não explodir o risco)
+        if curr_odd * item['odd'] <= 8.0: 
             ticket.append(item)
             curr_odd *= item['odd']
             used_games.add(item['jogo'])
