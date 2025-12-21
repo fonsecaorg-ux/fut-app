@@ -714,9 +714,10 @@ def scan_day_for_radars(calendar: pd.DataFrame, stats: Dict, refs: Dict, all_dfs
 
 def generate_smart_ticket_v23(calendar: pd.DataFrame, stats: Dict, refs: Dict, all_dfs: Dict, date_str: str) -> Dict:
     """
-    Scanner V23.5 - Smart Ticket (High Volume Fix)
-    ✅ Correção de Erro: Usa chave 'mercado' para compatibilidade com UI.
-    ✅ Ajuste: Filtro relaxado para 65% para encontrar mais oportunidades.
+    Scanner V23.6 - Smart Ticket (High Volume & Mix Fix)
+    ✅ Filtro: 65% (Mais agressivo para encher o bilhete)
+    ✅ Mix: Força busca por Escanteios E Cartões
+    ✅ Correção: Chave 'mercado' compatível com a tela
     """
     
     df_day = calendar[calendar['DtObj'].dt.strftime('%d/%m/%Y') == date_str]
@@ -733,84 +734,100 @@ def generate_smart_ticket_v23(calendar: pd.DataFrame, stats: Dict, refs: Dict, a
         if 'error' in res: continue
         probs = get_detailed_probs(res)
         
-        # 1. ÂNCORAS (Filtro relaxado para > 65%)
+        # 1. ÂNCORAS (Filtro 65% - Busca Escanteios E Cartões)
         for loc, name in [('home', res['home']), ('away', res['away'])]:
-            # Cantos
+            
+            # A) ESCANTEIOS (Over 3.5 e 4.5)
             for l in [3.5, 4.5]:
                 p = probs['corners'][loc].get(f'Over {l}', 0)
-                if p >= 65: # AJUSTADO PARA 65%
+                if p >= 65: # Filtro solicitado
                     odd = get_fair_odd(p)
-                    if 1.20 <= odd <= 1.50:
+                    # Aceita odds de segurança (1.20) até valor (1.50)
+                    if 1.20 <= odd <= 1.55:
                         anchors.append({
-                            'type': 'anchor', 'jogo': f"{res['home']} vs {res['away']}",
-                            'mercado': f"{name} Over {l} Escanteios", # CORRIGIDO: 'mercado' em vez de 'selection'
-                            'prob': p, 'odd': odd, 'liga': liga, 'hora': hora
+                            'type': 'anchor', 
+                            'jogo': f"{res['home']} vs {res['away']}",
+                            'mercado': f"{name} Over {l} Escanteios", # Chave corrigida
+                            'prob': p, 
+                            'odd': odd, 
+                            'liga': liga, 
+                            'hora': hora
                         })
-            # Cartões
+            
+            # B) CARTÕES (Over 1.5)
             p_card = probs['cards'][loc].get('Over 1.5', 0)
-            if p_card >= 65: # AJUSTADO PARA 65%
+            if p_card >= 65: # Filtro solicitado
                 odd = get_fair_odd(p_card)
-                if 1.22 <= odd <= 1.55:
+                if 1.20 <= odd <= 1.60:
                     anchors.append({
-                        'type': 'anchor', 'jogo': f"{res['home']} vs {res['away']}",
-                        'mercado': f"{name} Over 1.5 Cartões", # CORRIGIDO
-                        'prob': p_card, 'odd': odd, 'liga': liga, 'hora': hora
+                        'type': 'anchor', 
+                        'jogo': f"{res['home']} vs {res['away']}",
+                        'mercado': f"{name} Over 1.5 Cartões", # Chave corrigida
+                        'prob': p_card, 
+                        'odd': odd, 
+                        'liga': liga, 
+                        'hora': hora
                     })
 
-        # 2. FUSÕES (Filtro relaxado para > 65% combinada)
+        # 2. FUSÕES (Criar Aposta: Canto Time + Cartão Jogo)
         corn_prob = probs['corners']['home'].get('Over 3.5', 0)
         card_prob = probs['cards']['total'].get('Over 1.5', 0)
         
-        # Se Mandante é forte em canto E jogo tem tendência de cartão
+        # Se probabilidade combinada for boa
         if corn_prob >= 65 and card_prob >= 65:
             p_comb = (corn_prob/100 * card_prob/100 * 0.90) * 100
             odd_comb = get_fair_odd(p_comb)
             
             if 1.50 <= odd_comb <= 2.30:
                 fusions.append({
-                    'type': 'fusion', 'jogo': f"{res['home']} vs {res['away']}",
+                    'type': 'fusion', 
+                    'jogo': f"{res['home']} vs {res['away']}",
                     'team': res['home'],
                     'mercados': [f"{res['home']} Over 3.5 Escanteios", "Total Jogo Over 1.5 Cartões"],
-                    'prob_combined': p_comb, 'odd': odd_comb, 'liga': liga, 'hora': hora
+                    'prob_combined': p_comb, 
+                    'odd': odd_comb, 
+                    'liga': liga, 
+                    'hora': hora
                 })
 
-    # MONTAGEM DO BILHETE (Preenchimento Agressivo)
+    # MONTAGEM DO BILHETE (Prioridade: Encher 6 slots com qualidade)
     ticket = []
     curr_odd = 1.0
     used_games = set()
     
-    # Ordena: As melhores oportunidades primeiro
+    # Ordena por probabilidade (os mais garantidos primeiro)
     anchors.sort(key=lambda x: x['prob'], reverse=True)
     fusions.sort(key=lambda x: x['prob_combined'], reverse=True)
     
-    # 1. Pega as 2 Melhores Âncoras
-    for a in anchors:
-        if len(ticket) >= 2: break
-        if a['jogo'] not in used_games:
-            ticket.append(a); curr_odd *= a['odd']; used_games.add(a['jogo'])
-            
-    # 2. Pega as 2 Melhores Fusões
-    for f in fusions:
-        if len(ticket) >= 4: break
-        if f['jogo'] not in used_games:
-            ticket.append(f); curr_odd *= f['odd']; used_games.add(f['jogo'])
-            
-    # 3. Completa com o que tiver (Âncoras ou Fusões) até 6 seleções
-    leftovers = [x for x in (anchors + fusions) if x['jogo'] not in used_games]
-    # Ordena o resto pela probabilidade para pegar os mais seguros
-    leftovers.sort(key=lambda x: x.get('prob', x.get('prob_combined', 0)), reverse=True)
+    # Estratégia de Mix: Tenta pegar pelo menos 1 de cada tipo se possível
+    pool = []
     
-    for item in leftovers:
-        if len(ticket) >= 6: break
+    # Adiciona Top Âncoras (Escanteios ou Cartões)
+    for a in anchors: pool.append(a)
+    # Adiciona Top Fusões
+    for f in fusions: pool.append(f)
+    
+    # Reordena o pool geral pela probabilidade para pegar o "Filé Mignon" global
+    # (Assim garantimos que se tiver cartões muito bons, eles entram)
+    pool.sort(key=lambda x: x.get('prob', x.get('prob_combined', 0)), reverse=True)
+    
+    for item in pool:
+        if len(ticket) >= 6: break # Meta: 6 seleções
         
-        # Trava de segurança de odd máxima (para não explodir o risco)
-        if curr_odd * item['odd'] <= 8.0: 
-            ticket.append(item)
-            curr_odd *= item['odd']
-            used_games.add(item['jogo'])
+        if item['jogo'] not in used_games:
+            # Trava de segurança para a odd total não ficar absurda
+            if curr_odd * item['odd'] <= 8.5: 
+                ticket.append(item)
+                curr_odd *= item['odd']
+                used_games.add(item['jogo'])
             
-    return {'ticket': ticket, 'total_odd': round(curr_odd, 2), 'num_selections': len(ticket), 'all_anchors': len(anchors), 'all_fusions': len(fusions)
-           }
+    return {
+        'ticket': ticket, 
+        'total_odd': round(curr_odd, 2), 
+        'num_selections': len(ticket), 
+        'all_anchors': len(anchors), 
+        'all_fusions': len(fusions)
+    }
 
 def generate_3_tickets_system(calendar: pd.DataFrame, stats: Dict, refs: Dict, all_dfs: Dict, date_str: str, num_games: int = 3) -> Dict:
     """
