@@ -712,107 +712,150 @@ def scan_day_for_radars(calendar: pd.DataFrame, stats: Dict, refs: Dict, all_dfs
         'cards_total': radar_cards_total
     }
 
-def generate_smart_ticket_v23(calendar: pd.DataFrame, stats: Dict, refs: Dict, all_dfs: Dict, date_str: str, 
-                              target_leagues: List[str] = None, target_games: List[str] = None) -> Dict:
-    """
-    Scanner V23.7 - Smart Ticket (Com Filtros Manuais)
-    ✅ Filtro: 65% (Volume)
-    ✅ Mix: Escanteios + Cartões
-    ✅ Controle: Respeita as Ligas e Jogos escolhidos pelo usuário
-    """
-    
-    # 1. Filtra a Data
-    df_day = calendar[calendar['DtObj'].dt.strftime('%d/%m/%Y') == date_str].copy()
-    
-    # 2. Aplica Filtro de Ligas (se houver)
-    if target_leagues:
-        df_day = df_day[df_day['Liga'].isin(target_leagues)]
-        
-    # 3. Aplica Filtro de Jogos Específicos (se houver)
-    # Cria uma coluna temporária ID para facilitar
-    df_day['GameID'] = df_day['Time_Casa'] + ' vs ' + df_day['Time_Visitante']
-    
-    if target_games:
-        df_day = df_day[df_day['GameID'].isin(target_games)]
-    
-    anchors = []
-    fusions = []
-    
-    for _, row in df_day.iterrows():
-        home, away = row['Time_Casa'], row['Time_Visitante']
-        liga = row.get('Liga', 'N/A')
-        hora = row.get('Hora', 'N/A')
-        
-        res = calcular_jogo_v23(home, away, stats, None, refs, all_dfs)
-        if 'error' in res: continue
-        probs = get_detailed_probs(res)
-        
-        # 1. ÂNCORAS (65%)
-        for loc, name in [('home', res['home']), ('away', res['away'])]:
-            # Cantos
-            for l in [3.5, 4.5]:
-                p = probs['corners'][loc].get(f'Over {l}', 0)
-                if p >= 65:
-                    odd = get_fair_odd(p)
-                    if 1.20 <= odd <= 1.55:
-                        anchors.append({
-                            'type': 'anchor', 'jogo': f"{res['home']} vs {res['away']}",
-                            'mercado': f"{name} Over {l} Escanteios",
-                            'prob': p, 'odd': odd, 'liga': liga, 'hora': hora
-                        })
-            # Cartões
-            p_card = probs['cards'][loc].get('Over 1.5', 0)
-            if p_card >= 65:
-                odd = get_fair_odd(p_card)
-                if 1.20 <= odd <= 1.60:
-                    anchors.append({
-                        'type': 'anchor', 'jogo': f"{res['home']} vs {res['away']}",
-                        'mercado': f"{name} Over 1.5 Cartões",
-                        'prob': p_card, 'odd': odd, 'liga': liga, 'hora': hora
-                    })
 
-        # 2. FUSÕES
-        corn_prob = probs['corners']['home'].get('Over 3.5', 0)
-        card_prob = probs['cards']['total'].get('Over 1.5', 0)
+# TAB 3: CONSTRUTOR DE BILHETES (MANUAL + AUTOMÁTICO)
+    with tab3:
+        st.header("🎫 Construtor de Bilhetes")
+        st.caption("Escolha como quer montar seu Bilhete Principal. O Hedge (Aba 4) protegerá o resultado final.")
         
-        if corn_prob >= 65 and card_prob >= 65:
-            p_comb = (corn_prob/100 * card_prob/100 * 0.90) * 100
-            odd_comb = get_fair_odd(p_comb)
-            if 1.50 <= odd_comb <= 2.30:
-                fusions.append({
-                    'type': 'fusion', 'jogo': f"{res['home']} vs {res['away']}",
-                    'team': res['home'],
-                    'mercados': [f"{res['home']} Over 3.5 Escanteios", "Total Jogo Over 1.5 Cartões"],
-                    'prob_combined': p_comb, 'odd': odd_comb, 'liga': liga, 'hora': hora
-                })
-
-    # MONTAGEM
-    ticket = []
-    curr_odd = 1.0
-    used_games = set()
-    
-    anchors.sort(key=lambda x: x['prob'], reverse=True)
-    fusions.sort(key=lambda x: x['prob_combined'], reverse=True)
-    
-    pool = []
-    for a in anchors: pool.append(a)
-    for f in fusions: pool.append(f)
-    pool.sort(key=lambda x: x.get('prob', x.get('prob_combined', 0)), reverse=True)
-    
-    for item in pool:
-        if len(ticket) >= 6: break
-        if item['jogo'] not in used_games:
-            if curr_odd * item['odd'] <= 8.5: 
-                ticket.append(item)
-                curr_odd *= item['odd']
-                used_games.add(item['jogo'])
+        # Seletor de Modo
+        modo_construcao = st.radio(
+            "Como você quer montar o bilhete?",
+            ["🤖 Robô Scanner (Eu escolho a Liga/Jogo, ele decide a aposta)", 
+             "✍️ Manual (Eu escolho a aposta passo-a-passo)"],
+            horizontal=True
+        )
+        
+        st.markdown("---")
+        
+        if not calendar.empty:
+            dates = sorted(calendar['DtObj'].dt.strftime('%d/%m/%Y').unique())
+            sel_date = st.selectbox("Data dos Jogos:", dates, key="builder_date")
+            df_day = calendar[calendar['DtObj'].dt.strftime('%d/%m/%Y') == sel_date]
             
-    return {
-        'ticket': ticket, 'total_odd': round(curr_odd, 2), 
-        'num_selections': len(ticket), 'all_anchors': len(anchors), 
-        'all_fusions': len(fusions)
-    }
+            # ============================================================
+            # MODO 1: SCANNER ROBÔ (FILTRADO)
+            # ============================================================
+            if "Robô" in modo_construcao:
+                st.subheader("🤖 Scanner Inteligente")
+                st.info("Selecione as Ligas ou Jogos específicos e o Robô encontrará as melhores oportunidades (65%+).")
+                
+                c_filters1, c_filters2 = st.columns(2)
+                
+                # Filtro de Ligas
+                available_leagues = sorted(df_day['Liga'].unique())
+                with c_filters1:
+                    sel_leagues = st.multiselect("Filtrar Ligas:", available_leagues, default=available_leagues)
+                
+                # Filtro de Jogos (Dinâmico)
+                if sel_leagues:
+                    df_filtered = df_day[df_day['Liga'].isin(sel_leagues)]
+                else:
+                    df_filtered = df_day
+                    
+                available_games = sorted((df_filtered['Time_Casa'] + ' vs ' + df_filtered['Time_Visitante']).unique())
+                
+                with c_filters2:
+                    sel_games = st.multiselect("Filtrar Jogos Específicos (Opcional):", available_games)
+                
+                if st.button("🚀 ROBÔ: GERAR BILHETE AGORA", type="primary"):
+                    # Chama a função V23.7 que já tem os filtros
+                    res = generate_smart_ticket_v23(
+                        calendar, stats, refs, all_dfs, sel_date, 
+                        target_leagues=sel_leagues, target_games=sel_games
+                    )
+                    
+                    if res['ticket']:
+                        st.session_state.current_ticket = res['ticket'] # SALVA NA MEMÓRIA
+                        st.success(f"O Robô montou um bilhete com {len(res['ticket'])} seleções!")
+                        st.balloons()
+                    else:
+                        st.warning("O Robô não encontrou oportunidades seguras (>65%) nos jogos selecionados.")
 
+            # ============================================================
+            # MODO 2: MANUAL (VOCÊ MONTA)
+            # ============================================================
+            else:
+                st.subheader("✍️ Montagem Manual")
+                
+                # 1. Seleciona o Jogo
+                available_games_man = sorted((df_day['Time_Casa'] + ' vs ' + df_day['Time_Visitante']).unique())
+                selected_game_str = st.selectbox("1. Escolha a Partida:", available_games_man)
+                
+                if selected_game_str:
+                    # Calcula o jogo na hora
+                    row = df_day[(df_day['Time_Casa'] + ' vs ' + df_day['Time_Visitante']) == selected_game_str].iloc[0]
+                    res_man = calcular_jogo_v23(row['Time_Casa'], row['Time_Visitante'], stats, None, refs, all_dfs)
+                    
+                    if 'error' not in res_man:
+                        probs_man = get_detailed_probs(res_man)
+                        available_markets = get_available_markets_for_game(res_man, probs_man)
+                        
+                        # 2. Mostra opções de mercado
+                        st.write("2. Escolha o Mercado:")
+                        
+                        # Cria lista formatada para o selectbox
+                        market_options = [
+                            f"{m['mercado']} | Prob: {m['prob']:.0f}% | Odd: @{m['odd']}" 
+                            for m in available_markets if m['prob'] > 50
+                        ]
+                        
+                        selected_market_str = st.selectbox("Mercados Disponíveis (>50%):", market_options)
+                        
+                        if st.button("➕ Adicionar ao Bilhete"):
+                            # Recupera o objeto original baseado na string
+                            sel_obj = next(m for m in available_markets if f"{m['mercado']} | Prob: {m['prob']:.0f}% | Odd: @{m['odd']}" == selected_market_str)
+                            
+                            new_item = {
+                                'type': 'manual',
+                                'jogo': selected_game_str,
+                                'mercado': sel_obj['mercado'],
+                                'prob': sel_obj['prob'],
+                                'odd': sel_obj['odd'],
+                                'liga': row['Liga'],
+                                'hora': row['Hora']
+                            }
+                            
+                            # Adiciona à lista existente ou cria nova
+                            if 'current_ticket' not in st.session_state:
+                                st.session_state.current_ticket = []
+                            
+                            # Evita duplicatas
+                            if not any(x['mercado'] == new_item['mercado'] and x['jogo'] == new_item['jogo'] for x in st.session_state.current_ticket):
+                                st.session_state.current_ticket.append(new_item)
+                                st.success("Adicionado!")
+                            else:
+                                st.warning("Essa aposta já está no bilhete.")
+            
+            # ============================================================
+            # VISUALIZAÇÃO DO BILHETE (COMUM AOS DOIS MODOS)
+            # ============================================================
+            st.markdown("---")
+            st.subheader("🎫 Seu Bilhete Principal")
+            
+            if st.session_state.current_ticket:
+                # Botão para limpar
+                if st.button("🗑️ Limpar Bilhete"):
+                    st.session_state.current_ticket = []
+                    st.rerun()
+                
+                ticket = st.session_state.current_ticket
+                total_odd = np.prod([b['odd'] for b in ticket])
+                
+                st.metric("Odd Total Atual", f"@{total_odd:.2f}", delta=f"{len(ticket)} seleções")
+                
+                for i, item in enumerate(ticket, 1):
+                    desc = item.get('mercado', item.get('selection'))
+                    if item.get('type') == 'fusion': desc = " + ".join(item['mercados'])
+                    
+                    st.write(f"**{i}. {item['jogo']}**")
+                    st.caption(f"{desc} (@{item['odd']})")
+                    st.markdown("---")
+                
+                st.success("✅ Bilhete Pronto! Vá para a aba 'Sistema Hedges' para gerar a proteção.")
+            else:
+                st.info("Seu bilhete está vazio. Use o Robô ou adicione manualmente acima.")
+                
 def generate_3_tickets_system(calendar: pd.DataFrame, stats: Dict, refs: Dict, all_dfs: Dict, date_str: str, num_games: int = 3) -> Dict:
     """
     Sistema de 3 Bilhetes: Principal + Hedge 1 + Hedge 2
@@ -1610,6 +1653,30 @@ def main():
                 template="plotly_dark" if st.session_state.theme == 'dark' else "plotly_white"
             )
             st.plotly_chart(fig, use_container_width=True)
+
+def get_available_markets_for_game(res: Dict, probs: Dict) -> List[Dict]:
+    """Retorna lista de mercados disponíveis para seleção manual"""
+    markets = []
+    
+    # Cantos Casa
+    for l in [3.5, 4.5, 5.5]:
+        p = probs['corners']['home'].get(f'Over {l}', 0)
+        markets.append({'mercado': f"{res['home']} Over {l} Escanteios", 'prob': p, 'odd': get_fair_odd(p), 'type': 'Escanteios'})
+        
+    # Cantos Fora
+    for l in [2.5, 3.5, 4.5]:
+        p = probs['corners']['away'].get(f'Over {l}', 0)
+        markets.append({'mercado': f"{res['away']} Over {l} Escanteios", 'prob': p, 'odd': get_fair_odd(p), 'type': 'Escanteios'})
+        
+    # Cartões
+    for l in [1.5, 2.5]:
+        p1 = probs['cards']['home'].get(f'Over {l}', 0)
+        markets.append({'mercado': f"{res['home']} Over {l} Cartões", 'prob': p1, 'odd': get_fair_odd(p1), 'type': 'Cartões'})
+        
+        p2 = probs['cards']['away'].get(f'Over {l}', 0)
+        markets.append({'mercado': f"{res['away']} Over {l} Cartões", 'prob': p2, 'odd': get_fair_odd(p2), 'type': 'Cartões'})
+        
+    return markets
 
 if __name__ == "__main__":
     main()
