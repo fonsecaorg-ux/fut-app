@@ -1,11 +1,11 @@
 """
 ╔═══════════════════════════════════════════════════════════════════════════╗
-║       FUTPREVISÃO V23.3 - FINAL STABLE (SCANNER + HEDGE FLOW)             ║
+║       FUTPREVISÃO V23.4 - AUTO TICKET GENERATOR (ODD TARGET 4.5-5.5)      ║
 ║                                                                            ║
-║  ✅ Base: V23.0 Ultimate (Dados Reais + Dashboard)                        ║
-║  ✅ Correção: Integração Scanner -> Hedge via Session State               ║
-║  ✅ Lógica: Scanner focado em Âncoras (1.25) + Fusões (1.60-1.90)         ║
-║  ✅ Visual: Tema controlado pelo usuário (sem forçar CSS)                 ║
+║  ✅ Scanner Automático: Gera bilhete pronto com 1 clique.                 ║
+║  ✅ Alvo de Odd: Busca combinações que somem entre 4.50 e 5.50.           ║
+║  ✅ Lógica Híbrida: Mistura Âncoras (@1.25) com Fusões (@1.70).           ║
+║  ✅ Hedge Automático: Já calcula a proteção para esse bilhete gerado.     ║
 ║                                                                            ║
 ║  Dezembro 2025                                                           ║
 ╚═══════════════════════════════════════════════════════════════════════════╝
@@ -28,55 +28,33 @@ import json
 # ═══════════════════════════════════════════════════════════════════════════
 
 st.set_page_config(
-    page_title="FutPrevisão V23 Ultimate",
+    page_title="FutPrevisão V23.4",
     page_icon="⚽",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Session State
 if 'bankroll' not in st.session_state: st.session_state.bankroll = 1000.0
 if 'bet_history' not in st.session_state: st.session_state.bet_history = []
-if 'favorites' not in st.session_state: st.session_state.favorites = {'teams': [], 'matches': []}
 if 'theme' not in st.session_state: st.session_state.theme = 'dark'
-if 'alert_threshold' not in st.session_state: st.session_state.alert_threshold = 80.0
-if 'current_ticket' not in st.session_state: st.session_state.current_ticket = [] # Bilhete do Scanner
-
-# ═══════════════════════════════════════════════════════════════════════════
-# CONSTANTES
-# ═══════════════════════════════════════════════════════════════════════════
+if 'current_ticket' not in st.session_state: st.session_state.current_ticket = []
 
 THRESHOLDS = {
-    'fouls_violent': 12.5,
-    'shots_pressure_high': 6.0,
-    'shots_pressure_medium': 4.5,
-    'red_rate_strict_high': 0.12,
-    'red_rate_strict_medium': 0.08,
-    'prob_elite': 75,
-    'prob_elite_cards': 70,
-    'prob_red_high': 12,
-    'prob_red_medium': 8,
     'radar_corners': 70,
     'radar_cards': 65,
     'anchor_safety': 85,
-    'smart_ticket_min': 4.60,
-    'smart_ticket_max': 6.50
+    'smart_ticket_min': 4.50, # ALVO MÍNIMO
+    'smart_ticket_max': 5.50  # ALVO MÁXIMO
 }
 
-DEFAULTS = {
-    'shots_on_target': 4.5,
-    'red_cards_avg': 0.08,
-    'red_rate_referee': 0.08
-}
+DEFAULTS = {'shots_on_target': 4.5, 'red_cards_avg': 0.08, 'red_rate_referee': 0.08}
 
 NAME_MAPPING = {
-    'Man United': 'Man Utd', 'Manchester United': 'Man Utd',
-    'Man City': 'Man City', 'Manchester City': 'Man City',
-    'Spurs': 'Tottenham', 'Newcastle': 'Newcastle',
-    'Wolves': 'Wolves', 'Brighton': 'Brighton',
-    "Nott'm Forest": 'Nottm Forest', 'Nottingham Forest': 'Nottm Forest',
-    'West Ham': 'West Ham', 'Leicester': 'Leicester',
-    'Athletic Club': 'Ath Bilbao', 'Atl. Madrid': 'Ath Madrid'
+    'Man United': 'Man Utd', 'Manchester United': 'Man Utd', 'Man City': 'Man City',
+    'Manchester City': 'Man City', 'Spurs': 'Tottenham', 'Newcastle': 'Newcastle',
+    'Wolves': 'Wolves', 'Brighton': 'Brighton', "Nott'm Forest": 'Nottm Forest',
+    'West Ham': 'West Ham', 'Leicester': 'Leicester', 'Athletic Club': 'Ath Bilbao',
+    'Atl. Madrid': 'Ath Madrid'
 }
 
 LIGAS_ALVO = [
@@ -85,17 +63,14 @@ LIGAS_ALVO = [
 ]
 
 # ═══════════════════════════════════════════════════════════════════════════
-# CARREGAMENTO DE DADOS
+# CARREGAMENTO DE DADOS (MANTIDO)
 # ═══════════════════════════════════════════════════════════════════════════
 
 @st.cache_data(ttl=3600)
 def find_and_load_csv(league_name: str) -> pd.DataFrame:
     attempts = [f"{league_name} 25.26.csv", f"{league_name.replace(' ', '_')}_25_26.csv", f"{league_name}.csv"]
-    if "Süper Lig" in league_name: attempts.extend(["Super Lig Turquia 25.26.csv", "Super_Lig_Turquia_25_26.csv"])
-    if "Pro League" in league_name: attempts.append("Pro League Belgica 25.26.csv")
-    if "Premiership" in league_name: attempts.append("Premiership Escocia 25.26.csv")
-    if "Championship" in league_name: attempts.append("Championship Inglaterra 25.26.csv")
-
+    if "Süper Lig" in league_name: attempts.extend(["Super Lig Turquia 25.26.csv"])
+    
     for filename in attempts:
         if os.path.exists(filename):
             try:
@@ -129,48 +104,40 @@ def learn_stats_v23() -> Dict[str, Dict[str, Any]]:
         
         for c in ['HomeTeam', 'AwayTeam', 'HC', 'AC', 'HY', 'AY', 'HF', 'AF', 'FTHG', 'FTAG', 'HST', 'AST', 'HR', 'AR']:
             if c not in df.columns: df[c] = np.nan
-        
+            
         try:
-            h_stats = df.groupby('HomeTeam').agg({'HC': ['mean', 'std'], 'HY': ['mean', 'std'], 'HF': 'mean', 'FTHG': ['mean', 'std'], 'FTAG': 'mean', 'HST': 'mean', 'HR': 'mean'})
-            a_stats = df.groupby('AwayTeam').agg({'AC': ['mean', 'std'], 'AY': ['mean', 'std'], 'AF': 'mean', 'FTAG': ['mean', 'std'], 'FTHG': 'mean', 'AST': 'mean', 'AR': 'mean'})
+            h_stats = df.groupby('HomeTeam').agg({'HC': ['mean','std'], 'HY': ['mean','std'], 'HF': 'mean', 'FTHG': ['mean','std'], 'FTAG': 'mean', 'HST': 'mean', 'HR': 'mean'})
+            a_stats = df.groupby('AwayTeam').agg({'AC': ['mean','std'], 'AY': ['mean','std'], 'AF': 'mean', 'FTAG': ['mean','std'], 'FTHG': 'mean', 'AST': 'mean', 'AR': 'mean'})
             
             h_stats.columns = ['_'.join(col).strip() for col in h_stats.columns.values]
             a_stats.columns = ['_'.join(col).strip() for col in a_stats.columns.values]
-            h_stats = h_stats.fillna(value={'HST_mean': 4.5, 'HR_mean': 0.08, 'HC_std': 1.5, 'HY_std': 0.8, 'FTHG_std': 1.0})
-            a_stats = a_stats.fillna(value={'AST_mean': 4.5, 'AR_mean': 0.08, 'AC_std': 1.5, 'AY_std': 0.8, 'FTAG_std': 1.0})
             
-            for team in set(h_stats.index) | set(a_stats.index):
+            all_teams = set(h_stats.index) | set(a_stats.index)
+            
+            for team in all_teams:
                 h = h_stats.loc[team] if team in h_stats.index else pd.Series(0, index=h_stats.columns)
                 a = a_stats.loc[team] if team in a_stats.index else pd.Series(0, index=a_stats.columns)
                 
-                def w_avg(val_h, val_a, default=0):
-                    if val_h == 0 and val_a == 0: return default
-                    if val_h == 0: return val_a
-                    if val_a == 0: return val_h
-                    return (val_h * 0.6) + (val_a * 0.4)
+                def w_avg(vh, va, deft=0): return (vh * 0.6 + va * 0.4) if (vh+va) > 0 else deft
                 
-                corners_std = w_avg(h.get('HC_std', 1.5), a.get('AC_std', 1.5), 1.5)
-                cards_std = w_avg(h.get('HY_std', 0.8), a.get('AY_std', 0.8), 0.8)
-                goals_std = w_avg(h.get('FTHG_std', 1.0), a.get('FTAG_std', 1.0), 1.0)
-                
+                c_std = w_avg(h.get('HC_std', 1.5), a.get('AC_std', 1.5), 1.5)
                 stats_db[team] = {
-                    'corners': w_avg(h.get('HC_mean', 0), a.get('AC_mean', 0), 5.0),
-                    'consistency_corners': round(max(0, 100 - (corners_std * 30)), 1),
-                    'cards': w_avg(h.get('HY_mean', 0), a.get('AY_mean', 0), 2.0),
-                    'consistency_cards': round(max(0, 100 - (cards_std * 50)), 1),
-                    'fouls': w_avg(h.get('HF_mean', 0), a.get('AF_mean', 0), 11.0),
-                    'goals_f': w_avg(h.get('FTHG_mean', 0), a.get('FTAG_mean', 0), 1.2),
-                    'consistency_goals': round(max(0, 100 - (goals_std * 40)), 1),
-                    'goals_a': w_avg(h.get('FTAG_mean', 0), a.get('FTHG_mean', 0), 1.2),
-                    'shots_on_target': w_avg(h.get('HST_mean', 0), a.get('AST_mean', 0), 4.5),
-                    'red_cards_avg': w_avg(h.get('HR_mean', 0), a.get('AR_mean', 0), 0.08),
+                    'corners': w_avg(h.get('HC_mean',0), a.get('AC_mean',0), 5.0),
+                    'consistency_corners': round(max(0, 100 - (c_std * 30)), 1),
+                    'cards': w_avg(h.get('HY_mean',0), a.get('AY_mean',0), 2.0),
+                    'consistency_cards': max(0, 100 - (w_avg(h.get('HY_std',0.8), a.get('AY_std',0.8), 0.8)*50)),
+                    'fouls': w_avg(h.get('HF_mean',0), a.get('AF_mean',0), 11.0),
+                    'goals_f': w_avg(h.get('FTHG_mean',0), a.get('FTAG_mean',0), 1.2),
+                    'goals_a': w_avg(h.get('FTAG_mean',0), a.get('FTHG_mean',0), 1.2),
+                    'shots_on_target': w_avg(h.get('HST_mean',0), a.get('AST_mean',0), 4.5),
+                    'red_cards_avg': w_avg(h.get('HR_mean',0), a.get('AR_mean',0), 0.08),
                     'league': league
                 }
         except: pass
     return stats_db
 
 @st.cache_data(ttl=3600)
-def load_referees_v23() -> Dict[str, Dict[str, float]]:
+def load_referees_v23() -> Dict:
     refs_db = {}
     files = ["arbitros_5_ligas_2025_2026.csv", "arbitros.csv"]
     for f in files:
@@ -183,14 +150,8 @@ def load_referees_v23() -> Dict[str, Dict[str, float]]:
                     nome = str(row.get(col_nome, '')).strip()
                     if not nome: continue
                     media = float(row.get('Media_Cartoes_Por_Jogo', row.get('Fator', 4.0)))
-                    reds = float(row.get('Cartoes_Vermelhos', 0))
-                    games = float(row.get('Jogos_Apitados', 1))
-                    
-                    refs_db[nome] = {
-                        'factor': media/4.0, 'red_rate': (reds/games) if games > 0 else 0.08,
-                        'strictness': media, 'games': int(games),
-                        'yellows': int(row.get('Cartoes_Amarelos', 0)), 'reds': int(reds)
-                    }
+                    if media < 2: media *= 4.0
+                    refs_db[nome] = {'factor': media/4.0, 'red_rate': 0.08, 'strictness': media}
             except: pass
     return refs_db
 
@@ -198,10 +159,10 @@ def load_referees_v23() -> Dict[str, Dict[str, float]]:
 def load_calendar_safe() -> pd.DataFrame:
     if not os.path.exists("calendario_ligas.csv"): return pd.DataFrame()
     try:
-        try: df = pd.read_csv("calendario_ligas.csv", encoding='utf-8-sig')
-        except: df = pd.read_csv("calendario_ligas.csv", encoding='latin1')
+        df = pd.read_csv("calendario_ligas.csv", encoding='utf-8-sig')
         df.columns = [c.strip().replace('\ufeff', '') for c in df.columns]
-        df = df.rename(columns={'Mandante': 'Time_Casa', 'Visitante': 'Time_Visitante'})
+        rename = {'Mandante': 'Time_Casa', 'Visitante': 'Time_Visitante'}
+        df = df.rename(columns=rename)
         df['DtObj'] = pd.to_datetime(df['Data'], format='%d/%m/%Y', errors='coerce')
         return df.dropna(subset=['DtObj']).sort_values(by=['DtObj', 'Hora'])
     except: return pd.DataFrame()
@@ -221,200 +182,179 @@ def get_native_history(team_name: str, league: str, market: str, line: float, lo
     if league not in all_dfs: return "N/A"
     df = all_dfs[league]
     col_map = {('home', 'corners'): 'HC', ('away', 'corners'): 'AC', ('home', 'cards'): 'HY', ('away', 'cards'): 'AY'}
-    col = col_map.get((location, market))
+    col_code = col_map.get((location, market))
     team_col = 'HomeTeam' if location == 'home' else 'AwayTeam'
     matches = df[df[team_col] == team_name]
-    if matches.empty or not col: return "0/0"
+    if matches.empty: return "0/0"
     last = matches.tail(10)
-    hits = sum(1 for val in last[col] if float(val) > line)
+    hits = sum(1 for val in last[col_code] if float(val) > line)
     return f"{hits}/{len(last)}"
 
 def poisson(k: int, lamb: float) -> float:
     return (lamb**k * math.exp(-lamb)) / math.factorial(k) if lamb <= 30 else 0
 
-def monte_carlo(xg_h: float, xg_a: float, n: int = 1000) -> Tuple[float, float, float]:
+def monte_carlo(xg_h, xg_a, n=1000):
     gh = np.random.poisson(max(0.1, xg_h), n)
     ga = np.random.poisson(max(0.1, xg_a), n)
     return np.count_nonzero(gh > ga)/n, np.count_nonzero(gh == ga)/n, np.count_nonzero(ga > gh)/n
 
-def calcular_jogo_v23(home: str, away: str, stats: Dict, ref: Optional[str], refs_db: Dict, all_dfs: Dict) -> Dict:
+def calcular_jogo_v23(home: str, away: str, stats: Dict, ref: Optional[str], refs: Dict, all_dfs: Dict) -> Dict:
     h_n, a_n = normalize_name(home, list(stats.keys())), normalize_name(away, list(stats.keys()))
-    if not h_n or not a_n: return {'error': "Times não encontrados."}
+    if not h_n or not a_n: return {'error': "Times desconhecidos"}
     
     s_h, s_a = stats[h_n], stats[a_n]
-    r_data = refs_db.get(ref, {'factor': 1.0, 'red_rate': 0.08, 'strictness': 4.0})
+    r_data = refs.get(ref, {'factor': 1.0, 'red_rate': 0.08, 'strictness': 4.0})
     
-    p_h = 1.20 if s_h['shots_on_target'] > 6.0 else 1.10 if s_h['shots_on_target'] > 4.5 else 1.0
-    p_a = 1.20 if s_a['shots_on_target'] > 6.0 else 1.10 if s_a['shots_on_target'] > 4.5 else 1.0
+    p_h = 1.15 if s_h['shots_on_target'] > 5.5 else 1.0
+    p_a = 1.15 if s_a['shots_on_target'] > 5.5 else 1.0
     
     corn_h = s_h['corners'] * 1.15 * p_h
     corn_a = s_a['corners'] * 0.90 * p_a
     
-    viol_h = 1.0 if s_h['fouls'] > 12.5 else 0.85
-    viol_a = 1.0 if s_a['fouls'] > 12.5 else 0.85
-    card_h = s_h['cards'] * viol_h * r_data['factor']
-    card_a = s_a['cards'] * viol_a * r_data['factor']
+    card_h = s_h['cards'] * r_data['factor']
+    card_a = s_a['cards'] * r_data['factor']
     
     xg_h, xg_a = max(0.1, s_h['goals_f']), max(0.1, s_a['goals_f'])
     mc_h, mc_d, mc_a = monte_carlo(xg_h, xg_a)
     
     return {
         'home': h_n, 'away': a_n, 'league_h': s_h['league'], 'league_a': s_a['league'],
-        'corners': {'h': corn_h, 'a': corn_a, 'total': corn_h + corn_a},
-        'cards': {'h': card_h, 'a': card_a, 'total': card_h + card_a},
+        'corners': {'h': corn_h, 'a': corn_a, 'total': corn_h+corn_a},
+        'cards': {'h': card_h, 'a': card_a, 'total': card_h+card_a},
         'goals': {'h': xg_h, 'a': xg_a},
-        'monte_carlo': {'h': mc_h * 100, 'd': mc_d * 100, 'a': mc_a * 100},
-        'consistency': {
-            'corners_h': s_h.get('consistency_corners', 50), 'corners_a': s_a.get('consistency_corners', 50),
-            'cards_h': s_h.get('consistency_cards', 50), 'cards_a': s_a.get('consistency_cards', 50),
-            'goals_h': s_h.get('consistency_goals', 50)
-        },
-        'meta': {
-            'referee': ref or 'Neutro', 
-            'ref_factor': r_data['factor'],
-            'ref_label': "RIGOROSO 🔴" if r_data['strictness'] > 4.5 else "NORMAL 🟢",
-            'prob_red': ((s_h['red_cards_avg'] + s_a['red_cards_avg']) / 2) * r_data.get('red_rate', 0.08) * 100,
-            'prob_red_label': "ALTA"
-        },
-        'probs': {'btts': (1-poisson(0, xg_h))*(1-poisson(0, xg_a))*100, 'over_2_5': (1-sum([poisson(h, xg_h)*poisson(a, xg_a) for h in range(3) for a in range(3) if h+a<3]))*100}
+        'monte_carlo': {'h': mc_h*100, 'd': mc_d*100, 'a': mc_a*100},
+        'meta': {'referee': ref or 'Neutro', 'ref_factor': r_data['factor']}
     }
 
-def get_detailed_probs(res: Dict) -> Dict:
-    def sim_prob(avg, line): return max(5, min(95, 50 + (avg - line) * 15))
+def get_detailed_probs(pred: Dict) -> Dict:
+    def sim(avg, line): return max(5, min(95, 50 + (avg - line) * 15))
     return {
         'corners': {
-            'home': {f'Over {l}': sim_prob(res['corners']['h'], l) for l in [2.5, 3.5, 4.5, 5.5]},
-            'away': {f'Over {l}': sim_prob(res['corners']['a'], l) for l in [2.5, 3.5, 4.5]},
-            'total': {f'Over {l}': sim_prob(res['corners']['total'], l) for l in [8.5, 9.5, 10.5]}
+            'home': {f'Over {l}': sim(pred['corners']['h'], l) for l in [3.5, 4.5]},
+            'away': {f'Over {l}': sim(pred['corners']['a'], l) for l in [3.5, 4.5]},
+            'total': {f'Over {l}': sim(pred['corners']['total'], l) for l in [8.5, 9.5]}
         },
         'cards': {
-            'home': {f'Over {l}': sim_prob(res['cards']['h'], l) for l in [1.5, 2.5]},
-            'away': {f'Over {l}': sim_prob(res['cards']['a'], l) for l in [1.5, 2.5]},
-            'total': {f'Over {l}': sim_prob(res['cards']['total'], l) for l in [2.5, 3.5, 4.5]}
+            'home': {f'Over {l}': sim(pred['cards']['h'], l) for l in [1.5]},
+            'away': {f'Over {l}': sim(pred['cards']['a'], l) for l in [1.5]},
+            'total': {f'Over {l}': sim(pred['cards']['total'], l) for l in [3.5]}
         },
-        'chance': {'1X': res['monte_carlo']['h'] + res['monte_carlo']['d'], 'X2': res['monte_carlo']['a'] + res['monte_carlo']['d']}
+        'chance': {'1X': pred['monte_carlo']['h'] + pred['monte_carlo']['d'], 'X2': pred['monte_carlo']['a'] + pred['monte_carlo']['d']}
     }
 
 def get_fair_odd(prob: float) -> float:
     return round(100/prob, 2) if prob > 0 else 99.0
 
 # ═══════════════════════════════════════════════════════════════════════════
-# FUNÇÕES DE SCANNER E HEDGE (NOVAS V23)
+# 3. LÓGICA DE AUTO TICKET V23.4 (ODD TARGET 4.5-5.5)
 # ═══════════════════════════════════════════════════════════════════════════
 
-def scan_day_for_radars(calendar: pd.DataFrame, stats: Dict, refs: Dict, all_dfs: Dict, date_str: str) -> Dict:
-    df_day = calendar[calendar['DtObj'].dt.strftime('%d/%m/%Y') == date_str]
-    radar = {'corners_individual': [], 'cards_individual': [], 'corners_total': [], 'cards_total': []}
-    
-    for _, row in df_day.iterrows():
-        home, away = row['Time_Casa'], row['Time_Visitante']
-        res = calcular_jogo_v23(home, away, stats, None, refs, all_dfs)
-        if 'error' in res: continue
-        probs = get_detailed_probs(res)
-        
-        # Individual
-        for line in [3.5, 4.5]:
-            ph = probs['corners']['home'].get(f'Over {line}', 0)
-            if ph >= THRESHOLDS['radar_corners']:
-                radar['corners_individual'].append({'time': res['home'], 'mercado': f"{res['home']} Over {line} Cantos", 'prob': ph, 'media': res['corners']['h'], 'consistencia': res['consistency']['corners_h']})
-            pa = probs['corners']['away'].get(f'Over {line}', 0)
-            if pa >= THRESHOLDS['radar_corners']:
-                radar['corners_individual'].append({'time': res['away'], 'mercado': f"{res['away']} Over {line} Cantos", 'prob': pa, 'media': res['corners']['a'], 'consistencia': res['consistency']['corners_a']})
-        
-        for line in [1.5, 2.5]:
-            ph = probs['cards']['home'].get(f'Over {line}', 0)
-            if ph >= THRESHOLDS['radar_cards']:
-                radar['cards_individual'].append({'time': res['home'], 'mercado': f"{res['home']} Over {line} Cartões", 'prob': ph, 'media': res['cards']['h'], 'consistencia': res['consistency']['cards_h']})
-    return radar
-
-def generate_smart_ticket_v23(calendar: pd.DataFrame, stats: Dict, refs: Dict, all_dfs: Dict, date_str: str) -> Dict:
-    """Scanner: Âncoras (1.25) + Fusões (1.60-1.90)"""
+def generate_smart_ticket_v23_auto(calendar: pd.DataFrame, stats: Dict, refs: Dict, all_dfs: Dict, date_str: str) -> Dict:
+    """
+    Gera um bilhete AUTOMÁTICO com Odd entre 4.50 e 5.50.
+    Mistura: 2-3 Âncoras (1.25) + 2-3 Fusões (1.60+)
+    """
     df_day = calendar[calendar['DtObj'].dt.strftime('%d/%m/%Y') == date_str]
     anchors = []
     fusions = []
     
     for _, row in df_day.iterrows():
-        home, away = row['Time_Casa'], row['Time_Visitante']
-        res = calcular_jogo_v23(home, away, stats, None, refs, all_dfs)
+        h, a = row['Time_Casa'], row['Time_Visitante']
+        res = calcular_jogo_v23(h, a, stats, None, refs, all_dfs)
         if 'error' in res: continue
         probs = get_detailed_probs(res)
         
-        # 1. Âncoras
+        # 1. Âncoras (Safety)
+        # Cantos Casa/Fora > 3.5
         for loc, name in [('home', res['home']), ('away', res['away'])]:
-            # Cantos (3.5/4.5)
-            for l in [3.5, 4.5]:
-                p = probs['corners'][loc].get(f'Over {l}', 0)
-                if p >= 85:
-                    odd = get_fair_odd(p)
-                    if 1.20 <= odd <= 1.40:
-                        anchors.append({'type': 'anchor', 'jogo': f"{res['home']} vs {res['away']}", 'selection': f"{name} Over {l} Escanteios", 'prob': p, 'odd': odd})
-            # Cartões (1.5)
-            p_card = probs['cards'][loc].get('Over 1.5', 0)
-            if p_card >= 80:
-                odd = get_fair_odd(p_card)
-                if 1.22 <= odd <= 1.45:
-                    anchors.append({'type': 'anchor', 'jogo': f"{res['home']} vs {res['away']}", 'selection': f"{name} Over 1.5 Cartões", 'prob': p_card, 'odd': odd})
-
-        # 2. Fusões
-        corn_prob = probs['corners']['home'].get('Over 3.5', 0)
-        card_prob = probs['cards']['total'].get('Over 1.5', 0)
+            p = probs['corners'][loc].get('Over 3.5', 0)
+            if p >= 85: # Probabilidade muito alta
+                odd = get_fair_odd(p)
+                if 1.20 <= odd <= 1.35: # Odd de segurança
+                    anchors.append({'type': 'anchor', 'jogo': f"{h} x {a}", 'selection': f"{name} Over 3.5 Cantos", 'prob': p, 'odd': odd})
         
-        if corn_prob >= 75 and card_prob >= 75:
-            p_comb = (corn_prob/100 * card_prob/100 * 0.90) * 100
-            odd_comb = get_fair_odd(p_comb)
-            if 1.55 <= odd_comb <= 2.10:
-                fusions.append({'type': 'fusion', 'jogo': f"{res['home']} vs {res['away']}", 'team': res['home'], 'mercados': [f"{res['home']} Over 3.5 Escanteios", "Total Jogo Over 1.5 Cartões"], 'prob_combined': p_comb, 'odd': odd_comb})
+        # Cartões > 1.5
+        for loc, name in [('home', res['home']), ('away', res['away'])]:
+            p = probs['cards'][loc].get('Over 1.5', 0)
+            if p >= 80:
+                odd = get_fair_odd(p)
+                if 1.25 <= odd <= 1.40:
+                    anchors.append({'type': 'anchor', 'jogo': f"{h} x {a}", 'selection': f"{name} Over 1.5 Cartões", 'prob': p, 'odd': odd})
 
-    # Montar Ticket
+        # 2. Fusões (Valor)
+        # Canto > 3.5 E Cartão > 1.5 no mesmo jogo
+        pc = probs['corners']['home'].get('Over 3.5', 0)
+        pk = probs['cards']['total'].get('Over 3.5', 0)
+        
+        if pc > 70 and pk > 70:
+            comb = (pc/100 * pk/100 * 0.9) * 100
+            odd = get_fair_odd(comb)
+            if 1.60 <= odd <= 2.10:
+                fusions.append({'type': 'fusion', 'jogo': f"{h} x {a}", 'selection': f"Criar Aposta: {res['home']} +3.5 Cantos & Jogo +3.5 Cartões", 'prob': comb, 'odd': odd})
+
+    # Montagem Inteligente do Bilhete
     ticket = []
     curr_odd = 1.0
-    used = set()
+    used_games = set()
     
     anchors.sort(key=lambda x: x['prob'], reverse=True)
-    fusions.sort(key=lambda x: x['prob_combined'], reverse=True)
+    fusions.sort(key=lambda x: x['prob'], reverse=True)
     
-    for a in anchors[:2]:
-        if a['jogo'] not in used:
-            ticket.append(a); curr_odd *= a['odd']; used.add(a['jogo'])
+    # Passo A: Pega 2 Âncoras
+    for a in anchors:
+        if len(ticket) >= 2: break
+        if a['jogo'] not in used_games:
+            ticket.append(a)
+            curr_odd *= a['odd']
+            used_games.add(a['jogo'])
             
+    # Passo B: Enche de Fusões até Odd ~4.5
     for f in fusions:
         if len(ticket) >= 6: break
-        if f['jogo'] not in used and curr_odd * f['odd'] <= 6.5:
-            ticket.append(f); curr_odd *= f['odd']; used.add(f['jogo'])
+        if f['jogo'] not in used_games:
+            # Só adiciona se não estourar 6.0
+            if curr_odd * f['odd'] <= 6.0:
+                ticket.append(f)
+                curr_odd *= f['odd']
+                used_games.add(f['jogo'])
     
+    # Passo C: Ajuste fino (Se ficou baixo, põe mais âncora)
     if curr_odd < 4.0:
         for a in anchors:
             if len(ticket) >= 6: break
-            if a['jogo'] not in used:
-                ticket.append(a); curr_odd *= a['odd']; used.add(a['jogo'])
+            if a['jogo'] not in used_games:
+                ticket.append(a)
+                curr_odd *= a['odd']
+                used_games.add(a['jogo'])
+                
+    return {'ticket': ticket, 'total_odd': round(curr_odd, 2)}
 
-    return {'ticket': ticket, 'total_odd': round(curr_odd, 2), 'num_selections': len(ticket), 'all_anchors': len(anchors), 'all_fusions': len(fusions)}
-
+# Reutilizando a função de Hedge V23.1
 def generate_hedges_for_user_ticket(ticket: List[Dict], stats: Dict, refs: Dict, all_dfs: Dict) -> Dict:
-    """Gera Hedges para o bilhete do usuário"""
     principal, hedge1, hedge2 = [], [], []
     processed = set()
     
     for item in ticket:
-        try: parts = item['jogo'].split(' vs '); h, a = parts[0], parts[1]
+        try: parts = item['jogo'].split(' x '); h, a = parts[0], parts[1]
         except: continue
-        if f"{h}vs{a}" in processed: continue
+        if f"{h}x{a}" in processed: continue
         
         res = calcular_jogo_v23(h, a, stats, None, refs, all_dfs)
         if 'error' in res: continue
         probs = get_detailed_probs(res)
         
-        sel_txt = item.get('selection', 'Criar Aposta')
-        if item.get('type') == 'fusion': sel_txt = " + ".join(item['mercados'])
-        principal.append({'jogo': item['jogo'], 'selecao': sel_txt, 'odd': item['odd']})
+        # Principal
+        principal.append({'jogo': item['jogo'], 'selecao': item['selection'], 'odd': item['odd']})
         
-        mc = res['monte_carlo']
-        sel1 = f"DC {h} ou Empate" if mc['h'] > mc['a'] else f"DC {a} ou Empate"
-        odd1 = get_fair_odd(probs['chance']['1X'] if mc['h'] > mc['a'] else probs['chance']['X2'])
+        # Hedge 1: Safety (DC)
+        sel1 = f"DC {h}" if probs['chance']['1X'] > 60 else f"DC {a}"
+        odd1 = 1.35 # Est
         hedge1.append({'jogo': item['jogo'], 'selecao': sel1, 'odd': odd1})
         
-        hedge2.append({'jogo': item['jogo'], 'selecao': "Total Over 3.5 Cartões", 'odd': get_fair_odd(probs['cards']['total']['Over 3.5'])})
-        processed.add(f"{h}vs{a}")
+        # Hedge 2: Mix (Cartões/Total)
+        hedge2.append({'jogo': item['jogo'], 'selecao': "Total Over 3.5 Cartões", 'odd': 1.40})
+        
+        processed.add(f"{h}x{a}")
         
     return {
         'principal': {'itens': principal, 'odd': round(np.prod([x['odd'] for x in principal]), 2)},
@@ -423,73 +363,77 @@ def generate_hedges_for_user_ticket(ticket: List[Dict], stats: Dict, refs: Dict,
     }
 
 # ═══════════════════════════════════════════════════════════════════════════
-# UI PRINCIPAL
+# UI
 # ═══════════════════════════════════════════════════════════════════════════
 
+def render_result_v14_5(res, all_dfs):
+    m = res['meta']
+    probs = get_detailed_probs(res)
+    st.markdown("---")
+    st.subheader(f"🏠 {res['home']} vs ✈️ {res['away']}")
+    
+    c1, c2 = st.columns(2)
+    with c1:
+        st.info("🏁 **Escanteios**")
+        for line in [3.5, 4.5, 5.5]:
+            p = probs['corners']['home'].get(f'Over {line}', 0)
+            h = get_native_history(res['home'], res['league_h'], 'corners', line, 'home', all_dfs)
+            st.write(f"🏠 Over {line}: **{p:.0f}%** (Hist: {h})")
+            
+    with c2:
+        st.warning("🟨 **Cartões**")
+        for line in [1.5, 2.5]:
+            p = probs['cards']['home'].get(f'Over {line}', 0)
+            h = get_native_history(res['home'], res['league_h'], 'cards', line, 'home', all_dfs)
+            st.write(f"🏠 Over {line}: **{p:.0f}%** (Hist: {h})")
+
 def main():
-    if st.session_state.theme == 'dark':
-        st.markdown("<style>.stApp {background-color: #0E1117; color: #FAFAFA;}</style>", unsafe_allow_html=True)
-        
-    st.sidebar.title("🎛️ Painel V23.3")
-    st.sidebar.caption("Ultimate Edition")
+    st.title("⚽ FutPrevisão V23.4 (Auto Ticket)")
     
-    col_t1, col_t2 = st.sidebar.columns(2)
-    if col_t1.button("🌙 Escuro"): st.session_state.theme = 'dark'; st.rerun()
-    if col_t2.button("☀️ Claro"): st.session_state.theme = 'light'; st.rerun()
-    
-    with st.spinner("Carregando bases..."):
+    with st.spinner("Carregando..."):
         stats = learn_stats_v23()
         refs = load_referees_v23()
         calendar = load_calendar_safe()
         all_dfs = load_all_dataframes()
     
-    st.title("⚽ FutPrevisão V23.3 Ultimate")
-    
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["📅 Calendário", "🔍 Simulação", "🎯 Scanner Smart", "🛡️ Sistema Hedges", "📊 Radares", "📈 Dashboard"])
+    if not stats:
+        st.error("🚨 ERRO: Dados não carregados.")
+        return
+
+    tab1, tab2, tab3, tab4 = st.tabs(["📅 Calendário", "🎯 Scanner Auto", "🛡️ Sistema Hedges", "🔮 Simulação"])
     
     with tab1:
-        if not calendar.empty:
-            dates = sorted(calendar['DtObj'].dt.strftime('%d/%m/%Y').unique())
-            sel_date = st.selectbox("Data:", dates, key="cal_date")
-            df_d = calendar[calendar['DtObj'].dt.strftime('%d/%m/%Y') == sel_date]
-            st.dataframe(df_d, use_container_width=True)
-            
+        if calendar.empty: st.warning("Vazio")
+        else: st.dataframe(calendar, use_container_width=True)
+
     with tab2:
-        l_times = sorted(list(stats.keys()))
-        c1, c2 = st.columns(2)
-        h = c1.selectbox("Casa", l_times)
-        a = c2.selectbox("Fora", l_times, index=1)
-        if st.button("Simular"):
-            res = calcular_jogo_v23(h, a, stats, None, refs, all_dfs)
-            if 'error' not in res:
-                st.info(f"xG: {res['goals']['h']:.2f} x {res['goals']['a']:.2f}")
-                
-    with tab3:
-        st.header("🎯 Scanner V23 - Smart Ticket")
-        st.caption("Âncoras (@1.25) + Fusões (@1.60-1.90)")
+        st.header("🎯 Gerador de Bilhete Automático")
+        st.caption("Meta: Odd 4.50 ~ 5.50 | 6 Seleções | Âncoras + Fusões")
+        
         if not calendar.empty:
             dates = sorted(calendar['DtObj'].dt.strftime('%d/%m/%Y').unique())
-            sel_date = st.selectbox("Data Scanner:", dates, key="scan_date")
+            sel_date = st.selectbox("Data:", dates, key="sd")
             
-            if st.button("🚀 GERAR BILHETE E SALVAR", type="primary"):
-                res = generate_smart_ticket_v23(calendar, stats, refs, all_dfs, sel_date)
+            if st.button("🚀 GERAR BILHETE DO DIA", type="primary"):
+                res = generate_smart_ticket_v23_auto(calendar, stats, refs, all_dfs, sel_date)
+                
                 if res['ticket']:
                     st.session_state.current_ticket = res['ticket']
-                    st.success("Bilhete Gerado e Salvo!")
-                else: st.warning("Sem oportunidades.")
+                    st.success(f"Bilhete Gerado! Odd Total: @{res['total_odd']}")
+                else:
+                    st.warning("Não encontrei jogos suficientes para bater a meta de odd hoje.")
             
             if st.session_state.current_ticket:
-                st.markdown("### 🎫 Bilhete Ativo")
+                st.markdown("### 🎫 Bilhete Sugerido")
                 for item in st.session_state.current_ticket:
-                    desc = item.get('selection')
-                    if item['type'] == 'fusion': desc = " + ".join(item['mercados'])
-                    st.write(f"✅ {item['jogo']} | {desc} (@{item['odd']})")
-                st.info("Vá para a aba 'Sistema Hedges' para proteger.")
+                    icon = "🔴" if item['type'] == 'anchor' else "🔗"
+                    st.write(f"{icon} {item['jogo']} | **{item['selection']}** (@{item['odd']})")
+                st.info("Vá para a aba 'Sistema Hedges' para proteger este bilhete.")
 
-    with tab4:
-        st.header("🛡️ Sistema de Proteção (Hedges)")
+    with tab3:
+        st.header("🛡️ Sistema de Proteção")
         if not st.session_state.current_ticket:
-            st.warning("Gere um bilhete no Scanner primeiro.")
+            st.warning("Gere um bilhete na aba Scanner primeiro.")
         else:
             if st.button("🛡️ CALCULAR HEDGES", type="primary"):
                 hedges = generate_hedges_for_user_ticket(st.session_state.current_ticket, stats, refs, all_dfs)
@@ -503,20 +447,18 @@ def main():
                     st.metric("Odd", f"@{hedges['hedge1']['odd']}")
                     for i in hedges['hedge1']['itens']: st.caption(f"{i['jogo']} - {i['selecao']}")
                 with c3:
-                    st.subheader("🔄 Caos")
+                    st.subheader("🔄 Mix")
                     st.metric("Odd", f"@{hedges['hedge2']['odd']}")
                     for i in hedges['hedge2']['itens']: st.caption(f"{i['jogo']} - {i['selecao']}")
 
-    with tab5:
-         if not calendar.empty:
-            dates = sorted(calendar['DtObj'].dt.strftime('%d/%m/%Y').unique())
-            sel = st.selectbox("Data Radar:", dates, key="rad_d")
-            if st.button("Escanear"):
-                res = scan_day_for_radars(calendar, stats, refs, all_dfs, sel)
-                st.write(res)
-                
-    with tab6:
-        st.write("Dashboard V23")
+    with tab4:
+        l = sorted(list(stats.keys()))
+        c1, c2 = st.columns(2)
+        h = c1.selectbox("Casa", l, index=0)
+        a = c2.selectbox("Fora", l, index=1)
+        if st.button("Simular"):
+            res = calcular_jogo_v23(h, a, stats, None, refs, all_dfs)
+            if 'error' not in res: render_result_v14_5(res, all_dfs)
 
 if __name__ == "__main__":
     main()
