@@ -1,11 +1,11 @@
 """
 ╔═══════════════════════════════════════════════════════════════════════════╗
-║       FUTPREVISÃO V25.7 - WHITE THEME & UI FIX                            ║
+║       FUTPREVISÃO V25.8 - STABILITY FIX & WHITE THEME                     ║
 ║                                                                            ║
-║  ✅ TEMA: Tela Branca (Modo Claro ativado por padrão)                     ║
-║  ✅ FIX MENU: Seletor não reseta mais ao clicar (Adicionado key única)    ║
-║  ✅ ODDS CALIBRADAS: Visitante Over 1.5 Cartões fixado em ~1.45           ║
-║  ✅ INTEGRIDADE: Prevenção de duplicatas no menu manual                   ║
+║  ✅ FIX MENU: Congelamento de Odds (Impede reset ao clicar)               ║
+║  ✅ TEMA: Branco Forçado (CSS Injetado)                                   ║
+║  ✅ ESTABILIDADE: Cache de sessão para o jogo selecionado                 ║
+║  ✅ ODDS: Visitante Over 1.5 Cartões fixado em ~1.45                      ║
 ║                                                                            ║
 ║  Dezembro 2025                                                           ║
 ╚═══════════════════════════════════════════════════════════════════════════╝
@@ -21,22 +21,40 @@ from typing import Dict, List, Any, Optional, Tuple
 from difflib import get_close_matches
 
 # ═══════════════════════════════════════════════════════════════════════════
-# CONFIGURAÇÃO
+# CONFIGURAÇÃO E TEMA
 # ═══════════════════════════════════════════════════════════════════════════
 
 st.set_page_config(
-    page_title="FutPrevisão V25.7 White",
+    page_title="FutPrevisão V25.8 Stable",
     page_icon="⚽",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
+# CSS PARA FORÇAR TEMA CLARO (WHITE MODE)
+st.markdown("""
+    <style>
+        .stApp {
+            background-color: #FFFFFF !important;
+            color: #000000 !important;
+        }
+        .stSelectbox label, .stRadio label, .stMultiSelect label {
+            color: #000000 !important;
+        }
+        div[data-testid="stMetricValue"] {
+            color: #000000 !important;
+        }
+        p, h1, h2, h3 {
+            color: #000000 !important;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
 # Session State
 if 'bankroll' not in st.session_state: st.session_state.bankroll = 1000.0
 if 'current_ticket' not in st.session_state: st.session_state.current_ticket = []
-# TEMA PADRÃO DEFINIDO PARA LIGHT (CLARO)
-if 'theme' not in st.session_state: st.session_state.theme = 'light'
-if 'bet_history' not in st.session_state: st.session_state.bet_history = []
+# Cache para o jogo manual atual (Evita recálculo e reset do menu)
+if 'manual_game_cache' not in st.session_state: st.session_state.manual_game_cache = {}
 
 # Mapeamentos
 NAME_MAPPING = {
@@ -54,7 +72,7 @@ LIGAS_ALVO = [
     "Championship", "Bundesliga 2", "Pro League", "Süper Lig", "Scottish Premiership"
 ]
 
-# TABELA DE PREÇOS REAIS (V25.7)
+# TABELA DE PREÇOS REAIS (V25.8)
 REAL_ODDS = {
     # Mandante Escanteios
     ('home', 'corners', 3.5): 1.34,
@@ -205,6 +223,8 @@ def get_market_price(location: str, market_type: str, line: float, prob_calculat
     return get_fair_odd(prob_calculated)
 
 def monte_carlo(xg_h: float, xg_a: float, n: int = 1000) -> Tuple[float, float, float]:
+    # Fixando semente para estabilidade do menu manual
+    np.random.seed(42) 
     gh = np.random.poisson(max(0.1, xg_h), n)
     ga = np.random.poisson(max(0.1, xg_a), n)
     return np.count_nonzero(gh > ga)/n, np.count_nonzero(gh == ga)/n, np.count_nonzero(ga > gh)/n
@@ -470,15 +490,14 @@ def generate_hedges_for_user_ticket(ticket: List[Dict], stats: Dict, refs: Dict,
 # ═══════════════════════════════════════════════════════════════════════════
 
 def main():
-    # REMOVIDO CSS ESCURO. AGORA O TEMA É CLARO (PADRÃO)
-    
+    # Carregamento
     with st.spinner("Carregando bases..."):
         stats = learn_stats_v23()
         refs = load_referees_v23()
         calendar = load_calendar_safe()
         all_dfs = load_all_dataframes()
         
-    st.title("⚽ FutPrevisão V25.7 White")
+    st.title("⚽ FutPrevisão V25.8 Stable")
     tab1, tab2, tab3, tab4, tab5 = st.tabs(["📅 Calendário", "🔍 Simulação", "🎯 Scanner/Manual", "🛡️ Hedges", "📊 Radares"])
     
     with tab3:
@@ -506,21 +525,27 @@ def main():
                 sel_game = st.selectbox("Jogo:", games, key="sel_game_manual")
                 
                 if sel_game:
-                    row = df_day[(df_day['Time_Casa'] + ' vs ' + df_day['Time_Visitante']) == sel_game].iloc[0]
-                    res = calcular_jogo_v23(row['Time_Casa'], row['Time_Visitante'], stats, None, refs, all_dfs)
-                    if 'error' not in res:
-                        mkts = get_available_markets_for_game(res, get_detailed_probs(res))
+                    # LÓGICA DE CACHE: Se o jogo mudou ou não existe cache, calcula. Senão, usa o cache.
+                    if sel_game not in st.session_state.manual_game_cache:
+                        row = df_day[(df_day['Time_Casa'] + ' vs ' + df_day['Time_Visitante']) == sel_game].iloc[0]
+                        res = calcular_jogo_v23(row['Time_Casa'], row['Time_Visitante'], stats, None, refs, all_dfs)
+                        if 'error' not in res:
+                            probs = get_detailed_probs(res)
+                            mkts = get_available_markets_for_game(res, probs)
+                            # Mapeamento para evitar duplicatas
+                            options_map = {}
+                            for m in mkts:
+                                label = f"{m['mercado']} (@{m['odd']})"
+                                options_map[label] = m
+                            sorted_labels = sorted(options_map.keys())
+                            st.session_state.manual_game_cache[sel_game] = (options_map, sorted_labels)
+                    
+                    # Recupera do cache (garante que odds não mudem e menu não resete)
+                    if sel_game in st.session_state.manual_game_cache:
+                        options_map, sorted_labels = st.session_state.manual_game_cache[sel_game]
                         
-                        # MAPEAMENTO ÚNICO PARA EVITAR DUPLICATAS
-                        options_map = {}
-                        for m in mkts:
-                            label = f"{m['mercado']} (@{m['odd']})"
-                            options_map[label] = m
-                        
-                        sorted_labels = sorted(options_map.keys())
-                        
-                        # KEY ÚNICA PARA MERCADO PARA EVITAR RESET
-                        sel_mkt_label = st.selectbox("Mercado:", sorted_labels, key="sel_mkt_manual")
+                        # USAR KEY DINÂMICA baseada no jogo impede conflito entre jogos diferentes
+                        sel_mkt_label = st.selectbox("Mercado:", sorted_labels, key=f"mkt_select_{sel_game}")
                         
                         if st.button("➕ Adicionar"):
                             if sel_mkt_label in options_map:
