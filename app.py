@@ -627,10 +627,11 @@ def scan_day_for_radars(calendar: pd.DataFrame, stats: Dict, refs: Dict, all_dfs
                     'adversario': res['away'],
                     'liga': liga,
                     'hora': hora,
-                    'mercado': f"Over {line} Escanteios",
+                    'mercado': f"{res['home']} Over {line} Escanteios",
                     'prob': prob_h,
                     'media': res['corners']['h'],
-                    'consistencia': res['consistency']['corners_h']
+                    'consistencia': res['consistency']['corners_h'],
+                    'location': 'Casa'
                 })
             
             if line <= 4.5:
@@ -641,10 +642,11 @@ def scan_day_for_radars(calendar: pd.DataFrame, stats: Dict, refs: Dict, all_dfs
                         'adversario': res['home'],
                         'liga': liga,
                         'hora': hora,
-                        'mercado': f"Over {line} Escanteios",
+                        'mercado': f"{res['away']} Over {line} Escanteios",
                         'prob': prob_a,
                         'media': res['corners']['a'],
-                        'consistencia': res['consistency']['corners_a']
+                        'consistencia': res['consistency']['corners_a'],
+                        'location': 'Fora'
                     })
         
         # Radar Cartões Individual
@@ -656,10 +658,11 @@ def scan_day_for_radars(calendar: pd.DataFrame, stats: Dict, refs: Dict, all_dfs
                     'adversario': res['away'],
                     'liga': liga,
                     'hora': hora,
-                    'mercado': f"Over {line} Cartões",
+                    'mercado': f"{res['home']} Over {line} Cartões",
                     'prob': prob_h,
                     'media': res['cards']['h'],
-                    'consistencia': res['consistency']['cards_h']
+                    'consistencia': res['consistency']['cards_h'],
+                    'location': 'Casa'
                 })
             
             prob_a = probs['cards']['away'].get(f'Over {line}', 0)
@@ -669,10 +672,11 @@ def scan_day_for_radars(calendar: pd.DataFrame, stats: Dict, refs: Dict, all_dfs
                     'adversario': res['home'],
                     'liga': liga,
                     'hora': hora,
-                    'mercado': f"Over {line} Cartões",
+                    'mercado': f"{res['away']} Over {line} Cartões",
                     'prob': prob_a,
                     'media': res['cards']['a'],
-                    'consistencia': res['consistency']['cards_a']
+                    'consistencia': res['consistency']['cards_a'],
+                    'location': 'Fora'
                 })
         
         # Radar Cantos Total
@@ -748,7 +752,7 @@ def generate_smart_ticket_v23(calendar: pd.DataFrame, stats: Dict, refs: Dict, a
                             'type': 'anchor',
                             'jogo': f"{res['home']} vs {res['away']}",
                             'team': location_name,
-                            'mercado': f"Over {line} Escanteios",
+                            'mercado': f"{location_name} Over {line} Escanteios",
                             'prob': prob,
                             'odd': fair_odd,
                             'liga': liga,
@@ -769,7 +773,7 @@ def generate_smart_ticket_v23(calendar: pd.DataFrame, stats: Dict, refs: Dict, a
                             'type': 'anchor',
                             'jogo': f"{res['home']} vs {res['away']}",
                             'team': location_name,
-                            'mercado': f"Over {line} Cartões",
+                            'mercado': f"{location_name} Over {line} Cartões",
                             'prob': prob,
                             'odd': fair_odd,
                             'liga': liga,
@@ -1426,18 +1430,19 @@ def main():
                     
                     for i, sel in enumerate(result['ticket'], 1):
                         if sel['type'] == 'anchor':
-                            st.markdown(f"**{i}. 🔴 [ÂNCORA]** {sel['team']}")
-                            st.write(f"   {sel['jogo']}")
-                            st.write(f"   Mercado: {sel['mercado']}")
-                            st.write(f"   Probabilidade: {sel['prob']:.1f}% | Odd: @{sel['odd']}")
-                            st.write(f"   {sel['liga']} | {sel['hora']}")
+                            st.markdown(f"**{i}. 🔴 [ÂNCORA - Segurança]**")
+                            st.write(f"   **Jogo:** {sel['jogo']}")
+                            st.write(f"   **Mercado:** {sel['mercado']}")
+                            st.write(f"   **Probabilidade:** {sel['prob']:.1f}% | **Odd:** @{sel['odd']}")
+                            st.caption(f"{sel['liga']} | {sel['hora']}")
                         else:  # fusion
-                            st.markdown(f"**{i}. 🔗 [CRIAR APOSTA]** {sel['team']}")
-                            st.write(f"   {sel['jogo']}")
+                            st.markdown(f"**{i}. 🔗 [CRIAR APOSTA - Combo Duplo]**")
+                            st.write(f"   **Jogo:** {sel['jogo']}")
+                            st.write(f"   **Time:** {sel['team']}")
                             for j, merc in enumerate(sel['mercados']):
-                                st.write(f"   • {merc} ({sel['probs'][j]:.0f}%)")
-                            st.write(f"   Prob. Combinada: {sel['prob_combined']:.1f}% | Odd: @{sel['odd']}")
-                            st.write(f"   {sel['liga']} | {sel['hora']}")
+                                st.write(f"   ✓ {merc} ({sel['probs'][j]:.0f}%)")
+                            st.write(f"   **Prob. Combinada:** {sel['prob_combined']:.1f}% | **Odd:** @{sel['odd']}")
+                            st.caption(f"{sel['liga']} | {sel['hora']}")
                         
                         st.markdown("---")
     
@@ -1535,9 +1540,11 @@ def main():
                         for _, row in df_ci.iterrows():
                             cor = "green" if row['prob'] >= 80 else "orange"
                             cons_label = "🎯 Reloginho" if row['consistencia'] >= 70 else "⚠️ Caótico"
+                            location_icon = "🏠" if row['location'] == 'Casa' else "🛫"
                             
-                            st.markdown(f"**:{cor}[{row['prob']:.0f}%]** | {row['time']} vs {row['adversario']}")
-                            st.write(f"{row['mercado']} | Média: {row['media']:.1f} | {cons_label}")
+                            st.markdown(f"**:{cor}[{row['prob']:.0f}%]** | {location_icon} {row['mercado']}")
+                            st.write(f"Jogo: {row['time']} vs {row['adversario']}")
+                            st.write(f"Média: {row['media']:.1f} | {cons_label}")
                             st.caption(f"{row['liga']} | {row['hora']}")
                             st.markdown("---")
                     else:
@@ -1553,9 +1560,11 @@ def main():
                         for _, row in df_cdi.iterrows():
                             cor = "green" if row['prob'] >= 75 else "orange"
                             cons_label = "🎯 Reloginho" if row['consistencia'] >= 70 else "⚠️ Caótico"
+                            location_icon = "🏠" if row['location'] == 'Casa' else "🛫"
                             
-                            st.markdown(f"**:{cor}[{row['prob']:.0f}%]** | {row['time']} vs {row['adversario']}")
-                            st.write(f"{row['mercado']} | Média: {row['media']:.1f} | {cons_label}")
+                            st.markdown(f"**:{cor}[{row['prob']:.0f}%]** | {location_icon} {row['mercado']}")
+                            st.write(f"Jogo: {row['time']} vs {row['adversario']}")
+                            st.write(f"Média: {row['media']:.1f} | {cons_label}")
                             st.caption(f"{row['liga']} | {row['hora']}")
                             st.markdown("---")
                     else:
