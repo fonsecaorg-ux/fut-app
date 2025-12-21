@@ -355,10 +355,10 @@ def generate_smart_ticket_v23(calendar: pd.DataFrame, stats: Dict, refs: Dict, a
 
 def generate_hedges_for_user_ticket(ticket: List[Dict], stats: Dict, refs: Dict, all_dfs: Dict) -> Dict:
     """
-    Hedge V25.0 - ANTI-CORRELATION (Oponente + Outro Mercado)
-    ✅ Lógica de Exclusão: Se Principal = Villa, Hedge != Villa.
-    ✅ Hedge 1: O Espelho (Oponente ou Reação).
-    ✅ Hedge 2: O Caos/Intensidade (Mercado Oposto: Canto <-> Cartão).
+    Hedge V25.1 - MIRROR STRATEGY (Espelho + Segurança)
+    ✅ Hedge 1 (Espelho): Se Principal tem Villa Cantos, Hedge 1 tem United Cantos.
+    ✅ Hedge 2 (Segurança): Dupla Chance + Totais Baixos (Over 2.5 Cards / 7.5 Corners).
+    ✅ Cobre: Ação do Mandante vs Ação do Visitante vs Jogo Morno.
     """
     
     games_map = {}
@@ -381,67 +381,90 @@ def generate_hedges_for_user_ticket(ticket: List[Dict], stats: Dict, refs: Dict,
         if 'error' in res: continue
         probs = get_detailed_probs(res)
         
-        # Lista descrições do principal para verificação
-        principal_bets_desc = []
+        # Display Principal
+        principal_desc_str = ""
         for it in items:
             desc = it.get('mercado', it.get('selection', 'Aposta'))
             if it.get('type') == 'fusion': desc = " + ".join(it.get('mercados', []))
             principal_display.append({'jogo': it['jogo'], 'selecao': desc, 'odd': it['odd']})
-            principal_bets_desc.append(desc)
+            principal_desc_str += desc + " "
             
-        # --- DETECTAR O QUE FOI APOSTADO ---
-        # Verifica quais times e mercados já foram usados para EXCLUIR do Hedge
-        bet_on_h = any(h in d for d in principal_bets_desc)
-        bet_on_a = any(a in d for d in principal_bets_desc)
-        bet_on_corn = any('Escanteios' in d for d in principal_bets_desc)
-        bet_on_card = any('Cartões' in d for d in principal_bets_desc)
+        # --- ANÁLISE DO ESPELHO (QUEM ESTÁ NO PRINCIPAL?) ---
+        # Verifica se apostamos em Cantos para o Mandante ou Visitante
+        has_home_corn = h in principal_desc_str and "Escanteios" in principal_desc_str
+        has_away_corn = a in principal_desc_str and "Escanteios" in principal_desc_str
         
-        # Probabilidades Base
+        # Probabilidades para o Espelho
         prob_corn_h_react = probs['corners']['home']['Over 4.5']
         prob_corn_a_react = probs['corners']['away']['Over 3.5']
-        prob_card_tot = probs['cards']['total']['Over 3.5']
-        prob_corn_tot = probs['corners']['total']['Over 8.5']
         
-        # === HEDGE 1: O OPONENTE (O Espelho) ===
-        # Se apostou no Casa, vai no Visitante. Se apostou no Visitante, vai no Casa.
+        # Probabilidades para Segurança (Linhas Baixas)
+        prob_card_safe = probs['cards']['total']['Over 2.5'] # Linha baixíssima (Segurança)
+        prob_corn_safe = probs['corners']['total']['Over 7.5'] # Linha baixíssima
         
+        # ==============================================================================
+        # HEDGE 1: O ESPELHO (Inverte a Pressão)
+        # ==============================================================================
         h1_sel = ""
         h1_odd = 1.0
         
-        if bet_on_h and not bet_on_a:
-            # Principal: Villa -> Hedge: United (Reação)
-            h1_sel = f"{a} Over 3.5 Escanteios (Reação)"
-            h1_odd = get_fair_odd(prob_corn_a_react)
-        elif bet_on_a and not bet_on_h:
-            # Principal: United -> Hedge: Villa (Pressão)
-            h1_sel = f"{h} Over 4.5 Escanteios (Reação)"
-            h1_odd = get_fair_odd(prob_corn_h_react)
-        else:
-            # Se apostou em ambos ou totais, foca na INTENSIDADE GERAL de Cartões
-            h1_sel = "Total Jogo Over 4.5 Cartões (Jogo Pegado)"
-            h1_odd = get_fair_odd(probs['cards']['total']['Over 4.5'])
+        # Se Principal = Casa Pressiona -> Hedge = Visitante Pressiona + Casa Bate
+        if has_home_corn:
+            # Espelho: Visitante Cantos + Total Cartões (ou Casa Cartões se tiver prob)
+            sel_mirror_corn = f"{a} Over 3.5 Escanteios"
+            odd_mirror_corn = get_fair_odd(prob_corn_a_react)
             
+            # Combina com Cartões (Geralmente Over 3.5 Geral para garantir)
+            sel_mirror_card = "Total Over 3.5 Cartões"
+            odd_mirror_card = get_fair_odd(probs['cards']['total']['Over 3.5'])
+            
+            h1_sel = f"{sel_mirror_corn} + {sel_mirror_card}"
+            h1_odd = round(odd_mirror_corn * odd_mirror_card * 0.9, 2)
+
+        # Se Principal = Visitante Pressiona -> Hedge = Casa Pressiona
+        elif has_away_corn:
+            sel_mirror_corn = f"{h} Over 4.5 Escanteios"
+            odd_mirror_corn = get_fair_odd(prob_corn_h_react)
+            
+            sel_mirror_card = "Total Over 3.5 Cartões"
+            odd_mirror_card = get_fair_odd(probs['cards']['total']['Over 3.5'])
+            
+            h1_sel = f"{sel_mirror_corn} + {sel_mirror_card}"
+            h1_odd = round(odd_mirror_corn * odd_mirror_card * 0.9, 2)
+            
+        else:
+            # Se não tem cantos definidos, faz o Espelho de Resultado (Zebra)
+            if res['monte_carlo']['h'] > res['monte_carlo']['a']:
+                h1_sel = f"DC {a} ou Empate + Total Over 3.5 Cartões"
+                h1_odd = round(get_fair_odd(probs['chance']['X2']) * get_fair_odd(probs['cards']['total']['Over 3.5']) * 0.9, 2)
+            else:
+                h1_sel = f"DC {h} ou Empate + Total Over 3.5 Cartões"
+                h1_odd = round(get_fair_odd(probs['chance']['1X']) * get_fair_odd(probs['cards']['total']['Over 3.5']) * 0.9, 2)
+        
         hedge1.append({'jogo': game_name, 'selecao': h1_sel, 'odd': h1_odd})
         
-        # === HEDGE 2: O MERCADO OPOSTO (Sobra o quê?) ===
-        # Se Principal = Escanteios -> Hedge = Cartões Totais (Jogo travado)
-        # Se Principal = Cartões -> Hedge = Escanteios Totais (Jogo aberto)
+        # ==============================================================================
+        # HEDGE 2: A SEGURANÇA (Base + Totais Baixos)
+        # Igual ao seu 3º Bilhete (DC + Over 2.5 Cartões)
+        # ==============================================================================
         
-        h2_sel = ""
-        h2_odd = 1.0
+        # 1. Dupla Chance no Favorito Estatístico (Segurar o resultado provável)
+        fav_home = res['monte_carlo']['h'] > res['monte_carlo']['a']
+        dc_sel = f"DC {h} ou Empate" if fav_home else f"DC {a} ou Empate"
+        dc_odd = get_fair_odd(probs['chance']['1X'] if fav_home else probs['chance']['X2'])
         
-        if bet_on_corn:
-            # Aposta foi em fluxo. Hedge cobre BRIGA/TRAVAMENTO.
-            h2_sel = "Total Jogo Over 3.5 Cartões"
-            h2_odd = get_fair_odd(prob_card_tot)
-        elif bet_on_card:
-            # Aposta foi em briga. Hedge cobre JOGO LIMPO/ABERTO.
-            h2_sel = "Total Jogo Over 9.5 Escanteios"
-            h2_odd = get_fair_odd(probs['corners']['total']['Over 9.5'])
-        else:
-            # Fallback (ex: DC): Cobre Over Geral
-            h2_sel = "Total Jogo Over 8.5 Cantos + Over 3.5 Cartões"
-            h2_odd = round(get_fair_odd(prob_corn_tot) * get_fair_odd(prob_card_tot) * 0.9, 2)
+        # 2. Linha Baixa de Cartões (Over 2.5 é muito seguro)
+        safe_card_sel = "Total Over 2.5 Cartões"
+        safe_card_odd = get_fair_odd(prob_card_safe)
+        
+        # 3. Se a odd ficar muito baixa (< 1.8), adiciona Cantos Over 7.5
+        h2_sel = f"{dc_sel} + {safe_card_sel}"
+        h2_odd = round(dc_odd * safe_card_odd * 0.95, 2)
+        
+        if h2_odd < 1.80:
+            safe_corn_odd = get_fair_odd(prob_corn_safe)
+            h2_sel += " + Over 7.5 Cantos"
+            h2_odd = round(h2_odd * safe_corn_odd * 0.95, 2)
             
         hedge2.append({'jogo': game_name, 'selecao': h2_sel, 'odd': h2_odd})
         processed_games.add(game_name)
