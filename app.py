@@ -1,10 +1,11 @@
 """
 ╔═══════════════════════════════════════════════════════════════════════════╗
-║       FUTPREVISÃO V27.1 - FULL SUITE (VISUAL + MATH)                      ║
+║       FUTPREVISÃO V27.2 - VISUAL INTELLIGENCE & FULL SUITE                ║
 ║                                                                            ║
-║  ✅ MATH: Engine V27 (Dynamic Hedge + EV+ Scanner)                        ║
-║  ✅ VISUAL: Abas 'Simulação' e 'Radares' restauradas e funcionais         ║
-║  ✅ UI: Tema Branco Forçado + Menus Travados                              ║
+║  ✅ SIMULAÇÃO 2.0: Comparativo detalhado (Casa x Visitante) com Gráficos  ║
+║  ✅ MANUAL PRO: Exibe estatísticas do jogo antes da seleção de mercado    ║
+║  ✅ ENGINE V27: Mantido o motor de Hedges Dinâmicos e EV+                 ║
+║  ✅ UI: Otimizada para leitura rápida de dados                            ║
 ║                                                                            ║
 ║  Dezembro 2025                                                           ║
 ╚═══════════════════════════════════════════════════════════════════════════╝
@@ -25,7 +26,7 @@ from difflib import get_close_matches
 # ═══════════════════════════════════════════════════════════════════════════
 
 st.set_page_config(
-    page_title="FutPrevisão V27.1 Full",
+    page_title="FutPrevisão V27.2 Visual",
     page_icon="💎",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -55,6 +56,13 @@ st.markdown("""
             border-radius: 4px;
             font-size: 0.8em;
             font-weight: bold;
+        }
+        .stat-box {
+            background-color: #f0f2f6;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 10px;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -301,17 +309,14 @@ def optimize_market_line(probs_dict: Dict, market_scope: str, market_type: str, 
     """Motor de Elasticidade V27."""
     curr_line = start_line
     last_valid_odd = 1.0
-    
     while curr_line <= max_line:
         prob_key = f'Over {curr_line}'
         prob = probs_dict.get(prob_key, 0)
         odd = get_market_price(market_scope, market_type, curr_line, prob)
         last_valid_odd = odd
-        
         if odd >= min_odd and prob > 30:
             return curr_line, odd
         curr_line += 1.0
-        
     return curr_line - 1.0, last_valid_odd
 
 def generate_smart_ticket_v23(calendar: pd.DataFrame, stats: Dict, refs: Dict, all_dfs: Dict, date_str: str, 
@@ -401,7 +406,6 @@ def generate_hedges_for_user_ticket(ticket: List[Dict], stats: Dict, refs: Dict,
             principal_display.append({'jogo': it['jogo'], 'selecao': desc + ev_badge, 'odd': it['odd']})
             principal_desc_str += desc + " "
             
-        # OTIMIZAÇÃO DINÂMICA
         card_line_h1, card_odd_h1 = optimize_market_line(probs['cards']['total'], 'total', 'cards', start_line=3.5, min_odd=1.60, max_line=6.5)
 
         has_home_corn = h in principal_desc_str and "Escanteios" in principal_desc_str
@@ -458,7 +462,7 @@ def main():
         calendar = load_calendar_safe()
         all_dfs = load_all_dataframes()
         
-    st.title("💎 FutPrevisão V27.1 Full")
+    st.title("💎 FutPrevisão V27.2 Visual")
     tab1, tab2, tab3, tab4, tab5 = st.tabs(["📅 Calendário", "🔍 Simulação", "🎯 Scanner/Manual", "🛡️ Hedges", "📊 Radares"])
     
     # ─── TAB 1: CALENDÁRIO ───
@@ -472,9 +476,9 @@ def main():
         else:
             st.warning("Nenhum calendário carregado.")
 
-    # ─── TAB 2: SIMULAÇÃO ───
+    # ─── TAB 2: SIMULAÇÃO (VISUAL UPGRADE) ───
     with tab2:
-        st.header("🔍 Simulador de Monte Carlo")
+        st.header("🔍 Match Center")
         if not calendar.empty:
             dates_sim = sorted(calendar['DtObj'].dt.strftime('%d/%m/%Y').unique())
             sel_date_sim = st.selectbox("Data do Jogo:", dates_sim, key="sim_date")
@@ -487,23 +491,46 @@ def main():
                 res_sim = calcular_jogo_v23(row_sim['Time_Casa'], row_sim['Time_Visitante'], stats, None, refs, all_dfs)
                 
                 if 'error' not in res_sim:
+                    # PROBABILIDADES
                     c1, c2, c3 = st.columns(3)
-                    c1.metric("Vitória Casa", f"{res_sim['monte_carlo']['h']:.1f}%")
+                    c1.metric("Casa Vence", f"{res_sim['monte_carlo']['h']:.1f}%")
                     c2.metric("Empate", f"{res_sim['monte_carlo']['d']:.1f}%")
-                    c3.metric("Vitória Visitante", f"{res_sim['monte_carlo']['a']:.1f}%")
+                    c3.metric("Visitante Vence", f"{res_sim['monte_carlo']['a']:.1f}%")
                     
-                    st.subheader("Médias Esperadas")
-                    cm1, cm2, cm3 = st.columns(3)
-                    cm1.info(f"Escanteios: {res_sim['corners']['total']:.1f}")
-                    cm2.info(f"Cartões: {res_sim['cards']['total']:.1f}")
-                    cm3.info(f"Gols Esperados (xG): {res_sim['goals']['h']:.2f} x {res_sim['goals']['a']:.2f}")
+                    st.divider()
                     
-                    # Gráfico de Pizza
-                    labels = [res_sim['home'], 'Empate', res_sim['away']]
-                    values = [res_sim['monte_carlo']['h'], res_sim['monte_carlo']['d'], res_sim['monte_carlo']['a']]
-                    fig_pie = go.Figure(data=[go.Pie(labels=labels, values=values, hole=.3)])
-                    fig_pie.update_layout(height=300, margin=dict(t=20, b=20, l=20, r=20))
-                    st.plotly_chart(fig_pie, use_container_width=True)
+                    # ESTATÍSTICAS DETALHADAS (PEDIDO DO USUÁRIO)
+                    st.subheader("📊 Comparativo de Médias")
+                    
+                    # Data preparation for Bar Chart
+                    teams = [res_sim['home'], res_sim['away']]
+                    data_corners = [res_sim['corners']['h'], res_sim['corners']['a']]
+                    data_cards = [res_sim['cards']['h'], res_sim['cards']['a']]
+                    data_xg = [res_sim['goals']['h'], res_sim['goals']['a']]
+                    
+                    df_compare = pd.DataFrame({
+                        'Time': teams * 3,
+                        'Métrica': ['Escanteios']*2 + ['Cartões']*2 + ['xG (Gols)']*2,
+                        'Valor': data_corners + data_cards + data_xg
+                    })
+                    
+                    fig_bar = px.bar(df_compare, x='Métrica', y='Valor', color='Time', barmode='group',
+                                     color_discrete_sequence=['#1f77b4', '#ff7f0e'], height=400)
+                    fig_bar.update_layout(plot_bgcolor='white', paper_bgcolor='white', font_color='black')
+                    st.plotly_chart(fig_bar, use_container_width=True)
+                    
+                    # NUMEROS PUROS
+                    c_h, c_a = st.columns(2)
+                    with c_h:
+                        st.info(f"**{res_sim['home']}**")
+                        st.write(f"⛳ Cantos: {res_sim['corners']['h']:.1f}")
+                        st.write(f"🟨 Cartões: {res_sim['cards']['h']:.1f}")
+                        st.write(f"⚽ xG: {res_sim['goals']['h']:.2f}")
+                    with c_a:
+                        st.error(f"**{res_sim['away']}**")
+                        st.write(f"⛳ Cantos: {res_sim['corners']['a']:.1f}")
+                        st.write(f"🟨 Cartões: {res_sim['cards']['a']:.1f}")
+                        st.write(f"⚽ xG: {res_sim['goals']['a']:.2f}")
 
     # ─── TAB 3: SCANNER/MANUAL ───
     with tab3:
@@ -526,6 +553,7 @@ def main():
                         st.success(f"Encontradas {len(res['ticket'])} apostas de valor!")
                     else: st.warning("Nenhuma aposta com Valor Esperado positivo encontrada hoje.")
             else:
+                # MODO MANUAL COM PRÉVIA
                 games = sorted((df_day['Time_Casa'] + ' vs ' + df_day['Time_Visitante']).unique())
                 sel_game = st.selectbox("Jogo:", games, key="sel_game_manual")
                 
@@ -541,10 +569,19 @@ def main():
                                 label = f"{m['mercado']} (@{m['odd']})"
                                 options_map[label] = m
                             sorted_labels = sorted(options_map.keys())
-                            st.session_state.manual_game_cache[sel_game] = (options_map, sorted_labels)
+                            st.session_state.manual_game_cache[sel_game] = (options_map, sorted_labels, res) # Salva 'res' tb
                     
                     if sel_game in st.session_state.manual_game_cache:
-                        options_map, sorted_labels = st.session_state.manual_game_cache[sel_game]
+                        options_map, sorted_labels, res_cached = st.session_state.manual_game_cache[sel_game]
+                        
+                        # --- UPGRADE: MOSTRAR STATS ANTES DE ESCOLHER ---
+                        with st.expander("📊 Ver Estatísticas do Jogo", expanded=True):
+                            sc1, sc2, sc3, sc4 = st.columns(4)
+                            sc1.metric(f"Cantos {res_cached['home']}", f"{res_cached['corners']['h']:.1f}")
+                            sc2.metric(f"Cantos {res_cached['away']}", f"{res_cached['corners']['a']:.1f}")
+                            sc3.metric(f"Cartões {res_cached['home']}", f"{res_cached['cards']['h']:.1f}")
+                            sc4.metric(f"Cartões {res_cached['away']}", f"{res_cached['cards']['a']:.1f}")
+                        
                         sel_mkt_label = st.selectbox("Mercado:", sorted_labels, key=f"mkt_select_{sel_game}")
                         if st.button("➕ Adicionar"):
                             if sel_mkt_label in options_map:
@@ -586,7 +623,7 @@ def main():
 
     # ─── TAB 5: RADARES ───
     with tab5:
-        st.header("📊 Comparador de Times")
+        st.header("📊 Radar de Performance")
         all_teams = sorted(list(stats.keys()))
         t1 = st.selectbox("Time 1:", all_teams, key="radar_t1")
         t2 = st.selectbox("Time 2 (Opcional):", ["Nenhum"] + all_teams, key="radar_t2")
@@ -595,7 +632,6 @@ def main():
             s1 = stats[t1]
             categories = ['Escanteios', 'Cartões', 'Gols Pro', 'Gols Sofridos', 'Chutes Gol']
             val1 = [s1['corners'], s1['cards'], s1['goals_f'], s1['goals_a'], s1['shots_on_target']]
-            # Normalização simples para o gráfico (0-10)
             val1_norm = [min(10, v * 1.5) for v in val1]
             
             fig = go.Figure()
@@ -607,7 +643,8 @@ def main():
                 val2_norm = [min(10, v * 1.5) for v in val2]
                 fig.add_trace(go.Scatterpolar(r=val2_norm, theta=categories, fill='toself', name=t2))
             
-            fig.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0, 10])), showlegend=True)
+            fig.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0, 10])), showlegend=True, 
+                              paper_bgcolor='white', font_color='black')
             st.plotly_chart(fig, use_container_width=True)
 
 if __name__ == "__main__":
