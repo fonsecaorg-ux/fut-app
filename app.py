@@ -129,7 +129,7 @@ REAL_ODDS = {
     
     # Dupla Chance
     ('home', 'dc', '1X'): 1.24,
-    ('away', 'dc', 'X2'): 1.60
+    ('away', 'dc', 'X2'): 1.75
 }
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -524,7 +524,7 @@ def evaluate_combo(combo: Tuple[Dict, Dict], principal_sels: List[Dict],
     coverage = (coverage_count / principal_fails * 100) if principal_fails > 0 else 0
     
     odd_jogo = sel1['odd'] * sel2['odd']
-    odd_score = 100 if 1.60 <= odd_jogo <= 2.00 else (80 if 1.40 <= odd_jogo <= 2.50 else 50)
+    odd_score = 100 if 1.75 <= odd_jogo <= 2.00 else (80 if 1.40 <= odd_jogo <= 2.50 else 50)
     
     score = (coverage * 0.50) + (odd_score * 0.30) + (win_rate * 0.20)
     
