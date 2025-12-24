@@ -1,11 +1,11 @@
 """
 ╔═══════════════════════════════════════════════════════════════════════════╗
-║       FUTPREVISÃO V27.2 - VISUAL INTELLIGENCE & FULL SUITE                ║
+║       FUTPREVISÃO V27.3 - TICKET SIMULATOR SUITE                          ║
 ║                                                                            ║
-║  ✅ SIMULAÇÃO 2.0: Comparativo detalhado (Casa x Visitante) com Gráficos  ║
-║  ✅ MANUAL PRO: Exibe estatísticas do jogo antes da seleção de mercado    ║
-║  ✅ ENGINE V27: Mantido o motor de Hedges Dinâmicos e EV+                 ║
-║  ✅ UI: Otimizada para leitura rápida de dados                            ║
+║  ✅ NOVA ABA: '🧪 Simulador' para validar bilhetes com Monte Carlo (1000x)║
+║  ✅ SIMULAÇÃO REAL: Testa Escanteios, Cartões e DC matematicamente        ║
+║  ✅ MATCH CENTER: Antiga aba de simulação renomeada e mantida             ║
+║  ✅ ENGINE V27: Mantido o motor de Hedges Dinâmicos e Scanner EV+         ║
 ║                                                                            ║
 ║  Dezembro 2025                                                           ║
 ╚═══════════════════════════════════════════════════════════════════════════╝
@@ -26,7 +26,7 @@ from difflib import get_close_matches
 # ═══════════════════════════════════════════════════════════════════════════
 
 st.set_page_config(
-    page_title="FutPrevisão V27.2 Visual",
+    page_title="FutPrevisão V27.3 Simulator",
     page_icon="💎",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -306,7 +306,6 @@ def get_available_markets_for_game(res: Dict, probs: Dict) -> List[Dict]:
 # ═══════════════════════════════════════════════════════════════════════════
 
 def optimize_market_line(probs_dict: Dict, market_scope: str, market_type: str, start_line: float, min_odd: float, max_line: float) -> Tuple[float, float]:
-    """Motor de Elasticidade V27."""
     curr_line = start_line
     last_valid_odd = 1.0
     while curr_line <= max_line:
@@ -314,14 +313,12 @@ def optimize_market_line(probs_dict: Dict, market_scope: str, market_type: str, 
         prob = probs_dict.get(prob_key, 0)
         odd = get_market_price(market_scope, market_type, curr_line, prob)
         last_valid_odd = odd
-        if odd >= min_odd and prob > 30:
-            return curr_line, odd
+        if odd >= min_odd and prob > 30: return curr_line, odd
         curr_line += 1.0
     return curr_line - 1.0, last_valid_odd
 
 def generate_smart_ticket_v23(calendar: pd.DataFrame, stats: Dict, refs: Dict, all_dfs: Dict, date_str: str, 
                               target_leagues: List[str] = None, target_games: List[str] = None) -> Dict:
-    """Scanner V26 - EV+"""
     df_day = calendar[calendar['DtObj'].dt.strftime('%d/%m/%Y') == date_str].copy()
     if target_leagues: df_day = df_day[df_day['Liga'].isin(target_leagues)]
     df_day['GameID'] = df_day['Time_Casa'] + ' vs ' + df_day['Time_Visitante']
@@ -380,11 +377,9 @@ def generate_smart_ticket_v23(calendar: pd.DataFrame, stats: Dict, refs: Dict, a
 
 def generate_hedges_for_user_ticket(ticket: List[Dict], stats: Dict, refs: Dict, all_dfs: Dict) -> Dict:
     """Hedge V27.0 - DYNAMIC ENGINE"""
-    
     games_map = {}
     for item in ticket:
         games_map.setdefault(item['jogo'], []).append(item)
-        
     principal_display = []
     hedge1 = []
     hedge2 = []
@@ -407,7 +402,6 @@ def generate_hedges_for_user_ticket(ticket: List[Dict], stats: Dict, refs: Dict,
             principal_desc_str += desc + " "
             
         card_line_h1, card_odd_h1 = optimize_market_line(probs['cards']['total'], 'total', 'cards', start_line=3.5, min_odd=1.60, max_line=6.5)
-
         has_home_corn = h in principal_desc_str and "Escanteios" in principal_desc_str
         has_away_corn = a in principal_desc_str and "Escanteios" in principal_desc_str
         
@@ -452,6 +446,73 @@ def generate_hedges_for_user_ticket(ticket: List[Dict], stats: Dict, refs: Dict,
     }
 
 # ═══════════════════════════════════════════════════════════════════════════
+# SIMULADOR DE BILHETE (NOVO!)
+# ═══════════════════════════════════════════════════════════════════════════
+
+def simulate_ticket_monte_carlo(ticket, stats, refs, all_dfs, n_sims=1000):
+    """Simula o bilhete inteiro 1000 vezes."""
+    if not ticket: return 0.0
+    
+    games_data = {}
+    for item in ticket:
+        game_name = item['jogo']
+        if game_name not in games_data:
+            try:
+                h, a = game_name.split(' vs ')
+                res = calcular_jogo_v23(h, a, stats, None, refs, all_dfs)
+                if 'error' not in res: games_data[game_name] = res
+            except: continue
+
+    successful_runs = 0
+    
+    for _ in range(n_sims):
+        ticket_green = True
+        for item in ticket:
+            game_name = item['jogo']
+            if game_name not in games_data: continue
+            
+            data = games_data[game_name]
+            selection = item['mercado']
+            
+            sim_corn_h = np.random.poisson(data['corners']['h'])
+            sim_corn_a = np.random.poisson(data['corners']['a'])
+            sim_card_h = np.random.poisson(data['cards']['h'])
+            sim_card_a = np.random.poisson(data['cards']['a'])
+            
+            condition_met = False
+            if f"{data['home']} Over" in selection and "Escanteios" in selection:
+                line = float(selection.split('Over ')[1].split(' ')[0])
+                if sim_corn_h > line: condition_met = True
+            elif f"{data['away']} Over" in selection and "Escanteios" in selection:
+                line = float(selection.split('Over ')[1].split(' ')[0])
+                if sim_corn_a > line: condition_met = True
+            elif f"{data['home']} Over" in selection and "Cartões" in selection:
+                line = float(selection.split('Over ')[1].split(' ')[0])
+                if sim_card_h > line: condition_met = True
+            elif f"{data['away']} Over" in selection and "Cartões" in selection:
+                line = float(selection.split('Over ')[1].split(' ')[0])
+                if sim_card_a > line: condition_met = True
+            elif "Total Jogo Over" in selection:
+                line = float(selection.split('Over ')[1].split(' ')[0])
+                if "Escanteios" in selection or "Cantos" in selection:
+                    if (sim_corn_h + sim_corn_a) > line: condition_met = True
+                elif "Cartões" in selection:
+                    if (sim_card_h + sim_card_a) > line: condition_met = True
+            elif "DC" in selection:
+                sg_h = np.random.poisson(data['goals']['h'])
+                sg_a = np.random.poisson(data['goals']['a'])
+                if f"DC {data['home']}" in selection and sg_h >= sg_a: condition_met = True
+                elif f"DC {data['away']}" in selection and sg_a >= sg_h: condition_met = True
+
+            if not condition_met:
+                ticket_green = False
+                break 
+        
+        if ticket_green: successful_runs += 1
+            
+    return (successful_runs / n_sims) * 100
+
+# ═══════════════════════════════════════════════════════════════════════════
 # INTERFACE PRINCIPAL
 # ═══════════════════════════════════════════════════════════════════════════
 
@@ -462,8 +523,8 @@ def main():
         calendar = load_calendar_safe()
         all_dfs = load_all_dataframes()
         
-    st.title("💎 FutPrevisão V27.2 Visual")
-    tab1, tab2, tab3, tab4, tab5 = st.tabs(["📅 Calendário", "🔍 Simulação", "🎯 Scanner/Manual", "🛡️ Hedges", "📊 Radares"])
+    st.title("💎 FutPrevisão V27.3 Simulator")
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["📅 Calendário", "🔍 Match Center", "🎯 Scanner/Manual", "🧪 Simulador", "🛡️ Hedges", "📊 Radares"])
     
     # ─── TAB 1: CALENDÁRIO ───
     with tab1:
@@ -473,10 +534,9 @@ def main():
             sel_date_cal = st.selectbox("Selecione a Data:", dates, key="cal_date")
             df_cal_show = calendar[calendar['DtObj'].dt.strftime('%d/%m/%Y') == sel_date_cal].copy()
             st.dataframe(df_cal_show[['Hora', 'Liga', 'Time_Casa', 'Time_Visitante']], hide_index=True, use_container_width=True)
-        else:
-            st.warning("Nenhum calendário carregado.")
+        else: st.warning("Nenhum calendário carregado.")
 
-    # ─── TAB 2: SIMULAÇÃO (VISUAL UPGRADE) ───
+    # ─── TAB 2: MATCH CENTER ───
     with tab2:
         st.header("🔍 Match Center")
         if not calendar.empty:
@@ -491,18 +551,13 @@ def main():
                 res_sim = calcular_jogo_v23(row_sim['Time_Casa'], row_sim['Time_Visitante'], stats, None, refs, all_dfs)
                 
                 if 'error' not in res_sim:
-                    # PROBABILIDADES
                     c1, c2, c3 = st.columns(3)
                     c1.metric("Casa Vence", f"{res_sim['monte_carlo']['h']:.1f}%")
                     c2.metric("Empate", f"{res_sim['monte_carlo']['d']:.1f}%")
                     c3.metric("Visitante Vence", f"{res_sim['monte_carlo']['a']:.1f}%")
-                    
                     st.divider()
-                    
-                    # ESTATÍSTICAS DETALHADAS (PEDIDO DO USUÁRIO)
                     st.subheader("📊 Comparativo de Médias")
                     
-                    # Data preparation for Bar Chart
                     teams = [res_sim['home'], res_sim['away']]
                     data_corners = [res_sim['corners']['h'], res_sim['corners']['a']]
                     data_cards = [res_sim['cards']['h'], res_sim['cards']['a']]
@@ -513,24 +568,9 @@ def main():
                         'Métrica': ['Escanteios']*2 + ['Cartões']*2 + ['xG (Gols)']*2,
                         'Valor': data_corners + data_cards + data_xg
                     })
-                    
                     fig_bar = px.bar(df_compare, x='Métrica', y='Valor', color='Time', barmode='group',
                                      color_discrete_sequence=['#1f77b4', '#ff7f0e'], height=400)
-                    fig_bar.update_layout(plot_bgcolor='white', paper_bgcolor='white', font_color='black')
                     st.plotly_chart(fig_bar, use_container_width=True)
-                    
-                    # NUMEROS PUROS
-                    c_h, c_a = st.columns(2)
-                    with c_h:
-                        st.info(f"**{res_sim['home']}**")
-                        st.write(f"⛳ Cantos: {res_sim['corners']['h']:.1f}")
-                        st.write(f"🟨 Cartões: {res_sim['cards']['h']:.1f}")
-                        st.write(f"⚽ xG: {res_sim['goals']['h']:.2f}")
-                    with c_a:
-                        st.error(f"**{res_sim['away']}**")
-                        st.write(f"⛳ Cantos: {res_sim['corners']['a']:.1f}")
-                        st.write(f"🟨 Cartões: {res_sim['cards']['a']:.1f}")
-                        st.write(f"⚽ xG: {res_sim['goals']['a']:.2f}")
 
     # ─── TAB 3: SCANNER/MANUAL ───
     with tab3:
@@ -553,10 +593,8 @@ def main():
                         st.success(f"Encontradas {len(res['ticket'])} apostas de valor!")
                     else: st.warning("Nenhuma aposta com Valor Esperado positivo encontrada hoje.")
             else:
-                # MODO MANUAL COM PRÉVIA
                 games = sorted((df_day['Time_Casa'] + ' vs ' + df_day['Time_Visitante']).unique())
                 sel_game = st.selectbox("Jogo:", games, key="sel_game_manual")
-                
                 if sel_game:
                     if sel_game not in st.session_state.manual_game_cache:
                         row = df_day[(df_day['Time_Casa'] + ' vs ' + df_day['Time_Visitante']) == sel_game].iloc[0]
@@ -569,12 +607,10 @@ def main():
                                 label = f"{m['mercado']} (@{m['odd']})"
                                 options_map[label] = m
                             sorted_labels = sorted(options_map.keys())
-                            st.session_state.manual_game_cache[sel_game] = (options_map, sorted_labels, res) # Salva 'res' tb
+                            st.session_state.manual_game_cache[sel_game] = (options_map, sorted_labels, res)
                     
                     if sel_game in st.session_state.manual_game_cache:
                         options_map, sorted_labels, res_cached = st.session_state.manual_game_cache[sel_game]
-                        
-                        # --- UPGRADE: MOSTRAR STATS ANTES DE ESCOLHER ---
                         with st.expander("📊 Ver Estatísticas do Jogo", expanded=True):
                             sc1, sc2, sc3, sc4 = st.columns(4)
                             sc1.metric(f"Cantos {res_cached['home']}", f"{res_cached['corners']['h']:.1f}")
@@ -599,18 +635,42 @@ def main():
                     extra = f" <span class='ev-badge'>EV +{it['ev']}%</span>" if 'ev' in it and it['ev'] > 0 else ""
                     st.markdown(f"✅ {it['jogo']} - {it.get('mercado')} (@{it['odd']}){extra}", unsafe_allow_html=True)
 
-    # ─── TAB 4: HEDGES ───
+    # ─── TAB 4: SIMULADOR (NOVO!) ───
     with tab4:
-        st.header("🛡️ Sistema de Proteção V27 (Dynamic)")
+        st.header("🧪 Simulador de Bilhetes (Prova de Fogo)")
+        if not st.session_state.current_ticket:
+            st.warning("⚠️ Monte um bilhete na aba anterior para simular.")
+        else:
+            st.write("O robô vai jogar 1.000 partidas virtuais com as médias dos times e calcular a chance real do seu bilhete bater.")
+            if st.button("🔴 RODAR SIMULAÇÃO (1000x)", type="primary"):
+                with st.spinner("Simulando..."):
+                    win_rate = simulate_ticket_monte_carlo(st.session_state.current_ticket, stats, refs, all_dfs)
+                    total_odd = np.prod([x['odd'] for x in st.session_state.current_ticket])
+                    fair_odd = 100 / win_rate if win_rate > 0 else 999.0
+                    ev_total = (win_rate/100 * total_odd) - 1
+                    
+                    st.markdown("---")
+                    c1, c2, c3 = st.columns(3)
+                    c1.metric("Probabilidade Real", f"{win_rate:.1f}%")
+                    c2.metric("Odd Justa", f"@{fair_odd:.2f}")
+                    c3.metric("Odd do Bilhete", f"@{total_odd:.2f}")
+                    
+                    if ev_total > 0:
+                        st.success(f"💎 APOSTA DE VALOR! EV Positivo: +{ev_total*100:.1f}%")
+                    else:
+                        st.error(f"💀 APOSTA RUIM. EV Negativo: -{abs(ev_total)*100:.1f}% (A casa ganha)")
+
+    # ─── TAB 5: HEDGES ───
+    with tab5:
+        st.header("🛡️ Sistema de Proteção V27")
         if st.session_state.current_ticket:
-            if st.button("🛡️ CALCULAR HEDGES (Dynamic Odds)", type="primary"):
+            if st.button("🛡️ CALCULAR HEDGES", type="primary"):
                 hedges = generate_hedges_for_user_ticket(st.session_state.current_ticket, stats, refs, all_dfs)
                 c1, c2, c3 = st.columns(3)
                 with c1:
                     st.subheader("📋 Principal")
                     st.metric("Odd", f"@{hedges['principal']['odd']}")
-                    for i in hedges['principal']['itens']: 
-                        st.markdown(f"{i['jogo']} - {i['selecao']}", unsafe_allow_html=True)
+                    for i in hedges['principal']['itens']: st.markdown(f"{i['jogo']} - {i['selecao']}", unsafe_allow_html=True)
                 with c2:
                     st.subheader("🛡️ Hedge 1 (Espelho)")
                     st.metric("Odd", f"@{hedges['hedge1']['odd']}")
@@ -621,8 +681,8 @@ def main():
                     for i in hedges['hedge2']['itens']: st.caption(f"{i['jogo']} - {i['selecao']}")
         else: st.warning("Adicione jogos na Aba 3 primeiro.")
 
-    # ─── TAB 5: RADARES ───
-    with tab5:
+    # ─── TAB 6: RADARES ───
+    with tab6:
         st.header("📊 Radar de Performance")
         all_teams = sorted(list(stats.keys()))
         t1 = st.selectbox("Time 1:", all_teams, key="radar_t1")
