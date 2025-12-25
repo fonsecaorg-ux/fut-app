@@ -198,26 +198,60 @@ def detect_game_context(home:str,away:str,league:str,pos_h:int=None,pos_a:int=No
 
 @st.cache_data(ttl=3600)
 def find_and_load_csv(league:str)->pd.DataFrame:
-    """Carrega CSV da liga"""
-    attempts=[f"{league} 25.26.csv",f"{league.replace(' ','_')}_25_26.csv",f"{league}.csv"]
-    if "Süper" in league: attempts.extend(["Super Lig Turquia 25.26.csv"])
-    if "Pro League" in league: attempts.append("Pro League Belgica 25.26.csv")
-    if "Premiership" in league or "Scottish" in league: attempts.append("Premiership Escocia 25.26.csv")
-    if "Championship" in league: attempts.append("Championship Inglaterra 25.26.csv")
-    for filename in attempts:
-        for directory in ['/mnt/project/','./']:
-            filepath=os.path.join(directory,filename)
+    """Carrega CSV da liga - CORRIGIDO V31.1"""
+    # Mapeamento EXATO dos nomes
+    league_files = {
+        'Premier League': 'Premier_League_25_26.csv',
+        'La Liga': 'La_Liga_25_26.csv',
+        'Serie A': 'Serie_A_25_26.csv',
+        'Bundesliga': 'Bundesliga_25_26.csv',
+        'Ligue 1': 'Ligue_1_25_26.csv',
+        'Championship': 'Championship_Inglaterra_25_26.csv',
+        'Bundesliga 2': 'Bundesliga_2.csv',
+        'Pro League': 'Pro_League_Belgica_25_26.csv',
+        'Süper Lig': 'Super_Lig_Turquia_25_26.csv',
+        'Premiership': 'Premiership_Escocia_25_26.csv'
+    }
+    
+    # Tentar mapeamento direto primeiro
+    filename = league_files.get(league)
+    if filename:
+        for directory in ['/mnt/project/', './','']:
+            filepath = os.path.join(directory, filename) if directory else filename
             if os.path.exists(filepath):
                 try:
-                    try: df=pd.read_csv(filepath,encoding='utf-8-sig')
-                    except: df=pd.read_csv(filepath,encoding='latin1')
+                    df = pd.read_csv(filepath, encoding='utf-8-sig')
                     if not df.empty:
-                        df.columns=[c.strip().replace('\ufeff','') for c in df.columns]
-                        df=df.rename(columns={'Mandante':'HomeTeam','Visitante':'AwayTeam',
-                                              'Time_Casa':'HomeTeam','Time_Visitante':'AwayTeam'})
-                        df['_League_']=league
+                        df.columns = [c.strip().replace('\ufeff', '') for c in df.columns]
+                        df = df.rename(columns={'Mandante':'HomeTeam', 'Visitante':'AwayTeam',
+                                                'Time_Casa':'HomeTeam', 'Time_Visitante':'AwayTeam'})
+                        df['_League_'] = league
                         return df
-                except: continue
+                except Exception as e:
+                    continue
+    
+    # Fallback: tentar variações
+    attempts = [
+        f"{league.replace(' ', '_')}_25_26.csv",
+        f"{league}_25_26.csv",
+        f"{league}.csv"
+    ]
+    
+    for filename in attempts:
+        for directory in ['/mnt/project/', './', '']:
+            filepath = os.path.join(directory, filename) if directory else filename
+            if os.path.exists(filepath):
+                try:
+                    df = pd.read_csv(filepath, encoding='utf-8-sig')
+                    if not df.empty:
+                        df.columns = [c.strip().replace('\ufeff', '') for c in df.columns]
+                        df = df.rename(columns={'Mandante':'HomeTeam', 'Visitante':'AwayTeam',
+                                                'Time_Casa':'HomeTeam', 'Time_Visitante':'AwayTeam'})
+                        df['_League_'] = league
+                        return df
+                except:
+                    continue
+    
     return pd.DataFrame()
 
 @st.cache_data(ttl=3600)
@@ -399,13 +433,30 @@ def main():
                 unsafe_allow_html=True)
     
     with st.spinner("🔄 Carregando sistema MAXIMUM..."):
-        stats,h2h,clusters=learn_stats_maximum()
-        cal=load_calendar()
-        st.session_state.h2h_matrix=h2h
-        st.session_state.team_clusters=clusters
+        try:
+            stats, h2h, clusters = learn_stats_maximum()
+            cal = load_calendar()
+            st.session_state.h2h_matrix = h2h
+            st.session_state.team_clusters = clusters
+        except Exception as e:
+            st.error(f"❌ Erro ao carregar sistema: {str(e)}")
+            st.info("💡 **Possíveis soluções:**\n\n1. Verifique se os CSVs estão na mesma pasta do app\n2. Certifique-se que os nomes são: `Premier_League_25_26.csv`, etc\n3. Tente recarregar a página (F5)")
+            import traceback
+            with st.expander("🔧 Detalhes técnicos (para debug)"):
+                st.code(traceback.format_exc())
+            return
     
     if not stats:
-        st.error("❌ Erro ao carregar dados")
+        st.error("❌ Nenhum dado foi carregado")
+        st.info("💡 **Verifique:**\n\n✅ Os CSVs estão na pasta correta?\n✅ Os nomes dos arquivos estão corretos?\n✅ Os arquivos não estão corrompidos?")
+        
+        # Mostrar arquivos encontrados
+        import glob
+        csv_files = glob.glob("*.csv") + glob.glob("/mnt/project/*.csv")
+        if csv_files:
+            with st.expander("📁 Arquivos CSV encontrados"):
+                for f in csv_files:
+                    st.text(f)
         return
     
     with st.sidebar:
@@ -443,7 +494,7 @@ def main():
         st.caption("• ROC AUC")
         st.caption("• 15+ Visualizações")
     
-    tab1,tab2,tab3,tab4,tab5=st.tabs(["🎫 Construtor","🛡️ Hedges MAXIMUM","🎲 Simulador","📊 Métricas PRO","🎨 Visualizações"])
+    tab1,tab2,tab3,tab4,tab5,tab6=st.tabs(["🎫 Construtor","🛡️ Hedges MAXIMUM","🎲 Simulador","📊 Métricas PRO","🎨 Visualizações","🔍 Scanner de Partidas"])
     
     with tab1:
         st.header("🎫 Construtor de Bilhetes V31 MAXIMUM")
@@ -702,6 +753,8 @@ def main():
                     
                     # Criar hedges (2 seleções por jogo)
                     hedges_created=0
+                    hedges_list=[]  # Para salvar
+                    
                     for hedge_idx in range(min(max_hedges,len(all_markets)//len(st.session_state.current_ticket))):
                         st.markdown(f"#### 🛡️ Hedge {hedge_idx+1}")
                         
@@ -725,6 +778,14 @@ def main():
                             for s in hedge_sels:
                                 st.caption(f"• {s['jogo']}: {s['market']['name']} ({s['prob']:.1f}% | @{s['odd']:.2f} | Value: {s['value']:.2f})")
                             
+                            # Salvar hedge
+                            hedges_list.append({
+                                'index':hedge_idx+1,
+                                'selections':hedge_sels,
+                                'prob':prob_hedge,
+                                'odd':odd_hedge
+                            })
+                            
                             hedges_created+=1
                             
                             # Remover mercados usados
@@ -736,8 +797,12 @@ def main():
                     
                     if hedges_created==0:
                         st.warning("⚠️ Não foi possível gerar hedges com os critérios atuais. Tente reduzir a probabilidade mínima.")
+                        st.session_state.hedges_data=None
                     else:
                         st.success(f"✅ {hedges_created} hedge(s) gerado(s) com V31 MAXIMUM!")
+                        
+                        # Salvar hedges no session_state
+                        st.session_state.hedges_data={'hedges':hedges_list}
                         
                         st.markdown("---")
                         st.markdown("### 💡 Análise de Cobertura")
@@ -760,9 +825,14 @@ def main():
         else:
             st.success("✨ Poisson Bivariado + Contexto + H2H + Clusters")
             n_sim=st.slider("Simulações:",100,10000,1000,100)
+            
+            simulate_hedges=st.checkbox("Simular também os Hedges gerados?",value=True)
+            
             if st.button("▶️ SIMULAR MAXIMUM",type="primary",use_container_width=True):
                 with st.spinner(f"⏳ {n_sim} simulações..."):
-                    results=[]
+                    
+                    # SIMULAR PRINCIPAL
+                    results_principal=[]
                     for _ in range(n_sim):
                         all_hit=True
                         for g in st.session_state.current_ticket:
@@ -773,13 +843,78 @@ def main():
                                     all_hit=False
                                     break
                             if not all_hit: break
-                        results.append(all_hit)
-                    wr=(sum(results)/n_sim)*100
-                    ci_l,ci_u=bootstrap_ci_fast(np.array(results,dtype=float))
-                    st.markdown("### 📊 Resultados")
-                    c1,c2=st.columns(2)
-                    c1.metric("🎯 Taxa Acerto",f"{wr:.1f}%",f"IC:[{ci_l*100:.1f}%,{ci_u*100:.1f}%]")
-                    c2.metric("✅ Greens",f"{sum(results)}/{n_sim}")
+                        results_principal.append(all_hit)
+                    
+                    wr_principal=(sum(results_principal)/n_sim)*100
+                    ci_l_p,ci_u_p=bootstrap_ci_fast(np.array(results_principal,dtype=float))
+                    
+                    st.markdown("---")
+                    st.markdown("### 🎫 BILHETE PRINCIPAL")
+                    c1,c2,c3=st.columns(3)
+                    c1.metric("🎯 Taxa Acerto",f"{wr_principal:.1f}%")
+                    c2.metric("📊 IC 95%",f"[{ci_l_p*100:.1f}%, {ci_u_p*100:.1f}%]")
+                    c3.metric("✅ Greens",f"{sum(results_principal)}/{n_sim}")
+                    
+                    # SIMULAR HEDGES (se existirem e checkbox marcado)
+                    if simulate_hedges and st.session_state.hedges_data:
+                        st.markdown("---")
+                        st.markdown("### 🛡️ SIMULAÇÃO DOS HEDGES")
+                        
+                        hedges_list=st.session_state.hedges_data.get('hedges',[])
+                        
+                        for h_idx,hedge in enumerate(hedges_list[:3],1):
+                            # Simular este hedge
+                            results_hedge=[]
+                            for _ in range(n_sim):
+                                all_hit_h=True
+                                for sel in hedge['selections']:
+                                    # Encontrar o jogo correspondente
+                                    jogo_match=None
+                                    for g in st.session_state.current_ticket:
+                                        if g['jogo']==sel.get('jogo'):
+                                            jogo_match=g
+                                            break
+                                    
+                                    if jogo_match:
+                                        h_st,a_st=jogo_match['home_stats'],jogo_match['away_stats']
+                                        sim=simulate_game_v31(h_st,a_st,1)[0]
+                                        if not check_sel(sim,sel.get('market',{})):
+                                            all_hit_h=False
+                                            break
+                                
+                                results_hedge.append(all_hit_h)
+                            
+                            wr_hedge=(sum(results_hedge)/n_sim)*100
+                            ci_l_h,ci_u_h=bootstrap_ci_fast(np.array(results_hedge,dtype=float))
+                            
+                            st.markdown(f"#### 🛡️ Hedge {h_idx}")
+                            c1,c2,c3=st.columns(3)
+                            c1.metric(f"Taxa Acerto H{h_idx}",f"{wr_hedge:.1f}%")
+                            c2.metric("IC 95%",f"[{ci_l_h*100:.1f}%, {ci_u_h*100:.1f}%]")
+                            c3.metric("Greens",f"{sum(results_hedge)}/{n_sim}")
+                        
+                        st.markdown("---")
+                        st.markdown("### 📊 COMPARAÇÃO")
+                        
+                        comparison_data={
+                            'Bilhete':['Principal']+[f'Hedge {i+1}' for i in range(len(hedges_list[:3]))],
+                            'Prob (%)': [wr_principal]+[0]*len(hedges_list[:3])
+                        }
+                        
+                        df_comp=pd.DataFrame(comparison_data)
+                        
+                        fig=go.Figure(data=[
+                            go.Bar(x=df_comp['Bilhete'],y=df_comp['Prob (%)'],
+                                  marker_color=['#667eea','#f093fb','#f5576c','#48c6ef'][:len(df_comp)])
+                        ])
+                        fig.update_layout(title="Probabilidade de Acerto - Principal vs Hedges",
+                                        template='plotly_dark',yaxis_title="Probabilidade (%)")
+                        st.plotly_chart(fig,use_container_width=True)
+                    
+                    else:
+                        if not st.session_state.hedges_data:
+                            st.info("💡 Gere hedges na Tab 2 para simular cobertura!")
+                    
                     st.success("✅ Simulação concluída com Poisson Bivariado!")
     
     with tab4:
@@ -824,6 +959,131 @@ def main():
                 except: pass
         else:
             st.info("Adicione jogos para ver radar charts")
+    
+    with tab6:
+        st.header("🔍 Scanner de Partidas - Recomendações Automáticas")
+        st.markdown("**Análise inteligente dos melhores jogos para apostar em cantos e cartões**")
+        
+        if cal.empty:
+            st.warning("⚠️ Calendário não disponível")
+        else:
+            # Seletor de data
+            dates=sorted(cal['DtObj'].dt.strftime('%d/%m/%Y').unique())
+            sel_date_scanner=st.selectbox("📅 Selecione a data:",dates,key="scanner_date")
+            
+            if st.button("🔍 ANALISAR PARTIDAS",type="primary",use_container_width=True):
+                with st.spinner("⏳ Analisando jogos..."):
+                    df_day=cal[cal['DtObj'].dt.strftime('%d/%m/%Y')==sel_date_scanner]
+                    
+                    recommendations=[]
+                    
+                    for _,row in df_day.iterrows():
+                        home_name=row.get('Time_Casa','')
+                        away_name=row.get('Time_Visitante','')
+                        league=row.get('Liga','')
+                        
+                        h_norm=normalize_name(home_name,list(stats.keys()))
+                        a_norm=normalize_name(away_name,list(stats.keys()))
+                        
+                        if h_norm and a_norm and h_norm in stats and a_norm in stats:
+                            h_st,a_st=stats[h_norm],stats[a_norm]
+                            
+                            # Calcular scores
+                            # SCORE CANTOS: quanto maior, melhor para Over cantos
+                            corners_total=h_st['corners']+a_st['corners']
+                            corners_consistency=(1-h_st['corners_std']/h_st['corners'])+(1-a_st['corners_std']/a_st['corners']) if h_st['corners']>0 and a_st['corners']>0 else 0
+                            corners_trend=h_st.get('corners_trend',0)+a_st.get('corners_trend',0)
+                            corners_score=(corners_total*0.6)+(corners_consistency*2)+(corners_trend*5)
+                            
+                            # SCORE CARTÕES: quanto maior, melhor para Over cartões
+                            cards_total=h_st['cards']+a_st['cards']
+                            cards_consistency=(1-h_st['cards_std']/h_st['cards'])+(1-a_st['cards_std']/a_st['cards']) if h_st['cards']>0 and a_st['cards']>0 else 0
+                            cards_score=(cards_total*1.5)+(cards_consistency*1.5)
+                            
+                            # Contexto
+                            context=detect_game_context(h_norm,a_norm,league)
+                            if context['type']=='DERBY':
+                                corners_score*=1.15
+                                cards_score*=1.35
+                            elif context['type']=='TOP_CLASH':
+                                corners_score*=1.08
+                                cards_score*=1.15
+                            
+                            # H2H boost
+                            h2h_key=f"{h_norm}_vs_{a_norm}"
+                            if h2h_key in h2h:
+                                h2h_data=h2h[h2h_key]
+                                if h2h_data['tc_avg']>10:
+                                    corners_score*=1.10
+                            
+                            recommendations.append({
+                                'jogo':f"{home_name} vs {away_name}",
+                                'liga':league,
+                                'hora':row.get('Hora','--:--'),
+                                'corners_score':corners_score,
+                                'cards_score':cards_score,
+                                'corners_total':corners_total,
+                                'cards_total':cards_total,
+                                'context':context['type'],
+                                'h_corners':h_st['corners'],
+                                'a_corners':a_st['corners'],
+                                'h_cards':h_st['cards'],
+                                'a_cards':a_st['cards']
+                            })
+                    
+                    if not recommendations:
+                        st.warning("Nenhuma partida encontrada com dados disponíveis")
+                    else:
+                        # Ordenar por melhor score
+                        recommendations.sort(key=lambda x:x['corners_score'],reverse=True)
+                        
+                        st.markdown("---")
+                        st.markdown("### 🎯 TOP RECOMENDAÇÕES PARA CANTOS")
+                        
+                        for idx,rec in enumerate(recommendations[:5],1):
+                            with st.expander(f"#{idx} {rec['jogo']} ({rec['hora']}) - Score: {rec['corners_score']:.1f}",expanded=(idx<=3)):
+                                c1,c2,c3,c4=st.columns(4)
+                                c1.metric("🏟️ Liga",rec['liga'])
+                                c2.metric("📊 Total Médio",f"{rec['corners_total']:.1f}")
+                                c3.metric("🏠 Casa",f"{rec['h_corners']:.1f}")
+                                c4.metric("✈️ Fora",f"{rec['a_corners']:.1f}")
+                                
+                                if rec['context']!='NORMAL':
+                                    st.info(f"🔥 {rec['context']}: Probabilidade aumentada!")
+                                
+                                # Sugestões
+                                st.markdown("**💡 Sugestões:**")
+                                if rec['corners_total']>11:
+                                    st.success(f"✅ Total Over 10.5 Cantos (Média: {rec['corners_total']:.1f})")
+                                if rec['corners_total']>9:
+                                    st.success(f"✅ Total Over 9.5 Cantos (Média: {rec['corners_total']:.1f})")
+                                if rec['h_corners']>4.5:
+                                    st.success(f"✅ Casa Over 4.5 Cantos (Média: {rec['h_corners']:.1f})")
+                        
+                        st.markdown("---")
+                        st.markdown("### 💳 TOP RECOMENDAÇÕES PARA CARTÕES")
+                        
+                        recommendations.sort(key=lambda x:x['cards_score'],reverse=True)
+                        
+                        for idx,rec in enumerate(recommendations[:5],1):
+                            with st.expander(f"#{idx} {rec['jogo']} ({rec['hora']}) - Score: {rec['cards_score']:.1f}",expanded=(idx<=3)):
+                                c1,c2,c3,c4=st.columns(4)
+                                c1.metric("🏟️ Liga",rec['liga'])
+                                c2.metric("📊 Total Médio",f"{rec['cards_total']:.1f}")
+                                c3.metric("🏠 Casa",f"{rec['h_cards']:.1f}")
+                                c4.metric("✈️ Fora",f"{rec['a_cards']:.1f}")
+                                
+                                if rec['context']!='NORMAL':
+                                    st.warning(f"🔥 {rec['context']}: Jogo quente!")
+                                
+                                # Sugestões
+                                st.markdown("**💡 Sugestões:**")
+                                if rec['cards_total']>4.5:
+                                    st.success(f"✅ Total Over 4.5 Cartões (Média: {rec['cards_total']:.1f})")
+                                if rec['cards_total']>3.5:
+                                    st.success(f"✅ Total Over 3.5 Cartões (Média: {rec['cards_total']:.1f})")
+                                if rec['h_cards']>1.8:
+                                    st.success(f"✅ Casa Over 1.5 Cartões (Média: {rec['h_cards']:.1f})")
 
 if __name__=="__main__":
     main()
