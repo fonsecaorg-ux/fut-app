@@ -494,7 +494,7 @@ def main():
         st.caption("• ROC AUC")
         st.caption("• 15+ Visualizações")
     
-    tab1,tab2,tab3,tab4,tab5,tab6=st.tabs(["🎫 Construtor","🛡️ Hedges MAXIMUM","🎲 Simulador","📊 Métricas PRO","🎨 Visualizações","🔍 Scanner de Partidas"])
+    tab1,tab2,tab3,tab4,tab5,tab6,tab7=st.tabs(["🎫 Construtor","🛡️ Hedges MAXIMUM","🎲 Simulador","📊 Métricas PRO","🎨 Visualizações","🔍 Scanner de Partidas","📝 Registrar Apostas"])
     
     with tab1:
         st.header("🎫 Construtor de Bilhetes V31 MAXIMUM")
@@ -984,6 +984,171 @@ def main():
                 except: pass
         else:
             st.info("Adicione jogos para ver radar charts")
+    
+    with tab7:
+        st.header("📝 Registrar Apostas - Alimentar Métricas PRO")
+        st.markdown("**Registre os resultados das suas apostas para acompanhar desempenho**")
+        
+        st.markdown("---")
+        
+        # Opção 1: Registro Rápido
+        st.markdown("### ⚡ Registro Rápido")
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            stake_input = st.number_input("💰 Valor Apostado (€)", min_value=1.0, value=10.0, step=5.0, key="stake_reg")
+        
+        with col2:
+            odd_input = st.number_input("📊 Odd Total", min_value=1.01, value=2.00, step=0.1, key="odd_reg")
+        
+        with col3:
+            resultado = st.radio("🎯 Resultado:", ["✅ Ganhou", "❌ Perdeu"], horizontal=True, key="resultado_reg")
+        
+        descricao = st.text_input("📝 Descrição (opcional):", placeholder="Ex: Manchester vs Arsenal - Over 10.5 cantos", key="desc_reg")
+        
+        if st.button("💾 REGISTRAR APOSTA", type="primary", use_container_width=True, key="btn_reg"):
+            ganhou = resultado == "✅ Ganhou"
+            
+            if ganhou:
+                retorno = stake_input * odd_input
+                lucro = retorno - stake_input
+            else:
+                retorno = 0
+                lucro = -stake_input
+            
+            # Salvar no session_state
+            aposta_registro = {
+                'stake': stake_input,
+                'odd': odd_input,
+                'ganhou': ganhou,
+                'return': retorno / stake_input if stake_input > 0 else 1.0,  # Multiplicador
+                'lucro': lucro,
+                'descricao': descricao if descricao else f"Aposta @{odd_input:.2f}",
+                'data': datetime.now().strftime('%d/%m/%Y %H:%M')
+            }
+            
+            st.session_state.bet_results.append(aposta_registro)
+            
+            # Atualizar bankroll
+            novo_bankroll = st.session_state.bankroll_history[-1] + lucro
+            st.session_state.bankroll_history.append(novo_bankroll)
+            
+            if ganhou:
+                st.success(f"✅ APOSTA REGISTRADA! Lucro: +€{lucro:.2f}")
+            else:
+                st.error(f"❌ APOSTA REGISTRADA! Perda: -€{abs(lucro):.2f}")
+            
+            st.balloons()
+            time.sleep(1)
+            st.rerun()
+        
+        st.markdown("---")
+        
+        # Opção 2: Registrar bilhete atual
+        st.markdown("### 🎫 Registrar Bilhete Atual")
+        
+        if st.session_state.current_ticket:
+            st.info(f"📋 Bilhete montado com {len(st.session_state.current_ticket)} jogo(s)")
+            
+            # Calcular odd total do bilhete
+            if 'ticket_odds' in st.session_state and st.session_state.ticket_odds:
+                odd_bilhete = st.session_state.ticket_odds.get('odd_total', 2.0)
+            else:
+                odd_bilhete = 2.0
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                stake_bilhete = st.number_input("💰 Valor Apostado (€)", min_value=1.0, value=10.0, step=5.0, key="stake_bilhete")
+                st.metric("📊 Odd Total", f"@{odd_bilhete:.2f}")
+            
+            with col2:
+                resultado_bilhete = st.radio("🎯 Resultado:", ["✅ Ganhou", "❌ Perdeu"], horizontal=True, key="resultado_bilhete")
+            
+            if st.button("💾 REGISTRAR BILHETE", type="primary", use_container_width=True, key="btn_bilhete"):
+                ganhou_bilhete = resultado_bilhete == "✅ Ganhou"
+                
+                if ganhou_bilhete:
+                    retorno_bilhete = stake_bilhete * odd_bilhete
+                    lucro_bilhete = retorno_bilhete - stake_bilhete
+                else:
+                    retorno_bilhete = 0
+                    lucro_bilhete = -stake_bilhete
+                
+                # Descrição do bilhete
+                jogos_desc = " + ".join([g['jogo'] for g in st.session_state.current_ticket[:2]])
+                if len(st.session_state.current_ticket) > 2:
+                    jogos_desc += f" + {len(st.session_state.current_ticket)-2} mais"
+                
+                aposta_bilhete = {
+                    'stake': stake_bilhete,
+                    'odd': odd_bilhete,
+                    'ganhou': ganhou_bilhete,
+                    'return': retorno_bilhete / stake_bilhete if stake_bilhete > 0 else 1.0,
+                    'lucro': lucro_bilhete,
+                    'descricao': f"Bilhete: {jogos_desc}",
+                    'data': datetime.now().strftime('%d/%m/%Y %H:%M')
+                }
+                
+                st.session_state.bet_results.append(aposta_bilhete)
+                
+                novo_bankroll_bilhete = st.session_state.bankroll_history[-1] + lucro_bilhete
+                st.session_state.bankroll_history.append(novo_bankroll_bilhete)
+                
+                if ganhou_bilhete:
+                    st.success(f"🎉 BILHETE REGISTRADO! Lucro: +€{lucro_bilhete:.2f}")
+                else:
+                    st.error(f"💔 BILHETE REGISTRADO! Perda: -€{abs(lucro_bilhete):.2f}")
+                
+                st.balloons()
+                time.sleep(1)
+                st.rerun()
+        else:
+            st.warning("⚠️ Monte um bilhete primeiro na Tab 'Construtor'")
+        
+        st.markdown("---")
+        
+        # Histórico de apostas
+        st.markdown("### 📜 Histórico de Apostas")
+        
+        if st.session_state.bet_results:
+            st.success(f"✅ {len(st.session_state.bet_results)} aposta(s) registrada(s)")
+            
+            # Estatísticas rápidas
+            total_apostado = sum([b['stake'] for b in st.session_state.bet_results])
+            total_lucro = sum([b['lucro'] for b in st.session_state.bet_results])
+            ganhas = sum([1 for b in st.session_state.bet_results if b['ganhou']])
+            
+            c1, c2, c3, c4 = st.columns(4)
+            c1.metric("💰 Total Apostado", f"€{total_apostado:.2f}")
+            c2.metric("📈 Lucro/Perda", f"€{total_lucro:+.2f}", 
+                     delta_color="normal" if total_lucro >= 0 else "inverse")
+            c3.metric("✅ Apostas Ganhas", f"{ganhas}/{len(st.session_state.bet_results)}")
+            c4.metric("📊 Win Rate", f"{(ganhas/len(st.session_state.bet_results)*100):.1f}%")
+            
+            st.markdown("#### Últimas 10 Apostas:")
+            
+            for idx, bet in enumerate(reversed(st.session_state.bet_results[-10:]), 1):
+                with st.expander(f"{'✅' if bet['ganhou'] else '❌'} {bet['data']} - {bet['descricao']}", expanded=(idx <= 3)):
+                    col1, col2, col3, col4 = st.columns(4)
+                    col1.metric("Stake", f"€{bet['stake']:.2f}")
+                    col2.metric("Odd", f"@{bet['odd']:.2f}")
+                    col3.metric("Resultado", "GANHOU ✅" if bet['ganhou'] else "PERDEU ❌")
+                    col4.metric("Lucro/Perda", f"€{bet['lucro']:+.2f}",
+                               delta_color="normal" if bet['lucro'] >= 0 else "inverse")
+            
+            # Botão para limpar histórico
+            st.markdown("---")
+            if st.button("🗑️ LIMPAR HISTÓRICO", type="secondary", key="clear_history"):
+                if st.checkbox("⚠️ Confirmar limpeza de histórico?", key="confirm_clear"):
+                    st.session_state.bet_results = []
+                    st.session_state.bankroll_history = [1000.0]
+                    st.success("✅ Histórico limpo!")
+                    time.sleep(1)
+                    st.rerun()
+        else:
+            st.info("📭 Nenhuma aposta registrada ainda. Use o formulário acima para começar!")
     
     with tab6:
         st.header("🔍 Scanner de Partidas - Recomendações Automáticas")
