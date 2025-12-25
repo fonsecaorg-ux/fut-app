@@ -398,6 +398,273 @@ def check_sel(sim:Dict,sel:Dict)->bool:
     return False
 
 # ═══════════════════════════════════════════════════════════════════════════
+# FUNÇÕES IMPORTAR BILHETE - TAB 8
+# ═══════════════════════════════════════════════════════════════════════════
+
+def parse_bilhete_texto(texto:str)->List[Dict]:
+    """Parse texto colado do bilhete - INTELIGENTE"""
+    import re
+    
+    linhas = [l.strip() for l in texto.split('\n') if l.strip()]
+    jogos_encontrados = []
+    jogo_atual = None
+    
+    for linha in linhas:
+        # Detectar jogo (formato: Time vs Time OU Time x Time)
+        if ' vs ' in linha or ' x ' in linha.lower():
+            vs_sep = ' vs ' if ' vs ' in linha else ' x '
+            partes = linha.split(vs_sep)
+            if len(partes) == 2:
+                jogo_atual = {
+                    'home': partes[0].strip(),
+                    'away': partes[1].strip(),
+                    'mercados': []
+                }
+                jogos_encontrados.append(jogo_atual)
+        
+        # Detectar mercados
+        elif jogo_atual:
+            # Over/Under Cantos/Escanteios
+            if any(x in linha.lower() for x in ['canto', 'escanteio', 'corner']):
+                if 'mais de' in linha.lower() or 'over' in linha.lower():
+                    # Extrair linha (3.5, 4.5, etc)
+                    nums = re.findall(r'\d+\.5', linha)
+                    if nums:
+                        line = float(nums[0])
+                        # Extrair odd se tiver
+                        odds = re.findall(r'@?\d+\.\d+', linha)
+                        odd = float(odds[-1].replace('@','')) if odds else 2.0
+                        
+                        # Detectar se é total, casa ou fora
+                        if 'total' in linha.lower():
+                            loc = 'total'
+                        elif jogo_atual['home'].lower() in linha.lower():
+                            loc = 'home'
+                        elif jogo_atual['away'].lower() in linha.lower():
+                            loc = 'away'
+                        else:
+                            loc = 'total'
+                        
+                        jogo_atual['mercados'].append({
+                            'tipo': 'corners',
+                            'location': loc,
+                            'line': line,
+                            'odd': odd,
+                            'desc': linha
+                        })
+            
+            # Over/Under Cartões
+            elif any(x in linha.lower() for x in ['cartão', 'cartoes', 'card']):
+                if 'mais de' in linha.lower() or 'over' in linha.lower():
+                    nums = re.findall(r'\d+\.5', linha)
+                    if nums:
+                        line = float(nums[0])
+                        odds = re.findall(r'@?\d+\.\d+', linha)
+                        odd = float(odds[-1].replace('@','')) if odds else 2.0
+                        
+                        if 'total' in linha.lower():
+                            loc = 'total'
+                        elif jogo_atual['home'].lower() in linha.lower():
+                            loc = 'home'
+                        elif jogo_atual['away'].lower() in linha.lower():
+                            loc = 'away'
+                        else:
+                            loc = 'total'
+                        
+                        jogo_atual['mercados'].append({
+                            'tipo': 'cards',
+                            'location': loc,
+                            'line': line,
+                            'odd': odd,
+                            'desc': linha
+                        })
+    
+    return jogos_encontrados
+
+def validar_jogos_bilhete(jogos_parsed:List[Dict], stats_db:Dict)->List[Dict]:
+    """Valida e normaliza nomes dos times"""
+    jogos_validados = []
+    times_conhecidos = list(stats_db.keys())
+    
+    for jogo in jogos_parsed:
+        home_norm = normalize_name(jogo['home'], times_conhecidos)
+        away_norm = normalize_name(jogo['away'], times_conhecidos)
+        
+        if home_norm and away_norm and home_norm in stats_db and away_norm in stats_db:
+            jogos_validados.append({
+                'home': home_norm,
+                'away': away_norm,
+                'home_original': jogo['home'],
+                'away_original': jogo['away'],
+                'mercados': jogo['mercados'],
+                'home_stats': stats_db[home_norm],
+                'away_stats': stats_db[away_norm]
+            })
+    
+    return jogos_validados
+
+def calcular_prob_bilhete(jogos_validados:List[Dict], n_sims:int=5000)->Dict:
+    """Calcula probabilidade real do bilhete com Poisson"""
+    todas_probs = []
+    detalhes = []
+    
+    for jogo in jogos_validados:
+        for mercado in jogo['mercados']:
+            # Simular jogo
+            sims = simulate_game_v31(jogo['home_stats'], jogo['away_stats'], n_sims)
+            
+            # Checar quantas simulações passam
+            hits = sum(1 for sim in sims if check_sel(sim, {
+                'type': mercado['tipo'],
+                'location': mercado['location'],
+                'line': mercado['line']
+            }))
+            
+            prob = (hits / n_sims) * 100
+            
+            # Odd justa
+            odd_justa = 100 / prob if prob > 0 else 99.0
+            
+            # Value
+            value = (prob/100 * mercado['odd']) / 1.0
+            
+            todas_probs.append(prob / 100)
+            
+            detalhes.append({
+                'jogo': f"{jogo['home']} vs {jogo['away']}",
+                'mercado': mercado['desc'],
+                'prob_real': prob,
+                'odd_casa': mercado['odd'],
+                'odd_justa': odd_justa,
+                'value': value,
+                'tem_value': value > 1.05
+            })
+    
+    # Probabilidade combinada
+    prob_total = np.prod(todas_probs) * 100 if todas_probs else 0
+    
+    return {
+        'prob_total': prob_total,
+        'detalhes': detalhes,
+        'num_selecoes': len(detalhes)
+    }
+
+def gerar_hedges_bilhete(jogos_validados:List[Dict], stake_principal:float, odd_principal:float, n_sims:int=5000)->List[Dict]:
+    """Gera 3 tipos de hedge para o bilhete"""
+    hedges = []
+    
+    # Coletar todas as seleções com probs
+    selecoes_com_prob = []
+    for jogo in jogos_validados:
+        for mercado in jogo['mercados']:
+            sims = simulate_game_v31(jogo['home_stats'], jogo['away_stats'], n_sims)
+            hits = sum(1 for sim in sims if check_sel(sim, {
+                'type': mercado['tipo'],
+                'location': mercado['location'],
+                'line': mercado['line']
+            }))
+            prob = (hits / n_sims) * 100
+            
+            selecoes_com_prob.append({
+                'jogo': jogo,
+                'mercado': mercado,
+                'prob': prob
+            })
+    
+    # HEDGE 1: Inverter a de MENOR probabilidade
+    if selecoes_com_prob:
+        selecoes_com_prob.sort(key=lambda x: x['prob'])
+        menor_prob = selecoes_com_prob[0]
+        
+        # Criar hedge invertendo essa seleção
+        hedge1_selecoes = []
+        for sel in selecoes_com_prob:
+            if sel == menor_prob:
+                # Inverter (Under ao invés de Over)
+                novo_line = sel['mercado']['line']
+                hedge1_selecoes.append({
+                    'jogo': f"{sel['jogo']['home']} vs {sel['jogo']['away']}",
+                    'desc': f"Under {novo_line} {sel['mercado']['tipo']}",
+                    'odd': 1.8,  # Estimativa
+                    'prob': 100 - sel['prob']
+                })
+        
+        if hedge1_selecoes:
+            stake_hedge1 = stake_principal * 0.3
+            odd_hedge1 = np.prod([s['odd'] for s in hedge1_selecoes])
+            
+            hedges.append({
+                'tipo': 'Proteção Inteligente',
+                'descricao': f'Inverte a seleção de menor probabilidade ({menor_prob["prob"]:.1f}%)',
+                'selecoes': hedge1_selecoes,
+                'stake': stake_hedge1,
+                'odd': odd_hedge1,
+                'retorno_se_acerta': stake_hedge1 * odd_hedge1,
+                'resultado_se_principal_ganha': stake_principal * odd_principal - stake_hedge1,
+                'resultado_se_hedge_ganha': stake_hedge1 * odd_hedge1 - stake_principal
+            })
+    
+    # HEDGE 2: Inverter METADE das seleções
+    if len(selecoes_com_prob) >= 2:
+        metade = len(selecoes_com_prob) // 2
+        hedge2_selecoes = []
+        
+        for sel in selecoes_com_prob[:metade]:
+            hedge2_selecoes.append({
+                'jogo': f"{sel['jogo']['home']} vs {sel['jogo']['away']}",
+                'desc': f"Under {sel['mercado']['line']} {sel['mercado']['tipo']}",
+                'odd': 1.9,
+                'prob': 100 - sel['prob']
+            })
+        
+        if hedge2_selecoes:
+            stake_hedge2 = stake_principal * 0.5
+            odd_hedge2 = np.prod([s['odd'] for s in hedge2_selecoes])
+            
+            hedges.append({
+                'tipo': 'Proteção Parcial',
+                'descricao': f'Inverte {len(hedge2_selecoes)} seleções de menor probabilidade',
+                'selecoes': hedge2_selecoes,
+                'stake': stake_hedge2,
+                'odd': odd_hedge2,
+                'retorno_se_acerta': stake_hedge2 * odd_hedge2,
+                'resultado_se_principal_ganha': stake_principal * odd_principal - stake_hedge2,
+                'resultado_se_hedge_ganha': stake_hedge2 * odd_hedge2 - stake_principal
+            })
+    
+    # HEDGE 3: Inverter TODAS (lucro garantido se odds forem boas)
+    if selecoes_com_prob:
+        hedge3_selecoes = []
+        
+        for sel in selecoes_com_prob:
+            hedge3_selecoes.append({
+                'jogo': f"{sel['jogo']['home']} vs {sel['jogo']['away']}",
+                'desc': f"Under {sel['mercado']['line']} {sel['mercado']['tipo']}",
+                'odd': 2.1,
+                'prob': 100 - sel['prob']
+            })
+        
+        if hedge3_selecoes:
+            odd_hedge3 = np.prod([s['odd'] for s in hedge3_selecoes])
+            # Calcular stake para lucro garantido
+            stake_hedge3 = stake_principal * odd_principal / (odd_hedge3 + 1)
+            
+            lucro_garantido = stake_principal * odd_principal - stake_principal - stake_hedge3
+            
+            hedges.append({
+                'tipo': 'Lucro Garantido',
+                'descricao': 'Inverte todas as seleções - arbitragem completa',
+                'selecoes': hedge3_selecoes,
+                'stake': stake_hedge3,
+                'odd': odd_hedge3,
+                'retorno_se_acerta': stake_hedge3 * odd_hedge3,
+                'lucro_garantido': lucro_garantido,
+                'resultado_qualquer': lucro_garantido
+            })
+    
+    return hedges
+
+# ═══════════════════════════════════════════════════════════════════════════
 # VISUALIZAÇÕES
 # ═══════════════════════════════════════════════════════════════════════════
 
@@ -494,7 +761,7 @@ def main():
         st.caption("• ROC AUC")
         st.caption("• 15+ Visualizações")
     
-    tab1,tab2,tab3,tab4,tab5,tab6,tab7=st.tabs(["🎫 Construtor","🛡️ Hedges MAXIMUM","🎲 Simulador","📊 Métricas PRO","🎨 Visualizações","🔍 Scanner de Partidas","📝 Registrar Apostas"])
+    tab1,tab2,tab3,tab4,tab5,tab6,tab7,tab8=st.tabs(["🎫 Construtor","🛡️ Hedges MAXIMUM","🎲 Simulador","📊 Métricas PRO","🎨 Visualizações","🔍 Scanner de Partidas","📝 Registrar Apostas","📋 Importar Bilhete"])
     
     with tab1:
         st.header("🎫 Construtor de Bilhetes V31 MAXIMUM")
@@ -1274,6 +1541,259 @@ def main():
                                     st.success(f"✅ Total Over 3.5 Cartões (Média: {rec['cards_total']:.1f})")
                                 if rec['h_cards']>1.8:
                                     st.success(f"✅ Casa Over 1.5 Cartões (Média: {rec['h_cards']:.1f})")
+    
+    with tab8:
+        st.header("📋 Importar Bilhete - Gerar Hedges Automáticos")
+        st.markdown("**Cole seu bilhete da casa de apostas e gere hedges inteligentes automaticamente!**")
+        
+        st.markdown("---")
+        
+        # Instruções
+        with st.expander("📖 Como usar"):
+            st.markdown("""
+            **Passo 1:** Cole o texto do seu bilhete no campo abaixo
+            
+            **Exemplo:**
+            ```
+            Brentford vs Bournemouth
+            Total Escanteios: Mais de 3.5 @1.30
+            
+            Torino vs Cagliari
+            Total Cartões: Mais de 3.5
+            
+            Parma vs Fiorentina
+            Total Cartões: Mais de 3.5 @1.33
+            ```
+            
+            **Passo 2:** Informe stake e odd total
+            
+            **Passo 3:** Clique em ANALISAR
+            
+            **Resultado:** Sistema gera 3 tipos de hedge automaticamente!
+            """)
+        
+        st.markdown("---")
+        
+        # Input do bilhete
+        st.markdown("### 📝 Cole seu bilhete aqui:")
+        
+        texto_bilhete = st.text_area(
+            "Texto do Bilhete:",
+            height=200,
+            placeholder="""Brentford vs Bournemouth
+Total Escanteios: Mais de 3.5 @1.30
+
+Torino vs Cagliari  
+Total Cartões: Mais de 3.5
+Total Escanteios: Mais de 3.5
+
+Parma vs Fiorentina
+Total Cartões: Mais de 3.5 @1.33""",
+            key="bilhete_texto"
+        )
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            stake_bilhete_input = st.number_input(
+                "💰 Stake (R$):",
+                min_value=1.0,
+                value=30.0,
+                step=5.0,
+                key="stake_bilhete_input"
+            )
+        
+        with col2:
+            odd_bilhete_input = st.number_input(
+                "📊 Odd Total:",
+                min_value=1.01,
+                value=3.54,
+                step=0.01,
+                key="odd_bilhete_input"
+            )
+        
+        if st.button("🔍 ANALISAR BILHETE E GERAR HEDGES", type="primary", use_container_width=True, key="analisar_bilhete"):
+            if not texto_bilhete.strip():
+                st.error("⚠️ Cole o texto do bilhete primeiro!")
+            else:
+                with st.spinner("⏳ Analisando bilhete e gerando hedges..."):
+                    try:
+                        # PASSO 1: Parse do texto
+                        jogos_parsed = parse_bilhete_texto(texto_bilhete)
+                        
+                        if not jogos_parsed:
+                            st.error("❌ Não foi possível identificar jogos no texto. Verifique o formato!")
+                        else:
+                            st.success(f"✅ {len(jogos_parsed)} jogo(s) identificado(s)!")
+                            
+                            # PASSO 2: Validar jogos
+                            jogos_validados = validar_jogos_bilhete(jogos_parsed, stats)
+                            
+                            if not jogos_validados:
+                                st.warning("⚠️ Nenhum jogo pôde ser validado. Verifique os nomes dos times.")
+                                
+                                with st.expander("🔍 Jogos encontrados (não validados):"):
+                                    for jogo in jogos_parsed:
+                                        st.write(f"- {jogo['home']} vs {jogo['away']}")
+                            else:
+                                st.success(f"✅ {len(jogos_validados)} jogo(s) validado(s) no sistema!")
+                                
+                                # Calcular total de seleções
+                                total_selecoes = sum(len(j['mercados']) for j in jogos_validados)
+                                
+                                st.info(f"📊 **Bilhete:** {len(jogos_validados)} jogo(s) • {total_selecoes} seleção(ões)")
+                                
+                                # PASSO 3: Calcular probabilidade real
+                                analise = calcular_prob_bilhete(jogos_validados, n_sims=3000)
+                                
+                                st.markdown("---")
+                                st.markdown("### 📊 ANÁLISE DO BILHETE")
+                                
+                                col1, col2, col3, col4 = st.columns(4)
+                                
+                                with col1:
+                                    st.metric("🎲 Prob Real", f"{analise['prob_total']:.1f}%")
+                                
+                                with col2:
+                                    odd_justa = 100 / analise['prob_total'] if analise['prob_total'] > 0 else 99
+                                    st.metric("📊 Odd Justa", f"@{odd_justa:.2f}")
+                                
+                                with col3:
+                                    value_score = (analise['prob_total']/100 * odd_bilhete_input)
+                                    st.metric("💎 Value", f"{value_score:.2f}",
+                                             delta="BOM!" if value_score > 1.05 else "RUIM",
+                                             delta_color="normal" if value_score > 1.05 else "inverse")
+                                
+                                with col4:
+                                    retorno_esperado = stake_bilhete_input * odd_bilhete_input
+                                    st.metric("💰 Retorno Pot.", f"R$ {retorno_esperado:.2f}")
+                                
+                                # Detalhes por seleção
+                                with st.expander("🔍 Detalhes por Seleção", expanded=True):
+                                    for det in analise['detalhes']:
+                                        col1, col2, col3, col4 = st.columns([3, 2, 1, 1])
+                                        
+                                        with col1:
+                                            st.write(f"**{det['jogo']}**")
+                                            st.caption(det['mercado'])
+                                        
+                                        with col2:
+                                            st.metric("Prob Real", f"{det['prob_real']:.1f}%")
+                                        
+                                        with col3:
+                                            st.metric("Odd Casa", f"@{det['odd_casa']:.2f}")
+                                        
+                                        with col4:
+                                            if det['tem_value']:
+                                                st.success("✅ VALUE")
+                                            else:
+                                                st.error("❌ SEM VALUE")
+                                
+                                # PASSO 4: Gerar Hedges
+                                st.markdown("---")
+                                st.markdown("### 🛡️ HEDGES GERADOS AUTOMATICAMENTE")
+                                
+                                hedges = gerar_hedges_bilhete(jogos_validados, stake_bilhete_input, odd_bilhete_input, n_sims=3000)
+                                
+                                if not hedges:
+                                    st.warning("⚠️ Não foi possível gerar hedges. Tente com mais seleções.")
+                                else:
+                                    st.success(f"✅ {len(hedges)} estratégia(s) de hedge gerada(s)!")
+                                    
+                                    for idx, hedge in enumerate(hedges, 1):
+                                        with st.expander(f"🛡️ HEDGE {idx}: {hedge['tipo']}", expanded=(idx == 1)):
+                                            st.markdown(f"**{hedge['descricao']}**")
+                                            st.markdown("---")
+                                            
+                                            col1, col2, col3 = st.columns(3)
+                                            
+                                            with col1:
+                                                st.metric("💰 Stake Hedge", f"R$ {hedge['stake']:.2f}")
+                                                st.caption(f"Stake Total: R$ {stake_bilhete_input + hedge['stake']:.2f}")
+                                            
+                                            with col2:
+                                                st.metric("📊 Odd Hedge", f"@{hedge['odd']:.2f}")
+                                            
+                                            with col3:
+                                                st.metric("💸 Retorno", f"R$ {hedge['retorno_se_acerta']:.2f}")
+                                            
+                                            st.markdown("**Seleções do Hedge:**")
+                                            for sel in hedge['selecoes']:
+                                                st.caption(f"• {sel['jogo']}: {sel['desc']} @{sel['odd']:.2f}")
+                                            
+                                            st.markdown("---")
+                                            st.markdown("**💡 Cenários:**")
+                                            
+                                            if 'lucro_garantido' in hedge:
+                                                # Hedge tipo 3 - Lucro garantido
+                                                st.success(f"🎉 **LUCRO GARANTIDO:** R$ {hedge['lucro_garantido']:+.2f} (qualquer resultado!)")
+                                            else:
+                                                # Hedges tipo 1 e 2
+                                                col1, col2 = st.columns(2)
+                                                
+                                                with col1:
+                                                    st.info(f"✅ **Se Principal GANHA:**\nLucro: R$ {hedge['resultado_se_principal_ganha']:+.2f}")
+                                                
+                                                with col2:
+                                                    st.warning(f"🛡️ **Se Hedge GANHA:**\nResultado: R$ {hedge['resultado_se_hedge_ganha']:+.2f}")
+                                    
+                                    # Comparação visual
+                                    st.markdown("---")
+                                    st.markdown("### 📊 COMPARAÇÃO VISUAL")
+                                    
+                                    comp_data = {
+                                        'Estratégia': ['Sem Hedge', 'Hedge 1', 'Hedge 2', 'Hedge 3'][:len(hedges)+1],
+                                        'Stake Total': [stake_bilhete_input] + [stake_bilhete_input + h['stake'] for h in hedges],
+                                        'Melhor Caso': [stake_bilhete_input * odd_bilhete_input - stake_bilhete_input] + 
+                                                      [h.get('resultado_se_principal_ganha', h.get('lucro_garantido', 0)) for h in hedges],
+                                        'Pior Caso': [-stake_bilhete_input] + 
+                                                    [h.get('resultado_se_hedge_ganha', h.get('lucro_garantido', 0)) for h in hedges]
+                                    }
+                                    
+                                    df_comp = pd.DataFrame(comp_data)
+                                    
+                                    fig = go.Figure()
+                                    fig.add_trace(go.Bar(
+                                        name='Melhor Caso (Principal Ganha)',
+                                        x=df_comp['Estratégia'],
+                                        y=df_comp['Melhor Caso'],
+                                        marker_color='#48c6ef'
+                                    ))
+                                    fig.add_trace(go.Bar(
+                                        name='Pior Caso (Hedge Ganha)',
+                                        x=df_comp['Estratégia'],
+                                        y=df_comp['Pior Caso'],
+                                        marker_color='#f5576c'
+                                    ))
+                                    
+                                    fig.update_layout(
+                                        title="Comparação de Resultados",
+                                        barmode='group',
+                                        template='plotly_dark',
+                                        yaxis_title="Lucro/Perda (R$)",
+                                        height=400
+                                    )
+                                    
+                                    st.plotly_chart(fig, use_container_width=True)
+                                    
+                                    # Recomendação
+                                    st.markdown("---")
+                                    st.markdown("### 💡 RECOMENDAÇÃO DO SISTEMA")
+                                    
+                                    if analise['prob_total'] < 30:
+                                        st.warning(f"⚠️ **Probabilidade Real Baixa ({analise['prob_total']:.1f}%)**\n\nRecomendamos usar **Hedge 3 (Lucro Garantido)** ou reduzir stake.")
+                                    elif value_score < 1.0:
+                                        st.error(f"❌ **SEM VALUE** (Value Score: {value_score:.2f})\n\nAs odds da casa estão ruins. Considere **Hedge 2 ou 3** para proteger.")
+                                    elif value_score > 1.10:
+                                        st.success(f"✅ **EXCELENTE VALUE!** (Value Score: {value_score:.2f})\n\nPode apostar direto ou usar **Hedge 1** para proteção leve.")
+                                    else:
+                                        st.info(f"📊 **VALUE NEUTRO** (Value Score: {value_score:.2f})\n\nRecomendamos **Hedge 2** para equilibrar risco/retorno.")
+                    
+                    except Exception as e:
+                        st.error(f"❌ Erro ao processar bilhete: {str(e)}")
+                        with st.expander("🔧 Detalhes do erro"):
+                            import traceback
+                            st.code(traceback.format_exc())
 
 if __name__=="__main__":
     main()
