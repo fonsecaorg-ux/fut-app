@@ -522,7 +522,183 @@ def main():
             - 📊 Bootstrap CI (95%)
             - 🎯 Value Score
             """)
-            st.info("🚧 Motor de hedges completo em desenvolvimento. Features V31 ativas nas estatísticas!")
+            
+            st.markdown("### ⚙️ Configurações de Hedge")
+            c1,c2,c3=st.columns(3)
+            with c1: min_prob=st.slider("Prob Mínima (%)",30,70,40,5)
+            with c2: n_sims=st.slider("Simulações",200,2000,500,100)
+            with c3: max_hedges=st.slider("Max Hedges",2,5,3,1)
+            
+            if st.button("🚀 GERAR HEDGES MAXIMUM",type="primary",use_container_width=True):
+                with st.spinner("⏳ Gerando hedges com V31 MAXIMUM..."):
+                    
+                    # ANÁLISE DO BILHETE PRINCIPAL
+                    principal_sels=[]
+                    for g in st.session_state.current_ticket:
+                        for s in g['selections']:
+                            principal_sels.append({
+                                'jogo':g['jogo'],'sel':s,
+                                'home_stats':g['home_stats'],'away_stats':g['away_stats'],
+                                'context':g.get('context',{})
+                            })
+                    
+                    # CALCULAR PROBABILIDADES COM V31
+                    principal_probs=[]
+                    for ps in principal_sels:
+                        h_st,a_st=ps['home_stats'],ps['away_stats']
+                        sel=ps['sel']
+                        ctx=ps['context']
+                        
+                        # Aplicar contexto
+                        h_corners=h_st['corners']*ctx.get('factor_corners',1.0)
+                        a_corners=a_st['corners']*ctx.get('factor_corners',1.0)
+                        h_cards=h_st['cards']*ctx.get('factor_cards',1.0)
+                        a_cards=a_st['cards']*ctx.get('factor_cards',1.0)
+                        
+                        # Simular
+                        sims=[]
+                        for _ in range(n_sims):
+                            ch,ca=bivariate_poisson_vectorized(h_corners,a_corners,-0.25,1)
+                            cdh,cda=np.random.poisson(h_cards,1),np.random.poisson(a_cards,1)
+                            gh,ga=bivariate_poisson_vectorized(h_st['goals_f'],a_st.get('goals_f',1.2),0.15,1)
+                            sims.append({'home_corners':ch[0],'away_corners':ca[0],
+                                       'home_cards':cdh[0],'away_cards':cda[0],
+                                       'home_goals':gh[0],'away_goals':ga[0]})
+                        
+                        hits=sum(1 for s in sims if check_sel(s,sel))
+                        prob=(hits/n_sims)*100
+                        
+                        # Bootstrap CI
+                        ci_l,ci_u=bootstrap_ci_fast(np.array([1 if check_sel(s,sel) else 0 for s in sims],dtype=float))
+                        
+                        # Value Score
+                        odd=get_odd(sel['location'],sel['type'],sel.get('line',0))
+                        value=calculate_value_score(prob/100,odd)
+                        
+                        # Kelly
+                        kelly=kelly_criterion_fractional(prob/100,odd,var=0.1)
+                        
+                        principal_probs.append({
+                            'jogo':ps['jogo'],'mercado':sel['mercado'],'prob':prob,
+                            'ci':(ci_l*100,ci_u*100),'odd':odd,'value':value,'kelly':kelly
+                        })
+                    
+                    # Calcular prob combinada
+                    prob_principal=np.prod([p['prob']/100 for p in principal_probs])*100
+                    odd_principal=np.prod([p['odd'] for p in principal_probs])
+                    
+                    st.markdown("---")
+                    st.markdown("### 🎫 BILHETE PRINCIPAL")
+                    
+                    c1,c2,c3,c4=st.columns(4)
+                    c1.metric("🎯 Probabilidade",f"{prob_principal:.1f}%")
+                    c2.metric("💰 Odd Total",f"@{odd_principal:.2f}")
+                    roi_principal=(prob_principal/100)*odd_principal*100-100
+                    c3.metric("📊 ROI Esperado",f"{roi_principal:+.1f}%")
+                    kelly_principal=kelly_criterion_fractional(prob_principal/100,odd_principal,0.15)
+                    c4.metric("💎 Kelly Stake",f"{kelly_principal*100:.1f}%")
+                    
+                    for idx,p in enumerate(principal_probs,1):
+                        with st.expander(f"Seleção {idx}: {p['jogo']} - {p['mercado']}"):
+                            c1,c2,c3=st.columns(3)
+                            c1.metric("Probabilidade",f"{p['prob']:.1f}%",
+                                     f"IC: [{p['ci'][0]:.1f}%, {p['ci'][1]:.1f}%]")
+                            c2.metric("Value Score",f"{p['value']:.2f}",
+                                     "✅ VALUE!" if p['value']>1.10 else "⚠️ Sem value")
+                            c3.metric("Kelly Stake",f"{p['kelly']*100:.1f}%")
+                    
+                    # GERAR HEDGES
+                    st.markdown("---")
+                    st.markdown("### 🛡️ HEDGES GERADOS")
+                    
+                    # Gerar combinações alternativas
+                    all_markets=[]
+                    for g in st.session_state.current_ticket:
+                        h_name,a_name=g['jogo'].split(' vs ')
+                        h_st,a_st=g['home_stats'],g['away_stats']
+                        
+                        # Mercados alternativos
+                        alt_mkts=[
+                            {'type':'corners','location':'away','line':2.5,'name':f"{a_name} Over 2.5 Cantos"},
+                            {'type':'corners','location':'away','line':3.5,'name':f"{a_name} Over 3.5 Cantos"},
+                            {'type':'corners','location':'total','line':8.5,'name':"Total Over 8.5 Cantos"},
+                            {'type':'corners','location':'total','line':10.5,'name':"Total Over 10.5 Cantos"},
+                            {'type':'cards','location':'total','line':3.5,'name':"Total Over 3.5 Cartões"},
+                            {'type':'cards','location':'total','line':4.5,'name':"Total Over 4.5 Cartões"},
+                        ]
+                        
+                        # Filtrar os que não estão no principal
+                        principal_mkts=[sel['mercado'] for sel in g['selections']]
+                        alt_mkts=[m for m in alt_mkts if m['name'] not in principal_mkts]
+                        
+                        # Simular cada alternativa
+                        for mkt in alt_mkts[:4]:  # Max 4 por jogo
+                            sims_alt=simulate_game_v31(h_st,a_st,n_sims)
+                            hits=sum(1 for s in sims_alt if check_sel(s,mkt))
+                            prob=(hits/n_sims)*100
+                            
+                            if prob>=min_prob:
+                                odd=get_odd(mkt['location'],mkt['type'],mkt['line'])
+                                all_markets.append({
+                                    'jogo':g['jogo'],'market':mkt,'prob':prob,'odd':odd,
+                                    'value':calculate_value_score(prob/100,odd)
+                                })
+                    
+                    # Ordenar por value score
+                    all_markets.sort(key=lambda x:x['value'],reverse=True)
+                    
+                    # Criar hedges (2 seleções por jogo)
+                    hedges_created=0
+                    for hedge_idx in range(min(max_hedges,len(all_markets)//len(st.session_state.current_ticket))):
+                        st.markdown(f"#### 🛡️ Hedge {hedge_idx+1}")
+                        
+                        hedge_sels=[]
+                        for g in st.session_state.current_ticket:
+                            # Pegar 2 melhores mercados deste jogo
+                            jogo_mkts=[m for m in all_markets if m['jogo']==g['jogo']][:2]
+                            if len(jogo_mkts)==2:
+                                hedge_sels.extend(jogo_mkts)
+                        
+                        if len(hedge_sels)==len(st.session_state.current_ticket)*2:
+                            prob_hedge=np.prod([s['prob']/100 for s in hedge_sels])*100
+                            odd_hedge=np.prod([s['odd'] for s in hedge_sels])
+                            
+                            c1,c2,c3=st.columns(3)
+                            c1.metric("🎯 Prob Hedge",f"{prob_hedge:.1f}%")
+                            c2.metric("💰 Odd Hedge",f"@{odd_hedge:.2f}")
+                            roi_h=(prob_hedge/100)*odd_hedge*100-100
+                            c3.metric("📊 ROI",f"{roi_h:+.1f}%")
+                            
+                            for s in hedge_sels:
+                                st.caption(f"• {s['jogo']}: {s['market']['name']} ({s['prob']:.1f}% | @{s['odd']:.2f} | Value: {s['value']:.2f})")
+                            
+                            hedges_created+=1
+                            
+                            # Remover mercados usados
+                            for s in hedge_sels:
+                                if s in all_markets:
+                                    all_markets.remove(s)
+                        else:
+                            break
+                    
+                    if hedges_created==0:
+                        st.warning("⚠️ Não foi possível gerar hedges com os critérios atuais. Tente reduzir a probabilidade mínima.")
+                    else:
+                        st.success(f"✅ {hedges_created} hedge(s) gerado(s) com V31 MAXIMUM!")
+                        
+                        st.markdown("---")
+                        st.markdown("### 💡 Análise de Cobertura")
+                        
+                        st.info(f"""
+                        **Estratégia Recomendada:**
+                        - Principal: {kelly_principal*100:.1f}% do bankroll (€{bankroll*kelly_principal:.2f})
+                        - Cada Hedge: {kelly_principal*0.5*100:.1f}% do bankroll (€{bankroll*kelly_principal*0.5:.2f})
+                        
+                        **Cenários:**
+                        - ✅ Principal acerta: +€{bankroll*kelly_principal*(odd_principal-1):.2f}
+                        - 🛡️ Hedge acerta: Minimiza perda
+                        - ❌ Nenhum acerta: -{len(st.session_state.current_ticket)*2*kelly_principal*100:.1f}% bankroll
+                        """)
     
     with tab3:
         st.header("🎲 Simulador Monte Carlo MAXIMUM")
