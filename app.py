@@ -834,7 +834,9 @@ def adaptive_recommendation(ticket: List[Dict], stats: Dict) -> Dict:
             'message': f'❌ PERIGO: {len(ticket)} jogos = chance muito baixa! Reduza para 2-3',
             'target_odd_per_game': (1.80, 2.20),
             'target_odd_total': (3.24, 4.84)
-        } 
+        }
+
+def generate_hedges_v30(principal_games: List[Dict], stats: Dict, 
                        min_prob: float = 40.0, n_sims: int = 500,
                        progress_callback=None) -> Dict:
     """
