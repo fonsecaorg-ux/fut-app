@@ -2,6 +2,7 @@
 ╔═══════════════════════════════════════════════════════════════════════════╗
 ║           FUTPREVISÃO V31 MAXIMUM - SISTEMA DEFINITIVO COMPLETO           ║
 ║                        VERSÃO FINAL - PRODUÇÃO                            ║
+║                   SEM SKLEARN - 100% NUMPY/SCIPY                          ║
 ╚═══════════════════════════════════════════════════════════════════════════╝
 """
 
@@ -15,12 +16,6 @@ from difflib import get_close_matches
 from itertools import combinations
 from scipy import stats
 from scipy.stats import poisson, norm, beta
-from sklearn.cluster import KMeans
-from sklearn.preprocessing import StandardScaler
-from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import train_test_split
-from sklearn.isotonic import IsotonicRegression
-from sklearn.metrics import roc_auc_score
 import math
 import os
 import time
@@ -236,19 +231,42 @@ def learn_stats_maximum()->Tuple[Dict,Dict,Dict]:
             h2h_stats[key]={'n':len(games),'hc_avg':np.mean([g['hc'] for g in games]),
                            'ac_avg':np.mean([g['ac'] for g in games]),'tc_avg':np.mean([g['tc'] for g in games]),
                            'volatility':np.std([g['tc'] for g in games])}
-    # CLUSTERING
+    # CLUSTERING SIMPLES (sem sklearn)
     teams,features=[],[]
     for team,st in stats_db.items():
         teams.append(team)
         features.append([st['corners'],st['cards'],st['goals_f'],st['corners_std'],st['cards_std']])
+    
+    team_clusters={}
     if len(features)>10:
-        scaler=StandardScaler()
-        features_scaled=scaler.fit_transform(np.array(features))
+        # Normalizar manualmente
+        features_arr=np.array(features)
+        mean=features_arr.mean(axis=0)
+        std=features_arr.std(axis=0)+1e-8
+        features_scaled=(features_arr-mean)/std
+        
+        # K-Means simples (versão numpy pura)
         n_clust=min(5,len(features)//10)
-        kmeans=KMeans(n_clusters=n_clust,random_state=42,n_init=10)
-        clusters=kmeans.fit_predict(features_scaled)
+        n_iter=20
+        
+        # Inicializar centroids aleatoriamente
+        np.random.seed(42)
+        idx=np.random.choice(len(features_scaled),n_clust,replace=False)
+        centroids=features_scaled[idx]
+        
+        # Iterações K-Means
+        for _ in range(n_iter):
+            # Atribuir clusters (distância euclidiana)
+            distances=np.sqrt(((features_scaled[:,np.newaxis]-centroids)**2).sum(axis=2))
+            clusters=np.argmin(distances,axis=1)
+            
+            # Atualizar centroids
+            for k in range(n_clust):
+                if np.sum(clusters==k)>0:
+                    centroids[k]=features_scaled[clusters==k].mean(axis=0)
+        
         team_clusters={teams[i]:int(clusters[i]) for i in range(len(teams))}
-    else: team_clusters={}
+    
     return stats_db,h2h_stats,team_clusters
 
 @st.cache_data(ttl=600)
