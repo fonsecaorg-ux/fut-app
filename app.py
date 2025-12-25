@@ -721,22 +721,34 @@ def main():
                         h_name,a_name=g['jogo'].split(' vs ')
                         h_st,a_st=g['home_stats'],g['away_stats']
                         
-                        # Mercados alternativos
+                        # Mercados alternativos - AMPLIADO para gerar mais hedges
                         alt_mkts=[
+                            # Cantos visitante
                             {'type':'corners','location':'away','line':2.5,'name':f"{a_name} Over 2.5 Cantos"},
                             {'type':'corners','location':'away','line':3.5,'name':f"{a_name} Over 3.5 Cantos"},
+                            {'type':'corners','location':'away','line':4.5,'name':f"{a_name} Over 4.5 Cantos"},
+                            # Cantos casa
+                            {'type':'corners','location':'home','line':3.5,'name':f"{h_name} Over 3.5 Cantos"},
+                            {'type':'corners','location':'home','line':4.5,'name':f"{h_name} Over 4.5 Cantos"},
+                            # Total cantos
                             {'type':'corners','location':'total','line':8.5,'name':"Total Over 8.5 Cantos"},
+                            {'type':'corners','location':'total','line':9.5,'name':"Total Over 9.5 Cantos"},
                             {'type':'corners','location':'total','line':10.5,'name':"Total Over 10.5 Cantos"},
+                            {'type':'corners','location':'total','line':11.5,'name':"Total Over 11.5 Cantos"},
+                            # Cartões
                             {'type':'cards','location':'total','line':3.5,'name':"Total Over 3.5 Cartões"},
                             {'type':'cards','location':'total','line':4.5,'name':"Total Over 4.5 Cartões"},
+                            {'type':'cards','location':'total','line':5.5,'name':"Total Over 5.5 Cartões"},
+                            {'type':'cards','location':'home','line':1.5,'name':f"{h_name} Over 1.5 Cartões"},
+                            {'type':'cards','location':'away','line':1.5,'name':f"{a_name} Over 1.5 Cartões"},
                         ]
                         
                         # Filtrar os que não estão no principal
                         principal_mkts=[sel['mercado'] for sel in g['selections']]
                         alt_mkts=[m for m in alt_mkts if m['name'] not in principal_mkts]
                         
-                        # Simular cada alternativa
-                        for mkt in alt_mkts[:4]:  # Max 4 por jogo
+                        # Simular cada alternativa (aumentar para 8)
+                        for mkt in alt_mkts[:8]:  # Max 8 mercados por jogo
                             sims_alt=simulate_game_v31(h_st,a_st,n_sims)
                             hits=sum(1 for s in sims_alt if check_sel(s,mkt))
                             prob=(hits/n_sims)*100
@@ -755,44 +767,57 @@ def main():
                     hedges_created=0
                     hedges_list=[]  # Para salvar
                     
-                    for hedge_idx in range(min(max_hedges,len(all_markets)//len(st.session_state.current_ticket))):
+                    for hedge_idx in range(min(max_hedges, len(all_markets)//len(st.session_state.current_ticket))):
                         st.markdown(f"#### 🛡️ Hedge {hedge_idx+1}")
                         
-                        hedge_sels=[]
-                        for g in st.session_state.current_ticket:
-                            # Pegar 2 melhores mercados deste jogo
-                            jogo_mkts=[m for m in all_markets if m['jogo']==g['jogo']][:2]
-                            if len(jogo_mkts)==2:
-                                hedge_sels.extend(jogo_mkts)
+                        hedge_sels = []
+                        markets_used_this_hedge = []
                         
-                        if len(hedge_sels)==len(st.session_state.current_ticket)*2:
-                            prob_hedge=np.prod([s['prob']/100 for s in hedge_sels])*100
-                            odd_hedge=np.prod([s['odd'] for s in hedge_sels])
+                        for g in st.session_state.current_ticket:
+                            # Pegar mercados DISPONÍVEIS deste jogo (que não foram usados ainda)
+                            jogo_mkts = [m for m in all_markets if m['jogo'] == g['jogo']]
                             
-                            c1,c2,c3=st.columns(3)
-                            c1.metric("🎯 Prob Hedge",f"{prob_hedge:.1f}%")
-                            c2.metric("💰 Odd Hedge",f"@{odd_hedge:.2f}")
-                            roi_h=(prob_hedge/100)*odd_hedge*100-100
-                            c3.metric("📊 ROI",f"{roi_h:+.1f}%")
+                            # Pegar os 2 melhores disponíveis
+                            selected = jogo_mkts[:2]
+                            
+                            if len(selected) >= 2:
+                                hedge_sels.extend(selected)
+                                markets_used_this_hedge.extend(selected)
+                            elif len(selected) == 1:
+                                # Só tem 1 disponível, ainda assim adiciona
+                                hedge_sels.append(selected[0])
+                                markets_used_this_hedge.append(selected[0])
+                        
+                        # Aceitar hedge se tem pelo menos 2 seleções POR JOGO
+                        if len(hedge_sels) >= len(st.session_state.current_ticket) * 2:
+                            prob_hedge = np.prod([s['prob']/100 for s in hedge_sels]) * 100
+                            odd_hedge = np.prod([s['odd'] for s in hedge_sels])
+                            
+                            c1, c2, c3 = st.columns(3)
+                            c1.metric("🎯 Prob Hedge", f"{prob_hedge:.1f}%")
+                            c2.metric("💰 Odd Hedge", f"@{odd_hedge:.2f}")
+                            roi_h = (prob_hedge/100) * odd_hedge * 100 - 100
+                            c3.metric("📊 ROI", f"{roi_h:+.1f}%")
                             
                             for s in hedge_sels:
                                 st.caption(f"• {s['jogo']}: {s['market']['name']} ({s['prob']:.1f}% | @{s['odd']:.2f} | Value: {s['value']:.2f})")
                             
                             # Salvar hedge
                             hedges_list.append({
-                                'index':hedge_idx+1,
-                                'selections':hedge_sels,
-                                'prob':prob_hedge,
-                                'odd':odd_hedge
+                                'index': hedge_idx+1,
+                                'selections': hedge_sels,
+                                'prob': prob_hedge,
+                                'odd': odd_hedge
                             })
                             
-                            hedges_created+=1
+                            hedges_created += 1
                             
-                            # Remover mercados usados
-                            for s in hedge_sels:
+                            # CRÍTICO: Remover mercados usados ANTES do próximo loop
+                            for s in markets_used_this_hedge:
                                 if s in all_markets:
                                     all_markets.remove(s)
                         else:
+                            # Se não conseguiu montar hedge completo, para
                             break
                     
                     if hedges_created==0:
