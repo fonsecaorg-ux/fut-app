@@ -25,13 +25,48 @@ warnings.filterwarnings('ignore')
 
 st.set_page_config(page_title="FutPrevisão V31 MAXIMUM", page_icon="🔥", layout="wide")
 
-# CSS
+# CSS Melhorado - Fundo Claro e Legível
 st.markdown("""<style>
-.stApp { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-.stButton>button { width: 100%; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); 
-                   color: white; font-weight: bold; border: none; padding: 12px; border-radius: 8px; }
-h1, h2, h3 { color: white !important; }
-.stMetric { background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; }
+.stApp { 
+    background: linear-gradient(to bottom, #f5f7fa 0%, #c3cfe2 100%);
+}
+.stButton>button { 
+    width: 100%; 
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+    color: white; 
+    font-weight: bold; 
+    border: none; 
+    padding: 12px; 
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+.stButton>button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+}
+h1, h2, h3 { 
+    color: #1a202c !important;
+    text-shadow: 1px 1px 2px rgba(255,255,255,0.5);
+}
+.stMetric { 
+    background: rgba(255,255,255,0.9); 
+    padding: 15px; 
+    border-radius: 10px;
+    border: 2px solid #667eea;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+.stMarkdown {
+    color: #2d3748 !important;
+}
+.stExpander {
+    background: rgba(255,255,255,0.95);
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+.stSelectbox, .stSlider {
+    background: rgba(255,255,255,0.9);
+    border-radius: 5px;
+}
 </style>""", unsafe_allow_html=True)
 
 # SESSION STATE
