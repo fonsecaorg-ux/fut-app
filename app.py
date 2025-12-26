@@ -1233,54 +1233,176 @@ Por enquanto, use os comandos:
                 st.chat_message("assistant", avatar="🤖").markdown(msg['content'])
         
         # Input
-        user_input = st.chat_input("Digite um comando... (ex: /jogos)")
-        
-        if user_input:
+    
+ if user_input:
             st.session_state.chat_history.append({'role': 'user', 'content': user_input})
             
             cmd = user_input.lower()
             response = ""
             
-            if '/jogos' in cmd:
+            # JOGOS DE HOJE/AMANHÃ
+            if 'jogo' in cmd or 'partida' in cmd:
+                # Determinar data
+                if 'amanha' in cmd or 'amanhã' in cmd:
+                    target_date = (datetime.now() + timedelta(days=1)).strftime('%d/%m/%Y')
+                    periodo = "AMANHÃ"
+                else:
+                    target_date = datetime.now().strftime('%d/%m/%Y')
+                    periodo = "HOJE"
+                
+                # Determinar mercado
+                if 'gol' in cmd:
+                    mercado_tipo = 'gols'
+                    header = f"⚽ MELHORES PARA GOLS {periodo}"
+                elif 'canto' in cmd or 'escanteio' in cmd:
+                    mercado_tipo = 'cantos'
+                    header = f"🔶 MELHORES PARA CANTOS {periodo}"
+                elif 'cartao' in cmd or 'cartão' in cmd:
+                    mercado_tipo = 'cartoes'
+                    header = f"🟨 MELHORES PARA CARTÕES {periodo}"
+                else:
+                    mercado_tipo = 'geral'
+                    header = f"🎯 MELHORES JOGOS {periodo}"
+                
+                # Buscar jogos
                 if not cal.empty:
+                    jogos_dia = cal[cal['DtObj'].dt.strftime('%d/%m/%Y') == target_date]
+                    
+                    if len(jogos_dia) > 0:
+                        lista = []
+                        
+                        for _, jogo in jogos_dia.iterrows():
+                            h = normalize_name(jogo['Time_Casa'], list(stats.keys()))
+                            a = normalize_name(jogo['Time_Visitante'], list(stats.keys()))
+                            
+                            if h and a and h in stats and a in stats:
+                                calc = calcular_jogo_v31(stats[h], stats[a], {})
+                                
+                                score = 0
+                                info = ""
+                                
+                                if mercado_tipo == 'gols':
+                                    total = calc['goals']['h'] + calc['goals']['a']
+                                    if total > 2.5:
+                                        score = int(total * 25)
+                                        prob = min(int((total - 2.5) * 30 + 60), 85)
+                                        info = f"Over 2.5 ({prob}%) - xG: {calc['goals']['h']:.1f}x{calc['goals']['a']:.1f}"
+                                
+                                elif mercado_tipo == 'cantos':
+                                    if calc['corners']['t'] > 10.5:
+                                        score = int(calc['corners']['t'] * 7)
+                                        prob = min(int((calc['corners']['t'] - 10.5) * 10 + 70), 85)
+                                        info = f"Over 10.5 ({prob}%) - Previsão: {calc['corners']['t']:.1f}"
+                                
+                                elif mercado_tipo == 'cartoes':
+                                    if calc['cards']['t'] > 4.5:
+                                        score = int(calc['cards']['t'] * 12)
+                                        prob = min(int((calc['cards']['t'] - 4.5) * 15 + 68), 82)
+                                        info = f"Over 4.5 ({prob}%) - Previsão: {calc['cards']['t']:.1f}"
+                                
+                                else:
+                                    score = int((calc['corners']['t'] * 5) + (calc['cards']['t'] * 8))
+                                    info = f"Cantos: {calc['corners']['t']:.1f} | Cartões: {calc['cards']['t']:.1f}"
+                                
+                                if score > 0:
+                                    lista.append({
+                                        'nome': f"{h} vs {a}",
+                                        'hora': jogo.get('Hora', 'N/A'),
+                                        'liga': stats[h]['league'],
+                                        'score': score,
+                                        'info': info
+                                    })
+                        
+                        if lista:
+                            lista = sorted(lista, key=lambda x: x['score'], reverse=True)[:5]
+                            
+                            response = f"**{header}:**\\n\\n"
+                            
+                            for i, item in enumerate(lista, 1):
+                                emoji = "🔥" if i == 1 else "✅"
+                                response += f"{emoji} **{i}. {item['nome']}**\\n"
+                                response += f"   🕐 {item['hora']} | 🏆 {item['liga']}\\n"
+                                response += f"   {item['info']}\\n\\n"
+                        else:
+                            response = f"⚠️ Sem jogos bons para {mercado_tipo} {periodo.lower()}"
+                    else:
+                        response = f"📅 Sem jogos para {periodo}"
+                else:
+                    response = "❌ Calendário indisponível"
+            
+            # ESTATÍSTICAS DE TIME
+            elif 'como esta' in cmd or 'como está' in cmd or 'como ta' in cmd or 'como tá' in cmd:
+                times_achou = []
+                for team in stats.keys():
+                    if team.lower() in cmd:
+                        times_achou.append(team)
+                
+                if times_achou:
+                    s = stats[times_achou[0]]
+                    nome = times_achou[0]
+                    
+                    response = f"**ANÁLISE - {nome}**\\n\\n"
+                    response += f"🏟️ Liga: {s['league']} | Jogos: {s['games']}\\n\\n"
+                    response += f"⚽ **ATAQUE:** {s['goals_f']:.2f} gols/jogo\\n"
+                    response += f"{'🔥 Muito ofensivo!' if s['goals_f'] > 2.0 else '📊 Médio' if s['goals_f'] > 1.5 else '⚠️ Fraco'}\\n\\n"
+                    response += f"🛡️ **DEFESA:** {s['goals_a']:.2f} gols sofridos/jogo\\n"
+                    response += f"{'✅ Sólida!' if s['goals_a'] < 1.0 else '📊 Média' if s['goals_a'] < 1.5 else '⚠️ Vazada'}\\n\\n"
+                    response += f"🔶 **CANTOS:** {s['corners']:.1f}/jogo\\n"
+                    response += f"🟨 **CARTÕES:** {s['cards']:.1f}/jogo\\n"
+                    response += f"⚠️ **FALTAS:** {s['fouls']:.1f}/jogo"
+                else:
+                    response = "⚠️ Não achei o time. Tente: 'Como está o Liverpool?'"
+            
+            # COMANDOS /
+            elif cmd.startswith('/'):
+                if '/jogos' in cmd:
                     hoje = datetime.now().strftime('%d/%m/%Y')
-                    jogos_h = cal[cal['DtObj'].dt.strftime('%d/%m/%Y') == hoje]
+                    jogos_h = cal[cal['DtObj'].dt.strftime('%d/%m/%Y') == hoje] if not cal.empty else []
                     
                     if len(jogos_h) > 0:
-                        response = f"🎯 **JOGOS HOJE ({hoje}):**\n\n"
+                        response = "🎯 **JOGOS HOJE:**\\n\\n"
                         count = 0
-                        
                         for _, j in jogos_h.head(5).iterrows():
                             h = normalize_name(j['Time_Casa'], list(stats.keys()))
                             a = normalize_name(j['Time_Visitante'], list(stats.keys()))
-                            
-                            if h and a and h in stats and a in stats:
+                            if h and a:
                                 count += 1
-                                response += f"**{count}. {h} vs {a}** 🕐 {j.get('Hora', 'N/A')}\n\n"
+                                response += f"**{count}. {h} vs {a}** 🕐 {j.get('Hora', 'N/A')}\\n\\n"
                     else:
                         response = "📅 Sem jogos hoje"
+                
+                elif '/ajuda' in cmd:
+                    response = "**COMO USAR:**\\n\\n"
+                    response += "💬 **PERGUNTAS:**\\n"
+                    response += "• 'Melhor jogo para gols amanhã'\\n"
+                    response += "• 'Como está o Liverpool'\\n"
+                    response += "• 'Jogos hoje'\\n"
+                    response += "• 'Melhores para cantos'\\n\\n"
+                    response += "📋 **COMANDOS:**\\n"
+                    response += "• /jogos - Jogos hoje\\n"
+                    response += "• /bilhete - Ver bilhete\\n"
+                    response += "• /ajuda - Esta ajuda"
+                
+                elif '/bilhete' in cmd:
+                    if st.session_state.current_ticket:
+                        response = f"🎫 **BILHETE:** {len(st.session_state.current_ticket)} seleções\\n\\n"
+                        for i, sel in enumerate(st.session_state.current_ticket, 1):
+                            response += f"{i}. {sel['market_display']} ({sel['prob']}%)\\n"
+                    else:
+                        response = "📭 Bilhete vazio!"
+                
                 else:
-                    response = "❌ Calendário não disponível"
+                    response = "💡 Use /ajuda para ver comandos!"
             
-            elif '/ajuda' in cmd:
-                response = """📚 **COMANDOS:**
-
-• `/jogos` - Jogos de hoje
-• `/bilhete` - Analisar bilhete
-• `/ajuda` - Mostrar ajuda"""
-            
-            elif '/bilhete' in cmd:
-                if st.session_state.current_ticket:
-                    response = f"🎫 **SEU BILHETE:**\n\n"
-                    response += f"Seleções: {len(st.session_state.current_ticket)}\n"
-                    
-                    for i, sel in enumerate(st.session_state.current_ticket, 1):
-                        response += f"{i}. {sel['market_display']} ({sel['prob']}%)\n"
-                else:
-                    response = "📭 Bilhete vazio!"
-            
+            # FALLBACK
             else:
-                response = "💡 Use `/ajuda` para ver comandos disponíveis!"
+                response = "🤔 Não entendi...\\n\\n"
+                response += "💡 **Tente:**\\n"
+                response += "• 'Melhor jogo para gols amanhã'\\n"
+                response += "• 'Como está o Liverpool'\\n"
+                response += "• 'Jogos de hoje'\\n"
+                response += "• 'Melhores jogos para cantos'\\n\\n"
+                response += "Ou use /ajuda"
             
             st.session_state.chat_history.append({'role': 'assistant', 'content': response})
             st.rerun()
