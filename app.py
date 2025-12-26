@@ -1233,8 +1233,7 @@ Por enquanto, use os comandos:
                 st.chat_message("assistant", avatar="🤖").markdown(msg['content'])
         
         # Input
-    
- if user_input:
+     if user_input:
             st.session_state.chat_history.append({'role': 'user', 'content': user_input})
             
             cmd = user_input.lower()
