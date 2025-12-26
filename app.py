@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
-from scipy.stats import poisson, norm
+from scipy.stats import poisson, norm, beta
 import json
 import hmac
 import os
@@ -100,8 +100,14 @@ if not check_password():
     st.stop()
 
 # ==============================================================================
-# 2. CARREGAMENTO DE DADOS (V31 ENGINE)
+# 2. CARREGAMENTO DE DADOS (V31 ENGINE - GITHUB FIX)
 # ==============================================================================
+
+# IMPORTANTE: Configure aqui o seu usuário e repositório do GitHub se os arquivos não carregarem localmente
+GITHUB_USER = "seu_usuario_github" # Ex: "joaosilva"
+GITHUB_REPO = "seu_repo_futprevisao" # Ex: "fut-app"
+GITHUB_BRANCH = "main" # Geralmente é 'main' ou 'master'
+GITHUB_BASE_URL = f"https://raw.githubusercontent.com/{GITHUB_USER}/{GITHUB_REPO}/{GITHUB_BRANCH}/"
 
 # Definição de Ligas e Arquivos
 LEAGUE_FILES = {
@@ -142,31 +148,36 @@ def normalize_name(name: str, known_teams: List[str]) -> Optional[str]:
 @st.cache_data(ttl=3600)
 def load_all_data_v31():
     """
-    Carrega dados de repositório GitHub (diretório atual) com fallback robusto.
+    Carrega dados com estratégia Híbrida: Local -> GitHub Raw.
     """
     stats_db = {}
     
-    # 1. Identificar Diretório de Dados (Compatível com GitHub)
-    possible_paths = ['.', './data', '/mount/src/fut-app', os.getcwd()]
-    data_path = '.'
+    # 1. Identificar Diretório de Dados Local (Compatível com GitHub Clone)
+    possible_paths = ['.', './data', 'data', '/mount/src/fut-app', os.getcwd()]
     
-    for p in possible_paths:
-        if any(os.path.exists(os.path.join(p, f)) for f in [list(LEAGUE_FILES.values())[0][0]]):
-            data_path = p
-            break
-            
+    def try_read_csv(filename):
+        # Tentativa 1: Local
+        for p in possible_paths:
+            fpath = os.path.join(p, filename)
+            if os.path.exists(fpath):
+                try: return pd.read_csv(fpath, encoding='utf-8')
+                except: 
+                    try: return pd.read_csv(fpath, encoding='latin1')
+                    except: pass
+        
+        # Tentativa 2: GitHub Raw (Fallback)
+        try:
+            url = f"{GITHUB_BASE_URL}{filename}"
+            return pd.read_csv(url, encoding='utf-8')
+        except:
+            return pd.DataFrame() # Falhou
+
     # 2. Carregar Stats
     for league_name, filenames in LEAGUE_FILES.items():
         df = pd.DataFrame()
         for fname in filenames:
-            fpath = os.path.join(data_path, fname)
-            if os.path.exists(fpath):
-                try:
-                    df = pd.read_csv(fpath, encoding='utf-8')
-                    break
-                except:
-                    try: df = pd.read_csv(fpath, encoding='latin1')
-                    except: continue
+            df = try_read_csv(fname)
+            if not df.empty: break
         
         if df.empty: continue
         
@@ -175,9 +186,6 @@ def load_all_data_v31():
                    'FTHG': 'FTHG', 'FTAG': 'FTAG', 
                    'HC': 'HC', 'AC': 'AC', 'HY': 'HY', 'AY': 'AY',
                    'HST': 'HST', 'AST': 'AST', 'HF': 'HF', 'AF': 'AF'}
-        
-        # Verifica colunas existentes
-        existing_cols = [c for c in cols_map.values() if c in df.columns]
         
         teams = set(df['HomeTeam'].dropna().unique()) | set(df['AwayTeam'].dropna().unique())
         
@@ -210,28 +218,20 @@ def load_all_data_v31():
             }
 
     # 3. Carregar Calendário
-    cal = pd.DataFrame()
-    cal_path = os.path.join(data_path, 'calendario_ligas.csv')
-    if os.path.exists(cal_path):
-        try:
-            cal = pd.read_csv(cal_path)
-            if 'Data' in cal.columns:
-                cal['DtObj'] = pd.to_datetime(cal['Data'], format='%d/%m/%Y', errors='coerce')
-        except: pass
+    cal = try_read_csv('calendario_ligas.csv')
+    if not cal.empty and 'Data' in cal.columns:
+        cal['DtObj'] = pd.to_datetime(cal['Data'], format='%d/%m/%Y', errors='coerce')
         
     # 4. Carregar Árbitros
     refs = {}
-    ref_path = os.path.join(data_path, 'arbitros_5_ligas_2025_2026.csv')
-    if os.path.exists(ref_path):
-        try:
-            ref_df = pd.read_csv(ref_path)
-            for _, row in ref_df.iterrows():
-                refs[row['Arbitro']] = {
-                    'factor': row.get('Media_Cartoes_Por_Jogo', 4.0) / 4.0,
-                    'avg_cards': row.get('Media_Cartoes_Por_Jogo', 4.0),
-                    'red_rate': 0.1 # Default
-                }
-        except: pass
+    ref_df = try_read_csv('arbitros_5_ligas_2025_2026.csv')
+    if not ref_df.empty:
+        for _, row in ref_df.iterrows():
+            refs[row['Arbitro']] = {
+                'factor': row.get('Media_Cartoes_Por_Jogo', 4.0) / 4.0,
+                'avg_cards': row.get('Media_Cartoes_Por_Jogo', 4.0),
+                'red_rate': 0.1 # Default
+            }
         
     return stats_db, cal, refs
 
@@ -309,8 +309,10 @@ class SuperKnowledgeBase:
 
     def get_games_date(self, date_str):
         if self.cal.empty: return []
-        mask = self.cal['DtObj'].dt.strftime('%d/%m/%Y') == date_str
-        return self.cal[mask].to_dict('records')
+        try:
+            mask = self.cal['DtObj'].dt.strftime('%d/%m/%Y') == date_str
+            return self.cal[mask].to_dict('records')
+        except: return []
 
 class SuperResponder:
     def __init__(self, kb: SuperKnowledgeBase):
