@@ -633,9 +633,10 @@ def main():
         st.caption("_Sistema Profissional de Análise Esportiva_")
     
     with col3:
-        st.metric("📚 Database", f"{len(STATS)} times", delta="10 Ligas")
-    
-    st.markdown("---")
+      # Corrigido para:
+st.metric("📚 Database", f"{len(STATS)} times")
+#                         ^^^^^^^^^^^^^
+#                         Variável global correta!
     
 
     # ═══════════════════════════════════════════════════════════
