@@ -1143,53 +1143,36 @@ def main():
     # ============================================================
     
     with tab9:
-        st.header("🤖 FutPrevisão AI Advisor ULTRA")
+        st.header("🤖 FutPrevisão AI Advisor ULTRA - Superbot")
+        st.caption("_Pergunte qualquer coisa sobre jogos, times, ligas, estatísticas..._")
         
+        # Mensagem simples de boas-vindas (TEMPORÁRIO - versão simplificada)
         if not st.session_state.chat_history:
-            total = len(st.session_state.bet_results)
-            ganhas = sum(1 for b in st.session_state.bet_results if b.get('ganhou', False))
-            wr = (ganhas/total*100) if total > 0 else 0
-            banca = st.session_state.bankroll_history[-1]
-            
-            perfil = "🎯 PROFISSIONAL" if wr >= 70 and total >= 30 else                      "📊 AVANÇADO" if wr >= 60 and total >= 15 else                      "🌟 INTERMEDIÁRIO" if total >= 5 else "🔰 INICIANTE"
-            
-            welcome = f"""👋 Olá! Sou o **FutPrevisão AI Advisor ULTRA**!
+            welcome = """👋 **Olá! Sou o FutPrevisão Superbot!**
 
-📊 **SEU PERFIL: {perfil}**
-• Apostas: {total}
-• Win Rate: {wr:.1f}%
-• Banca: {format_currency(banca)}
+💬 **Sistema em atualização!**
 
-💡 **COMANDOS DISPONÍVEIS:**
-• `/jogos` - Top jogos hoje
-• `/stats [time]` - Estatísticas detalhadas
-• `/analisa [time1] vs [time2]` - Análise completa
-• `/bilhete` - Analisar bilhete atual
-• `/kelly` - Calcular stake ideal (Kelly)
-• `/perfil` - Ver seu perfil completo
-• `/historico` - Últimas 5 apostas
-• `/hedge` - Explicar estratégias de hedge
-• `/poisson` - Explicar distribuição de Poisson
-• `/value` - Explicar value betting
+Por enquanto, use os comandos:
+• `/jogos` - Ver jogos de hoje
 • `/ajuda` - Ver todos comandos
 
-🎯 **Digite um comando ou faça uma pergunta!**"""
+**Digite um comando abaixo! 👇**"""
             
             st.session_state.chat_history.append({'role': 'assistant', 'content': welcome})
         
         # Botões rápidos
         col1, col2, col3, col4 = st.columns(4)
         
-        if col1.button("🎯 Jogos Hoje", use_container_width=True):
+        if col1.button("🎯 Jogos", use_container_width=True):
             st.session_state.chat_history.append({'role': 'user', 'content': '/jogos'})
             st.rerun()
         
-        if col2.button("💡 Hedge", use_container_width=True):
-            st.session_state.chat_history.append({'role': 'user', 'content': '/hedge'})
+        if col2.button("💡 Ajuda", use_container_width=True):
+            st.session_state.chat_history.append({'role': 'user', 'content': '/ajuda'})
             st.rerun()
         
-        if col3.button("💰 Kelly", use_container_width=True):
-            st.session_state.chat_history.append({'role': 'user', 'content': '/kelly'})
+        if col3.button("💰 Bilhete", use_container_width=True):
+            st.session_state.chat_history.append({'role': 'user', 'content': '/bilhete'})
             st.rerun()
         
         if col4.button("🗑️ Limpar", use_container_width=True):
@@ -1206,191 +1189,57 @@ def main():
                 st.chat_message("assistant", avatar="🤖").markdown(msg['content'])
         
         # Input
-        user_msg = st.chat_input("Digite sua pergunta ou comando...")
+        user_input = st.chat_input("Digite um comando... (ex: /jogos)")
         
-        if user_msg:
-            st.session_state.chat_history.append({'role': 'user', 'content': user_msg})
+        if user_input:
+            st.session_state.chat_history.append({'role': 'user', 'content': user_input})
             
+            cmd = user_input.lower()
             response = ""
-            cmd = user_msg.lower()
             
-            if cmd.startswith('/'):
-                if '/ajuda' in cmd:
-                    response = """📚 **COMANDOS DISPONÍVEIS:**
-
-🎮 **ANÁLISE:**
-• `/jogos` - Melhores jogos de hoje
-• `/stats [time]` - Estatísticas de um time
-• `/analisa [time1] vs [time2]` - Análise de jogo
-• `/bilhete` - Analisar bilhete atual
-
-💰 **GESTÃO:**
-• `/kelly` - Calcular stake ideal
-• `/perfil` - Seu perfil completo
-• `/historico` - Últimas apostas
-
-📖 **EDUCAÇÃO:**
-• `/hedge` - Estratégias de hedge
-• `/poisson` - Distribuição de Poisson
-• `/value` - Value betting"""
-                
-                elif '/jogos' in cmd:
-                    if not cal.empty:
-                        hoje = datetime.now().strftime('%d/%m/%Y')
-                        jogos_h = cal[cal['DtObj'].dt.strftime('%d/%m/%Y') == hoje]
-                        
-                        if len(jogos_h) > 0:
-                            response = f"🎯 **TOP JOGOS HOJE ({hoje}):**
-
-"
-                            count = 0
-                            
-                            for _, j in jogos_h.head(5).iterrows():
-                                h = normalize_name(j['Time_Casa'], list(stats.keys()))
-                                a = normalize_name(j['Time_Visitante'], list(stats.keys()))
-                                
-                                if h and a and h in stats and a in stats:
-                                    count += 1
-                                    c = calcular_jogo_v31(stats[h], stats[a], {})
-                                    
-                                    response += f"**{count}. {h} vs {a}** 🕐 {j.get('Hora', 'N/A')}
-"
-                                    response += f"   📊 Cantos: {c['corners']['t']:.1f} | Cartões: {c['cards']['t']:.1f}
-"
-                                    response += f"   ⚽ xG: {c['goals']['h']:.2f} x {c['goals']['a']:.2f}
-
-"
-                        else:
-                            response = "📅 Sem jogos hoje no calendário"
-                    else:
-                        response = "❌ Calendário não disponível"
-                
-                elif '/kelly' in cmd:
-                    if st.session_state.current_ticket and 'ticket_odds' in st.session_state:
-                        prob = st.session_state.ticket_odds['prob_total'] / 100
-                        odd = st.session_state.ticket_odds['odd_total']
-                        banca = st.session_state.bankroll_history[-1]
-                        
-                        kelly = calculate_kelly_criterion(prob, odd, banca)
-                        
-                        response = f"""💰 **KELLY CRITERION - STAKE IDEAL**
-
-📊 **DADOS DO BILHETE:**
-• Probabilidade: {prob*100:.1f}%
-• Odd total: @{odd:.2f}
-• Banca atual: {format_currency(banca)}
-
-🎯 **CÁLCULO KELLY:**
-• Fração Kelly: {kelly['percentage']:.2f}%
-• Stake sugerido: {format_currency(kelly['stake'])}
-• Recomendação: **{kelly['recommendation']}**
-
-💵 **PROJEÇÃO:**
-• Se ganhar: +{format_currency(kelly['stake'] * (odd - 1))}
-• ROI esperado: {(prob*odd - (1-prob))*100:.1f}%
-
-{'✅ Aposta tem value!' if prob*odd > 1 else '⚠️ Sem value matemático'}"""
-                    else:
-                        response = "⚠️ Crie um bilhete primeiro na Tab 'Construtor'"
-                
-                elif '/perfil' in cmd:
-                    total = len(st.session_state.bet_results)
+            if '/jogos' in cmd:
+                if not cal.empty:
+                    hoje = datetime.now().strftime('%d/%m/%Y')
+                    jogos_h = cal[cal['DtObj'].dt.strftime('%d/%m/%Y') == hoje]
                     
-                    if total > 0:
-                        ganhas = sum(1 for b in st.session_state.bet_results if b.get('ganhou', False))
-                        wr = (ganhas/total)*100
+                    if len(jogos_h) > 0:
+                        response = f"🎯 **JOGOS HOJE ({hoje}):**\n\n"
+                        count = 0
                         
-                        total_staked = sum(b.get('stake', 0) for b in st.session_state.bet_results)
-                        total_profit = sum(b.get('lucro', 0) for b in st.session_state.bet_results)
-                        roi = calculate_roi(total_staked, total_profit)
-                        
-                        returns = [b.get('return', 0) for b in st.session_state.bet_results]
-                        sharpe = calculate_sharpe_ratio(returns)
-                        
-                        perfil_tipo = "🎯 PROFISSIONAL" if wr >= 70 and total >= 30 else                                      "📊 AVANÇADO" if wr >= 60 and total >= 15 else                                      "🌟 INTERMEDIÁRIO" if total >= 5 else "🔰 INICIANTE"
-                        
-                        response = f"""👤 **SEU PERFIL COMPLETO**
-
-🎨 **CLASSIFICAÇÃO: {perfil_tipo}**
-
-📊 **ESTATÍSTICAS:**
-• Total apostas: {total}
-• Apostas ganhas: {ganhas} ({wr:.1f}%)
-• ROI: {roi:+.1f}%
-• Sharpe Ratio: {sharpe:.2f}
-
-💰 **FINANCEIRO:**
-• Banca atual: {format_currency(st.session_state.bankroll_history[-1])}
-• Lucro/Prejuízo: {format_currency(total_profit)}
-
-🎯 **ANÁLISE:**
-{('✅ PARABÉNS! Continue assim!' if wr >= 60 and roi > 5 else '⚠️ Revise sua estratégia')}"""
+                        for _, j in jogos_h.head(5).iterrows():
+                            h = normalize_name(j['Time_Casa'], list(stats.keys()))
+                            a = normalize_name(j['Time_Visitante'], list(stats.keys()))
+                            
+                            if h and a and h in stats and a in stats:
+                                count += 1
+                                response += f"**{count}. {h} vs {a}** 🕐 {j.get('Hora', 'N/A')}\n\n"
                     else:
-                        response = "📭 Sem apostas registradas ainda"
-                
-                elif '/hedge' in cmd:
-                    response = """🛡️ **ESTRATÉGIAS DE HEDGE EXPLICADAS**
-
-**1. SMART PROTECTION (30% stake)**
-• Inverte seleção de menor prob
-• Mantém lucro alto se principal ganhar
-• Proteção parcial
-
-**2. PARTIAL PROTECTION (50% stake)**
-• Inverte metade das seleções
-• Equilíbrio entre proteção e lucro
-• Reduz risco significativamente
-
-**3. GUARANTEED PROFIT (arbitragem)**
-• Inverte TODAS as seleções
-• LUCRO GARANTIDO
-• Sem risco, mas lucro menor
-
-💡 Use Tab 'Hedges MAXIMUM' para calcular!"""
-                
-                elif '/poisson' in cmd:
-                    response = """🎲 **DISTRIBUIÇÃO DE POISSON**
-
-📊 **O QUE É:**
-Modelo matemático para eventos raros e independentes (perfeito para escanteios e cartões no futebol).
-
-🔢 **FÓRMULA:**
-P(k) = (λ^k × e^-λ) / k!
-
-Onde:
-• λ = média esperada
-• k = número de eventos
-• e = constante de Euler
-
-⚽ **APLICAÇÃO NO FUTEBOL:**
-• Cantos são eventos raros ✅
-• Independentes entre si ✅
-• Média estável por time ✅
-
-🎯 **NOSSO SISTEMA:**
-Simula 3000 jogos usando Poisson para calcular probabilidades precisas!"""
-                
+                        response = "📅 Sem jogos hoje"
                 else:
-                    response = "❓ Comando não reconhecido. Use `/ajuda`"
+                    response = "❌ Calendário não disponível"
+            
+            elif '/ajuda' in cmd:
+                response = """📚 **COMANDOS:**
+
+• `/jogos` - Jogos de hoje
+• `/bilhete` - Analisar bilhete
+• `/ajuda` - Mostrar ajuda"""
+            
+            elif '/bilhete' in cmd:
+                if st.session_state.current_ticket:
+                    response = f"🎫 **SEU BILHETE:**\n\n"
+                    response += f"Seleções: {len(st.session_state.current_ticket)}\n"
+                    
+                    for i, sel in enumerate(st.session_state.current_ticket, 1):
+                        response += f"{i}. {sel['market_display']} ({sel['prob']}%)\n"
+                else:
+                    response = "📭 Bilhete vazio!"
             
             else:
-                # Resposta natural
-                if 'bilhete' in cmd or 'ticket' in cmd:
-                    if st.session_state.current_ticket:
-                        response = f"Você tem {len(st.session_state.current_ticket)} seleção(ões) no bilhete. Use `/bilhete` para análise completa!"
-                    else:
-                        response = "Seu bilhete está vazio. Vá para Tab 'Construtor' para adicionar jogos!"
-                
-                elif 'ajuda' in cmd or 'help' in cmd or 'comando' in cmd:
-                    response = "Use `/ajuda` para ver todos os comandos disponíveis!"
-                
-                else:
-                    response = "💡 Use `/ajuda` para ver os comandos disponíveis ou faça uma pergunta específica sobre apostas!"
+                response = "💡 Use `/ajuda` para ver comandos disponíveis!"
             
             st.session_state.chat_history.append({'role': 'assistant', 'content': response})
             st.rerun()
-
-
 
 # ============================================================
 # FUNÇÕES AUXILIARES EXPANDIDAS
