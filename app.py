@@ -1703,7 +1703,7 @@ Ou pergunte sobre times, estatísticas, ligas!"""
             st.session_state.chat_history.append({'role': 'assistant', 'content': response})
             st.rerun()
         
-   ============================================================
+   #============================================================
 # FUNÇÕES AUXILIARES EXPANDIDAS
 # ============================================================
 
