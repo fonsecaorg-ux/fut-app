@@ -1185,7 +1185,6 @@ def main():
     # ============================================================
     # TAB 9: AI ADVISOR
     # ============================================================
-    
     with tab9:
         st.header("🤖 FutPrevisão AI Advisor ULTRA - Superbot")
         st.caption("_Pergunte qualquer coisa sobre jogos, times, ligas, estatísticas..._")
@@ -1233,10 +1232,10 @@ Por enquanto, use os comandos:
                 st.chat_message("assistant", avatar="🤖").markdown(msg['content'])
         
         # Input
-     user_input = st.chat_input("Digite um comando")
-
-     if user_input:
-                                          st.session_state.chat_history.append({'role': 'user', 'content': user_input})
+        user_input = st.chat_input("Digite um comando")
+        
+        if user_input:
+            st.session_state.chat_history.append({'role': 'user', 'content': user_input})
             
             cmd = user_input.lower()
             response = ""
@@ -1317,13 +1316,13 @@ Por enquanto, use os comandos:
                         if lista:
                             lista = sorted(lista, key=lambda x: x['score'], reverse=True)[:5]
                             
-                            response = f"**{header}:**\\n\\n"
+                            response = f"**{header}:**\n\n"
                             
                             for i, item in enumerate(lista, 1):
                                 emoji = "🔥" if i == 1 else "✅"
-                                response += f"{emoji} **{i}. {item['nome']}**\\n"
-                                response += f"   🕐 {item['hora']} | 🏆 {item['liga']}\\n"
-                                response += f"   {item['info']}\\n\\n"
+                                response += f"{emoji} **{i}. {item['nome']}**\n"
+                                response += f"   🕐 {item['hora']} | 🏆 {item['liga']}\n"
+                                response += f"   {item['info']}\n\n"
                         else:
                             response = f"⚠️ Sem jogos bons para {mercado_tipo} {periodo.lower()}"
                     else:
@@ -1342,14 +1341,14 @@ Por enquanto, use os comandos:
                     s = stats[times_achou[0]]
                     nome = times_achou[0]
                     
-                    response = f"**ANÁLISE - {nome}**\\n\\n"
-                    response += f"🏟️ Liga: {s['league']} | Jogos: {s['games']}\\n\\n"
-                    response += f"⚽ **ATAQUE:** {s['goals_f']:.2f} gols/jogo\\n"
-                    response += f"{'🔥 Muito ofensivo!' if s['goals_f'] > 2.0 else '📊 Médio' if s['goals_f'] > 1.5 else '⚠️ Fraco'}\\n\\n"
-                    response += f"🛡️ **DEFESA:** {s['goals_a']:.2f} gols sofridos/jogo\\n"
-                    response += f"{'✅ Sólida!' if s['goals_a'] < 1.0 else '📊 Média' if s['goals_a'] < 1.5 else '⚠️ Vazada'}\\n\\n"
-                    response += f"🔶 **CANTOS:** {s['corners']:.1f}/jogo\\n"
-                    response += f"🟨 **CARTÕES:** {s['cards']:.1f}/jogo\\n"
+                    response = f"**ANÁLISE - {nome}**\n\n"
+                    response += f"🏟️ Liga: {s['league']} | Jogos: {s['games']}\n\n"
+                    response += f"⚽ **ATAQUE:** {s['goals_f']:.2f} gols/jogo\n"
+                    response += f"{'🔥 Muito ofensivo!' if s['goals_f'] > 2.0 else '📊 Médio' if s['goals_f'] > 1.5 else '⚠️ Fraco'}\n\n"
+                    response += f"🛡️ **DEFESA:** {s['goals_a']:.2f} gols sofridos/jogo\n"
+                    response += f"{'✅ Sólida!' if s['goals_a'] < 1.0 else '📊 Média' if s['goals_a'] < 1.5 else '⚠️ Vazada'}\n\n"
+                    response += f"🔶 **CANTOS:** {s['corners']:.1f}/jogo\n"
+                    response += f"🟨 **CARTÕES:** {s['cards']:.1f}/jogo\n"
                     response += f"⚠️ **FALTAS:** {s['fouls']:.1f}/jogo"
                 else:
                     response = "⚠️ Não achei o time. Tente: 'Como está o Liverpool?'"
@@ -1361,34 +1360,34 @@ Por enquanto, use os comandos:
                     jogos_h = cal[cal['DtObj'].dt.strftime('%d/%m/%Y') == hoje] if not cal.empty else []
                     
                     if len(jogos_h) > 0:
-                        response = "🎯 **JOGOS HOJE:**\\n\\n"
+                        response = "🎯 **JOGOS HOJE:**\n\n"
                         count = 0
                         for _, j in jogos_h.head(5).iterrows():
                             h = normalize_name(j['Time_Casa'], list(stats.keys()))
                             a = normalize_name(j['Time_Visitante'], list(stats.keys()))
                             if h and a:
                                 count += 1
-                                response += f"**{count}. {h} vs {a}** 🕐 {j.get('Hora', 'N/A')}\\n\\n"
+                                response += f"**{count}. {h} vs {a}** 🕐 {j.get('Hora', 'N/A')}\n\n"
                     else:
                         response = "📅 Sem jogos hoje"
                 
                 elif '/ajuda' in cmd:
-                    response = "**COMO USAR:**\\n\\n"
-                    response += "💬 **PERGUNTAS:**\\n"
-                    response += "• 'Melhor jogo para gols amanhã'\\n"
-                    response += "• 'Como está o Liverpool'\\n"
-                    response += "• 'Jogos hoje'\\n"
-                    response += "• 'Melhores para cantos'\\n\\n"
-                    response += "📋 **COMANDOS:**\\n"
-                    response += "• /jogos - Jogos hoje\\n"
-                    response += "• /bilhete - Ver bilhete\\n"
+                    response = "**COMO USAR:**\n\n"
+                    response += "💬 **PERGUNTAS:**\n"
+                    response += "• 'Melhor jogo para gols amanhã'\n"
+                    response += "• 'Como está o Liverpool'\n"
+                    response += "• 'Jogos hoje'\n"
+                    response += "• 'Melhores para cantos'\n\n"
+                    response += "📋 **COMANDOS:**\n"
+                    response += "• /jogos - Jogos hoje\n"
+                    response += "• /bilhete - Ver bilhete\n"
                     response += "• /ajuda - Esta ajuda"
                 
                 elif '/bilhete' in cmd:
                     if st.session_state.current_ticket:
-                        response = f"🎫 **BILHETE:** {len(st.session_state.current_ticket)} seleções\\n\\n"
+                        response = f"🎫 **BILHETE:** {len(st.session_state.current_ticket)} seleções\n\n"
                         for i, sel in enumerate(st.session_state.current_ticket, 1):
-                            response += f"{i}. {sel['market_display']} ({sel['prob']}%)\\n"
+                            response += f"{i}. {sel['market_display']} ({sel['prob']}%)\n"
                     else:
                         response = "📭 Bilhete vazio!"
                 
@@ -1397,17 +1396,16 @@ Por enquanto, use os comandos:
             
             # FALLBACK
             else:
-                response = "🤔 Não entendi...\\n\\n"
-                response += "💡 **Tente:**\\n"
-                response += "• 'Melhor jogo para gols amanhã'\\n"
-                response += "• 'Como está o Liverpool'\\n"
-                response += "• 'Jogos de hoje'\\n"
-                response += "• 'Melhores jogos para cantos'\\n\\n"
+                response = "🤔 Não entendi...\n\n"
+                response += "💡 **Tente:**\n"
+                response += "• 'Melhor jogo para gols amanhã'\n"
+                response += "• 'Como está o Liverpool'\n"
+                response += "• 'Jogos de hoje'\n"
+                response += "• 'Melhores jogos para cantos'\n\n"
                 response += "Ou use /ajuda"
             
             st.session_state.chat_history.append({'role': 'assistant', 'content': response})
             st.rerun()
-
 # ============================================================
 # FUNÇÕES AUXILIARES EXPANDIDAS
 # ============================================================
