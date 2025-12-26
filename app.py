@@ -1233,10 +1233,10 @@ Por enquanto, use os comandos:
                 st.chat_message("assistant", avatar="🤖").markdown(msg['content'])
         
         # Input
-user_input = st.chat_input("Digite um comando")
+     user_input = st.chat_input("Digite um comando")
 
      if user_input:
-            st.session_state.chat_history.append({'role': 'user', 'content': user_input})
+                                          st.session_state.chat_history.append({'role': 'user', 'content': user_input})
             
             cmd = user_input.lower()
             response = ""
