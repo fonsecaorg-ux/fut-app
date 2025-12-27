@@ -364,7 +364,7 @@ def load_all_data():
             st.sidebar.warning(f"⚠️ {league_name}: {str(e)}")
     
     try:
-        cal_filepath = find_file('calendario_ligas.csv')
+        cal_filepath = find_file('calendario_ligas.pdf')
     if cal_filepath:
         try:
             cal = pd.read_csv(cal_filepath, encoding='utf-8')
