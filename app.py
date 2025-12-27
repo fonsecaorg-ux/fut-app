@@ -946,14 +946,17 @@ def main():
                 time_casa_manual = ""
             if isinstance(time_fora_manual, str) and time_fora_manual == "— Selecione —":
                 time_fora_manual = ""
-with col2:
+            # Mercado e localização (guiado)
+            col_m1, col_m2 = st.columns(2)
+            with col_m1:
                 tipo_mercado_manual = st.selectbox(
-                    "📊 Tipo de Mercado", 
+                    "📊 Tipo de Mercado",
                     ["Cantos", "Cartões", "Gols", "Ambas Marcam", "Gols Casa", "Gols Fora"],
                     key="manual_market_type",
                     help="Escolha o tipo de mercado"
                 )
-                
+
+            with col_m2:
                 localizacao_manual = st.selectbox(
                     "📍 Localização",
                     ["Total", "Casa", "Visitante"],
@@ -998,7 +1001,7 @@ with col2:
                     )
                 else:
                     linha_manual = float(linha_sel)
-with col2:
+            with col2:
                 odd_manual = st.number_input(
                     "🎲 Odd",
                     min_value=1.01,
