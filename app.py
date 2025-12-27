@@ -5,7 +5,7 @@ VERSÃO PROFISSIONAL
 
 Autor: Diego
 Versão: 31.0 ULTRA MAXIMUM
-Data: 25/12/2024
+Data: 27/12/2024
 """
 
 import streamlit as st
@@ -237,16 +237,16 @@ def load_all_data():
     referees = {}
     
     league_files = {
-        'Premier League': '/mnt/project/Premier_League_25_26.csv',
-        'La Liga': '/mnt/project/La_Liga_25_26.csv',
-        'Serie A': '/mnt/project/Serie_A_25_26.csv',
-        'Bundesliga': '/mnt/project/Bundesliga_25_26.csv',
-        'Ligue 1': '/mnt/project/Ligue_1_25_26.csv',
-        'Championship': '/mnt/project/Championship_Inglaterra_25_26.csv',
-        'Bundesliga 2': '/mnt/project/Bundesliga_2.csv',
-        'Pro League': '/mnt/project/Pro_League_Belgica_25_26.csv',
-        'Super Lig': '/mnt/project/Super_Lig_Turquia_25_26.csv',
-        'Premiership': '/mnt/project/Premiership_Escocia_25_26.csv'
+        'Premier League': 'Premier_League_25_26.csv',
+        'La Liga': 'La_Liga_25_26.csv',
+        'Serie A': 'Serie_A_25_26.csv',
+        'Bundesliga': 'Bundesliga_25_26.csv',
+        'Ligue 1': 'Ligue_1_25_26.csv',
+        'Championship': 'Championship_Inglaterra_25_26.csv',
+        'Bundesliga 2': 'Bundesliga_2.csv',
+        'Pro League': 'Pro_League_Belgica_25_26.csv',
+        'Super Lig': 'Super_Lig_Turquia_25_26.csv',
+        'Premiership': 'Premiership_Escocia_25_26.csv'
     }
     
     for league_name, filepath in league_files.items():
@@ -309,14 +309,14 @@ def load_all_data():
             st.sidebar.warning(f"⚠️ {league_name}: {str(e)}")
     
     try:
-        cal = pd.read_csv('/mnt/project/calendario_ligas.csv', encoding='utf-8')
+        cal = pd.read_csv('calendario_ligas.csv', encoding='utf-8')
         if 'Data' in cal.columns:
             cal['DtObj'] = pd.to_datetime(cal['Data'], format='%d/%m/%Y', errors='coerce')
     except:
         pass
     
     try:
-        refs_df = pd.read_csv('/mnt/project/arbitros_5_ligas_2025_2026.csv', encoding='utf-8')
+        refs_df = pd.read_csv('arbitros_5_ligas_2025_2026.csv', encoding='utf-8')
         for _, row in refs_df.iterrows():
             referees[row['Arbitro']] = {
                 'factor': row['Media_Cartoes_Por_Jogo'] / 4.0,
@@ -346,12 +346,12 @@ def calcular_jogo_v31(home_stats: Dict, away_stats: Dict, ref_data: Dict) -> Dic
     """
     
     # ESCANTEIOS com boost de chutes
-    base_corners_h = home_STATS.get('corners_home', home_STATS['corners'])
-    base_corners_a = away_STATS.get('corners_away', away_STATS['corners'])
+    base_corners_h = home_stats.get('corners_home', home_stats['corners'])
+    base_corners_a = away_stats.get('corners_away', away_stats['corners'])
     
     # Boost baseado em chutes no gol
-    shots_h = home_STATS.get('shots_home', 4.5)
-    shots_a = home_STATS.get('shots_away', 4.0)
+    shots_h = home_stats.get('shots_home', 4.5)
+    shots_a = away_stats.get('shots_away', 4.0)
     
     if shots_h > 6.0:
         pressure_h = 1.20  # Alto
@@ -366,8 +366,8 @@ def calcular_jogo_v31(home_stats: Dict, away_stats: Dict, ref_data: Dict) -> Dic
     corners_total = corners_h + corners_a
     
     # CARTÕES
-    fouls_h = home_STATS.get('fouls_home', home_STATS.get('fouls', 12.0))
-    fouls_a = away_STATS.get('fouls_away', away_STATS.get('fouls', 12.0))
+    fouls_h = home_stats.get('fouls_home', home_stats.get('fouls', 12.0))
+    fouls_a = away_stats.get('fouls_away', away_stats.get('fouls', 12.0))
     
     # Fator de violência
     violence_h = 1.0 if fouls_h > 12.5 else 0.85
@@ -385,8 +385,8 @@ def calcular_jogo_v31(home_stats: Dict, away_stats: Dict, ref_data: Dict) -> Dic
     else:
         strictness = 1.0
     
-    cards_h_base = home_STATS.get('cards_home', home_STATS['cards'])
-    cards_a_base = away_STATS.get('cards_away', away_STATS['cards'])
+    cards_h_base = home_stats.get('cards_home', home_stats['cards'])
+    cards_a_base = away_stats.get('cards_away', away_stats['cards'])
     
     cards_h = cards_h_base * violence_h * ref_factor * strictness
     cards_a = cards_a_base * violence_a * ref_factor * strictness
@@ -396,8 +396,8 @@ def calcular_jogo_v31(home_stats: Dict, away_stats: Dict, ref_data: Dict) -> Dic
     prob_red_card = ((0.05 + 0.05) / 2) * ref_red_rate * 100
     
     # xG (Expected Goals)
-    xg_h = (home_STATS['goals_f'] * away_STATS['goals_a']) / 1.3
-    xg_a = (away_STATS['goals_f'] * home_STATS['goals_a']) / 1.3
+    xg_h = (home_stats['goals_f'] * away_stats['goals_a']) / 1.3
+    xg_a = (away_stats['goals_f'] * home_stats['goals_a']) / 1.3
     
     return {
         'corners': {'h': corners_h, 'a': corners_a, 't': corners_total},
@@ -575,7 +575,7 @@ def validar_jogos_bilhete(jogos_parsed: List[Dict], stats_db: Dict) -> List[Dict
         h_norm = normalize_name(jogo['home'], times)
         a_norm = normalize_name(jogo['away'], times)
         
-        if h_norm and a_norm and h_norm in STATS_db and a_norm in STATS_db:
+        if h_norm and a_norm and h_norm in stats_db and a_norm in stats_db:
             jogos_val.append({
                 'home': h_norm,
                 'away': a_norm,
@@ -1528,8 +1528,8 @@ def main():
 
 def generate_corner_distribution_chart(team_stats: Dict, team_name: str) -> go.Figure:
     """Gera gráfico de distribuição de cantos de um time"""
-    corners_mean = team_STATS.get('corners', 5.5)
-    corners_std = team_STATS.get('corners_std', 2.0)
+    corners_mean = team_stats.get('corners', 5.5)
+    corners_std = team_stats.get('corners_std', 2.0)
     
     x = np.linspace(0, 15, 100)
     y = (1 / (corners_std * np.sqrt(2 * np.pi))) * np.exp(-0.5 * ((x - corners_mean) / corners_std) ** 2)
@@ -1549,19 +1549,19 @@ def generate_comparison_radar(home_stats: Dict, away_stats: Dict, home_name: str
     categories = ['Cantos', 'Cartões', 'Gols Marcados', 'Chutes', 'Faltas']
     
     home_values = [
-        home_STATS.get('corners', 5.5) / 10 * 100,
-        home_STATS.get('cards', 2.5) / 5 * 100,
-        home_STATS.get('goals_f', 1.5) / 3 * 100,
-        home_STATS.get('shots_on_target', 4.5) / 8 * 100,
-        home_STATS.get('fouls', 12.0) / 15 * 100
+        home_stats.get('corners', 5.5) / 10 * 100,
+        home_stats.get('cards', 2.5) / 5 * 100,
+        home_stats.get('goals_f', 1.5) / 3 * 100,
+        home_stats.get('shots_on_target', 4.5) / 8 * 100,
+        home_stats.get('fouls', 12.0) / 15 * 100
     ]
     
     away_values = [
-        away_STATS.get('corners', 5.5) / 10 * 100,
-        away_STATS.get('cards', 2.5) / 5 * 100,
-        away_STATS.get('goals_f', 1.5) / 3 * 100,
-        away_STATS.get('shots_on_target', 4.5) / 8 * 100,
-        away_STATS.get('fouls', 12.0) / 15 * 100
+        away_stats.get('corners', 5.5) / 10 * 100,
+        away_stats.get('cards', 2.5) / 5 * 100,
+        away_stats.get('goals_f', 1.5) / 3 * 100,
+        away_stats.get('shots_on_target', 4.5) / 8 * 100,
+        away_stats.get('fouls', 12.0) / 15 * 100
     ]
     
     fig = go.Figure()
@@ -1594,13 +1594,13 @@ def generate_heatmap_correlations(stats_db: Dict) -> go.Figure:
     """Gera heatmap de correlações entre métricas"""
     data_matrix = []
     
-    for team, stats in STATS_db.items():
+    for team, stats in stats_db.items():
         data_matrix.append([
-            STATS.get('corners', 5.5),
-            STATS.get('cards', 2.5),
-            STATS.get('goals_f', 1.5),
-            STATS.get('fouls', 12.0),
-            STATS.get('shots_on_target', 4.5)
+            stats.get('corners', 5.5),
+            stats.get('cards', 2.5),
+            stats.get('goals_f', 1.5),
+            stats.get('fouls', 12.0),
+            stats.get('shots_on_target', 4.5)
         ])
     
     df = pd.DataFrame(data_matrix, columns=['Cantos', 'Cartões', 'Gols', 'Faltas', 'Chutes'])
@@ -1931,12 +1931,12 @@ def generate_league_comparison_table(stats_db: Dict) -> pd.DataFrame:
         'times': 0
     })
     
-    for team, stats in STATS_db.items():
-        league = STATS['league']
-        league_STATS[league]['cantos'].append(STATS.get('corners', 5.5))
-        league_STATS[league]['cartoes'].append(STATS.get('cards', 2.5))
-        league_STATS[league]['gols'].append(STATS.get('goals_f', 1.5))
-        league_STATS[league]['times'] += 1
+    for team, stats in stats_db.items():
+        league = stats.get('league', 'N/A')
+        league_stats[league]['cantos'].append(stats.get('corners', 5.5))
+        league_stats[league]['cartoes'].append(stats.get('cards', 2.5))
+        league_stats[league]['gols'].append(stats.get('goals_f', 1.5))
+        league_stats[league]['times'] += 1
     
     rows = []
     for league, data in league_stats.items():
@@ -1970,11 +1970,11 @@ class BettingAnalyzer:
         stats = self.stats_db[team_name]
         
         return {
-            'corners_trend': 'increasing' if STATS.get('corners', 5.5) > 5.5 else 'decreasing',
-            'cards_trend': 'increasing' if STATS.get('cards', 2.5) > 2.5 else 'decreasing',
-            'offensive': STATS.get('goals_f', 1.5) > 1.5,
-            'defensive': STATS.get('goals_a', 1.5) < 1.5,
-            'disciplined': STATS.get('fouls', 12.0) < 12.5
+            'corners_trend': 'increasing' if stats.get('corners', 5.5) > 5.5 else 'decreasing',
+            'cards_trend': 'increasing' if stats.get('cards', 2.5) > 2.5 else 'decreasing',
+            'offensive': stats.get('goals_f', 1.5) > 1.5,
+            'defensive': stats.get('goals_a', 1.5) < 1.5,
+            'disciplined': stats.get('fouls', 12.0) < 12.5
         }
     
     def compare_head_to_head(self, team1: str, team2: str) -> Dict:
