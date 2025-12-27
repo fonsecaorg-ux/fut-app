@@ -9,6 +9,7 @@ import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
 from scipy.stats import poisson, norm, beta
+from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 import json
 import hmac
