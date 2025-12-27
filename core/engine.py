@@ -2,6 +2,9 @@ import math
 import numpy as np
 from datetime import datetime, timedelta
 from typing import Dict, List, Tuple, Optional
+from typing import Dict
+import plotly.graph_objects as go
+
 
 
 def calcular_jogo_v31(home_stats: Dict, away_stats: Dict, ref_data: Dict) -> Dict:
