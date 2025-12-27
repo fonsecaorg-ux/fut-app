@@ -363,32 +363,28 @@ def load_all_data():
         except Exception as e:
             st.sidebar.warning(f"⚠️ {league_name}: {str(e)}")
     
-    try:
-        cal_filepath = find_file('calendario_ligas.pdf')
+    cal_filepath = find_file('calendario_ligas.csv')
     if cal_filepath:
         try:
             cal = pd.read_csv(cal_filepath, encoding='utf-8')
-        if 'Data' in cal.columns:
-            cal['DtObj'] = pd.to_datetime(cal['Data'], format='%d/%m/%Y', errors='coerce')
-    except:
-        pass
-    
-    try:
-        refs_filepath = find_file('arbitros_5_ligas_2025_2026.csv')
+            if 'Data' in cal.columns:
+                cal['DtObj'] = pd.to_datetime(cal['Data'], format='%d/%m/%Y', errors='coerce')
+        except Exception as e:
+            st.sidebar.warning(f"⚠️ Calendário: {str(e)}")
+    refs_filepath = find_file('arbitros_5_ligas_2025_2026.csv')
     if refs_filepath:
         try:
             refs_df = pd.read_csv(refs_filepath, encoding='utf-8')
-        for _, row in refs_df.iterrows():
-            referees[row['Arbitro']] = {
-                'factor': row['Media_Cartoes_Por_Jogo'] / 4.0,
-                'games': row['Jogos_Apitados'],
-                'avg_cards': row['Media_Cartoes_Por_Jogo'],
-                'red_cards': row.get('Cartoes_Vermelhos', 0),
-                'red_rate': row.get('Cartoes_Vermelhos', 0) / row['Jogos_Apitados'] if row['Jogos_Apitados'] > 0 else 0.08
-            }
-    except:
-        pass
-    
+            for _, row in refs_df.iterrows():
+                referees[row['Arbitro']] = {
+                    'factor': row['Media_Cartoes_Por_Jogo'] / 4.0,
+                    'games': row['Jogos_Apitados'],
+                    'avg_cards': row['Media_Cartoes_Por_Jogo'],
+                    'red_cards': row.get('Cartoes_Vermelhos', 0),
+                    'red_rate': row.get('Cartoes_Vermelhos', 0) / row['Jogos_Apitados'] if row['Jogos_Apitados'] > 0 else 0.08
+                }
+        except Exception as e:
+            st.sidebar.warning(f"⚠️ Árbitros: {str(e)}")
     return stats_db, cal, referees
 
 
