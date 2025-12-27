@@ -18,10 +18,11 @@ from typing import Dict, List, Optional, Tuple
 import plotly.graph_objects as go
 import plotly.express as px
 from pathlib import Path
-BASE_DIR = Path(__file__).resolve().parent
 from difflib import get_close_matches
 import re
 from collections import defaultdict
+
+BASE_DIR = Path(__file__).resolve().parent
 
 # ============================================================
 # CONFIGURAÇÃO DA PÁGINA
@@ -250,11 +251,12 @@ def get_prob_emoji(prob: float) -> str:
 
 
 # ============================================================
-# CARREGAMENTO ROBUSTO DE ARQUIVOS (CORREÇÃO #4)
+# CARREGAMENTO ROBUSTO DE ARQUIVOS
 # ============================================================
 
 def find_file(filename: str) -> Optional[str]:
     """Busca arquivo em múltiplos diretórios"""
+    from pathlib import Path
     search_paths = [
         Path('/mnt/project') / filename,
         Path('.') / filename,
@@ -350,25 +352,29 @@ def load_all_data():
         except Exception as e:
             st.sidebar.warning(f"⚠️ {league_name}: {str(e)}")
     
-    try:
-        cal = pd.read_csv('calendario_ligas.csv', encoding='utf-8')
-        if 'Data' in cal.columns:
-            cal['DtObj'] = pd.to_datetime(cal['Data'], format='%d/%m/%Y', errors='coerce')
-    except:
-        pass
+    cal_filepath = find_file('calendario_ligas.csv')
+    if cal_filepath:
+        try:
+            cal = pd.read_csv(cal_filepath, encoding='utf-8')
+            if 'Data' in cal.columns:
+                cal['DtObj'] = pd.to_datetime(cal['Data'], format='%d/%m/%Y', errors='coerce')
+        except:
+            pass
     
-    try:
-        refs_df = pd.read_csv('arbitros_5_ligas_2025_2026.csv', encoding='utf-8')
-        for _, row in refs_df.iterrows():
-            referees[row['Arbitro']] = {
-                'factor': row['Media_Cartoes_Por_Jogo'] / 4.0,
-                'games': row['Jogos_Apitados'],
-                'avg_cards': row['Media_Cartoes_Por_Jogo'],
-                'red_cards': row.get('Cartoes_Vermelhos', 0),
-                'red_rate': row.get('Cartoes_Vermelhos', 0) / row['Jogos_Apitados'] if row['Jogos_Apitados'] > 0 else 0.08
-            }
-    except:
-        pass
+    refs_filepath = find_file('arbitros_5_ligas_2025_2026.csv')
+    if refs_filepath:
+        try:
+            refs_df = pd.read_csv(refs_filepath, encoding='utf-8')
+            for _, row in refs_df.iterrows():
+                referees[row['Arbitro']] = {
+                    'factor': row['Media_Cartoes_Por_Jogo'] / 4.0,
+                    'games': row['Jogos_Apitados'],
+                    'avg_cards': row['Media_Cartoes_Por_Jogo'],
+                    'red_cards': row.get('Cartoes_Vermelhos', 0),
+                    'red_rate': row.get('Cartoes_Vermelhos', 0) / row['Jogos_Apitados'] if row['Jogos_Apitados'] > 0 else 0.08
+                }
+        except:
+            pass
     
     return stats_db, cal, referees
 
@@ -438,8 +444,8 @@ def calcular_jogo_v31(home_stats: Dict, away_stats: Dict, ref_data: Dict) -> Dic
     prob_red_card = ((0.05 + 0.05) / 2) * ref_red_rate * 100
     
     # xG (Expected Goals)
-    xg_h = (home_stats['goals_f'] * away_stats_db['goals_a']) / 1.3
-    xg_a = (away_stats_db['goals_f'] * home_stats['goals_a']) / 1.3
+    xg_h = (home_stats['goals_f'] * away_stats['goals_a']) / 1.3
+    xg_a = (away_stats['goals_f'] * home_stats['goals_a']) / 1.3
     
     return {
         'corners': {'h': corners_h, 'a': corners_a, 't': corners_total},
@@ -664,10 +670,9 @@ def calcular_prob_bilhete(jogos_validados: List[Dict], n_sims: int = 3000) -> Di
 # Carregar dados globais
 stats_db, CAL, REFS = load_all_data()
 
-
-
 def clean_team_name(text: str) -> str:
     """Limpa e normaliza nome de time"""
+    import re
     text = text.lower().strip()
     text = re.sub(r'[^\w\s]', '', text)
     stop_words = {'do', 'da', 'de', 'dos', 'das', 'o', 'a', 'os', 'as', 
@@ -682,6 +687,7 @@ def processar_chat(mensagem, stats_db):
         return "Por favor, digite uma pergunta válida."
     
     msg = mensagem.lower().strip()
+    known_teams = list(stats_db.keys())
     
     # 1. COMANDOS ESPECIAIS
     if msg in ['/ajuda', 'ajuda', 'help']:
@@ -762,8 +768,10 @@ def processar_chat(mensagem, stats_db):
             time2_limpo = clean_team_name(times[1])
             match1 = get_close_matches(time1_limpo, [t.lower() for t in known_teams], n=1, cutoff=0.4)
             match2 = get_close_matches(time2_limpo, [t.lower() for t in known_teams], n=1, cutoff=0.4)
+            
             t1 = [t for t in known_teams if t.lower() == match1[0]][0] if match1 else None
             t2 = [t for t in known_teams if t.lower() == match2[0]][0] if match2 else None
+            
             if t1 and t2:
                 s1 = stats_db[t1]
                 s2 = stats_db[t2]
@@ -788,17 +796,11 @@ def processar_chat(mensagem, stats_db):
                 return f"❌ Times não encontrados. Disponíveis: {', '.join(known_teams[:5])}..."
     
     # 5. ANÁLISE DE TIME ÚNICO
-    # Tentar encontrar time mencionado
-    from difflib import get_close_matches
-    known_teams = list(stats_db.keys())
-    
-    # Limpar mensagem
-    known_teams = list(stats_db.keys())
     msg_limpa = clean_team_name(msg)
     match = get_close_matches(msg_limpa, [t.lower() for t in known_teams], n=1, cutoff=0.4)
     
     if match:
-        team = match[0]
+        team = [t for t in known_teams if t.lower() == match[0]][0]
         stats = stats_db[team]
         
         resp = f"📊 **{team.upper()}**\n\n"
@@ -867,19 +869,18 @@ def main():
     # ═══════════════════════════════════════════════════════════
     
     tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9 = st.tabs([
-        "🔍 Scanner",
-        "📋 Construtor", 
-        "🏆 Rankings",
-        "📊 Análise Detalhada",
-        "💼 Gestão de Banca",
-        "📅 Calendários",
-        "🎲 Bet Builder",
-        "📚 Educação",
-        "🤖 IA Advisor"
+        "🎫 Construtor", 
+        "🛡️ Hedges",
+        "🎲 Simulador",
+        "📊 Métricas",
+        "🎨 Viz", 
+        "📝 Registro", 
+        "🔍 Scanner", 
+        "📋 Importar", 
+        "🤖 AI"
     ])
-    """Função principal do aplicativo"""
     
-    stats, cal, referees = load_all_data()
+    stats_db, cal, referees = load_all_data()
     
     if 'current_ticket' not in st.session_state:
         st.session_state.current_ticket = []
@@ -891,10 +892,6 @@ def main():
         st.session_state.chat_history = []
     if 'initial_bankroll' not in st.session_state:
         st.session_state.initial_bankroll = 1000.0
-    
-    st.title("⚽ FutPrevisão V31 MAXIMUM + AI Advisor ULTRA")
-    st.markdown("**Sistema Completo e Profissional de Análise de Apostas Esportivas**")
-    st.markdown("_Causality Engine V31 | Poisson | Monte Carlo | Kelly | Sharpe | 2300+ linhas_")
     
     with st.sidebar:
         st.header("📊 Dashboard")
@@ -916,11 +913,6 @@ def main():
             wr = (ganhas/total)*100 if total > 0 else 0
             st.markdown("---")
             st.metric("Win Rate", f"{wr:.1f}%")
-    
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9 = st.tabs([
-        "🎫 Construtor", "🛡️ Hedges", "🎲 Simulador", "📊 Métricas",
-        "🎨 Viz", "📝 Registro", "🔍 Scanner", "📋 Importar", "🤖 AI"
-    ])
     
     # ============================================================
     # TAB 1: CONSTRUTOR
@@ -1282,7 +1274,7 @@ def main():
         elif viz_tipo == "Top Times - Cantos":
             st.subheader("🔶 Top 20 Times com Mais Cantos")
             
-            times_sorted = sorted(stats.items(), key=lambda x: x[1]['corners'], reverse=True)[:20]
+            times_sorted = sorted(stats_db.items(), key=lambda x: x[1]['corners'], reverse=True)[:20]
             
             times_nomes = [t[0] for t in times_sorted]
             times_cantos = [t[1]['corners'] for t in times_sorted]
@@ -1500,7 +1492,7 @@ def main():
             wr = (ganhas/total*100) if total > 0 else 0
             banca = st.session_state.bankroll_history[-1]
             
-            perfil = "🎯 PROFISSIONAL" if wr >= 70 and total >= 30 else                      "📊 AVANÇADO" if wr >= 60 and total >= 15 else                      "🌟 INTERMEDIÁRIO" if total >= 5 else "🔰 INICIANTE"
+            perfil = "🎯 PROFISSIONAL" if wr >= 70 and total >= 30 else "📊 AVANÇADO" if wr >= 60 and total >= 15 else "🌟 INTERMEDIÁRIO" if total >= 5 else "🔰 INICIANTE"
             
             welcome = f"""👋 Olá! Sou o **FutPrevisão AI Advisor ULTRA**!
 
@@ -1978,11 +1970,11 @@ def generate_league_comparison_table(stats_db: Dict) -> pd.DataFrame:
     })
     
     for team, stats in stats_db.items():
-        league = stats_db['league']
-        league_stats_db[league]['cantos'].append(stats.get('corners', 5.5))
-        league_stats_db[league]['cartoes'].append(stats.get('cards', 2.5))
-        league_stats_db[league]['gols'].append(stats.get('goals_f', 1.5))
-        league_stats_db[league]['times'] += 1
+        league = stats.get('league', 'Desconhecida')
+        league_stats[league]['cantos'].append(stats.get('corners', 5.5))
+        league_stats[league]['cartoes'].append(stats.get('cards', 2.5))
+        league_stats[league]['gols'].append(stats.get('goals_f', 1.5))
+        league_stats[league]['times'] += 1
     
     rows = []
     for league, data in league_stats.items():
@@ -2303,7 +2295,7 @@ def generate_betting_report(stats: Dict, bet_results: List[Dict]) -> str:
 def export_data_to_csv(data: List[Dict], filename: str) -> str:
     """Exporta dados para CSV"""
     df = pd.DataFrame(data)
-    filepath = f"/mnt/user-data/outputs/{filename}"
+    filepath = f"./{filename}"
     df.to_csv(filepath, index=False)
     return filepath
 
