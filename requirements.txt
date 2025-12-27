@@ -7,4 +7,11 @@ plotly
 scipy
 openpyxl
 pytz
+streamlit
+pandas
+numpy
+scipy
+plotly
+scikit-learn
+
 
