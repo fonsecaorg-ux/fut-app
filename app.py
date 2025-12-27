@@ -14,10 +14,10 @@ import numpy as np
 from datetime import datetime, timedelta
 import json
 import math
-from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 import plotly.graph_objects as go
 import plotly.express as px
+from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent
 from difflib import get_close_matches
 import re
@@ -244,18 +244,17 @@ def get_prob_emoji(prob: float) -> str:
     else:
         return "⚪"
 
+# ============================================================
+# CARREGAMENTO DE DADOS
+# ============================================================
+
 
 # ============================================================
 # CARREGAMENTO ROBUSTO DE ARQUIVOS (CORREÇÃO #4)
 # ============================================================
 
 def find_file(filename: str) -> Optional[str]:
-    """
-    Busca arquivo em múltiplos diretórios possíveis.
-    
-    CORREÇÃO #4: Carregamento robusto para Streamlit Cloud/GitHub
-    Prioridade: /mnt/project/ > raiz > ./data/ > BASE_DIR
-    """
+    """Busca arquivo em múltiplos diretórios"""
     search_paths = [
         Path('/mnt/project') / filename,
         Path('.') / filename,
@@ -263,24 +262,14 @@ def find_file(filename: str) -> Optional[str]:
         BASE_DIR / filename,
         BASE_DIR / 'data' / filename,
     ]
-    
     for path in search_paths:
         if path.exists():
             return str(path)
-    
     return None
-
-
-# ============================================================
-# CARREGAMENTO DE DADOS
-# ============================================================
 
 @st.cache_data(ttl=3600)
 def load_all_data():
-    """
-    Carrega todos os dados do sistema
-    CORREÇÃO #4 APLICADA: usa find_file()
-    """
+    """Carrega todos os dados do sistema"""
     stats_db = {}
     cal = pd.DataFrame()
     referees = {}
@@ -300,11 +289,9 @@ def load_all_data():
     
     for league_name, filename in league_files.items():
         filepath = find_file(filename)
-        
         if not filepath:
             st.sidebar.warning(f"⚠️ {league_name}: Arquivo não encontrado")
             continue
-        
         try:
             df = pd.read_csv(filepath, encoding='utf-8')
             teams = set(df['HomeTeam'].dropna().unique()) | set(df['AwayTeam'].dropna().unique())
@@ -363,28 +350,26 @@ def load_all_data():
         except Exception as e:
             st.sidebar.warning(f"⚠️ {league_name}: {str(e)}")
     
-    cal_filepath = find_file('calendario_ligas.csv')
-    if cal_filepath:
-        try:
-            cal = pd.read_csv(cal_filepath, encoding='utf-8')
-            if 'Data' in cal.columns:
-                cal['DtObj'] = pd.to_datetime(cal['Data'], format='%d/%m/%Y', errors='coerce')
-        except Exception as e:
-            st.sidebar.warning(f"⚠️ Calendário: {str(e)}")
-    refs_filepath = find_file('arbitros_5_ligas_2025_2026.csv')
-    if refs_filepath:
-        try:
-            refs_df = pd.read_csv(refs_filepath, encoding='utf-8')
-            for _, row in refs_df.iterrows():
-                referees[row['Arbitro']] = {
-                    'factor': row['Media_Cartoes_Por_Jogo'] / 4.0,
-                    'games': row['Jogos_Apitados'],
-                    'avg_cards': row['Media_Cartoes_Por_Jogo'],
-                    'red_cards': row.get('Cartoes_Vermelhos', 0),
-                    'red_rate': row.get('Cartoes_Vermelhos', 0) / row['Jogos_Apitados'] if row['Jogos_Apitados'] > 0 else 0.08
-                }
-        except Exception as e:
-            st.sidebar.warning(f"⚠️ Árbitros: {str(e)}")
+    try:
+        cal = pd.read_csv('calendario_ligas.csv', encoding='utf-8')
+        if 'Data' in cal.columns:
+            cal['DtObj'] = pd.to_datetime(cal['Data'], format='%d/%m/%Y', errors='coerce')
+    except:
+        pass
+    
+    try:
+        refs_df = pd.read_csv('arbitros_5_ligas_2025_2026.csv', encoding='utf-8')
+        for _, row in refs_df.iterrows():
+            referees[row['Arbitro']] = {
+                'factor': row['Media_Cartoes_Por_Jogo'] / 4.0,
+                'games': row['Jogos_Apitados'],
+                'avg_cards': row['Media_Cartoes_Por_Jogo'],
+                'red_cards': row.get('Cartoes_Vermelhos', 0),
+                'red_rate': row.get('Cartoes_Vermelhos', 0) / row['Jogos_Apitados'] if row['Jogos_Apitados'] > 0 else 0.08
+            }
+    except:
+        pass
+    
     return stats_db, cal, referees
 
 
@@ -403,12 +388,12 @@ def calcular_jogo_v31(home_stats: Dict, away_stats: Dict, ref_data: Dict) -> Dic
     """
     
     # ESCANTEIOS com boost de chutes
-    base_corners_h = home_STATS.get('corners_home', home_STATS['corners'])
-    base_corners_a = away_STATS.get('corners_away', away_STATS['corners'])
+    base_corners_h = home_stats.get('corners_home', home_stats['corners'])
+    base_corners_a = away_stats.get('corners_away', away_stats['corners'])
     
     # Boost baseado em chutes no gol
-    shots_h = home_STATS.get('shots_home', 4.5)
-    shots_a = home_STATS.get('shots_away', 4.0)
+    shots_h = home_stats.get('shots_home', 4.5)
+    shots_a = home_stats.get('shots_away', 4.0)
     
     if shots_h > 6.0:
         pressure_h = 1.20  # Alto
@@ -423,8 +408,8 @@ def calcular_jogo_v31(home_stats: Dict, away_stats: Dict, ref_data: Dict) -> Dic
     corners_total = corners_h + corners_a
     
     # CARTÕES
-    fouls_h = home_STATS.get('fouls_home', home_STATS.get('fouls', 12.0))
-    fouls_a = away_STATS.get('fouls_away', away_STATS.get('fouls', 12.0))
+    fouls_h = home_stats.get('fouls_home', home_stats.get('fouls', 12.0))
+    fouls_a = away_stats.get('fouls_away', away_stats.get('fouls', 12.0))
     
     # Fator de violência
     violence_h = 1.0 if fouls_h > 12.5 else 0.85
@@ -442,8 +427,8 @@ def calcular_jogo_v31(home_stats: Dict, away_stats: Dict, ref_data: Dict) -> Dic
     else:
         strictness = 1.0
     
-    cards_h_base = home_STATS.get('cards_home', home_STATS['cards'])
-    cards_a_base = away_STATS.get('cards_away', away_STATS['cards'])
+    cards_h_base = home_stats.get('cards_home', home_stats['cards'])
+    cards_a_base = away_stats.get('cards_away', away_stats['cards'])
     
     cards_h = cards_h_base * violence_h * ref_factor * strictness
     cards_a = cards_a_base * violence_a * ref_factor * strictness
@@ -453,8 +438,8 @@ def calcular_jogo_v31(home_stats: Dict, away_stats: Dict, ref_data: Dict) -> Dic
     prob_red_card = ((0.05 + 0.05) / 2) * ref_red_rate * 100
     
     # xG (Expected Goals)
-    xg_h = (home_STATS['goals_f'] * away_STATS['goals_a']) / 1.3
-    xg_a = (away_STATS['goals_f'] * home_STATS['goals_a']) / 1.3
+    xg_h = (home_stats['goals_f'] * away_STATS['goals_a']) / 1.3
+    xg_a = (away_STATS['goals_f'] * home_stats['goals_a']) / 1.3
     
     return {
         'corners': {'h': corners_h, 'a': corners_a, 't': corners_total},
@@ -682,30 +667,17 @@ STATS, CAL, REFS = load_all_data()
 
 
 def clean_team_name(text: str) -> str:
-    """
-    CORREÇÃO #3: Limpa e normaliza nome de time para busca
-    Remove pontuação, converte para lowercase, remove artigos
-    """
-    # Lowercase
+    """Limpa e normaliza nome de time"""
     text = text.lower().strip()
-    
-    # Remove pontuação (?, !, ., etc)
     text = re.sub(r'[^\w\s]', '', text)
-    
-    # Remove artigos e preposições comuns
     stop_words = {'do', 'da', 'de', 'dos', 'das', 'o', 'a', 'os', 'as', 
                   'como', 'está', 'esta', 'stats', 'estatistica', 'estatísticas'}
     words = text.split()
     text = ' '.join([w for w in words if w not in stop_words])
-    
     return text.strip()
 
-
 def processar_chat(mensagem, stats_db):
-    """
-    Processa mensagens do chat
-    CORREÇÃO #3 APLICADA: usa clean_team_name()
-    """
+    """Processa mensagens do chat e retorna resposta apropriada"""
     if not mensagem or not stats_db:
         return "Por favor, digite uma pergunta válida."
     
@@ -786,31 +758,12 @@ def processar_chat(mensagem, stats_db):
         times = msg.split(separator)
         
         if len(times) == 2:
-            # CORREÇÃO #3: Limpar nomes antes de buscar
             time1_limpo = clean_team_name(times[0])
             time2_limpo = clean_team_name(times[1])
-            
-            known_teams = list(stats_db.keys())
-            
-            # Buscar com fuzzy matching
-            match1 = get_close_matches(time1_limpo, 
-                                      [t.lower() for t in known_teams], 
-                                      n=1, cutoff=0.4)
-            match2 = get_close_matches(time2_limpo, 
-                                      [t.lower() for t in known_teams], 
-                                      n=1, cutoff=0.4)
-            
-            # Recuperar nome original
-            if match1:
-                t1 = [t for t in known_teams if t.lower() == match1[0]][0]
-            else:
-                t1 = None
-            
-            if match2:
-                t2 = [t for t in known_teams if t.lower() == match2[0]][0]
-            else:
-                t2 = None
-            
+            match1 = get_close_matches(time1_limpo, [t.lower() for t in known_teams], n=1, cutoff=0.4)
+            match2 = get_close_matches(time2_limpo, [t.lower() for t in known_teams], n=1, cutoff=0.4)
+            t1 = [t for t in known_teams if t.lower() == match1[0]][0] if match1 else None
+            t2 = [t for t in known_teams if t.lower() == match2[0]][0] if match2 else None
             if t1 and t2:
                 s1 = stats_db[t1]
                 s2 = stats_db[t2]
@@ -834,20 +787,18 @@ def processar_chat(mensagem, stats_db):
             else:
                 return f"❌ Times não encontrados. Disponíveis: {', '.join(known_teams[:5])}..."
     
-    # 5. ANÁLISE DE TIME ÚNICO (CORREÇÃO #3 APLICADA)
+    # 5. ANÁLISE DE TIME ÚNICO
+    # Tentar encontrar time mencionado
+    from difflib import get_close_matches
     known_teams = list(stats_db.keys())
     
     # Limpar mensagem
+    known_teams = list(stats_db.keys())
     msg_limpa = clean_team_name(msg)
-    
-    # Buscar com fuzzy matching (cutoff reduzido para 0.4)
-    match = get_close_matches(msg_limpa, 
-                             [t.lower() for t in known_teams], 
-                             n=1, cutoff=0.4)
+    match = get_close_matches(msg_limpa, [t.lower() for t in known_teams], n=1, cutoff=0.4)
     
     if match:
-        # Recuperar nome original do time
-        team = [t for t in known_teams if t.lower() == match[0]][0]
+        team = match[0]
         stats = stats_db[team]
         
         resp = f"📊 **{team.upper()}**\n\n"
@@ -1644,19 +1595,19 @@ def generate_comparison_radar(home_stats: Dict, away_stats: Dict, home_name: str
     categories = ['Cantos', 'Cartões', 'Gols Marcados', 'Chutes', 'Faltas']
     
     home_values = [
-        home_STATS.get('corners', 5.5) / 10 * 100,
-        home_STATS.get('cards', 2.5) / 5 * 100,
-        home_STATS.get('goals_f', 1.5) / 3 * 100,
-        home_STATS.get('shots_on_target', 4.5) / 8 * 100,
-        home_STATS.get('fouls', 12.0) / 15 * 100
+        home_stats.get('corners', 5.5) / 10 * 100,
+        home_stats.get('cards', 2.5) / 5 * 100,
+        home_stats.get('goals_f', 1.5) / 3 * 100,
+        home_stats.get('shots_on_target', 4.5) / 8 * 100,
+        home_stats.get('fouls', 12.0) / 15 * 100
     ]
     
     away_values = [
-        away_STATS.get('corners', 5.5) / 10 * 100,
-        away_STATS.get('cards', 2.5) / 5 * 100,
-        away_STATS.get('goals_f', 1.5) / 3 * 100,
-        away_STATS.get('shots_on_target', 4.5) / 8 * 100,
-        away_STATS.get('fouls', 12.0) / 15 * 100
+        away_stats.get('corners', 5.5) / 10 * 100,
+        away_stats.get('cards', 2.5) / 5 * 100,
+        away_stats.get('goals_f', 1.5) / 3 * 100,
+        away_stats.get('shots_on_target', 4.5) / 8 * 100,
+        away_stats.get('fouls', 12.0) / 15 * 100
     ]
     
     fig = go.Figure()
