@@ -1,5 +1,7 @@
 import re
 from difflib import get_close_matches
+from typing import List, Optional
+
 
 
 def normalize_name(name: str, known_teams: List[str]) -> Optional[str]:
