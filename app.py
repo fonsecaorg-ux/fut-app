@@ -438,8 +438,8 @@ def calcular_jogo_v31(home_stats: Dict, away_stats: Dict, ref_data: Dict) -> Dic
     prob_red_card = ((0.05 + 0.05) / 2) * ref_red_rate * 100
     
     # xG (Expected Goals)
-    xg_h = (home_stats['goals_f'] * away_STATS['goals_a']) / 1.3
-    xg_a = (away_STATS['goals_f'] * home_stats['goals_a']) / 1.3
+    xg_h = (home_stats['goals_f'] * away_stats_db['goals_a']) / 1.3
+    xg_a = (away_stats_db['goals_f'] * home_stats['goals_a']) / 1.3
     
     return {
         'corners': {'h': corners_h, 'a': corners_a, 't': corners_total},
@@ -617,7 +617,7 @@ def validar_jogos_bilhete(jogos_parsed: List[Dict], stats_db: Dict) -> List[Dict
         h_norm = normalize_name(jogo['home'], times)
         a_norm = normalize_name(jogo['away'], times)
         
-        if h_norm and a_norm and h_norm in STATS_db and a_norm in STATS_db:
+        if h_norm and a_norm and h_norm in stats_db and a_norm in stats_db:
             jogos_val.append({
                 'home': h_norm,
                 'away': a_norm,
@@ -662,7 +662,7 @@ def calcular_prob_bilhete(jogos_validados: List[Dict], n_sims: int = 3000) -> Di
 
 
 # Carregar dados globais
-STATS, CAL, REFS = load_all_data()
+stats_db, CAL, REFS = load_all_data()
 
 
 
@@ -857,7 +857,7 @@ def main():
         st.caption("_Sistema Profissional de Análise Esportiva_")
     
     with col3:
-        st.metric("📚 Database", f"{len(STATS)} times", delta="10 Ligas")
+        st.metric("📚 Database", f"{len(stats_db)} times", delta="10 Ligas")
     
     st.markdown("---")
     
@@ -899,7 +899,7 @@ def main():
     with st.sidebar:
         st.header("📊 Dashboard")
         col1, col2 = st.columns(2)
-        col1.metric("Times", len(STATS))
+        col1.metric("Times", len(stats_db))
         col1.metric("Jogos", len(cal) if not cal.empty else 0)
         col2.metric("Árbitros", len(referees))
         banca = st.session_state.bankroll_history[-1]
@@ -937,13 +937,13 @@ def main():
             st.markdown(f"### 🎯 {len(jogos_dia)} jogo(s) disponível(eis)")
             
             for idx, jogo in jogos_dia.iterrows():
-                h = normalize_name(jogo['Time_Casa'], list(STATS.keys()))
-                a = normalize_name(jogo['Time_Visitante'], list(STATS.keys()))
+                h = normalize_name(jogo['Time_Casa'], list(stats_db.keys()))
+                a = normalize_name(jogo['Time_Visitante'], list(stats_db.keys()))
                 
-                if h and a and h in STATS and a in STATS:
+                if h and a and h in stats_db and a in stats_db:
                     ref_nome = jogo.get('Arbitro', 'N/A')
                     ref_data = referees.get(ref_nome, {})
-                    calc = calcular_jogo_v31(STATS[h], STATS[a], ref_data)
+                    calc = calcular_jogo_v31(stats_db[h], stats_db[a], ref_data)
                     
                     with st.expander(f"⚽ {h} vs {a} | {jogo.get('Hora', 'N/A')}", expanded=False):
                         col1, col2, col3, col4 = st.columns(4)
@@ -1097,8 +1097,8 @@ def main():
             
             jogos_disp = []
             for _, jogo in jogos_dia.iterrows():
-                h = normalize_name(jogo['Time_Casa'], list(STATS.keys()))
-                a = normalize_name(jogo['Time_Visitante'], list(STATS.keys()))
+                h = normalize_name(jogo['Time_Casa'], list(stats_db.keys()))
+                a = normalize_name(jogo['Time_Visitante'], list(stats_db.keys()))
                 if h and a:
                     jogos_disp.append(f"{h} vs {a}")
             
@@ -1109,7 +1109,7 @@ def main():
                     h_name, a_name = jogo_sel.split(' vs ')
                     
                     with st.spinner('Simulando...'):
-                        sims = simulate_game_v31(STATS[h_name], STATS[a_name], {}, 3000)
+                        sims = simulate_game_v31(stats_db[h_name], stats_db[a_name], {}, 3000)
                         
                         st.subheader("📊 Resultados")
                         col1, col2, col3, col4 = st.columns(4)
@@ -1258,7 +1258,7 @@ def main():
             
             liga_data = defaultdict(lambda: {'cantos': [], 'cartoes': [], 'gols': []})
             
-            for team, data in STATS.items():
+            for team, data in stats_db.items():
                 liga = data['league']
                 liga_data[liga]['cantos'].append(data['corners'])
                 liga_data[liga]['cartoes'].append(data['cards'])
@@ -1305,7 +1305,7 @@ def main():
         elif viz_tipo == "Distribuição de Cantos":
             st.subheader("📈 Distribuição de Cantos - Todos os Times")
             
-            todos_cantos = [data['corners'] for data in STATS.values()]
+            todos_cantos = [data['corners'] for data in stats_db.values()]
             
             fig = go.Figure()
             fig.add_trace(go.Histogram(
@@ -1316,7 +1316,7 @@ def main():
             ))
             
             fig.update_layout(
-                title=f'Distribuição de Cantos ({len(STATS)} times)',
+                title=f'Distribuição de Cantos ({len(stats_db)} times)',
                 xaxis_title='Cantos por Jogo',
                 yaxis_title='Frequência',
                 height=400
@@ -1329,7 +1329,7 @@ def main():
             col1, col2, col3 = st.columns(3)
             col1.metric("Média", f"{media_cantos:.2f}")
             col2.metric("Mediana", f"{mediana_cantos:.2f}")
-            col3.metric("Times", len(STATS))
+            col3.metric("Times", len(stats_db))
         
         else:
             st.info(f"Gráfico '{viz_tipo}' em desenvolvimento")
@@ -1396,11 +1396,11 @@ def main():
                 
                 with st.spinner('Analisando jogos...'):
                     for _, jogo in jogos_dia.iterrows():
-                        h = normalize_name(jogo['Time_Casa'], list(STATS.keys()))
-                        a = normalize_name(jogo['Time_Visitante'], list(STATS.keys()))
+                        h = normalize_name(jogo['Time_Casa'], list(stats_db.keys()))
+                        a = normalize_name(jogo['Time_Visitante'], list(stats_db.keys()))
                         
-                        if h and a and h in STATS and a in STATS:
-                            calc = calcular_jogo_v31(STATS[h], STATS[a], {})
+                        if h and a and h in stats_db and a in stats_db:
+                            calc = calcular_jogo_v31(stats_db[h], stats_db[a], {})
                             
                             # Verificar cantos
                             if tipo_mercado in ["Cantos", "Ambos"]:
@@ -1453,7 +1453,7 @@ def main():
                 jogos_parsed = parse_bilhete_texto(texto)
                 
                 if jogos_parsed:
-                    jogos_val = validar_jogos_bilhete(jogos_parsed, STATS)
+                    jogos_val = validar_jogos_bilhete(jogos_parsed, stats_db)
                     
                     if jogos_val:
                         st.success(f"✅ {len(jogos_val)} jogo(s) validado(s)")
@@ -1561,7 +1561,7 @@ def main():
             st.session_state.chat_history.append({'role': 'user', 'content': user_msg})
             
             # Processar mensagem com IA
-            response = processar_chat(user_msg, STATS)
+            response = processar_chat(user_msg, stats_db)
             
             # Adicionar resposta ao histórico
             st.session_state.chat_history.append({'role': 'assistant', 'content': response})
@@ -1574,8 +1574,8 @@ def main():
 
 def generate_corner_distribution_chart(team_stats: Dict, team_name: str) -> go.Figure:
     """Gera gráfico de distribuição de cantos de um time"""
-    corners_mean = team_STATS.get('corners', 5.5)
-    corners_std = team_STATS.get('corners_std', 2.0)
+    corners_mean = team_stats.get('corners', 5.5)
+    corners_std = team_stats.get('corners_std', 2.0)
     
     x = np.linspace(0, 15, 100)
     y = (1 / (corners_std * np.sqrt(2 * np.pi))) * np.exp(-0.5 * ((x - corners_mean) / corners_std) ** 2)
@@ -1640,13 +1640,13 @@ def generate_heatmap_correlations(stats_db: Dict) -> go.Figure:
     """Gera heatmap de correlações entre métricas"""
     data_matrix = []
     
-    for team, stats in STATS_db.items():
+    for team, stats in stats_db.items():
         data_matrix.append([
-            STATS.get('corners', 5.5),
-            STATS.get('cards', 2.5),
-            STATS.get('goals_f', 1.5),
-            STATS.get('fouls', 12.0),
-            STATS.get('shots_on_target', 4.5)
+            stats.get('corners', 5.5),
+            stats.get('cards', 2.5),
+            stats.get('goals_f', 1.5),
+            stats.get('fouls', 12.0),
+            stats.get('shots_on_target', 4.5)
         ])
     
     df = pd.DataFrame(data_matrix, columns=['Cantos', 'Cartões', 'Gols', 'Faltas', 'Chutes'])
@@ -1977,12 +1977,12 @@ def generate_league_comparison_table(stats_db: Dict) -> pd.DataFrame:
         'times': 0
     })
     
-    for team, stats in STATS_db.items():
-        league = STATS['league']
-        league_STATS[league]['cantos'].append(STATS.get('corners', 5.5))
-        league_STATS[league]['cartoes'].append(STATS.get('cards', 2.5))
-        league_STATS[league]['gols'].append(STATS.get('goals_f', 1.5))
-        league_STATS[league]['times'] += 1
+    for team, stats in stats_db.items():
+        league = stats_db['league']
+        league_stats_db[league]['cantos'].append(stats.get('corners', 5.5))
+        league_stats_db[league]['cartoes'].append(stats.get('cards', 2.5))
+        league_stats_db[league]['gols'].append(stats.get('goals_f', 1.5))
+        league_stats_db[league]['times'] += 1
     
     rows = []
     for league, data in league_stats.items():
@@ -2016,11 +2016,11 @@ class BettingAnalyzer:
         stats = self.stats_db[team_name]
         
         return {
-            'corners_trend': 'increasing' if STATS.get('corners', 5.5) > 5.5 else 'decreasing',
-            'cards_trend': 'increasing' if STATS.get('cards', 2.5) > 2.5 else 'decreasing',
-            'offensive': STATS.get('goals_f', 1.5) > 1.5,
-            'defensive': STATS.get('goals_a', 1.5) < 1.5,
-            'disciplined': STATS.get('fouls', 12.0) < 12.5
+            'corners_trend': 'increasing' if stats.get('corners', 5.5) > 5.5 else 'decreasing',
+            'cards_trend': 'increasing' if stats.get('cards', 2.5) > 2.5 else 'decreasing',
+            'offensive': stats.get('goals_f', 1.5) > 1.5,
+            'defensive': stats.get('goals_a', 1.5) < 1.5,
+            'disciplined': stats.get('fouls', 12.0) < 12.5
         }
     
     def compare_head_to_head(self, team1: str, team2: str) -> Dict:
