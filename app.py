@@ -237,7 +237,7 @@ def load_all_data():
     referees = {}
     
     league_files = {
-        'Premier League': '/mnt/project/Premier_League_25_26.csv',
+        'Premier League': '/Premier_League_25_26.csv',
         'La Liga': '/mnt/project/La_Liga_25_26.csv',
         'Serie A': '/mnt/project/Serie_A_25_26.csv',
         'Bundesliga': '/mnt/project/Bundesliga_25_26.csv',
