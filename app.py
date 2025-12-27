@@ -229,107 +229,140 @@ def get_prob_emoji(prob: float) -> str:
 # CARREGAMENTO DE DADOS
 # ============================================================
 
-@st.cache_data(ttl=3600)
-def load_all_data():
-    """Carrega todos os dados do sistema"""
-    stats_db = {}
-    cal = pd.DataFrame()
-    referees = {}
-    
-    league_files = {
-        'Premier League': '/Premier_League_25_26.csv',
-        'La Liga': '/mnt/project/La_Liga_25_26.csv',
-        'Serie A': '/mnt/project/Serie_A_25_26.csv',
-        'Bundesliga': '/mnt/project/Bundesliga_25_26.csv',
-        'Ligue 1': '/mnt/project/Ligue_1_25_26.csv',
-        'Championship': '/mnt/project/Championship_Inglaterra_25_26.csv',
-        'Bundesliga 2': '/mnt/project/Bundesliga_2.csv',
-        'Pro League': '/mnt/project/Pro_League_Belgica_25_26.csv',
-        'Super Lig': '/mnt/project/Super_Lig_Turquia_25_26.csv',
-        'Premiership': '/mnt/project/Premiership_Escocia_25_26.csv'
-    }
-    
-    for league_name, filepath in league_files.items():
-        try:
-            df = pd.read_csv(filepath, encoding='utf-8')
-            teams = set(df['HomeTeam'].dropna().unique()) | set(df['AwayTeam'].dropna().unique())
-            
-            for team in teams:
-                if pd.isna(team):
-                    continue
-                
-                h_games = df[df['HomeTeam'] == team]
-                a_games = df[df['AwayTeam'] == team]
-                
-                # Estatísticas detalhadas
-                corners_h = h_games['HC'].mean() if 'HC' in h_games.columns and len(h_games) > 0 else 5.5
-                corners_a = a_games['AC'].mean() if 'AC' in a_games.columns and len(a_games) > 0 else 4.5
-                corners_h_std = h_games['HC'].std() if 'HC' in h_games.columns and len(h_games) > 1 else 2.0
-                corners_a_std = a_games['AC'].std() if 'AC' in a_games.columns and len(a_games) > 1 else 2.0
-                
-                cards_h = h_games[['HY', 'HR']].sum(axis=1).mean() if 'HY' in h_games.columns and len(h_games) > 0 else 2.5
-                cards_a = a_games[['AY', 'AR']].sum(axis=1).mean() if 'AY' in a_games.columns and len(a_games) > 0 else 2.5
-                
-                fouls_h = h_games['HF'].mean() if 'HF' in h_games.columns and len(h_games) > 0 else 12.0
-                fouls_a = a_games['AF'].mean() if 'AF' in a_games.columns and len(a_games) > 0 else 12.0
-                
-                goals_fh = h_games['FTHG'].mean() if 'FTHG' in h_games.columns and len(h_games) > 0 else 1.5
-                goals_fa = a_games['FTAG'].mean() if 'FTAG' in a_games.columns and len(a_games) > 0 else 1.3
-                goals_ah = h_games['FTAG'].mean() if 'FTAG' in h_games.columns and len(h_games) > 0 else 1.3
-                goals_aa = a_games['FTHG'].mean() if 'FTHG' in a_games.columns and len(a_games) > 0 else 1.5
-                
-                # Chutes (V14.0)
-                shots_h = h_games['HST'].mean() if 'HST' in h_games.columns and len(h_games) > 0 else 4.5
-                shots_a = a_games['AST'].mean() if 'AST' in a_games.columns and len(a_games) > 0 else 4.0
-                
-                stats_db[team] = {
-                    'corners': (corners_h + corners_a) / 2,
-                    'corners_home': corners_h,
-                    'corners_away': corners_a,
-                    'corners_std': (corners_h_std + corners_a_std) / 2,
-                    'cards': (cards_h + cards_a) / 2,
-                    'cards_home': cards_h,
-                    'cards_away': cards_a,
-                    'fouls': (fouls_h + fouls_a) / 2,
-                    'fouls_home': fouls_h,
-                    'fouls_away': fouls_a,
-                    'goals_f': (goals_fh + goals_fa) / 2,
-                    'goals_f_home': goals_fh,
-                    'goals_f_away': goals_fa,
-                    'goals_a': (goals_ah + goals_aa) / 2,
-                    'goals_a_home': goals_ah,
-                    'goals_a_away': goals_aa,
-                    'shots_on_target': (shots_h + shots_a) / 2,
-                    'shots_home': shots_h,
-                    'shots_away': shots_a,
-                    'league': league_name,
-                    'games': len(h_games) + len(a_games)
-                }
-        except Exception as e:
-            st.sidebar.warning(f"⚠️ {league_name}: {str(e)}")
-    
-    try:
-        cal = pd.read_csv('/mnt/project/calendario_ligas.csv', encoding='utf-8')
-        if 'Data' in cal.columns:
-            cal['DtObj'] = pd.to_datetime(cal['Data'], format='%d/%m/%Y', errors='coerce')
-    except:
-        pass
-    
-    try:
-        refs_df = pd.read_csv('/mnt/project/arbitros_5_ligas_2025_2026.csv', encoding='utf-8')
-        for _, row in refs_df.iterrows():
-            referees[row['Arbitro']] = {
-                'factor': row['Media_Cartoes_Por_Jogo'] / 4.0,
-                'games': row['Jogos_Apitados'],
-                'avg_cards': row['Media_Cartoes_Por_Jogo'],
-                'red_cards': row.get('Cartoes_Vermelhos', 0),
-                'red_rate': row.get('Cartoes_Vermelhos', 0) / row['Jogos_Apitados'] if row['Jogos_Apitados'] > 0 else 0.08
-            }
-    except:
-        pass
-    
-    return stats_db, cal, referees
+# Definição de Ligas e Arquivos
+LEAGUE_FILES = {
+    'Premier League': ['Premier_League_25_26.csv', 'E0.csv'],
+    'La Liga': ['La_Liga_25_26.csv', 'SP1.csv'],
+    'Serie A': ['Serie_A_25_26.csv', 'I1.csv'],
+    'Bundesliga': ['Bundesliga_25_26.csv', 'D1.csv'],
+    'Ligue 1': ['Ligue_1_25_26.csv', 'F1.csv'],
+    'Championship': ['Championship_Inglaterra_25_26.csv', 'E1.csv'],
+    'Bundesliga 2': ['Bundesliga_2.csv', 'D2.csv'],
+    'Pro League': ['Pro_League_Belgica_25_26.csv', 'B1.csv'],
+    'Super Lig': ['Super_Lig_Turquia_25_26.csv', 'T1.csv'],
+    'Premiership': ['Premiership_Escocia_25_26.csv', 'SC0.csv']
+}
 
+NAME_MAPPING = {
+    'Man United': 'Manchester Utd', 'Manchester United': 'Manchester Utd', 'Man Utd': 'Manchester Utd',
+    'Man City': 'Manchester City', 'Spurs': 'Tottenham', 'Newcastle': 'Newcastle Utd',
+    'Wolves': 'Wolverhampton', 'Brighton': 'Brighton and Hove Albion',
+    'Nottm Forest': "Nott'm Forest", 'Leicester': 'Leicester City',
+    'West Ham': 'West Ham Utd', 'Sheffield Utd': 'Sheffield United',
+    'Inter': 'Inter Milan', 'AC Milan': 'Milan',
+    'Ath Madrid': 'Atletico Madrid', 'Ath Bilbao': 'Athletic Club',
+    'Betis': 'Real Betis', 'Sociedad': 'Real Sociedad'
+}
+
+def normalize_name(name: str, known_teams: List[str]) -> Optional[str]:
+    """Normaliza nomes com fuzzy matching"""
+    if not name: return None
+    name = name.strip()
+    if name in NAME_MAPPING:
+        name = NAME_MAPPING[name]
+    if name in known_teams:
+        return name
+    matches = get_close_matches(name, known_teams, n=1, cutoff=0.6)
+    return matches[0] if matches else None
+
+@st.cache_data(ttl=3600)
+def load_all_data_v31():
+    """
+    Carrega dados de repositório GitHub (diretório atual) com fallback robusto.
+    """
+    stats_db = {}
+    
+    # 1. Identificar Diretório de Dados (Compatível com GitHub)
+    possible_paths = ['.', './data', '/mount/src/fut-app', os.getcwd()]
+    data_path = '.'
+    
+    for p in possible_paths:
+        if any(os.path.exists(os.path.join(p, f)) for f in [list(LEAGUE_FILES.values())[0][0]]):
+            data_path = p
+            break
+
+# 2. Carregar Stats
+    for league_name, filenames in LEAGUE_FILES.items():
+        df = pd.DataFrame()
+        for fname in filenames:
+            fpath = os.path.join(data_path, fname)
+            if os.path.exists(fpath):
+                try:
+                    df = pd.read_csv(fpath, encoding='utf-8')
+                    break
+                except:
+                    try: df = pd.read_csv(fpath, encoding='latin1')
+                    except: continue
+        
+        if df.empty: continue
+
+# Padronizar colunas
+        cols_map = {'HomeTeam': 'HomeTeam', 'AwayTeam': 'AwayTeam', 
+                   'FTHG': 'FTHG', 'FTAG': 'FTAG', 
+                   'HC': 'HC', 'AC': 'AC', 'HY': 'HY', 'AY': 'AY',
+                   'HST': 'HST', 'AST': 'AST', 'HF': 'HF', 'AF': 'AF'}
+        
+        # Verifica colunas existentes
+        existing_cols = [c for c in cols_map.values() if c in df.columns]
+        
+        teams = set(df['HomeTeam'].dropna().unique()) | set(df['AwayTeam'].dropna().unique())
+        
+        for team in teams:
+            h_games = df[df['HomeTeam'] == team]
+            a_games = df[df['AwayTeam'] == team]
+
+# Cálculo de Médias (com fallback seguro)
+            def get_mean(df_h, df_a, col_h, col_a, default):
+                val_h = df_h[col_h].mean() if col_h in df_h.columns and not df_h.empty else default
+                val_a = df_a[col_a].mean() if col_a in df_a.columns and not df_a.empty else default
+                return (val_h + val_a) / 2
+                
+            corners = get_mean(h_games, a_games, 'HC', 'AC', 5.0)
+            cards = get_mean(h_games, a_games, 'HY', 'AY', 2.0)
+            fouls = get_mean(h_games, a_games, 'HF', 'AF', 11.0)
+            goals_f = get_mean(h_games, a_games, 'FTHG', 'FTAG', 1.3)
+            goals_a = get_mean(h_games, a_games, 'FTAG', 'FTHG', 1.3)
+            shots = get_mean(h_games, a_games, 'HST', 'AST', 4.5)
+
+stats_db[team] = {
+                'corners': corners,
+                'cards': cards,
+                'fouls': fouls,
+                'goals_f': goals_f,
+                'goals_a': goals_a,
+                'shots_on_target': shots,
+                'league': league_name,
+                'games': len(h_games) + len(a_games)
+            }
+
+# 3. Carregar Calendário
+    cal = pd.DataFrame()
+    cal_path = os.path.join(data_path, 'calendario_ligas.csv')
+    if os.path.exists(cal_path):
+        try:
+            cal = pd.read_csv(cal_path)
+            if 'Data' in cal.columns:
+                cal['DtObj'] = pd.to_datetime(cal['Data'], format='%d/%m/%Y', errors='coerce')
+        except: pass
+
+# 4. Carregar Árbitros
+    refs = {}
+    ref_path = os.path.join(data_path, 'arbitros_5_ligas_2025_2026.csv')
+    if os.path.exists(ref_path):
+        try:
+            ref_df = pd.read_csv(ref_path)
+            for _, row in ref_df.iterrows():
+                refs[row['Arbitro']] = {
+                    'factor': row.get('Media_Cartoes_Por_Jogo', 4.0) / 4.0,
+                    'avg_cards': row.get('Media_Cartoes_Por_Jogo', 4.0),
+                    'red_rate': 0.1 # Default
+                }
+        except: pass
+        
+    return stats_db, cal, refs
+
+# Carregamento Global
+STATS_DB, CALENDAR_DF, REFEREES_DB = load_all_data_v31()
 
 # ============================================================
 # MOTOR DE CÁLCULO V31 - CAUSALITY ENGINE
