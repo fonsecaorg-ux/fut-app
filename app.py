@@ -346,12 +346,12 @@ def calcular_jogo_v31(home_stats: Dict, away_stats: Dict, ref_data: Dict) -> Dic
     """
     
     # ESCANTEIOS com boost de chutes
-    base_corners_h = home_stats.get('corners_home', home_stats['corners'])
-    base_corners_a = away_stats.get('corners_away', away_stats['corners'])
+    base_corners_h = home_STATS.get('corners_home', home_STATS['corners'])
+    base_corners_a = away_STATS.get('corners_away', away_STATS['corners'])
     
     # Boost baseado em chutes no gol
-    shots_h = home_stats.get('shots_home', 4.5)
-    shots_a = home_stats.get('shots_away', 4.0)
+    shots_h = home_STATS.get('shots_home', 4.5)
+    shots_a = home_STATS.get('shots_away', 4.0)
     
     if shots_h > 6.0:
         pressure_h = 1.20  # Alto
@@ -366,8 +366,8 @@ def calcular_jogo_v31(home_stats: Dict, away_stats: Dict, ref_data: Dict) -> Dic
     corners_total = corners_h + corners_a
     
     # CARTÕES
-    fouls_h = home_stats.get('fouls_home', home_stats.get('fouls', 12.0))
-    fouls_a = away_stats.get('fouls_away', away_stats.get('fouls', 12.0))
+    fouls_h = home_STATS.get('fouls_home', home_STATS.get('fouls', 12.0))
+    fouls_a = away_STATS.get('fouls_away', away_STATS.get('fouls', 12.0))
     
     # Fator de violência
     violence_h = 1.0 if fouls_h > 12.5 else 0.85
@@ -385,8 +385,8 @@ def calcular_jogo_v31(home_stats: Dict, away_stats: Dict, ref_data: Dict) -> Dic
     else:
         strictness = 1.0
     
-    cards_h_base = home_stats.get('cards_home', home_stats['cards'])
-    cards_a_base = away_stats.get('cards_away', away_stats['cards'])
+    cards_h_base = home_STATS.get('cards_home', home_STATS['cards'])
+    cards_a_base = away_STATS.get('cards_away', away_STATS['cards'])
     
     cards_h = cards_h_base * violence_h * ref_factor * strictness
     cards_a = cards_a_base * violence_a * ref_factor * strictness
@@ -396,8 +396,8 @@ def calcular_jogo_v31(home_stats: Dict, away_stats: Dict, ref_data: Dict) -> Dic
     prob_red_card = ((0.05 + 0.05) / 2) * ref_red_rate * 100
     
     # xG (Expected Goals)
-    xg_h = (home_stats['goals_f'] * away_stats['goals_a']) / 1.3
-    xg_a = (away_stats['goals_f'] * home_stats['goals_a']) / 1.3
+    xg_h = (home_STATS['goals_f'] * away_STATS['goals_a']) / 1.3
+    xg_a = (away_STATS['goals_f'] * home_STATS['goals_a']) / 1.3
     
     return {
         'corners': {'h': corners_h, 'a': corners_a, 't': corners_total},
@@ -575,7 +575,7 @@ def validar_jogos_bilhete(jogos_parsed: List[Dict], stats_db: Dict) -> List[Dict
         h_norm = normalize_name(jogo['home'], times)
         a_norm = normalize_name(jogo['away'], times)
         
-        if h_norm and a_norm and h_norm in stats_db and a_norm in stats_db:
+        if h_norm and a_norm and h_norm in STATS_db and a_norm in STATS_db:
             jogos_val.append({
                 'home': h_norm,
                 'away': a_norm,
@@ -663,11 +663,7 @@ def processar_chat(mensagem, stats_db):
     if 'hoje' in msg or 'today' in msg:
         try:
             hoje = datetime.now().strftime('%d/%m/%Y')
-            # Preferir coluna datetime se existir (mais robusto)
-            if 'DtObj' in CAL.columns:
-                jogos_hoje = CAL[CAL['DtObj'].dt.strftime('%d/%m/%Y') == hoje]
-            else:
-                jogos_hoje = CAL[CAL['Data'] == hoje]
+            jogos_hoje = CAL[CAL['Data'] == hoje]
             
             if len(jogos_hoje) == 0:
                 return f"📅 Não há jogos cadastrados para hoje ({hoje})"
@@ -897,66 +893,29 @@ def main():
             st.markdown("**Crie seleções personalizadas digitando os dados:**")
             
             col1, col2 = st.columns(2)
-
-            # ✅ Modo guiado com dropdown (mais confiável) ou digitado (flexível)
-            modo_manual = st.radio(
-                "Modo de entrada",
-                ["Guiado (lista)", "Digitado (manual)"],
-                horizontal=True,
-                key="manual_mode",
-                help="Guiado = escolher em lista suspensa | Digitado = escrever o nome"
-            )
-
-            times_opts = ["— Selecione —"] + sorted(list(STATS.keys()))
-
+            
             with col1:
-                if modo_manual.startswith("Guiado"):
-                    time_casa_manual = st.selectbox(
-                        "🏠 Time Casa",
-                        times_opts,
-                        key="manual_home_sel",
-                        help="Selecione o time que joga em casa"
-                    )
-                else:
-                    time_casa_manual = st.text_input(
-                        "🏠 Time Casa",
-                        placeholder="Ex: Arsenal",
-                        key="manual_home",
-                        help="Digite o nome do time que joga em casa"
-                    )
-
+                time_casa_manual = st.text_input(
+                    "🏠 Time Casa", 
+                    placeholder="Ex: Arsenal", 
+                    key="manual_home",
+                    help="Digite o nome do time que joga em casa"
+                )
+                time_fora_manual = st.text_input(
+                    "✈️ Time Visitante", 
+                    placeholder="Ex: Chelsea", 
+                    key="manual_away",
+                    help="Digite o nome do time visitante"
+                )
+            
             with col2:
-                if modo_manual.startswith("Guiado"):
-                    time_fora_manual = st.selectbox(
-                        "✈️ Time Visitante",
-                        times_opts,
-                        key="manual_away_sel",
-                        help="Selecione o time visitante"
-                    )
-                else:
-                    time_fora_manual = st.text_input(
-                        "✈️ Time Visitante",
-                        placeholder="Ex: Chelsea",
-                        key="manual_away",
-                        help="Digite o nome do time visitante"
-                    )
-
-            # Normalizar placeholders do modo guiado
-            if isinstance(time_casa_manual, str) and time_casa_manual == "— Selecione —":
-                time_casa_manual = ""
-            if isinstance(time_fora_manual, str) and time_fora_manual == "— Selecione —":
-                time_fora_manual = ""
-            # Mercado e localização (guiado)
-            col_m1, col_m2 = st.columns(2)
-            with col_m1:
                 tipo_mercado_manual = st.selectbox(
-                    "📊 Tipo de Mercado",
+                    "📊 Tipo de Mercado", 
                     ["Cantos", "Cartões", "Gols", "Ambas Marcam", "Gols Casa", "Gols Fora"],
                     key="manual_market_type",
                     help="Escolha o tipo de mercado"
                 )
-
-            with col_m2:
+                
                 localizacao_manual = st.selectbox(
                     "📍 Localização",
                     ["Total", "Casa", "Visitante"],
@@ -967,40 +926,16 @@ def main():
             col1, col2, col3 = st.columns(3)
             
             with col1:
-                # ✅ Linha via dropdown (limpa e rápida) + opção personalizada
-                if tipo_mercado_manual == "Cantos":
-                    linhas_opts = [x + 0.5 for x in range(2, 21)]   # 2.5 até 20.5
-                    default_linha = 10.5 if 10.5 in linhas_opts else linhas_opts[len(linhas_opts)//2]
-                elif tipo_mercado_manual == "Cartões":
-                    linhas_opts = [x + 0.5 for x in range(0, 13)]   # 0.5 até 12.5
-                    default_linha = 4.5 if 4.5 in linhas_opts else linhas_opts[len(linhas_opts)//2]
-                elif tipo_mercado_manual in ["Gols", "Gols Casa", "Gols Fora", "Ambas Marcam"]:
-                    linhas_opts = [x + 0.5 for x in range(0, 9)]    # 0.5 até 8.5
-                    default_linha = 2.5 if 2.5 in linhas_opts else linhas_opts[len(linhas_opts)//2]
-                else:
-                    linhas_opts = [x + 0.5 for x in range(0, 21)]
-                    default_linha = linhas_opts[len(linhas_opts)//2]
-
-                linhas_menu = ["Personalizada..."] + linhas_opts
-                linha_sel = st.selectbox(
+                linha_manual = st.number_input(
                     "📏 Linha",
-                    linhas_menu,
-                    index=(linhas_menu.index(default_linha) if default_linha in linhas_menu else 1),
-                    key="manual_line_sel",
-                    help="Escolha a linha do mercado (ex: 10.5 para Over 10.5)"
+                    min_value=0.5,
+                    max_value=20.5,
+                    value=10.5,
+                    step=0.5,
+                    key="manual_line",
+                    help="Linha do mercado (ex: 10.5 para Over 10.5)"
                 )
-
-                if linha_sel == "Personalizada...":
-                    linha_manual = st.number_input(
-                        "📏 Linha personalizada",
-                        min_value=0.5,
-                        max_value=50.5,
-                        value=float(default_linha),
-                        step=0.5,
-                        key="manual_line_custom"
-                    )
-                else:
-                    linha_manual = float(linha_sel)
+            
             with col2:
                 odd_manual = st.number_input(
                     "🎲 Odd",
@@ -1703,9 +1638,9 @@ def main():
         # Exibir histórico
         for msg in st.session_state.chat_history:
             if msg['role'] == 'user':
-                st.chat_message("user", avatar="👤").markdown(render_md(msg['content']))
+                st.chat_message("user", avatar="👤").markdown(msg['content'])
             else:
-                st.chat_message("assistant", avatar="🤖").markdown(render_md(msg['content']))
+                st.chat_message("assistant", avatar="🤖").markdown(msg['content'])
         
         # Input
         user_msg = st.chat_input("Digite sua pergunta ou comando...")
@@ -1727,8 +1662,8 @@ def main():
 
 def generate_corner_distribution_chart(team_stats: Dict, team_name: str) -> go.Figure:
     """Gera gráfico de distribuição de cantos de um time"""
-    corners_mean = team_stats.get('corners', 5.5)
-    corners_std = team_stats.get('corners_std', 2.0)
+    corners_mean = team_STATS.get('corners', 5.5)
+    corners_std = team_STATS.get('corners_std', 2.0)
     
     x = np.linspace(0, 15, 100)
     y = (1 / (corners_std * np.sqrt(2 * np.pi))) * np.exp(-0.5 * ((x - corners_mean) / corners_std) ** 2)
@@ -1748,19 +1683,19 @@ def generate_comparison_radar(home_stats: Dict, away_stats: Dict, home_name: str
     categories = ['Cantos', 'Cartões', 'Gols Marcados', 'Chutes', 'Faltas']
     
     home_values = [
-        home_stats.get('corners', 5.5) / 10 * 100,
-        home_stats.get('cards', 2.5) / 5 * 100,
-        home_stats.get('goals_f', 1.5) / 3 * 100,
-        home_stats.get('shots_on_target', 4.5) / 8 * 100,
-        home_stats.get('fouls', 12.0) / 15 * 100
+        home_STATS.get('corners', 5.5) / 10 * 100,
+        home_STATS.get('cards', 2.5) / 5 * 100,
+        home_STATS.get('goals_f', 1.5) / 3 * 100,
+        home_STATS.get('shots_on_target', 4.5) / 8 * 100,
+        home_STATS.get('fouls', 12.0) / 15 * 100
     ]
     
     away_values = [
-        away_stats.get('corners', 5.5) / 10 * 100,
-        away_stats.get('cards', 2.5) / 5 * 100,
-        away_stats.get('goals_f', 1.5) / 3 * 100,
-        away_stats.get('shots_on_target', 4.5) / 8 * 100,
-        away_stats.get('fouls', 12.0) / 15 * 100
+        away_STATS.get('corners', 5.5) / 10 * 100,
+        away_STATS.get('cards', 2.5) / 5 * 100,
+        away_STATS.get('goals_f', 1.5) / 3 * 100,
+        away_STATS.get('shots_on_target', 4.5) / 8 * 100,
+        away_STATS.get('fouls', 12.0) / 15 * 100
     ]
     
     fig = go.Figure()
@@ -1793,7 +1728,7 @@ def generate_heatmap_correlations(stats_db: Dict) -> go.Figure:
     """Gera heatmap de correlações entre métricas"""
     data_matrix = []
     
-    for team, stats in stats_db.items():
+    for team, stats in STATS_db.items():
         data_matrix.append([
             STATS.get('corners', 5.5),
             STATS.get('cards', 2.5),
@@ -2130,12 +2065,12 @@ def generate_league_comparison_table(stats_db: Dict) -> pd.DataFrame:
         'times': 0
     })
     
-    for team, stats in stats_db.items():
+    for team, stats in STATS_db.items():
         league = STATS['league']
-        league_stats[league]['cantos'].append(STATS.get('corners', 5.5))
-        league_stats[league]['cartoes'].append(STATS.get('cards', 2.5))
-        league_stats[league]['gols'].append(STATS.get('goals_f', 1.5))
-        league_stats[league]['times'] += 1
+        league_STATS[league]['cantos'].append(STATS.get('corners', 5.5))
+        league_STATS[league]['cartoes'].append(STATS.get('cards', 2.5))
+        league_STATS[league]['gols'].append(STATS.get('goals_f', 1.5))
+        league_STATS[league]['times'] += 1
     
     rows = []
     for league, data in league_stats.items():
