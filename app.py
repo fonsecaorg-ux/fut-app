@@ -668,7 +668,7 @@ def calcular_prob_bilhete(jogos_validados: List[Dict], n_sims: int = 3000) -> Di
 
 
 # Carregar dados globais
-stats_db, CAL, REFS = load_all_data()
+stats_db_global, CAL_GLOBAL, REFS_GLOBAL = load_all_data()
 
 def clean_team_name(text: str) -> str:
     """Limpa e normaliza nome de time"""
@@ -722,7 +722,7 @@ def processar_chat(mensagem, stats_db):
     if 'hoje' in msg or 'today' in msg:
         try:
             hoje = datetime.now().strftime('%d/%m/%Y')
-            jogos_hoje = CAL[CAL['Data'] == hoje]
+            jogos_hoje = CAL_GLOBAL[CAL_GLOBAL['Data'] == hoje]
             
             if len(jogos_hoje) == 0:
                 return f"📅 Não há jogos cadastrados para hoje ({hoje})"
@@ -847,6 +847,11 @@ def processar_chat(mensagem, stats_db):
 def main():
 
     # ═══════════════════════════════════════════════════════════
+    # DADOS CARREGADOS PRIMEIRO (CORREÇÃO DO ERRO)
+    # ═══════════════════════════════════════════════════════════
+    stats_db, cal, referees = load_all_data()
+
+    # ═══════════════════════════════════════════════════════════
     # HEADER PROFISSIONAL
     # ═══════════════════════════════════════════════════════════
     col1, col2, col3 = st.columns([2, 3, 2])
@@ -879,8 +884,6 @@ def main():
         "📋 Importar", 
         "🤖 AI"
     ])
-    
-    stats_db, cal, referees = load_all_data()
     
     if 'current_ticket' not in st.session_state:
         st.session_state.current_ticket = []
