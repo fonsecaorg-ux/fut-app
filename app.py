@@ -229,140 +229,112 @@ def get_prob_emoji(prob: float) -> str:
 # CARREGAMENTO DE DADOS
 # ============================================================
 
-# Definição de Ligas e Arquivos
+# Configuração GitHub (caso arquivos não estejam localmente)
+GITHUB_USER = "seu_usuario"
+GITHUB_REPO = "seu_repo"
+GITHUB_BRANCH = "main"
+GITHUB_BASE_URL = f"https://raw.githubusercontent.com/{GITHUB_USER}/{GITHUB_REPO}/{GITHUB_BRANCH}/"
+
 LEAGUE_FILES = {
-    'Premier League': ['Premier_League_25_26.csv', 'E0.csv'],
-    'La Liga': ['La_Liga_25_26.csv', 'SP1.csv'],
-    'Serie A': ['Serie_A_25_26.csv', 'I1.csv'],
-    'Bundesliga': ['Bundesliga_25_26.csv', 'D1.csv'],
-    'Ligue 1': ['Ligue_1_25_26.csv', 'F1.csv'],
-    'Championship': ['Championship_Inglaterra_25_26.csv', 'E1.csv'],
-    'Bundesliga 2': ['Bundesliga_2.csv', 'D2.csv'],
-    'Pro League': ['Pro_League_Belgica_25_26.csv', 'B1.csv'],
-    'Super Lig': ['Super_Lig_Turquia_25_26.csv', 'T1.csv'],
-    'Premiership': ['Premiership_Escocia_25_26.csv', 'SC0.csv']
+    'Premier League': ['Premier_League_25_26.csv'],
+    'La Liga': ['La_Liga_25_26.csv'],
+    'Serie A': ['Serie_A_25_26.csv'],
+    'Bundesliga': ['Bundesliga_25_26.csv'],
+    'Ligue 1': ['Ligue_1_25_26.csv'],
+    'Championship': ['Championship_Inglaterra_25_26.csv'],
+    'Bundesliga 2': ['Bundesliga_2.csv'],
+    'Pro League': ['Pro_League_Belgica_25_26.csv'],
+    'Super Lig': ['Super_Lig_Turquia_25_26.csv'],
+    'Premiership': ['Premiership_Escocia_25_26.csv']
 }
 
 NAME_MAPPING = {
-    'Man United': 'Manchester Utd', 'Manchester United': 'Manchester Utd', 'Man Utd': 'Manchester Utd',
-    'Man City': 'Manchester City', 'Spurs': 'Tottenham', 'Newcastle': 'Newcastle Utd',
-    'Wolves': 'Wolverhampton', 'Brighton': 'Brighton and Hove Albion',
-    'Nottm Forest': "Nott'm Forest", 'Leicester': 'Leicester City',
-    'West Ham': 'West Ham Utd', 'Sheffield Utd': 'Sheffield United',
-    'Inter': 'Inter Milan', 'AC Milan': 'Milan',
-    'Ath Madrid': 'Atletico Madrid', 'Ath Bilbao': 'Athletic Club',
-    'Betis': 'Real Betis', 'Sociedad': 'Real Sociedad'
+    'Man United': 'Manchester Utd', 'Man City': 'Manchester City',
+    'Spurs': 'Tottenham', 'Newcastle': 'Newcastle Utd',
+    'Wolves': 'Wolverhampton', 'Nottm Forest': "Nott'm Forest",
+    'Inter': 'Inter Milan', 'Ath Madrid': 'Atletico Madrid'
 }
 
 def normalize_name(name: str, known_teams: List[str]) -> Optional[str]:
-    """Normaliza nomes com fuzzy matching"""
     if not name: return None
     name = name.strip()
-    if name in NAME_MAPPING:
-        name = NAME_MAPPING[name]
-    if name in known_teams:
-        return name
+    if name in NAME_MAPPING: name = NAME_MAPPING[name]
+    if name in known_teams: return name
     matches = get_close_matches(name, known_teams, n=1, cutoff=0.6)
     return matches[0] if matches else None
 
 @st.cache_data(ttl=3600)
-def load_all_data_v31():
-    """
-    Carrega dados de repositório GitHub (diretório atual) com fallback robusto.
-    """
+def load_all_data():
     stats_db = {}
+    possible_paths = ['.', './data', 'data', os.getcwd()]
     
-    # 1. Identificar Diretório de Dados (Compatível com GitHub)
-    possible_paths = ['.', './data', '/mount/src/fut-app', os.getcwd()]
-    data_path = '.'
+    def try_read_csv(filename):
+        # Local
+        for p in possible_paths:
+            fpath = os.path.join(p, filename)
+            if os.path.exists(fpath):
+                try: return pd.read_csv(fpath, encoding='utf-8')
+                except: 
+                    try: return pd.read_csv(fpath, encoding='latin1')
+                    except: pass
+        
+        # GitHub fallback
+        try:
+            url = f"{GITHUB_BASE_URL}{filename}"
+            return pd.read_csv(url)
+        except:
+            return pd.DataFrame()
     
-    for p in possible_paths:
-        if any(os.path.exists(os.path.join(p, f)) for f in [list(LEAGUE_FILES.values())[0][0]]):
-            data_path = p
-            break
-
-# 2. Carregar Stats
+    # Carregar stats
     for league_name, filenames in LEAGUE_FILES.items():
         df = pd.DataFrame()
         for fname in filenames:
-            fpath = os.path.join(data_path, fname)
-            if os.path.exists(fpath):
-                try:
-                    df = pd.read_csv(fpath, encoding='utf-8')
-                    break
-                except:
-                    try: df = pd.read_csv(fpath, encoding='latin1')
-                    except: continue
+            df = try_read_csv(fname)
+            if not df.empty: break
         
         if df.empty: continue
-
-# Padronizar colunas
-        cols_map = {'HomeTeam': 'HomeTeam', 'AwayTeam': 'AwayTeam', 
-                   'FTHG': 'FTHG', 'FTAG': 'FTAG', 
-                   'HC': 'HC', 'AC': 'AC', 'HY': 'HY', 'AY': 'AY',
-                   'HST': 'HST', 'AST': 'AST', 'HF': 'HF', 'AF': 'AF'}
-        
-        # Verifica colunas existentes
-        existing_cols = [c for c in cols_map.values() if c in df.columns]
         
         teams = set(df['HomeTeam'].dropna().unique()) | set(df['AwayTeam'].dropna().unique())
         
         for team in teams:
             h_games = df[df['HomeTeam'] == team]
             a_games = df[df['AwayTeam'] == team]
-
-# Cálculo de Médias (com fallback seguro)
-            def get_mean(df_h, df_a, col_h, col_a, default):
+            
+            def safe_mean(df_h, df_a, col_h, col_a, default):
                 val_h = df_h[col_h].mean() if col_h in df_h.columns and not df_h.empty else default
                 val_a = df_a[col_a].mean() if col_a in df_a.columns and not df_a.empty else default
                 return (val_h + val_a) / 2
-                
-            corners = get_mean(h_games, a_games, 'HC', 'AC', 5.0)
-            cards = get_mean(h_games, a_games, 'HY', 'AY', 2.0)
-            fouls = get_mean(h_games, a_games, 'HF', 'AF', 11.0)
-            goals_f = get_mean(h_games, a_games, 'FTHG', 'FTAG', 1.3)
-            goals_a = get_mean(h_games, a_games, 'FTAG', 'FTHG', 1.3)
-            shots = get_mean(h_games, a_games, 'HST', 'AST', 4.5)
-
-stats_db[team] = {
-                'corners': corners,
-                'cards': cards,
-                'fouls': fouls,
-                'goals_f': goals_f,
-                'goals_a': goals_a,
-                'shots_on_target': shots,
+            
+            stats_db[team] = {
+                'corners': safe_mean(h_games, a_games, 'HC', 'AC', 5.0),
+                'cards': safe_mean(h_games, a_games, 'HY', 'AY', 2.0),
+                'fouls': safe_mean(h_games, a_games, 'HF', 'AF', 11.0),
+                'goals_f': safe_mean(h_games, a_games, 'FTHG', 'FTAG', 1.3),
+                'goals_a': safe_mean(h_games, a_games, 'FTAG', 'FTHG', 1.3),
+                'shots_on_target': safe_mean(h_games, a_games, 'HST', 'AST', 4.5),
                 'league': league_name,
                 'games': len(h_games) + len(a_games)
             }
-
-# 3. Carregar Calendário
-    cal = pd.DataFrame()
-    cal_path = os.path.join(data_path, 'calendario_ligas.csv')
-    if os.path.exists(cal_path):
-        try:
-            cal = pd.read_csv(cal_path)
-            if 'Data' in cal.columns:
-                cal['DtObj'] = pd.to_datetime(cal['Data'], format='%d/%m/%Y', errors='coerce')
-        except: pass
-
-# 4. Carregar Árbitros
+    
+    # Calendário
+    cal = try_read_csv('calendario_ligas.csv')
+    if not cal.empty and 'Data' in cal.columns:
+        cal['DtObj'] = pd.to_datetime(cal['Data'], format='%d/%m/%Y', errors='coerce')
+    
+    # Árbitros
     refs = {}
-    ref_path = os.path.join(data_path, 'arbitros_5_ligas_2025_2026.csv')
-    if os.path.exists(ref_path):
-        try:
-            ref_df = pd.read_csv(ref_path)
-            for _, row in ref_df.iterrows():
-                refs[row['Arbitro']] = {
-                    'factor': row.get('Media_Cartoes_Por_Jogo', 4.0) / 4.0,
-                    'avg_cards': row.get('Media_Cartoes_Por_Jogo', 4.0),
-                    'red_rate': 0.1 # Default
-                }
-        except: pass
-        
+    ref_df = try_read_csv('arbitros_5_ligas_2025_2026.csv')
+    if not ref_df.empty:
+        for _, row in ref_df.iterrows():
+            refs[row['Arbitro']] = {
+                'factor': row.get('Media_Cartoes_Por_Jogo', 4.0) / 4.0,
+                'avg_cards': row.get('Media_Cartoes_Por_Jogo', 4.0)
+            }
+    
     return stats_db, cal, refs
 
-# Carregamento Global
-STATS_DB, CALENDAR_DF, REFEREES_DB = load_all_data_v31()
+# Carregar dados globais
+STATS, CAL, REFS = load_all_data()
 
 # ============================================================
 # MOTOR DE CÁLCULO V31 - CAUSALITY ENGINE
