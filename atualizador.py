@@ -18,7 +18,6 @@ import math
 from typing import Dict, List, Optional, Tuple
 import plotly.graph_objects as go
 import plotly.express as px
-BASE_DIR = Path(__file__).resolve().parent
 from difflib import get_close_matches
 import re
 from collections import defaultdict
