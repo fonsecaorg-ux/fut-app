@@ -834,9 +834,8 @@ Melhor Produção de Cantos: **{t1 if s1['corners'] > s2['corners'] else t2}** �
     
     # ===== CALENDARIO =====
     if intencao == 'calendario':
-        from datetime import datetime, timedelta
-        
         hoje = datetime.now()
+        msg_lower = msg.lower()
         
         # Detectar período
         if 'hoje' in msg_lower:
