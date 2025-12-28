@@ -1473,7 +1473,7 @@ def main():
             
             # Local
             local = col2.selectbox(
-                "📍 Time Individual ou Total:",
+                "📍 Local:",
                 ["Total", "Casa", "Fora"],
                 key='manual_location'
             )
