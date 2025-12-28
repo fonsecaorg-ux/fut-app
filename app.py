@@ -1473,14 +1473,14 @@ def main():
             
             # Local
             local = col2.selectbox(
-                "📍 Local:",
+                "📍 Time Individual ou Total:",
                 ["Total", "Casa", "Fora"],
                 key='manual_location'
             )
             
             # Linha baseada no tipo
             if tipo_mercado == "Cantos":
-                linhas_disponiveis = [4.5, 5.5, 6.5, 7.5, 8.5, 9.5, 10.5, 11.5, 12.5]
+                linhas_disponiveis = [2.5,3.5,4.5, 5.5, 6.5, 7.5, 8.5, 9.5, 10.5, 11.5, 12.5]
             elif tipo_mercado == "Cartões":
                 linhas_disponiveis = [2.5, 3.5, 4.5, 5.5, 6.5]
             else:  # Gols
