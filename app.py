@@ -1,4 +1,5 @@
 """
+from pathlib import Path
 FutPrevisão V31 MAXIMUM + AI Advisor ULTRA
 CÓDIGO COMPLETO - 2300+ LINHAS
 VERSÃO PROFISSIONAL
@@ -17,12 +18,9 @@ import math
 from typing import Dict, List, Optional, Tuple
 import plotly.graph_objects as go
 import plotly.express as px
-from pathlib import Path
 from difflib import get_close_matches
 import re
 from collections import defaultdict
-
-BASE_DIR = Path(__file__).resolve().parent
 
 # ============================================================
 # CONFIGURAÇÃO DA PÁGINA
@@ -249,26 +247,6 @@ def get_prob_emoji(prob: float) -> str:
 # CARREGAMENTO DE DADOS
 # ============================================================
 
-
-# ============================================================
-# CARREGAMENTO ROBUSTO DE ARQUIVOS
-# ============================================================
-
-def find_file(filename: str) -> Optional[str]:
-    """Busca arquivo em múltiplos diretórios"""
-    from pathlib import Path
-    search_paths = [
-        Path('/mnt/project') / filename,
-        Path('.') / filename,
-        Path('./data') / filename,
-        BASE_DIR / filename,
-        BASE_DIR / 'data' / filename,
-    ]
-    for path in search_paths:
-        if path.exists():
-            return str(path)
-    return None
-
 @st.cache_data(ttl=3600)
 def load_all_data():
     """Carrega todos os dados do sistema"""
@@ -277,23 +255,19 @@ def load_all_data():
     referees = {}
     
     league_files = {
-        'Premier League': 'Premier_League_25_26.csv',
-        'La Liga': 'La_Liga_25_26.csv',
-        'Serie A': 'Serie_A_25_26.csv',
-        'Bundesliga': 'Bundesliga_25_26.csv',
-        'Ligue 1': 'Ligue_1_25_26.csv',
-        'Championship': 'Championship_Inglaterra_25_26.csv',
-        'Bundesliga 2': 'Bundesliga_2.csv',
-        'Pro League': 'Pro_League_Belgica_25_26.csv',
-        'Super Lig': 'Super_Lig_Turquia_25_26.csv',
-        'Premiership': 'Premiership_Escocia_25_26.csv'
+        'Premier League': '/mnt/project/Premier_League_25_26.csv',
+        'La Liga': '/mnt/project/La_Liga_25_26.csv',
+        'Serie A': '/mnt/project/Serie_A_25_26.csv',
+        'Bundesliga': '/mnt/project/Bundesliga_25_26.csv',
+        'Ligue 1': '/mnt/project/Ligue_1_25_26.csv',
+        'Championship': '/mnt/project/Championship_Inglaterra_25_26.csv',
+        'Bundesliga 2': '/mnt/project/Bundesliga_2.csv',
+        'Pro League': '/mnt/project/Pro_League_Belgica_25_26.csv',
+        'Super Lig': '/mnt/project/Super_Lig_Turquia_25_26.csv',
+        'Premiership': '/mnt/project/Premiership_Escocia_25_26.csv'
     }
     
-    for league_name, filename in league_files.items():
-        filepath = find_file(filename)
-        if not filepath:
-            st.sidebar.warning(f"⚠️ {league_name}: Arquivo não encontrado")
-            continue
+    for league_name, filepath in league_files.items():
         try:
             df = pd.read_csv(filepath, encoding='utf-8')
             teams = set(df['HomeTeam'].dropna().unique()) | set(df['AwayTeam'].dropna().unique())
@@ -352,29 +326,25 @@ def load_all_data():
         except Exception as e:
             st.sidebar.warning(f"⚠️ {league_name}: {str(e)}")
     
-    cal_filepath = find_file('calendario_ligas.csv')
-    if cal_filepath:
-        try:
-            cal = pd.read_csv(cal_filepath, encoding='utf-8')
-            if 'Data' in cal.columns:
-                cal['DtObj'] = pd.to_datetime(cal['Data'], format='%d/%m/%Y', errors='coerce')
-        except:
-            pass
+    try:
+        cal = pd.read_csv('/mnt/project/calendario_ligas.csv', encoding='utf-8')
+        if 'Data' in cal.columns:
+            cal['DtObj'] = pd.to_datetime(cal['Data'], format='%d/%m/%Y', errors='coerce')
+    except:
+        pass
     
-    refs_filepath = find_file('arbitros_5_ligas_2025_2026.csv')
-    if refs_filepath:
-        try:
-            refs_df = pd.read_csv(refs_filepath, encoding='utf-8')
-            for _, row in refs_df.iterrows():
-                referees[row['Arbitro']] = {
-                    'factor': row['Media_Cartoes_Por_Jogo'] / 4.0,
-                    'games': row['Jogos_Apitados'],
-                    'avg_cards': row['Media_Cartoes_Por_Jogo'],
-                    'red_cards': row.get('Cartoes_Vermelhos', 0),
-                    'red_rate': row.get('Cartoes_Vermelhos', 0) / row['Jogos_Apitados'] if row['Jogos_Apitados'] > 0 else 0.08
-                }
-        except:
-            pass
+    try:
+        refs_df = pd.read_csv('/mnt/project/arbitros_5_ligas_2025_2026.csv', encoding='utf-8')
+        for _, row in refs_df.iterrows():
+            referees[row['Arbitro']] = {
+                'factor': row['Media_Cartoes_Por_Jogo'] / 4.0,
+                'games': row['Jogos_Apitados'],
+                'avg_cards': row['Media_Cartoes_Por_Jogo'],
+                'red_cards': row.get('Cartoes_Vermelhos', 0),
+                'red_rate': row.get('Cartoes_Vermelhos', 0) / row['Jogos_Apitados'] if row['Jogos_Apitados'] > 0 else 0.08
+            }
+    except:
+        pass
     
     return stats_db, cal, referees
 
@@ -394,12 +364,12 @@ def calcular_jogo_v31(home_stats: Dict, away_stats: Dict, ref_data: Dict) -> Dic
     """
     
     # ESCANTEIOS com boost de chutes
-    base_corners_h = home_stats.get('corners_home', home_stats['corners'])
-    base_corners_a = away_stats.get('corners_away', away_stats['corners'])
+    base_corners_h = home_STATS.get('corners_home', home_STATS['corners'])
+    base_corners_a = away_STATS.get('corners_away', away_STATS['corners'])
     
     # Boost baseado em chutes no gol
-    shots_h = home_stats.get('shots_home', 4.5)
-    shots_a = home_stats.get('shots_away', 4.0)
+    shots_h = home_STATS.get('shots_home', 4.5)
+    shots_a = home_STATS.get('shots_away', 4.0)
     
     if shots_h > 6.0:
         pressure_h = 1.20  # Alto
@@ -414,8 +384,8 @@ def calcular_jogo_v31(home_stats: Dict, away_stats: Dict, ref_data: Dict) -> Dic
     corners_total = corners_h + corners_a
     
     # CARTÕES
-    fouls_h = home_stats.get('fouls_home', home_stats.get('fouls', 12.0))
-    fouls_a = away_stats.get('fouls_away', away_stats.get('fouls', 12.0))
+    fouls_h = home_STATS.get('fouls_home', home_STATS.get('fouls', 12.0))
+    fouls_a = away_STATS.get('fouls_away', away_STATS.get('fouls', 12.0))
     
     # Fator de violência
     violence_h = 1.0 if fouls_h > 12.5 else 0.85
@@ -433,8 +403,8 @@ def calcular_jogo_v31(home_stats: Dict, away_stats: Dict, ref_data: Dict) -> Dic
     else:
         strictness = 1.0
     
-    cards_h_base = home_stats.get('cards_home', home_stats['cards'])
-    cards_a_base = away_stats.get('cards_away', away_stats['cards'])
+    cards_h_base = home_STATS.get('cards_home', home_STATS['cards'])
+    cards_a_base = away_STATS.get('cards_away', away_STATS['cards'])
     
     cards_h = cards_h_base * violence_h * ref_factor * strictness
     cards_a = cards_a_base * violence_a * ref_factor * strictness
@@ -444,8 +414,8 @@ def calcular_jogo_v31(home_stats: Dict, away_stats: Dict, ref_data: Dict) -> Dic
     prob_red_card = ((0.05 + 0.05) / 2) * ref_red_rate * 100
     
     # xG (Expected Goals)
-    xg_h = (home_stats['goals_f'] * away_stats['goals_a']) / 1.3
-    xg_a = (away_stats['goals_f'] * home_stats['goals_a']) / 1.3
+    xg_h = (home_STATS['goals_f'] * away_STATS['goals_a']) / 1.3
+    xg_a = (away_STATS['goals_f'] * home_STATS['goals_a']) / 1.3
     
     return {
         'corners': {'h': corners_h, 'a': corners_a, 't': corners_total},
@@ -623,7 +593,7 @@ def validar_jogos_bilhete(jogos_parsed: List[Dict], stats_db: Dict) -> List[Dict
         h_norm = normalize_name(jogo['home'], times)
         a_norm = normalize_name(jogo['away'], times)
         
-        if h_norm and a_norm and h_norm in stats_db and a_norm in stats_db:
+        if h_norm and a_norm and h_norm in STATS_db and a_norm in STATS_db:
             jogos_val.append({
                 'home': h_norm,
                 'away': a_norm,
@@ -668,7 +638,11 @@ def calcular_prob_bilhete(jogos_validados: List[Dict], n_sims: int = 3000) -> Di
 
 
 # Carregar dados globais
-stats_db_global, CAL_GLOBAL, REFS_GLOBAL = load_all_data()
+STATS, CAL, REFS = load_all_data()
+
+# ============================================================
+# CHATBOT ULTRA INTELIGENTE - FUNÇÕES AUXILIARES
+# ============================================================
 
 def clean_team_name(text: str) -> str:
     """Limpa e normaliza nome de time"""
@@ -676,10 +650,576 @@ def clean_team_name(text: str) -> str:
     text = text.lower().strip()
     text = re.sub(r'[^\w\s]', '', text)
     stop_words = {'do', 'da', 'de', 'dos', 'das', 'o', 'a', 'os', 'as', 
-                  'como', 'está', 'esta', 'stats', 'estatistica', 'estatísticas'}
+                  'como', 'está', 'esta', 'stats', 'estatistica', 'estatísticas', 
+                  'estatisticas', 'qual', 'quais', 'quanto', 'quantos'}
     words = text.split()
     text = ' '.join([w for w in words if w not in stop_words])
     return text.strip()
+
+def extrair_entidades(mensagem: str, stats_db: Dict) -> Dict:
+    """Extrai entidades da mensagem (times, ligas, métricas, valores)"""
+    msg_lower = mensagem.lower()
+    entidades = {
+        'times': [],
+        'ligas': [],
+        'metricas': [],
+        'valores': []
+    }
+    
+    # Detectar ligas
+    ligas_map = {
+        'premier': 'Premier League', 'premier league': 'Premier League',
+        'la liga': 'La Liga', 'laliga': 'La Liga',
+        'serie a': 'Serie A', 'seriea': 'Serie A',
+        'bundesliga': 'Bundesliga',
+        'ligue 1': 'Ligue 1', 'ligue1': 'Ligue 1',
+        'francesa': 'Ligue 1', 'inglesa': 'Premier League',
+        'espanhola': 'La Liga', 'italiana': 'Serie A',
+        'alemã': 'Bundesliga', 'alema': 'Bundesliga'
+    }
+    
+    for key, value in ligas_map.items():
+        if key in msg_lower and value not in entidades['ligas']:
+            entidades['ligas'].append(value)
+    
+    # Detectar métricas
+    metricas_map = {
+        'canto': 'corners', 'cantos': 'corners',
+        'escanteio': 'corners', 'escanteios': 'corners',
+        'cartao': 'cards', 'cartão': 'cards',
+        'cartoes': 'cards', 'cartões': 'cards',
+        'amarelo': 'cards', 'vermelho': 'cards',
+        'gol': 'goals_f', 'gols': 'goals_f',
+        'falta': 'fouls', 'faltas': 'fouls',
+        'chute': 'shots_on_target', 'chutes': 'shots_on_target'
+    }
+    
+    for key, value in metricas_map.items():
+        if key in msg_lower and value not in entidades['metricas']:
+            entidades['metricas'].append(value)
+    
+    # Detectar números
+    import re
+    numeros = re.findall(r'\d+(?:\.\d+)?', mensagem)
+    entidades['valores'] = [float(n) for n in numeros]
+    
+    # Detectar times
+    msg_limpa = clean_team_name(mensagem)
+    palavras = msg_limpa.split()
+    known_teams = list(stats_db.keys())
+    
+    for i in range(len(palavras)):
+        for j in range(i+1, min(i+4, len(palavras)+1)):
+            frase = ' '.join(palavras[i:j])
+            matches = get_close_matches(frase, [t.lower() for t in known_teams], n=1, cutoff=0.7)
+            if matches:
+                time_real = [t for t in known_teams if t.lower() == matches[0]][0]
+                if time_real not in entidades['times']:
+                    entidades['times'].append(time_real)
+    
+    return entidades
+
+def analisar_intencao(msg: str) -> str:
+    """
+    Analisa a INTENÇÃO da pergunta do usuário
+    Retorna: 'analise', 'recomendacao', 'ranking', 'comparacao', 'busca', 'listagem'
+    """
+    msg_lower = msg.lower()
+    
+    # PRIORIDADE 1: ANÁLISE/RECOMENDAÇÃO (mais específico)
+    if any(w in msg_lower for w in ['melhor', 'melhores', 'sugira', 'sugest', 'recomend', 'indique', 'dica', 'bom', 'bons', 'boa', 'boas']):
+        return 'recomendacao'
+    
+    # PRIORIDADE 2: ANÁLISE DE JOGO ESPECÍFICO
+    if any(w in msg_lower for w in ['analise', 'análise', 'previsao', 'previsão', 'preveja', 'quem ganha', 'quem vence', 'resultado']):
+        return 'analise'
+    
+    # PRIORIDADE 3: RANKINGS
+    if any(w in msg_lower for w in ['top', 'ranking', 'rank', 'maior', 'maiores', 'menor', 'menores']):
+        return 'ranking'
+    
+    # PRIORIDADE 4: COMPARAÇÕES
+    if ' vs ' in msg_lower or ' x ' in msg_lower or 'compar' in msg_lower:
+        return 'comparacao'
+    
+    # PRIORIDADE 5: BUSCAS ESPECÍFICAS
+    if any(w in msg_lower for w in ['qual', 'quais', 'quem', 'quanto', 'quantos']):
+        return 'busca'
+    
+    # PRIORIDADE 6: LISTAGEM SIMPLES (menos específico)
+    if any(w in msg_lower for w in ['jogo', 'jogos', 'partida', 'partidas', 'lista', 'mostre']):
+        return 'listagem'
+    
+    return 'conversa'
+
+def processar_data(texto: str) -> str:
+    """Processa datas mencionadas na mensagem"""
+    from datetime import datetime, timedelta
+    
+    hoje = datetime.now()
+    
+    # Padrões de data
+    if 'hoje' in texto:
+        return hoje.strftime('%d/%m/%Y')
+    elif 'amanha' in texto or 'amanhã' in texto:
+        return (hoje + timedelta(days=1)).strftime('%d/%m/%Y')
+    elif 'ontem' in texto:
+        return (hoje - timedelta(days=1)).strftime('%d/%m/%Y')
+    
+    # Buscar padrão DD/MM/YYYY ou DD/MM
+    import re
+    padrao_data = re.search(r'(\d{1,2})/(\d{1,2})(?:/(\d{4}))?', texto)
+    if padrao_data:
+        dia = padrao_data.group(1).zfill(2)
+        mes = padrao_data.group(2).zfill(2)
+        ano = padrao_data.group(3) if padrao_data.group(3) else str(hoje.year)
+        return f"{dia}/{mes}/{ano}"
+    
+    return hoje.strftime('%d/%m/%Y')
+
+def processar_chat_ultra(mensagem: str, stats_db: Dict, cal: pd.DataFrame, refs: Dict) -> str:
+    """
+    🤖 CHATBOT MEGA INTELIGENTE
+    Responde QUALQUER pergunta com acesso TOTAL aos dados
+    """
+    if not mensagem or not stats_db:
+        return "Por favor, digite uma pergunta válida."
+    
+    msg = mensagem.lower().strip()
+    known_teams = list(stats_db.keys())
+    
+    # ==========================================
+    # COMANDOS ESPECIAIS
+    # ==========================================
+    if msg in ['/ajuda', 'ajuda', 'help']:
+        return """🤖 **CHATBOT MEGA INTELIGENTE**
+
+💬 **PERGUNTE QUALQUER COISA:**
+
+📅 **Jogos:**
+• "jogos de hoje"
+• "jogos de 28/12/2025"
+• "jogos de amanhã"
+• "jogos da Premier League hoje"
+
+📊 **Estatísticas:**
+• "qual time tem mais cantos?"
+• "top 10 cartões"
+• "média de gols do Arsenal"
+• "Liverpool em casa"
+
+⚔️ **Comparações:**
+• "Arsenal vs Chelsea"
+• "compare Liverpool e City"
+
+🎯 **Análises de Jogos:**
+• "analise Liverpool vs Wolves"
+• "previsão para Arsenal vs Brighton"
+• "quem ganha Liverpool vs Wolves?"
+
+🏆 **Rankings:**
+• "melhores times em cantos"
+• "times com mais cartões"
+
+👨‍⚖️ **Árbitros:**
+• "árbitro de Arsenal vs Brighton"
+• "árbitros mais rigorosos"
+
+💡 **Recomendações:**
+• "sugira apostas para hoje"
+• "melhores jogos para cantos hoje"
+
+🌍 **Ligas:**
+• "times da Premier League"
+• "qual liga tem mais gols?"
+
+**Digite qualquer pergunta!**"""
+    
+    if msg in ['oi', 'olá', 'ola', 'hello', 'hi']:
+        return "👋 Olá! Pergunte QUALQUER COISA sobre futebol, jogos, estatísticas, previsões!"
+    
+    # ==========================================
+    # EXTRAIR ENTIDADES
+    # ==========================================
+    entidades = extrair_entidades(mensagem, stats_db)
+    
+    # ==========================================
+    # JOGOS (hoje, amanhã, data específica)
+    # ==========================================
+    if any(palavra in msg for palavra in ['jogo', 'jogos', 'partida', 'partidas']):
+        try:
+            data_busca = processar_data(msg)
+            jogos_data = cal[cal['Data'] == data_busca] if not cal.empty else pd.DataFrame()
+            
+            # Filtrar por liga se mencionada
+            if entidades['ligas']:
+                liga_filtro = entidades['ligas'][0]
+                jogos_data = jogos_data[jogos_data['Liga'] == liga_filtro]
+            
+            if len(jogos_data) == 0:
+                return f"📅 Sem jogos em {data_busca}"
+            
+            resp = f"📅 **JOGOS DE {data_busca}:**\n\n"
+            for _, jogo in jogos_data.head(15).iterrows():
+                resp += f"🏟️ {jogo['Time_Casa']} x {jogo['Time_Visitante']}\n"
+                resp += f"   ⏰ {jogo['Hora']} | 🏆 {jogo['Liga']}\n\n"
+            
+            if len(jogos_data) > 15:
+                resp += f"... e mais {len(jogos_data) - 15} jogos"
+            
+            return resp
+        except Exception as e:
+            return f"❌ Erro ao buscar jogos: {str(e)}"
+    
+    # ==========================================
+    # ANÁLISE DE JOGO ESPECÍFICO
+    # ==========================================
+    if any(palavra in msg for palavra in ['analise', 'análise', 'previsao', 'previsão', 'preveja']):
+        if len(entidades['times']) >= 2:
+            t1, t2 = entidades['times'][0], entidades['times'][1]
+            
+            if t1 in stats_db and t2 in stats_db:
+                calc = calcular_jogo_v31(stats_db[t1], stats_db[t2], {})
+                
+                resp = f"🎯 **ANÁLISE: {t1} vs {t2}**\n\n"
+                
+                # Previsões
+                resp += "📊 **PREVISÕES:**\n"
+                resp += f"⚽ Gols Casa: {calc['goals']['h']:.2f}\n"
+                resp += f"⚽ Gols Fora: {calc['goals']['a']:.2f}\n"
+                resp += f"🚩 Cantos Total: {calc['corners']['t']:.1f}\n"
+                resp += f"🟨 Cartões Total: {calc['cards']['t']:.1f}\n\n"
+                
+                # Recomendações
+                resp += "💡 **RECOMENDAÇÕES:**\n"
+                if calc['corners']['t'] > 10.5:
+                    resp += f"✅ Over 10.5 Cantos (Prev: {calc['corners']['t']:.1f})\n"
+                if calc['cards']['t'] > 4.5:
+                    resp += f"✅ Over 4.5 Cartões (Prev: {calc['cards']['t']:.1f})\n"
+                if calc['goals']['h'] + calc['goals']['a'] > 2.5:
+                    resp += f"✅ Over 2.5 Gols (Prev: {calc['goals']['h'] + calc['goals']['a']:.1f})\n"
+                
+                # Fatores
+                meta = calc.get('metadata', {})
+                resp += f"\n🔍 **FATORES:**\n"
+                resp += f"🎯 Pressão Casa: {meta.get('pressure_home', 1.0):.2f}x\n"
+                resp += f"⚠️ Violência Casa: {'Sim' if meta.get('violence_home', False) else 'Não'}\n"
+                resp += f"⚠️ Violência Fora: {'Sim' if meta.get('violence_away', False) else 'Não'}\n"
+                
+                return resp
+    
+    # ==========================================
+    # QUEM GANHA / RESULTADO
+    # ==========================================
+    if any(palavra in msg for palavra in ['quem ganha', 'quem vence', 'resultado', 'vencedor']):
+        if len(entidades['times']) >= 2:
+            t1, t2 = entidades['times'][0], entidades['times'][1]
+            
+            if t1 in stats_db and t2 in stats_db:
+                calc = calcular_jogo_v31(stats_db[t1], stats_db[t2], {})
+                
+                xg1 = calc['goals']['h']
+                xg2 = calc['goals']['a']
+                
+                if xg1 > xg2 + 0.5:
+                    vencedor = t1
+                    prob = 65
+                elif xg2 > xg1 + 0.5:
+                    vencedor = t2
+                    prob = 65
+                else:
+                    vencedor = "Empate"
+                    prob = 45
+                
+                resp = f"🎯 **PREVISÃO: {t1} vs {t2}**\n\n"
+                resp += f"🏆 **Vencedor Provável:** {vencedor} ({prob}%)\n\n"
+                resp += f"📊 **Expected Goals:**\n"
+                resp += f"⚽ {t1}: {xg1:.2f}\n"
+                resp += f"⚽ {t2}: {xg2:.2f}\n"
+                
+                return resp
+    
+    # ==========================================
+    # ÁRBITROS
+    # ==========================================
+    if 'arbitro' in msg or 'árbitro' in msg:
+        if len(entidades['times']) >= 2:
+            # Buscar jogo no calendário
+            t1, t2 = entidades['times'][0], entidades['times'][1]
+            
+            jogo_encontrado = None
+            for _, jogo in cal.iterrows():
+                h = normalize_name(jogo['Time_Casa'], known_teams)
+                a = normalize_name(jogo['Time_Visitante'], known_teams)
+                
+                if (h == t1 and a == t2) or (h == t2 and a == t1):
+                    jogo_encontrado = jogo
+                    break
+            
+            if jogo_encontrado is not None and 'Arbitro' in jogo_encontrado:
+                arb_nome = jogo_encontrado['Arbitro']
+                arb_info = refs.get(arb_nome, {})
+                
+                resp = f"👨‍⚖️ **ÁRBITRO: {t1} vs {t2}**\n\n"
+                resp += f"📋 Nome: {arb_nome}\n"
+                if arb_info:
+                    resp += f"🟨 Média Cartões: {arb_info.get('avg_cards', 0):.2f}/jogo\n"
+                    resp += f"🎮 Jogos: {arb_info.get('games', 0)}\n"
+                    resp += f"🔴 Taxa Vermelhos: {arb_info.get('red_rate', 0)*100:.1f}%\n"
+                
+                return resp
+        
+        # Top árbitros rigorosos
+        if 'rigoroso' in msg or 'mais' in msg:
+            arbitros_ranked = sorted(refs.items(), key=lambda x: x[1].get('avg_cards', 0), reverse=True)[:10]
+            
+            resp = "👨‍⚖️ **TOP 10 ÁRBITROS MAIS RIGOROSOS:**\n\n"
+            for i, (nome, info) in enumerate(arbitros_ranked, 1):
+                resp += f"{i}. {nome}: {info.get('avg_cards', 0):.2f} cartões/jogo\n"
+            
+            return resp
+    
+    # ==========================================
+    # RECOMENDAÇÕES / SUGESTÕES
+    # ==========================================
+    if any(palavra in msg for palavra in ['sugira', 'sugest', 'recomend', 'indique', 'dica']):
+        try:
+            data_busca = processar_data(msg)
+            jogos_data = cal[cal['Data'] == data_busca] if not cal.empty else pd.DataFrame()
+            
+            if len(jogos_data) == 0:
+                return f"📅 Sem jogos em {data_busca}"
+            
+            recomendacoes = []
+            
+            for _, jogo in jogos_data.iterrows():
+                h = normalize_name(jogo['Time_Casa'], known_teams)
+                a = normalize_name(jogo['Time_Visitante'], known_teams)
+                
+                if h and a and h in stats_db and a in stats_db:
+                    calc = calcular_jogo_v31(stats_db[h], stats_db[a], {})
+                    
+                    # Verificar oportunidades
+                    if calc['corners']['t'] > 10.5:
+                        recomendacoes.append({
+                            'jogo': f"{h} vs {a}",
+                            'mercado': f"Over 10.5 Cantos",
+                            'prev': calc['corners']['t'],
+                            'prob': 75,
+                            'hora': jogo.get('Hora', 'N/A')
+                        })
+                    
+                    if calc['cards']['t'] > 4.5:
+                        recomendacoes.append({
+                            'jogo': f"{h} vs {a}",
+                            'mercado': f"Over 4.5 Cartões",
+                            'prev': calc['cards']['t'],
+                            'prob': 72,
+                            'hora': jogo.get('Hora', 'N/A')
+                        })
+            
+            if not recomendacoes:
+                return f"❌ Nenhuma boa oportunidade encontrada para {data_busca}"
+            
+            # Ordenar por probabilidade
+            recomendacoes.sort(key=lambda x: x['prob'], reverse=True)
+            
+            resp = f"💡 **RECOMENDAÇÕES PARA {data_busca}:**\n\n"
+            for i, rec in enumerate(recomendacoes[:8], 1):
+                resp += f"{i}. 🎯 **{rec['jogo']}** ({rec['hora']})\n"
+                resp += f"   {rec['mercado']} | Prev: {rec['prev']:.1f} | Prob: {rec['prob']}%\n\n"
+            
+            return resp
+        except:
+            return "❌ Erro ao gerar recomendações"
+    
+    # ==========================================
+    # RANKINGS E TOP N
+    # ==========================================
+    if any(w in msg for w in ['top', 'ranking', 'melhor', 'melhores', 'maior', 'maiores']):
+        metrica = 'corners'
+        if any(w in msg for w in ['cartao', 'cartão', 'card']):
+            metrica = 'cards'
+        elif any(w in msg for w in ['gol', 'goal']):
+            metrica = 'goals_f'
+        elif any(w in msg for w in ['falta', 'faltas']):
+            metrica = 'fouls'
+        
+        n = 10
+        if entidades['valores']:
+            n = min(int(entidades['valores'][0]), 20)
+        
+        times_filtrados = stats_db
+        if entidades['ligas']:
+            liga = entidades['ligas'][0]
+            times_filtrados = {k: v for k, v in stats_db.items() if v.get('league') == liga}
+        
+        ranking = sorted(times_filtrados.items(), key=lambda x: x[1].get(metrica, 0), reverse=True)[:n]
+        
+        nome_metrica = {
+            'corners': 'CANTOS',
+            'cards': 'CARTÕES',
+            'goals_f': 'GOLS MARCADOS',
+            'fouls': 'FALTAS'
+        }.get(metrica, metrica.upper())
+        
+        resp = f"🏆 **TOP {n} - {nome_metrica}:**\n\n"
+        for i, (time, stats) in enumerate(ranking, 1):
+            valor = stats.get(metrica, 0)
+            liga_emoji = {
+                'Premier League': '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
+                'La Liga': '🇪🇸',
+                'Serie A': '🇮🇹',
+                'Bundesliga': '🇩🇪',
+                'Ligue 1': '🇫🇷'
+            }.get(stats.get('league', ''), '⚽')
+            resp += f"{i}. {time} {liga_emoji}: **{valor:.2f}**/jogo\n"
+        
+        return resp
+    
+    # ==========================================
+    # QUAL / QUEM / QUANTO
+    # ==========================================
+    if any(w in msg for w in ['qual', 'quais', 'quem', 'quanto', 'quantos']):
+        # Mais/Menos
+        if 'mais' in msg or 'maior' in msg:
+            ordem = 'max'
+        elif 'menos' in msg or 'menor' in msg:
+            ordem = 'min'
+        else:
+            ordem = 'max'
+        
+        metrica = 'corners'
+        if entidades['metricas']:
+            metrica = entidades['metricas'][0]
+        
+        times_filtrados = stats_db
+        if entidades['ligas']:
+            liga = entidades['ligas'][0]
+            times_filtrados = {k: v for k, v in stats_db.items() if v.get('league') == liga}
+        
+        if not times_filtrados:
+            return "❌ Nenhum time encontrado"
+        
+        if ordem == 'max':
+            time_found = max(times_filtrados.items(), key=lambda x: x[1].get(metrica, 0))
+        else:
+            time_found = min(times_filtrados.items(), key=lambda x: x[1].get(metrica, 0))
+        
+        time_nome, stats = time_found
+        valor = stats.get(metrica, 0)
+        
+        metrica_nome = {
+            'corners': 'cantos',
+            'cards': 'cartões',
+            'goals_f': 'gols marcados',
+            'fouls': 'faltas'
+        }.get(metrica, metrica)
+        
+        resp = f"{'🔥' if ordem == 'max' else '🔻'} **{time_nome}**\n\n"
+        resp += f"📊 {metrica_nome.upper()}: **{valor:.2f}**/jogo\n"
+        resp += f"🏆 Liga: {stats.get('league', 'N/A')}\n\n"
+        resp += "📈 Outras estatísticas:\n"
+        resp += f"🚩 Cantos: {stats.get('corners', 0):.2f}/jogo\n"
+        resp += f"🟨 Cartões: {stats.get('cards', 0):.2f}/jogo\n"
+        resp += f"⚽ Gols: {stats.get('goals_f', 0):.2f}/jogo\n"
+        
+        return resp
+    
+    # ==========================================
+    # COMPARAÇÕES (vs/x)
+    # ==========================================
+    if ' vs ' in msg or ' x ' in msg:
+        if len(entidades['times']) >= 2:
+            t1, t2 = entidades['times'][0], entidades['times'][1]
+            s1, s2 = stats_db[t1], stats_db[t2]
+            
+            resp = f"⚔️ **{t1} vs {t2}**\n\n"
+            resp += "📊 **COMPARAÇÃO COMPLETA:**\n\n"
+            
+            for nome, key, emoji in [
+                ('Cantos', 'corners', '🚩'),
+                ('Cartões', 'cards', '🟨'),
+                ('Gols Marcados', 'goals_f', '⚽'),
+                ('Gols Sofridos', 'goals_a', '🛡️'),
+                ('Faltas', 'fouls', '⚠️'),
+                ('Chutes', 'shots_on_target', '🎯')
+            ]:
+                v1, v2 = s1.get(key, 0), s2.get(key, 0)
+                
+                if v1 > v2:
+                    vencedor = f"**{t1}** vence"
+                elif v2 > v1:
+                    vencedor = f"**{t2}** vence"
+                else:
+                    vencedor = "Empate"
+                
+                resp += f"{emoji} {nome}: {v1:.2f} vs {v2:.2f} → {vencedor}\n"
+            
+            return resp
+    
+    # ==========================================
+    # TIMES DE UMA LIGA
+    # ==========================================
+    if 'times' in msg and entidades['ligas']:
+        liga = entidades['ligas'][0]
+        times_liga = [k for k, v in stats_db.items() if v.get('league') == liga]
+        
+        resp = f"🏆 **TIMES DA {liga}:**\n\n"
+        for time in sorted(times_liga):
+            resp += f"• {time}\n"
+        
+        resp += f"\n**Total:** {len(times_liga)} times"
+        
+        return resp
+    
+    # ==========================================
+    # ANÁLISE DE TIME ÚNICO
+    # ==========================================
+    if entidades['times']:
+        team = entidades['times'][0]
+        stats = stats_db[team]
+        
+        resp = f"📊 **{team.upper()}**\n\n"
+        resp = f"🏆 Liga: {stats.get('league', 'N/A')}\n"
+        resp += f"🎮 Jogos: {stats.get('games', 0)}\n\n"
+        
+        # Estatísticas detalhadas
+        resp += "📈 **ESTATÍSTICAS COMPLETAS:**\n\n"
+        
+        resp += f"**🚩 CANTOS:**\n"
+        resp += f"• Média: {stats.get('corners', 0):.2f}/jogo\n"
+        resp += f"• Casa: {stats.get('corners_home', 0):.2f}/jogo\n"
+        resp += f"• Fora: {stats.get('corners_away', 0):.2f}/jogo\n\n"
+        
+        resp += f"**🟨 CARTÕES:**\n"
+        resp += f"• Média: {stats.get('cards', 0):.2f}/jogo\n"
+        resp += f"• Casa: {stats.get('cards_home', 0):.2f}/jogo\n"
+        resp += f"• Fora: {stats.get('cards_away', 0):.2f}/jogo\n\n"
+        
+        resp += f"**⚽ GOLS:**\n"
+        resp += f"• Marcados: {stats.get('goals_f', 0):.2f}/jogo\n"
+        resp += f"• Sofridos: {stats.get('goals_a', 0):.2f}/jogo\n\n"
+        
+        resp += f"**⚠️ OUTRAS:**\n"
+        resp += f"• Faltas: {stats.get('fouls', 0):.2f}/jogo\n"
+        resp += f"• Chutes: {stats.get('shots_on_target', 0):.2f}/jogo\n"
+        
+        return resp
+    
+    # ==========================================
+    # RESPOSTA PADRÃO
+    # ==========================================
+    return """🤔 Não entendi. Exemplos:
+
+• "jogos de hoje"
+• "analise Liverpool vs Wolves"
+• "top 10 cantos"
+• "Arsenal vs Chelsea"
+• "sugira apostas para hoje"
+
+Digite **'ajuda'** para ver tudo!"""
+
 
 def processar_chat(mensagem, stats_db):
     """Processa mensagens do chat e retorna resposta apropriada"""
@@ -687,7 +1227,6 @@ def processar_chat(mensagem, stats_db):
         return "Por favor, digite uma pergunta válida."
     
     msg = mensagem.lower().strip()
-    known_teams = list(stats_db.keys())
     
     # 1. COMANDOS ESPECIAIS
     if msg in ['/ajuda', 'ajuda', 'help']:
@@ -722,7 +1261,7 @@ def processar_chat(mensagem, stats_db):
     if 'hoje' in msg or 'today' in msg:
         try:
             hoje = datetime.now().strftime('%d/%m/%Y')
-            jogos_hoje = CAL_GLOBAL[CAL_GLOBAL['Data'] == hoje]
+            jogos_hoje = CAL[CAL['Data'] == hoje]
             
             if len(jogos_hoje) == 0:
                 return f"📅 Não há jogos cadastrados para hoje ({hoje})"
@@ -764,15 +1303,19 @@ def processar_chat(mensagem, stats_db):
         times = msg.split(separator)
         
         if len(times) == 2:
-            time1_limpo = clean_team_name(times[0])
-            time2_limpo = clean_team_name(times[1])
-            match1 = get_close_matches(time1_limpo, [t.lower() for t in known_teams], n=1, cutoff=0.4)
-            match2 = get_close_matches(time2_limpo, [t.lower() for t in known_teams], n=1, cutoff=0.4)
+            time1 = times[0].strip()
+            time2 = times[1].strip()
             
-            t1 = [t for t in known_teams if t.lower() == match1[0]][0] if match1 else None
-            t2 = [t for t in known_teams if t.lower() == match2[0]][0] if match2 else None
+            # Normalizar nomes
+            from difflib import get_close_matches
+            known_teams = list(stats_db.keys())
             
-            if t1 and t2:
+            match1 = get_close_matches(time1, known_teams, n=1, cutoff=0.6)
+            match2 = get_close_matches(time2, known_teams, n=1, cutoff=0.6)
+            
+            if match1 and match2:
+                t1 = match1[0]
+                t2 = match2[0]
                 s1 = stats_db[t1]
                 s2 = stats_db[t2]
                 
@@ -796,11 +1339,18 @@ def processar_chat(mensagem, stats_db):
                 return f"❌ Times não encontrados. Disponíveis: {', '.join(known_teams[:5])}..."
     
     # 5. ANÁLISE DE TIME ÚNICO
-    msg_limpa = clean_team_name(msg)
-    match = get_close_matches(msg_limpa, [t.lower() for t in known_teams], n=1, cutoff=0.4)
+    # Tentar encontrar time mencionado
+    from difflib import get_close_matches
+    known_teams = list(stats_db.keys())
+    
+    # Limpar mensagem
+    palavras_ignorar = ['como', 'está', 'esta', 'o', 'a', 'do', 'da', 'de', 'stats', 'estatistica']
+    msg_limpa = ' '.join([word for word in msg.split() if word not in palavras_ignorar])
+    
+    match = get_close_matches(msg_limpa, known_teams, n=1, cutoff=0.5)
     
     if match:
-        team = [t for t in known_teams if t.lower() == match[0]][0]
+        team = match[0]
         stats = stats_db[team]
         
         resp = f"📊 **{team.upper()}**\n\n"
@@ -847,11 +1397,6 @@ def processar_chat(mensagem, stats_db):
 def main():
 
     # ═══════════════════════════════════════════════════════════
-    # DADOS CARREGADOS PRIMEIRO (CORREÇÃO DO ERRO)
-    # ═══════════════════════════════════════════════════════════
-    stats_db, cal, referees = load_all_data()
-
-    # ═══════════════════════════════════════════════════════════
     # HEADER PROFISSIONAL
     # ═══════════════════════════════════════════════════════════
     col1, col2, col3 = st.columns([2, 3, 2])
@@ -864,7 +1409,7 @@ def main():
         st.caption("_Sistema Profissional de Análise Esportiva_")
     
     with col3:
-        st.metric("📚 Database", f"{len(stats_db)} times", delta="10 Ligas")
+        st.metric("📚 Database", f"{len(STATS)} times", delta="10 Ligas")
     
     st.markdown("---")
     
@@ -874,16 +1419,19 @@ def main():
     # ═══════════════════════════════════════════════════════════
     
     tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9 = st.tabs([
-        "🎫 Construtor", 
-        "🛡️ Hedges",
-        "🎲 Simulador",
-        "📊 Métricas",
-        "🎨 Viz", 
-        "📝 Registro", 
-        "🔍 Scanner", 
-        "📋 Importar", 
-        "🤖 AI"
+        "🔍 Scanner",
+        "📋 Construtor", 
+        "🏆 Rankings",
+        "📊 Análise Detalhada",
+        "💼 Gestão de Banca",
+        "📅 Calendários",
+        "🎲 Bet Builder",
+        "📚 Educação",
+        "🤖 IA Advisor"
     ])
+    """Função principal do aplicativo"""
+    
+    stats, cal, referees = load_all_data()
     
     if 'current_ticket' not in st.session_state:
         st.session_state.current_ticket = []
@@ -896,10 +1444,14 @@ def main():
     if 'initial_bankroll' not in st.session_state:
         st.session_state.initial_bankroll = 1000.0
     
+    st.title("⚽ FutPrevisão V31 MAXIMUM + AI Advisor ULTRA")
+    st.markdown("**Sistema Completo e Profissional de Análise de Apostas Esportivas**")
+    st.markdown("_Causality Engine V31 | Poisson | Monte Carlo | Kelly | Sharpe | 2300+ linhas_")
+    
     with st.sidebar:
         st.header("📊 Dashboard")
         col1, col2 = st.columns(2)
-        col1.metric("Times", len(stats_db))
+        col1.metric("Times", len(STATS))
         col1.metric("Jogos", len(cal) if not cal.empty else 0)
         col2.metric("Árbitros", len(referees))
         banca = st.session_state.bankroll_history[-1]
@@ -917,12 +1469,130 @@ def main():
             st.markdown("---")
             st.metric("Win Rate", f"{wr:.1f}%")
     
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9 = st.tabs([
+        "🎫 Construtor", "🛡️ Hedges", "🎲 Simulador", "📊 Métricas",
+        "🎨 Viz", "📝 Registro", "🔍 Scanner", "📋 Importar", "🤖 AI"
+    ])
+    
     # ============================================================
     # TAB 1: CONSTRUTOR
     # ============================================================
     
     with tab1:
         st.header("🎫 Construtor de Bilhetes Profissional")
+        
+        # ====================================================
+        # 📝 CONSTRUTOR MANUAL - NOVA FUNCIONALIDADE
+        # ====================================================
+        with st.expander("📝 CONSTRUTOR MANUAL", expanded=True):
+            st.markdown("### Crie sua aposta manualmente")
+            
+            col1, col2 = st.columns(2)
+            
+            # Dropdowns para times
+            todos_times = sorted(list(STATS.keys()))
+            time_casa = col1.selectbox("🏠 Time da Casa:", todos_times, key='manual_home')
+            time_fora = col2.selectbox("✈️ Time Visitante:", todos_times, key='manual_away')
+            
+            col1, col2, col3 = st.columns(3)
+            
+            # Tipo de mercado
+            tipo_mercado = col1.selectbox(
+                "📊 Tipo de Mercado:",
+                ["Cantos", "Cartões", "Gols"],
+                key='manual_market_type'
+            )
+            
+            # Local
+            local = col2.selectbox(
+                "📍 Local:",
+                ["Total", "Casa", "Fora"],
+                key='manual_location'
+            )
+            
+            # Linha baseada no tipo
+            if tipo_mercado == "Cantos":
+                linhas_disponiveis = [2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5, 10.5, 11.5, 12.5]
+            elif tipo_mercado == "Cartões":
+                linhas_disponiveis = [2.5, 3.5, 4.5, 5.5, 6.5]
+            else:  # Gols
+                linhas_disponiveis = [0.5, 1.5, 2.5, 3.5, 4.5]
+            
+            linha = col3.selectbox(
+                "🎯 Linha (Over):",
+                linhas_disponiveis,
+                key='manual_line'
+            )
+            
+            # Calcular previsão
+            if time_casa != time_fora:
+                calc = calcular_jogo_v31(STATS[time_casa], STATS[time_fora], {})
+                
+                # Determinar valor esperado
+                if tipo_mercado == "Cantos":
+                    if local == "Total":
+                        valor_esperado = calc['corners']['t']
+                    elif local == "Casa":
+                        valor_esperado = calc['corners']['h']
+                    else:
+                        valor_esperado = calc['corners']['a']
+                elif tipo_mercado == "Cartões":
+                    if local == "Total":
+                        valor_esperado = calc['cards']['t']
+                    elif local == "Casa":
+                        valor_esperado = calc['cards']['h']
+                    else:
+                        valor_esperado = calc['cards']['a']
+                else:  # Gols
+                    if local == "Total":
+                        valor_esperado = calc['goals']['h'] + calc['goals']['a']
+                    elif local == "Casa":
+                        valor_esperado = calc['goals']['h']
+                    else:
+                        valor_esperado = calc['goals']['a']
+                
+                # Calcular probabilidade estimada
+                if valor_esperado > linha + 1.0:
+                    prob_estimada = 80
+                elif valor_esperado > linha + 0.5:
+                    prob_estimada = 75
+                elif valor_esperado > linha:
+                    prob_estimada = 70
+                else:
+                    prob_estimada = 60
+                
+                # Mostrar previsão
+                col1, col2, col3 = st.columns(3)
+                col1.metric("📈 Previsão", f"{valor_esperado:.2f}")
+                col2.metric("🎯 Linha", f"{linha}")
+                col3.metric("📊 Probabilidade", f"{prob_estimada}%")
+                
+                emoji = get_prob_emoji(prob_estimada)
+                
+                if prob_estimada >= 70:
+                    st.success(f"{emoji} BOA APOSTA! Previsão: {valor_esperado:.2f} | Linha: {linha}")
+                else:
+                    st.warning(f"{emoji} ATENÇÃO! Probabilidade baixa ({prob_estimada}%)")
+                
+                # Botão adicionar
+                if st.button("➕ ADICIONAR AO BILHETE", use_container_width=True, type="primary"):
+                    descricao = f"{time_casa} vs {time_fora} - Over {linha} {tipo_mercado} {local}"
+                    
+                    st.session_state.current_ticket.append({
+                        'jogo': f"{time_casa} vs {time_fora}",
+                        'market_display': f"Over {linha} {tipo_mercado} {local}",
+                        'prob': prob_estimada,
+                        'data': datetime.now().strftime('%d/%m/%Y')
+                    })
+                    st.success(f"✅ Adicionado: {descricao}")
+                    st.rerun()
+        
+        st.markdown("---")
+        
+        # ====================================================
+        # 📅 CONSTRUTOR AUTOMÁTICO (JOGOS DO CALENDÁRIO)
+        # ====================================================
+        st.markdown("### 📅 Construtor Automático (Jogos do Calendário)")
         
         if not cal.empty:
             dates = sorted(cal['DtObj'].dt.strftime('%d/%m/%Y').unique())
@@ -932,13 +1602,13 @@ def main():
             st.markdown(f"### 🎯 {len(jogos_dia)} jogo(s) disponível(eis)")
             
             for idx, jogo in jogos_dia.iterrows():
-                h = normalize_name(jogo['Time_Casa'], list(stats_db.keys()))
-                a = normalize_name(jogo['Time_Visitante'], list(stats_db.keys()))
+                h = normalize_name(jogo['Time_Casa'], list(STATS.keys()))
+                a = normalize_name(jogo['Time_Visitante'], list(STATS.keys()))
                 
-                if h and a and h in stats_db and a in stats_db:
+                if h and a and h in STATS and a in STATS:
                     ref_nome = jogo.get('Arbitro', 'N/A')
                     ref_data = referees.get(ref_nome, {})
-                    calc = calcular_jogo_v31(stats_db[h], stats_db[a], ref_data)
+                    calc = calcular_jogo_v31(STATS[h], STATS[a], ref_data)
                     
                     with st.expander(f"⚽ {h} vs {a} | {jogo.get('Hora', 'N/A')}", expanded=False):
                         col1, col2, col3, col4 = st.columns(4)
@@ -1092,8 +1762,8 @@ def main():
             
             jogos_disp = []
             for _, jogo in jogos_dia.iterrows():
-                h = normalize_name(jogo['Time_Casa'], list(stats_db.keys()))
-                a = normalize_name(jogo['Time_Visitante'], list(stats_db.keys()))
+                h = normalize_name(jogo['Time_Casa'], list(STATS.keys()))
+                a = normalize_name(jogo['Time_Visitante'], list(STATS.keys()))
                 if h and a:
                     jogos_disp.append(f"{h} vs {a}")
             
@@ -1104,7 +1774,7 @@ def main():
                     h_name, a_name = jogo_sel.split(' vs ')
                     
                     with st.spinner('Simulando...'):
-                        sims = simulate_game_v31(stats_db[h_name], stats_db[a_name], {}, 3000)
+                        sims = simulate_game_v31(STATS[h_name], STATS[a_name], {}, 3000)
                         
                         st.subheader("📊 Resultados")
                         col1, col2, col3, col4 = st.columns(4)
@@ -1253,7 +1923,7 @@ def main():
             
             liga_data = defaultdict(lambda: {'cantos': [], 'cartoes': [], 'gols': []})
             
-            for team, data in stats_db.items():
+            for team, data in STATS.items():
                 liga = data['league']
                 liga_data[liga]['cantos'].append(data['corners'])
                 liga_data[liga]['cartoes'].append(data['cards'])
@@ -1277,7 +1947,7 @@ def main():
         elif viz_tipo == "Top Times - Cantos":
             st.subheader("🔶 Top 20 Times com Mais Cantos")
             
-            times_sorted = sorted(stats_db.items(), key=lambda x: x[1]['corners'], reverse=True)[:20]
+            times_sorted = sorted(stats.items(), key=lambda x: x[1]['corners'], reverse=True)[:20]
             
             times_nomes = [t[0] for t in times_sorted]
             times_cantos = [t[1]['corners'] for t in times_sorted]
@@ -1300,7 +1970,7 @@ def main():
         elif viz_tipo == "Distribuição de Cantos":
             st.subheader("📈 Distribuição de Cantos - Todos os Times")
             
-            todos_cantos = [data['corners'] for data in stats_db.values()]
+            todos_cantos = [data['corners'] for data in STATS.values()]
             
             fig = go.Figure()
             fig.add_trace(go.Histogram(
@@ -1311,7 +1981,7 @@ def main():
             ))
             
             fig.update_layout(
-                title=f'Distribuição de Cantos ({len(stats_db)} times)',
+                title=f'Distribuição de Cantos ({len(STATS)} times)',
                 xaxis_title='Cantos por Jogo',
                 yaxis_title='Frequência',
                 height=400
@@ -1324,7 +1994,7 @@ def main():
             col1, col2, col3 = st.columns(3)
             col1.metric("Média", f"{media_cantos:.2f}")
             col2.metric("Mediana", f"{mediana_cantos:.2f}")
-            col3.metric("Times", len(stats_db))
+            col3.metric("Times", len(STATS))
         
         else:
             st.info(f"Gráfico '{viz_tipo}' em desenvolvimento")
@@ -1391,11 +2061,11 @@ def main():
                 
                 with st.spinner('Analisando jogos...'):
                     for _, jogo in jogos_dia.iterrows():
-                        h = normalize_name(jogo['Time_Casa'], list(stats_db.keys()))
-                        a = normalize_name(jogo['Time_Visitante'], list(stats_db.keys()))
+                        h = normalize_name(jogo['Time_Casa'], list(STATS.keys()))
+                        a = normalize_name(jogo['Time_Visitante'], list(STATS.keys()))
                         
-                        if h and a and h in stats_db and a in stats_db:
-                            calc = calcular_jogo_v31(stats_db[h], stats_db[a], {})
+                        if h and a and h in STATS and a in STATS:
+                            calc = calcular_jogo_v31(STATS[h], STATS[a], {})
                             
                             # Verificar cantos
                             if tipo_mercado in ["Cantos", "Ambos"]:
@@ -1448,7 +2118,7 @@ def main():
                 jogos_parsed = parse_bilhete_texto(texto)
                 
                 if jogos_parsed:
-                    jogos_val = validar_jogos_bilhete(jogos_parsed, stats_db)
+                    jogos_val = validar_jogos_bilhete(jogos_parsed, STATS)
                     
                     if jogos_val:
                         st.success(f"✅ {len(jogos_val)} jogo(s) validado(s)")
@@ -1495,7 +2165,7 @@ def main():
             wr = (ganhas/total*100) if total > 0 else 0
             banca = st.session_state.bankroll_history[-1]
             
-            perfil = "🎯 PROFISSIONAL" if wr >= 70 and total >= 30 else "📊 AVANÇADO" if wr >= 60 and total >= 15 else "🌟 INTERMEDIÁRIO" if total >= 5 else "🔰 INICIANTE"
+            perfil = "🎯 PROFISSIONAL" if wr >= 70 and total >= 30 else                      "📊 AVANÇADO" if wr >= 60 and total >= 15 else                      "🌟 INTERMEDIÁRIO" if total >= 5 else "🔰 INICIANTE"
             
             welcome = f"""👋 Olá! Sou o **FutPrevisão AI Advisor ULTRA**!
 
@@ -1555,8 +2225,8 @@ def main():
         if user_msg:
             st.session_state.chat_history.append({'role': 'user', 'content': user_msg})
             
-            # Processar mensagem com IA
-            response = processar_chat(user_msg, stats_db)
+            # Processar com chatbot MEGA inteligente (passa TODOS os dados)
+            response = processar_chat_ultra(user_msg, STATS, CAL, REFS)
             
             # Adicionar resposta ao histórico
             st.session_state.chat_history.append({'role': 'assistant', 'content': response})
@@ -1569,8 +2239,8 @@ def main():
 
 def generate_corner_distribution_chart(team_stats: Dict, team_name: str) -> go.Figure:
     """Gera gráfico de distribuição de cantos de um time"""
-    corners_mean = team_stats.get('corners', 5.5)
-    corners_std = team_stats.get('corners_std', 2.0)
+    corners_mean = team_STATS.get('corners', 5.5)
+    corners_std = team_STATS.get('corners_std', 2.0)
     
     x = np.linspace(0, 15, 100)
     y = (1 / (corners_std * np.sqrt(2 * np.pi))) * np.exp(-0.5 * ((x - corners_mean) / corners_std) ** 2)
@@ -1590,19 +2260,19 @@ def generate_comparison_radar(home_stats: Dict, away_stats: Dict, home_name: str
     categories = ['Cantos', 'Cartões', 'Gols Marcados', 'Chutes', 'Faltas']
     
     home_values = [
-        home_stats.get('corners', 5.5) / 10 * 100,
-        home_stats.get('cards', 2.5) / 5 * 100,
-        home_stats.get('goals_f', 1.5) / 3 * 100,
-        home_stats.get('shots_on_target', 4.5) / 8 * 100,
-        home_stats.get('fouls', 12.0) / 15 * 100
+        home_STATS.get('corners', 5.5) / 10 * 100,
+        home_STATS.get('cards', 2.5) / 5 * 100,
+        home_STATS.get('goals_f', 1.5) / 3 * 100,
+        home_STATS.get('shots_on_target', 4.5) / 8 * 100,
+        home_STATS.get('fouls', 12.0) / 15 * 100
     ]
     
     away_values = [
-        away_stats.get('corners', 5.5) / 10 * 100,
-        away_stats.get('cards', 2.5) / 5 * 100,
-        away_stats.get('goals_f', 1.5) / 3 * 100,
-        away_stats.get('shots_on_target', 4.5) / 8 * 100,
-        away_stats.get('fouls', 12.0) / 15 * 100
+        away_STATS.get('corners', 5.5) / 10 * 100,
+        away_STATS.get('cards', 2.5) / 5 * 100,
+        away_STATS.get('goals_f', 1.5) / 3 * 100,
+        away_STATS.get('shots_on_target', 4.5) / 8 * 100,
+        away_STATS.get('fouls', 12.0) / 15 * 100
     ]
     
     fig = go.Figure()
@@ -1635,13 +2305,13 @@ def generate_heatmap_correlations(stats_db: Dict) -> go.Figure:
     """Gera heatmap de correlações entre métricas"""
     data_matrix = []
     
-    for team, stats in stats_db.items():
+    for team, stats in STATS_db.items():
         data_matrix.append([
-            stats.get('corners', 5.5),
-            stats.get('cards', 2.5),
-            stats.get('goals_f', 1.5),
-            stats.get('fouls', 12.0),
-            stats.get('shots_on_target', 4.5)
+            STATS.get('corners', 5.5),
+            STATS.get('cards', 2.5),
+            STATS.get('goals_f', 1.5),
+            STATS.get('fouls', 12.0),
+            STATS.get('shots_on_target', 4.5)
         ])
     
     df = pd.DataFrame(data_matrix, columns=['Cantos', 'Cartões', 'Gols', 'Faltas', 'Chutes'])
@@ -1972,12 +2642,12 @@ def generate_league_comparison_table(stats_db: Dict) -> pd.DataFrame:
         'times': 0
     })
     
-    for team, stats in stats_db.items():
-        league = stats.get('league', 'Desconhecida')
-        league_stats[league]['cantos'].append(stats.get('corners', 5.5))
-        league_stats[league]['cartoes'].append(stats.get('cards', 2.5))
-        league_stats[league]['gols'].append(stats.get('goals_f', 1.5))
-        league_stats[league]['times'] += 1
+    for team, stats in STATS_db.items():
+        league = STATS['league']
+        league_STATS[league]['cantos'].append(STATS.get('corners', 5.5))
+        league_STATS[league]['cartoes'].append(STATS.get('cards', 2.5))
+        league_STATS[league]['gols'].append(STATS.get('goals_f', 1.5))
+        league_STATS[league]['times'] += 1
     
     rows = []
     for league, data in league_stats.items():
@@ -2011,11 +2681,11 @@ class BettingAnalyzer:
         stats = self.stats_db[team_name]
         
         return {
-            'corners_trend': 'increasing' if stats.get('corners', 5.5) > 5.5 else 'decreasing',
-            'cards_trend': 'increasing' if stats.get('cards', 2.5) > 2.5 else 'decreasing',
-            'offensive': stats.get('goals_f', 1.5) > 1.5,
-            'defensive': stats.get('goals_a', 1.5) < 1.5,
-            'disciplined': stats.get('fouls', 12.0) < 12.5
+            'corners_trend': 'increasing' if STATS.get('corners', 5.5) > 5.5 else 'decreasing',
+            'cards_trend': 'increasing' if STATS.get('cards', 2.5) > 2.5 else 'decreasing',
+            'offensive': STATS.get('goals_f', 1.5) > 1.5,
+            'defensive': STATS.get('goals_a', 1.5) < 1.5,
+            'disciplined': STATS.get('fouls', 12.0) < 12.5
         }
     
     def compare_head_to_head(self, team1: str, team2: str) -> Dict:
@@ -2298,7 +2968,7 @@ def generate_betting_report(stats: Dict, bet_results: List[Dict]) -> str:
 def export_data_to_csv(data: List[Dict], filename: str) -> str:
     """Exporta dados para CSV"""
     df = pd.DataFrame(data)
-    filepath = f"./{filename}"
+    filepath = f"/mnt/user-data/outputs/{filename}"
     df.to_csv(filepath, index=False)
     return filepath
 
