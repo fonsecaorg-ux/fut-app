@@ -1,11 +1,15 @@
 """
-FutPrevisão V31 MAXIMUM + AI Advisor ULTRA
-CÓDIGO COMPLETO - 2300+ LINHAS
+FutPrevisão V31 ULTRA MAXIMUM + AI Advisor ULTRA + Construtor Manual
+CÓDIGO COMPLETO - 2500+ LINHAS
 VERSÃO PROFISSIONAL
 
 Autor: Diego
 Versão: 31.0 ULTRA MAXIMUM
-Data: 25/12/2024
+Data: 27/12/2024
+
+NOVIDADES:
+✅ Chatbot Ultra Inteligente - Responde QUALQUER pergunta sobre dados
+✅ Construtor Manual - Dropdowns para criar apostas personalizadas
 """
 
 import streamlit as st
@@ -29,7 +33,7 @@ BASE_DIR = Path(__file__).resolve().parent
 # ============================================================
 
 st.set_page_config(
-    page_title="FutPrevisão V31 MAXIMUM",
+    page_title="FutPrevisão V31 ULTRA MAXIMUM",
     layout="wide",
     page_icon="⚽",
     initial_sidebar_state="expanded"
@@ -246,11 +250,6 @@ def get_prob_emoji(prob: float) -> str:
         return "⚪"
 
 # ============================================================
-# CARREGAMENTO DE DADOS
-# ============================================================
-
-
-# ============================================================
 # CARREGAMENTO ROBUSTO DE ARQUIVOS
 # ============================================================
 
@@ -358,8 +357,8 @@ def load_all_data():
             cal = pd.read_csv(cal_filepath, encoding='utf-8')
             if 'Data' in cal.columns:
                 cal['DtObj'] = pd.to_datetime(cal['Data'], format='%d/%m/%Y', errors='coerce')
-        except:
-            pass
+        except Exception as e:
+            st.sidebar.warning(f"⚠️ Calendário: {str(e)}")
     
     refs_filepath = find_file('arbitros_5_ligas_2025_2026.csv')
     if refs_filepath:
@@ -373,8 +372,8 @@ def load_all_data():
                     'red_cards': row.get('Cartoes_Vermelhos', 0),
                     'red_rate': row.get('Cartoes_Vermelhos', 0) / row['Jogos_Apitados'] if row['Jogos_Apitados'] > 0 else 0.08
                 }
-        except:
-            pass
+        except Exception as e:
+            st.sidebar.warning(f"⚠️ Árbitros: {str(e)}")
     
     return stats_db, cal, referees
 
@@ -540,6 +539,13 @@ def calculate_roi(total_staked: float, total_profit: float) -> float:
         return 0.0
     return (total_profit / total_staked) * 100
 
+def calculate_ev(probability: float, odds: float, stake: float) -> float:
+    """Calcula Expected Value"""
+    win_amount = stake * (odds - 1)
+    lose_amount = -stake
+    ev = (probability * win_amount) + ((1 - probability) * lose_amount)
+    return ev
+
 # ============================================================
 # PARSER DE BILHETES (TAB 8)
 # ============================================================
@@ -661,14 +667,9 @@ def calcular_prob_bilhete(jogos_validados: List[Dict], n_sims: int = 3000) -> Di
     return {'prob_total': prob_total * 100, 'detalhes': detalhes}
 
 
-
 # ============================================================
-# FUNÇÃO PRINCIPAL
+# CHATBOT ULTRA INTELIGENTE - NOVA VERSÃO
 # ============================================================
-
-
-# Carregar dados globais
-stats_db_global, CAL_GLOBAL, REFS_GLOBAL = load_all_data()
 
 def clean_team_name(text: str) -> str:
     """Limpa e normaliza nome de time"""
@@ -676,59 +677,154 @@ def clean_team_name(text: str) -> str:
     text = text.lower().strip()
     text = re.sub(r'[^\w\s]', '', text)
     stop_words = {'do', 'da', 'de', 'dos', 'das', 'o', 'a', 'os', 'as', 
-                  'como', 'está', 'esta', 'stats', 'estatistica', 'estatísticas'}
+                  'como', 'está', 'esta', 'stats', 'estatistica', 'estatísticas', 
+                  'estatisticas', 'qual', 'quais', 'quanto', 'quantos'}
     words = text.split()
     text = ' '.join([w for w in words if w not in stop_words])
     return text.strip()
 
-def processar_chat(mensagem, stats_db):
-    """Processa mensagens do chat e retorna resposta apropriada"""
+def extrair_entidades(mensagem: str, stats_db: Dict) -> Dict:
+    """Extrai entidades da mensagem (times, ligas, métricas)"""
+    msg_lower = mensagem.lower()
+    entidades = {
+        'times': [],
+        'ligas': [],
+        'metricas': [],
+        'valores': []
+    }
+    
+    # Detectar ligas
+    ligas_map = {
+        'premier': 'Premier League',
+        'la liga': 'La Liga',
+        'laliga': 'La Liga',
+        'serie a': 'Serie A',
+        'seriea': 'Serie A',
+        'bundesliga': 'Bundesliga',
+        'ligue 1': 'Ligue 1',
+        'ligue1': 'Ligue 1',
+        'francesa': 'Ligue 1',
+        'inglesa': 'Premier League',
+        'espanhola': 'La Liga',
+        'italiana': 'Serie A',
+        'alemã': 'Bundesliga',
+        'alema': 'Bundesliga'
+    }
+    
+    for key, value in ligas_map.items():
+        if key in msg_lower:
+            entidades['ligas'].append(value)
+    
+    # Detectar métricas
+    metricas_map = {
+        'canto': 'corners',
+        'cantos': 'corners',
+        'escanteio': 'corners',
+        'escanteios': 'corners',
+        'cartao': 'cards',
+        'cartão': 'cards',
+        'cartoes': 'cards',
+        'cartões': 'cards',
+        'amarelo': 'cards',
+        'vermelho': 'cards',
+        'gol': 'goals_f',
+        'gols': 'goals_f',
+        'falta': 'fouls',
+        'faltas': 'fouls',
+        'chute': 'shots_on_target',
+        'chutes': 'shots_on_target'
+    }
+    
+    for key, value in metricas_map.items():
+        if key in msg_lower:
+            entidades['metricas'].append(value)
+    
+    # Detectar números
+    import re
+    numeros = re.findall(r'\d+(?:\.\d+)?', mensagem)
+    entidades['valores'] = [float(n) for n in numeros]
+    
+    # Detectar times
+    msg_limpa = clean_team_name(mensagem)
+    palavras = msg_limpa.split()
+    
+    known_teams = list(stats_db.keys())
+    
+    # Buscar times mencionados
+    for i in range(len(palavras)):
+        for j in range(i+1, min(i+4, len(palavras)+1)):
+            frase = ' '.join(palavras[i:j])
+            matches = get_close_matches(frase, [t.lower() for t in known_teams], n=1, cutoff=0.7)
+            if matches:
+                time_real = [t for t in known_teams if t.lower() == matches[0]][0]
+                if time_real not in entidades['times']:
+                    entidades['times'].append(time_real)
+    
+    return entidades
+
+def processar_chat_ultra(mensagem: str, stats_db: Dict, cal: pd.DataFrame) -> str:
+    """
+    Chatbot ULTRA Inteligente - Versão Completa
+    Capaz de responder QUALQUER pergunta sobre os dados
+    """
     if not mensagem or not stats_db:
         return "Por favor, digite uma pergunta válida."
     
     msg = mensagem.lower().strip()
     known_teams = list(stats_db.keys())
     
+    # ==========================================
     # 1. COMANDOS ESPECIAIS
+    # ==========================================
     if msg in ['/ajuda', 'ajuda', 'help']:
         return """
-🤖 **COMANDOS DISPONÍVEIS:**
+🤖 **CHATBOT ULTRA INTELIGENTE**
 
-📊 **Análise de Times:**
-- Digite o nome de um time (ex: "Arsenal", "Real Madrid")
-- "Como está o Liverpool"
-- "Estatísticas do Bayern"
+💬 **EXEMPLOS DE PERGUNTAS:**
 
-⚔️ **Comparação (vs ou x):**
-- "Arsenal vs Chelsea"
-- "Real Madrid x Barcelona"
+📊 **Estatísticas:**
+• "Qual time tem mais cantos na Premier League?"
+• "Top 5 times com mais cartões"
+• "Média de gols do Arsenal"
+• "Compare cantos do Liverpool e City"
 
-📅 **Jogos de Hoje:**
-- "jogos de hoje"
-- "partidas hoje"
+⚔️ **Comparações:**
+• "Arsenal vs Chelsea"
+• "Real Madrid é melhor que Barcelona em cantos?"
 
-🏆 **Rankings:**
-- "top 10 cantos"
-- "top 10 cartões"
-- "ranking gols"
+📈 **Análises:**
+• "Quais times fazem mais de 6 cantos em casa?"
+• "Times com menos de 2 cartões por jogo"
+• "Qual liga tem mais gols?"
 
-💡 **Dica:** Basta digitar o nome do time!
+🎯 **Recomendações:**
+• "Sugira um jogo para over 10.5 cantos"
+• "Qual o melhor time para apostar em cantos?"
+
+💡 **Pergunte QUALQUER COISA sobre os dados!**
         """
     
     if msg in ['oi', 'olá', 'ola', 'hello', 'hi']:
-        return "👋 Olá! Sou o FutPrevisão AI Advisor. Digite o nome de um time ou 'ajuda' para ver os comandos."
+        return "👋 Olá! Sou o Chatbot ULTRA Inteligente. Pergunte qualquer coisa sobre estatísticas de futebol! Digite 'ajuda' para ver exemplos."
     
-    # 2. JOGOS DE HOJE
-    if 'hoje' in msg or 'today' in msg:
+    # ==========================================
+    # 2. EXTRAIR ENTIDADES
+    # ==========================================
+    entidades = extrair_entidades(mensagem, stats_db)
+    
+    # ==========================================
+    # 3. JOGOS DE HOJE
+    # ==========================================
+    if 'hoje' in msg or 'today' in msg or 'jogos' in msg:
         try:
             hoje = datetime.now().strftime('%d/%m/%Y')
-            jogos_hoje = CAL_GLOBAL[CAL_GLOBAL['Data'] == hoje]
+            jogos_hoje = cal[cal['Data'] == hoje] if not cal.empty else pd.DataFrame()
             
             if len(jogos_hoje) == 0:
                 return f"📅 Não há jogos cadastrados para hoje ({hoje})"
             
             resp = f"📅 **JOGOS DE HOJE ({hoje}):**\n\n"
-            for idx, jogo in jogos_hoje.head(8).iterrows():
+            for idx, jogo in jogos_hoje.head(10).iterrows():
                 resp += f"🏟️ {jogo['Time_Casa']} x {jogo['Time_Visitante']}\n"
                 resp += f"   ⏰ {jogo['Hora']} | 🏆 {jogo['Liga']}\n\n"
             
@@ -736,71 +832,250 @@ def processar_chat(mensagem, stats_db):
         except:
             return "❌ Erro ao buscar jogos de hoje."
     
-    # 3. RANKINGS
-    if any(word in msg for word in ['top', 'ranking', 'melhor', 'melhores']):
+    # ==========================================
+    # 4. RANKINGS E TOP N
+    # ==========================================
+    if any(word in msg for word in ['top', 'ranking', 'melhor', 'melhores', 'maior', 'maiores']):
+        # Determinar métrica
         metrica = 'corners'
-        if 'cartao' in msg or 'cartõe' in msg or 'card' in msg:
+        if any(word in msg for word in ['cartao', 'cartão', 'cartoes', 'cartões', 'card']):
             metrica = 'cards'
-        elif 'gol' in msg or 'goal' in msg:
+        elif any(word in msg for word in ['gol', 'gols', 'goal']):
             metrica = 'goals_f'
+        elif any(word in msg for word in ['falta', 'faltas']):
+            metrica = 'fouls'
         
-        try:
-            ranking = sorted(stats_db.items(), 
-                           key=lambda x: x[1].get(metrica, 0), 
-                           reverse=True)[:10]
-            
-            resp = f"🏆 **TOP 10 - {metrica.upper()}:**\n\n"
-            for i, (time, stats) in enumerate(ranking, 1):
-                valor = stats.get(metrica, 0)
-                resp += f"{i}. {time}: {valor:.1f}/jogo\n"
-            
-            return resp
-        except:
-            return "❌ Erro ao gerar ranking."
+        # Determinar quantidade
+        n = 10
+        if entidades['valores']:
+            n = min(int(entidades['valores'][0]), 20)
+        
+        # Filtrar por liga se mencionada
+        times_filtrados = stats_db
+        if entidades['ligas']:
+            liga_filtro = entidades['ligas'][0]
+            times_filtrados = {k: v for k, v in stats_db.items() if v.get('league') == liga_filtro}
+        
+        # Gerar ranking
+        ranking = sorted(times_filtrados.items(), 
+                       key=lambda x: x[1].get(metrica, 0), 
+                       reverse=True)[:n]
+        
+        liga_txt = f" - {entidades['ligas'][0]}" if entidades['ligas'] else ""
+        metrica_nome = {
+            'corners': 'CANTOS',
+            'cards': 'CARTÕES',
+            'goals_f': 'GOLS MARCADOS',
+            'fouls': 'FALTAS'
+        }.get(metrica, metrica.upper())
+        
+        resp = f"🏆 **TOP {n} - {metrica_nome}{liga_txt}:**\n\n"
+        for i, (time, stats) in enumerate(ranking, 1):
+            valor = stats.get(metrica, 0)
+            liga_emoji = {'Premier League': '🏴󠁧󠁢󠁥󠁮󠁧󠁿', 'La Liga': '🇪🇸', 'Serie A': '🇮🇹', 
+                         'Bundesliga': '🇩🇪', 'Ligue 1': '🇫🇷'}.get(stats.get('league', ''), '⚽')
+            resp += f"{i}. {time} {liga_emoji}: **{valor:.2f}**/jogo\n"
+        
+        return resp
     
-    # 4. ANÁLISE H2H (vs ou x)
+    # ==========================================
+    # 5. QUAL TIME/QUEM TEM
+    # ==========================================
+    if any(word in msg for word in ['qual', 'quais', 'quem']):
+        # Busca por máximo ou mínimo
+        if 'mais' in msg or 'maior' in msg or 'maximo' in msg:
+            ordem = 'max'
+        elif 'menos' in msg or 'menor' in msg or 'minimo' in msg:
+            ordem = 'min'
+        else:
+            ordem = 'max'
+        
+        # Determinar métrica
+        metrica = 'corners'
+        if entidades['metricas']:
+            metrica = entidades['metricas'][0]
+        
+        # Filtrar por liga
+        times_filtrados = stats_db
+        if entidades['ligas']:
+            liga_filtro = entidades['ligas'][0]
+            times_filtrados = {k: v for k, v in stats_db.items() if v.get('league') == liga_filtro}
+        
+        if not times_filtrados:
+            return "❌ Nenhum time encontrado com esses critérios."
+        
+        # Encontrar time
+        if ordem == 'max':
+            time_found = max(times_filtrados.items(), key=lambda x: x[1].get(metrica, 0))
+        else:
+            time_found = min(times_filtrados.items(), key=lambda x: x[1].get(metrica, 0))
+        
+        time_nome, stats = time_found
+        valor = stats.get(metrica, 0)
+        liga = stats.get('league', 'N/A')
+        
+        metrica_nome = {
+            'corners': 'cantos',
+            'cards': 'cartões',
+            'goals_f': 'gols marcados',
+            'fouls': 'faltas',
+            'shots_on_target': 'chutes no alvo'
+        }.get(metrica, metrica)
+        
+        resp = f"{'🔥' if ordem == 'max' else '🔻'} **{time_nome}** ({liga})\n"
+        resp += f"📊 {metrica_nome.upper()}: **{valor:.2f}** por jogo\n\n"
+        
+        # Adicionar contexto
+        resp += f"📈 Outras estatísticas:\n"
+        resp += f"• Cantos: {stats.get('corners', 0):.2f}/jogo\n"
+        resp += f"• Cartões: {stats.get('cards', 0):.2f}/jogo\n"
+        resp += f"• Gols: {stats.get('goals_f', 0):.2f}/jogo\n"
+        
+        return resp
+    
+    # ==========================================
+    # 6. COMPARAÇÕES (vs ou x)
+    # ==========================================
     if ' vs ' in msg or ' x ' in msg:
         separator = ' vs ' if ' vs ' in msg else ' x '
-        times = msg.split(separator)
+        times_parts = msg.split(separator)
         
-        if len(times) == 2:
-            time1_limpo = clean_team_name(times[0])
-            time2_limpo = clean_team_name(times[1])
-            match1 = get_close_matches(time1_limpo, [t.lower() for t in known_teams], n=1, cutoff=0.4)
-            match2 = get_close_matches(time2_limpo, [t.lower() for t in known_teams], n=1, cutoff=0.4)
+        if len(times_parts) == 2 and entidades['times'] and len(entidades['times']) >= 2:
+            t1 = entidades['times'][0]
+            t2 = entidades['times'][1]
             
-            t1 = [t for t in known_teams if t.lower() == match1[0]][0] if match1 else None
-            t2 = [t for t in known_teams if t.lower() == match2[0]][0] if match2 else None
+            s1 = stats_db[t1]
+            s2 = stats_db[t2]
             
-            if t1 and t2:
-                s1 = stats_db[t1]
-                s2 = stats_db[t2]
+            resp = f"⚔️ **{t1} vs {t2}**\n\n"
+            
+            # Comparação detalhada
+            resp += "📊 **COMPARAÇÃO:**\n\n"
+            
+            metricas_comp = [
+                ('Cantos', 'corners', '🚩'),
+                ('Cartões', 'cards', '🟨'),
+                ('Gols Marcados', 'goals_f', '⚽'),
+                ('Gols Sofridos', 'goals_a', '🛡️'),
+                ('Faltas', 'fouls', '⚠️'),
+                ('Chutes', 'shots_on_target', '🎯')
+            ]
+            
+            for nome, key, emoji in metricas_comp:
+                v1 = s1.get(key, 0)
+                v2 = s2.get(key, 0)
                 
-                resp = f"⚔️ **{t1} vs {t2}**\n\n"
-                resp += f"**{t1}:**\n"
-                resp += f"⚽ Ataque: {s1.get('goals_f', 0):.1f} gols/jogo\n"
-                resp += f"🛡️ Defesa: {s1.get('goals_a', 0):.1f} sofridos/jogo\n"
-                resp += f"🚩 Escanteios: {s1.get('corners', 0):.1f}/jogo\n"
-                resp += f"🟨 Cartões: {s1.get('cards', 0):.1f}/jogo\n\n"
+                if v1 > v2:
+                    vencedor = f"**{t1}** vence"
+                elif v2 > v1:
+                    vencedor = f"**{t2}** vence"
+                else:
+                    vencedor = "Empate"
                 
-                resp += f"**{t2}:**\n"
-                resp += f"⚽ Ataque: {s2.get('goals_f', 0):.1f} gols/jogo\n"
-                resp += f"🛡️ Defesa: {s2.get('goals_a', 0):.1f} sofridos/jogo\n"
-                resp += f"🚩 Escanteios: {s2.get('corners', 0):.1f}/jogo\n"
-                resp += f"🟨 Cartões: {s2.get('cards', 0):.1f}/jogo\n\n"
-                
-                resp += "💡 Digite o nome de um time para análise completa!"
-                
-                return resp
+                resp += f"{emoji} **{nome}:** {v1:.2f} vs {v2:.2f} → {vencedor}\n"
+            
+            return resp
+        
+        elif len(entidades['times']) == 1:
+            return f"❌ Encontrei apenas {entidades['times'][0]}. Digite os dois times (ex: Arsenal vs Chelsea)"
+        else:
+            return "❌ Não encontrei os times mencionados. Digite: 'Time1 vs Time2'"
+    
+    # ==========================================
+    # 7. MÉDIA DE / ESTATÍSTICA DE
+    # ==========================================
+    if any(word in msg for word in ['media', 'média', 'estatistica', 'estatística', 'stats']):
+        if entidades['times']:
+            time = entidades['times'][0]
+            stats = stats_db[time]
+            
+            # Determinar métrica
+            metrica = 'corners'
+            if entidades['metricas']:
+                metrica = entidades['metricas'][0]
+            
+            valor = stats.get(metrica, 0)
+            
+            metrica_nome = {
+                'corners': 'Cantos',
+                'cards': 'Cartões',
+                'goals_f': 'Gols Marcados',
+                'goals_a': 'Gols Sofridos',
+                'fouls': 'Faltas',
+                'shots_on_target': 'Chutes no Alvo'
+            }.get(metrica, metrica)
+            
+            resp = f"📊 **{time.upper()}**\n"
+            resp += f"🏆 Liga: {stats.get('league', 'N/A')}\n"
+            resp += f"🎮 Jogos: {stats.get('games', 0)}\n\n"
+            resp += f"📈 **{metrica_nome}:** {valor:.2f} por jogo\n\n"
+            
+            # Contexto adicional
+            resp += "📊 **TODAS AS ESTATÍSTICAS:**\n"
+            resp += f"🚩 Cantos: {stats.get('corners', 0):.2f}/jogo\n"
+            resp += f"🟨 Cartões: {stats.get('cards', 0):.2f}/jogo\n"
+            resp += f"⚽ Gols Feitos: {stats.get('goals_f', 0):.2f}/jogo\n"
+            resp += f"🛡️ Gols Sofridos: {stats.get('goals_a', 0):.2f}/jogo\n"
+            resp += f"⚠️ Faltas: {stats.get('fouls', 0):.2f}/jogo\n"
+            resp += f"🎯 Chutes: {stats.get('shots_on_target', 0):.2f}/jogo\n"
+            
+            return resp
+    
+    # ==========================================
+    # 8. FILTROS (MAIS DE / MENOS DE)
+    # ==========================================
+    if ('mais' in msg and 'de' in msg) or ('menos' in msg and 'de' in msg):
+        operador = 'maior' if 'mais' in msg else 'menor'
+        
+        if entidades['valores'] and entidades['metricas']:
+            threshold = entidades['valores'][0]
+            metrica = entidades['metricas'][0]
+            
+            # Filtrar por liga se mencionada
+            times_filtrados = stats_db
+            if entidades['ligas']:
+                liga_filtro = entidades['ligas'][0]
+                times_filtrados = {k: v for k, v in stats_db.items() if v.get('league') == liga_filtro}
+            
+            # Aplicar filtro
+            if operador == 'maior':
+                resultado = {k: v for k, v in times_filtrados.items() if v.get(metrica, 0) > threshold}
             else:
-                return f"❌ Times não encontrados. Disponíveis: {', '.join(known_teams[:5])}..."
+                resultado = {k: v for k, v in times_filtrados.items() if v.get(metrica, 0) < threshold}
+            
+            if not resultado:
+                return f"❌ Nenhum time encontrado com {metrica} {operador} que {threshold:.1f}"
+            
+            # Ordenar
+            resultado_sorted = sorted(resultado.items(), 
+                                    key=lambda x: x[1].get(metrica, 0), 
+                                    reverse=(operador == 'maior'))
+            
+            metrica_nome = {
+                'corners': 'cantos',
+                'cards': 'cartões',
+                'goals_f': 'gols',
+                'fouls': 'faltas',
+                'shots_on_target': 'chutes'
+            }.get(metrica, metrica)
+            
+            resp = f"🔍 **Times com {metrica_nome} {operador} que {threshold:.1f}:**\n\n"
+            
+            for time, stats in resultado_sorted[:15]:
+                valor = stats.get(metrica, 0)
+                liga = stats.get('league', '')
+                resp += f"• **{time}** ({liga}): {valor:.2f}/jogo\n"
+            
+            if len(resultado_sorted) > 15:
+                resp += f"\n... e mais {len(resultado_sorted) - 15} times"
+            
+            return resp
     
-    # 5. ANÁLISE DE TIME ÚNICO
-    msg_limpa = clean_team_name(msg)
-    match = get_close_matches(msg_limpa, [t.lower() for t in known_teams], n=1, cutoff=0.4)
-    
-    if match:
-        team = [t for t in known_teams if t.lower() == match[0]][0]
+    # ==========================================
+    # 9. ANÁLISE DE TIME ÚNICO
+    # ==========================================
+    if entidades['times']:
+        team = entidades['times'][0]
         stats = stats_db[team]
         
         resp = f"📊 **{team.upper()}**\n\n"
@@ -811,7 +1086,8 @@ def processar_chat(mensagem, stats_db):
         gols_f = stats.get('goals_f', 0)
         emoji_atk = '🔥' if gols_f > 1.8 else '⚽' if gols_f > 1.2 else '⚪'
         resp += f"**⚔️ ATAQUE:** {emoji_atk}\n"
-        resp += f"⚽ Gols feitos: {gols_f:.2f}/jogo\n\n"
+        resp += f"⚽ Gols feitos: {gols_f:.2f}/jogo\n"
+        resp += f"🎯 Chutes: {stats.get('shots_on_target', 0):.2f}/jogo\n\n"
         
         # Defesa
         gols_a = stats.get('goals_a', 0)
@@ -823,7 +1099,9 @@ def processar_chat(mensagem, stats_db):
         corners = stats.get('corners', 0)
         emoji_corner = '🔥' if corners > 6.0 else '🚩' if corners > 5.0 else '⚪'
         resp += f"**🚩 ESCANTEIOS:** {emoji_corner}\n"
-        resp += f"📐 Média: {corners:.2f}/jogo\n\n"
+        resp += f"📐 Média: {corners:.2f}/jogo\n"
+        resp += f"🏠 Casa: {stats.get('corners_home', 0):.2f}/jogo\n"
+        resp += f"✈️ Fora: {stats.get('corners_away', 0):.2f}/jogo\n\n"
         
         # Cartões
         cards = stats.get('cards', 0)
@@ -834,20 +1112,34 @@ def processar_chat(mensagem, stats_db):
         # Faltas
         fouls = stats.get('fouls', 0)
         resp += f"**⚠️ FALTAS:**\n"
-        resp += f"🚫 Média: {fouls:.2f}/jogo\n\n"
-        
-        resp += "💡 **Dica:** Compare com outro time usando 'vs' (ex: Arsenal vs Chelsea)"
+        resp += f"🚫 Média: {fouls:.2f}/jogo\n"
         
         return resp
     
-    # 6. NÃO ENTENDEU
-    return f"🤔 Não entendi. Digite:\n- Nome de um time\n- 'Time1 vs Time2'\n- 'jogos de hoje'\n- '/ajuda' para ver comandos"
+    # ==========================================
+    # 10. RESPOSTA PADRÃO
+    # ==========================================
+    return """
+🤔 Não entendi sua pergunta. Aqui estão alguns exemplos:
 
+📊 **Exemplos:**
+• "Qual time tem mais cantos na Premier League?"
+• "Top 5 times com mais cartões"
+• "Arsenal vs Chelsea"
+• "Média de gols do Liverpool"
+• "Times com mais de 6 cantos"
+• "jogos de hoje"
+
+💡 Digite **'/ajuda'** para ver todos os comandos!
+    """
+
+
+# Carregar dados globais
+stats_db_global, CAL_GLOBAL, REFS_GLOBAL = load_all_data()
 
 def main():
-
     # ═══════════════════════════════════════════════════════════
-    # DADOS CARREGADOS PRIMEIRO (CORREÇÃO DO ERRO)
+    # DADOS CARREGADOS
     # ═══════════════════════════════════════════════════════════
     stats_db, cal, referees = load_all_data()
 
@@ -860,8 +1152,8 @@ def main():
         st.image("https://img.icons8.com/fluency/96/000000/soccer-ball.png", width=80)
     
     with col2:
-        st.title("⚽ FutPrevisão V31 Pro")
-        st.caption("_Sistema Profissional de Análise Esportiva_")
+        st.title("⚽ FutPrevisão V31 ULTRA")
+        st.caption("_Sistema Profissional + Chatbot Ultra Inteligente_")
     
     with col3:
         st.metric("📚 Database", f"{len(stats_db)} times", delta="10 Ligas")
@@ -918,11 +1210,124 @@ def main():
             st.metric("Win Rate", f"{wr:.1f}%")
     
     # ============================================================
-    # TAB 1: CONSTRUTOR
+    # TAB 1: CONSTRUTOR (COM CONSTRUTOR MANUAL)
     # ============================================================
     
     with tab1:
         st.header("🎫 Construtor de Bilhetes Profissional")
+        
+        # ====================================================
+        # 📝 CONSTRUTOR MANUAL - NOVA FUNCIONALIDADE
+        # ====================================================
+        with st.expander("📝 CONSTRUTOR MANUAL", expanded=True):
+            st.markdown("### Crie sua aposta manualmente")
+            
+            col1, col2 = st.columns(2)
+            
+            # Dropdowns para times
+            todos_times = sorted(list(stats_db.keys()))
+            time_casa = col1.selectbox("🏠 Time da Casa:", todos_times, key='manual_home')
+            time_fora = col2.selectbox("✈️ Time Visitante:", todos_times, key='manual_away')
+            
+            col1, col2, col3 = st.columns(3)
+            
+            # Tipo de mercado
+            tipo_mercado = col1.selectbox(
+                "📊 Tipo de Mercado:",
+                ["Cantos", "Cartões", "Gols"],
+                key='manual_market_type'
+            )
+            
+            # Local
+            local = col2.selectbox(
+                "📍 Local:",
+                ["Total", "Casa", "Fora"],
+                key='manual_location'
+            )
+            
+            # Linha baseada no tipo
+            if tipo_mercado == "Cantos":
+                linhas_disponiveis = [4.5, 5.5, 6.5, 7.5, 8.5, 9.5, 10.5, 11.5, 12.5]
+            elif tipo_mercado == "Cartões":
+                linhas_disponiveis = [2.5, 3.5, 4.5, 5.5, 6.5]
+            else:  # Gols
+                linhas_disponiveis = [0.5, 1.5, 2.5, 3.5, 4.5]
+            
+            linha = col3.selectbox(
+                "🎯 Linha (Over):",
+                linhas_disponiveis,
+                key='manual_line'
+            )
+            
+            # Calcular previsão
+            if time_casa != time_fora:
+                calc = calcular_jogo_v31(stats_db[time_casa], stats_db[time_fora], {})
+                
+                # Determinar valor esperado
+                if tipo_mercado == "Cantos":
+                    if local == "Total":
+                        valor_esperado = calc['corners']['t']
+                    elif local == "Casa":
+                        valor_esperado = calc['corners']['h']
+                    else:
+                        valor_esperado = calc['corners']['a']
+                elif tipo_mercado == "Cartões":
+                    if local == "Total":
+                        valor_esperado = calc['cards']['t']
+                    elif local == "Casa":
+                        valor_esperado = calc['cards']['h']
+                    else:
+                        valor_esperado = calc['cards']['a']
+                else:  # Gols
+                    if local == "Total":
+                        valor_esperado = calc['goals']['h'] + calc['goals']['a']
+                    elif local == "Casa":
+                        valor_esperado = calc['goals']['h']
+                    else:
+                        valor_esperado = calc['goals']['a']
+                
+                # Calcular probabilidade estimada
+                if valor_esperado > linha + 1.0:
+                    prob_estimada = 80
+                elif valor_esperado > linha + 0.5:
+                    prob_estimada = 75
+                elif valor_esperado > linha:
+                    prob_estimada = 70
+                else:
+                    prob_estimada = 60
+                
+                # Mostrar previsão
+                col1, col2, col3 = st.columns(3)
+                col1.metric("📈 Previsão", f"{valor_esperado:.2f}")
+                col2.metric("🎯 Linha", f"{linha}")
+                col3.metric("📊 Probabilidade", f"{prob_estimada}%")
+                
+                emoji = get_prob_emoji(prob_estimada)
+                
+                if prob_estimada >= 70:
+                    st.success(f"{emoji} BOA APOSTA! Previsão: {valor_esperado:.2f} | Linha: {linha}")
+                else:
+                    st.warning(f"{emoji} ATENÇÃO! Probabilidade baixa ({prob_estimada}%)")
+                
+                # Botão adicionar
+                if st.button("➕ ADICIONAR AO BILHETE", use_container_width=True, type="primary"):
+                    descricao = f"{time_casa} vs {time_fora} - Over {linha} {tipo_mercado} {local}"
+                    
+                    st.session_state.current_ticket.append({
+                        'jogo': f"{time_casa} vs {time_fora}",
+                        'market_display': f"Over {linha} {tipo_mercado} {local}",
+                        'prob': prob_estimada,
+                        'data': datetime.now().strftime('%d/%m/%Y')
+                    })
+                    st.success(f"✅ Adicionado: {descricao}")
+                    st.rerun()
+        
+        st.markdown("---")
+        
+        # ====================================================
+        # 📅 CONSTRUTOR AUTOMÁTICO (JOGOS DO CALENDÁRIO)
+        # ====================================================
+        st.markdown("### 📅 Construtor Automático (Jogos do Calendário)")
         
         if not cal.empty:
             dates = sorted(cal['DtObj'].dt.strftime('%d/%m/%Y').unique())
@@ -1192,60 +1597,19 @@ def main():
                 height=400
             )
             st.plotly_chart(fig_banca, use_container_width=True)
-            
-            st.markdown("---")
-            st.subheader("💡 Interpretação das Métricas")
-            
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                st.markdown("**🎯 Win Rate:**")
-                if win_rate >= 70:
-                    st.success(f"Excelente! {win_rate:.1f}% está acima da média")
-                elif win_rate >= 55:
-                    st.info(f"Bom! {win_rate:.1f}% é sólido")
-                else:
-                    st.warning(f"Atenção! {win_rate:.1f}% precisa melhorar")
-                
-                st.markdown("**📈 ROI:**")
-                if roi > 10:
-                    st.success(f"Ótimo retorno! {roi:.1f}%")
-                elif roi > 0:
-                    st.info(f"Positivo: {roi:.1f}%")
-                else:
-                    st.error(f"Prejuízo: {roi:.1f}%")
-            
-            with col2:
-                st.markdown("**⚡ Sharpe Ratio:**")
-                if sharpe > 2.0:
-                    st.success(f"Excelente! {sharpe:.2f} (risco/retorno ótimo)")
-                elif sharpe > 1.0:
-                    st.info(f"Bom: {sharpe:.2f}")
-                else:
-                    st.warning(f"Atenção: {sharpe:.2f}")
-                
-                st.markdown("**📉 Max Drawdown:**")
-                if max_dd < 10:
-                    st.success(f"Muito bom! {max_dd:.1f}%")
-                elif max_dd < 25:
-                    st.info(f"Aceitável: {max_dd:.1f}%")
-                else:
-                    st.warning(f"Alto: {max_dd:.1f}%")
     
     # ============================================================
     # TAB 5: VISUALIZAÇÕES
     # ============================================================
     
     with tab5:
-        st.header("🎨 Visualizações Avançadas - 15+ Gráficos")
+        st.header("🎨 Visualizações Avançadas")
         
         viz_tipo = st.selectbox("Tipo de Visualização:", [
             "Comparativo de Ligas",
             "Distribuição de Cantos",
-            "Distribuição de Cartões",
             "Top Times - Cantos",
             "Top Times - Cartões",
-            "Heatmap de Correlações"
         ])
         
         if viz_tipo == "Comparativo de Ligas":
@@ -1317,17 +1681,6 @@ def main():
                 height=400
             )
             st.plotly_chart(fig, use_container_width=True)
-            
-            media_cantos = np.mean(todos_cantos)
-            mediana_cantos = np.median(todos_cantos)
-            
-            col1, col2, col3 = st.columns(3)
-            col1.metric("Média", f"{media_cantos:.2f}")
-            col2.metric("Mediana", f"{mediana_cantos:.2f}")
-            col3.metric("Times", len(stats_db))
-        
-        else:
-            st.info(f"Gráfico '{viz_tipo}' em desenvolvimento")
     
     # ============================================================
     # TAB 6: REGISTRAR APOSTAS
@@ -1483,7 +1836,7 @@ def main():
                 st.warning("⚠️ Cole o texto do bilhete acima")
     
     # ============================================================
-    # TAB 9: AI ADVISOR
+    # TAB 9: AI ADVISOR ULTRA
     # ============================================================
     
     with tab9:
@@ -1504,36 +1857,33 @@ def main():
 • Win Rate: {wr:.1f}%
 • Banca: {format_currency(banca)}
 
-💡 **COMANDOS DISPONÍVEIS:**
-• `/jogos` - Top jogos hoje
-• `/stats [time]` - Estatísticas detalhadas
-• `/analisa [time1] vs [time2]` - Análise completa
-• `/bilhete` - Analisar bilhete atual
-• `/kelly` - Calcular stake ideal (Kelly)
-• `/perfil` - Ver seu perfil completo
-• `/historico` - Últimas 5 apostas
-• `/hedge` - Explicar estratégias de hedge
-• `/poisson` - Explicar distribuição de Poisson
-• `/value` - Explicar value betting
-• `/ajuda` - Ver todos comandos
+💡 **CHATBOT ULTRA INTELIGENTE**
+Pergunte QUALQUER COISA sobre os dados!
 
-🎯 **Digite um comando ou faça uma pergunta!**"""
+**Exemplos:**
+• "Qual time tem mais cantos na Premier League?"
+• "Top 5 times com mais cartões"
+• "Compare Arsenal e Chelsea"
+• "Times com mais de 6 cantos em casa"
+• "Média de gols do Liverpool"
+
+🎯 **Digite sua pergunta abaixo!**"""
             
             st.session_state.chat_history.append({'role': 'assistant', 'content': welcome})
         
         # Botões rápidos
         col1, col2, col3, col4 = st.columns(4)
         
-        if col1.button("🎯 Jogos Hoje", use_container_width=True):
-            st.session_state.chat_history.append({'role': 'user', 'content': '/jogos'})
+        if col1.button("🎯 Top Cantos", use_container_width=True):
+            st.session_state.chat_history.append({'role': 'user', 'content': 'top 10 cantos'})
             st.rerun()
         
-        if col2.button("💡 Hedge", use_container_width=True):
-            st.session_state.chat_history.append({'role': 'user', 'content': '/hedge'})
+        if col2.button("🟨 Top Cartões", use_container_width=True):
+            st.session_state.chat_history.append({'role': 'user', 'content': 'top 10 cartões'})
             st.rerun()
         
-        if col3.button("💰 Kelly", use_container_width=True):
-            st.session_state.chat_history.append({'role': 'user', 'content': '/kelly'})
+        if col3.button("📅 Hoje", use_container_width=True):
+            st.session_state.chat_history.append({'role': 'user', 'content': 'jogos de hoje'})
             st.rerun()
         
         if col4.button("🗑️ Limpar", use_container_width=True):
@@ -1550,757 +1900,16 @@ def main():
                 st.chat_message("assistant", avatar="🤖").markdown(msg['content'])
         
         # Input
-        user_msg = st.chat_input("Digite sua pergunta ou comando...")
+        user_msg = st.chat_input("Digite sua pergunta...")
         
         if user_msg:
             st.session_state.chat_history.append({'role': 'user', 'content': user_msg})
             
-            # Processar mensagem com IA
-            response = processar_chat(user_msg, stats_db)
+            # Processar com chatbot ULTRA inteligente
+            response = processar_chat_ultra(user_msg, stats_db, cal)
             
-            # Adicionar resposta ao histórico
             st.session_state.chat_history.append({'role': 'assistant', 'content': response})
             st.rerun()
-
-
-# ============================================================
-# FUNÇÕES AUXILIARES EXPANDIDAS
-# ============================================================
-
-def generate_corner_distribution_chart(team_stats: Dict, team_name: str) -> go.Figure:
-    """Gera gráfico de distribuição de cantos de um time"""
-    corners_mean = team_stats.get('corners', 5.5)
-    corners_std = team_stats.get('corners_std', 2.0)
-    
-    x = np.linspace(0, 15, 100)
-    y = (1 / (corners_std * np.sqrt(2 * np.pi))) * np.exp(-0.5 * ((x - corners_mean) / corners_std) ** 2)
-    
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(x=x, y=y, fill='tozeroy', name=team_name, line=dict(color='orange', width=2)))
-    fig.update_layout(
-        title=f'Distribuição de Cantos - {team_name}',
-        xaxis_title='Número de Cantos',
-        yaxis_title='Densidade',
-        height=300
-    )
-    return fig
-
-def generate_comparison_radar(home_stats: Dict, away_stats: Dict, home_name: str, away_name: str) -> go.Figure:
-    """Gera radar chart comparativo entre dois times"""
-    categories = ['Cantos', 'Cartões', 'Gols Marcados', 'Chutes', 'Faltas']
-    
-    home_values = [
-        home_stats.get('corners', 5.5) / 10 * 100,
-        home_stats.get('cards', 2.5) / 5 * 100,
-        home_stats.get('goals_f', 1.5) / 3 * 100,
-        home_stats.get('shots_on_target', 4.5) / 8 * 100,
-        home_stats.get('fouls', 12.0) / 15 * 100
-    ]
-    
-    away_values = [
-        away_stats.get('corners', 5.5) / 10 * 100,
-        away_stats.get('cards', 2.5) / 5 * 100,
-        away_stats.get('goals_f', 1.5) / 3 * 100,
-        away_stats.get('shots_on_target', 4.5) / 8 * 100,
-        away_stats.get('fouls', 12.0) / 15 * 100
-    ]
-    
-    fig = go.Figure()
-    
-    fig.add_trace(go.Scatterpolar(
-        r=home_values,
-        theta=categories,
-        fill='toself',
-        name=home_name,
-        line=dict(color='blue')
-    ))
-    
-    fig.add_trace(go.Scatterpolar(
-        r=away_values,
-        theta=categories,
-        fill='toself',
-        name=away_name,
-        line=dict(color='red')
-    ))
-    
-    fig.update_layout(
-        polar=dict(radialaxis=dict(visible=True, range=[0, 100])),
-        showlegend=True,
-        height=400
-    )
-    
-    return fig
-
-def generate_heatmap_correlations(stats_db: Dict) -> go.Figure:
-    """Gera heatmap de correlações entre métricas"""
-    data_matrix = []
-    
-    for team, stats in stats_db.items():
-        data_matrix.append([
-            stats.get('corners', 5.5),
-            stats.get('cards', 2.5),
-            stats.get('goals_f', 1.5),
-            stats.get('fouls', 12.0),
-            stats.get('shots_on_target', 4.5)
-        ])
-    
-    df = pd.DataFrame(data_matrix, columns=['Cantos', 'Cartões', 'Gols', 'Faltas', 'Chutes'])
-    corr_matrix = df.corr()
-    
-    fig = go.Figure(data=go.Heatmap(
-        z=corr_matrix.values,
-        x=['Cantos', 'Cartões', 'Gols', 'Faltas', 'Chutes'],
-        y=['Cantos', 'Cartões', 'Gols', 'Faltas', 'Chutes'],
-        colorscale='RdBu',
-        zmid=0,
-        text=corr_matrix.values.round(2),
-        texttemplate='%{text}',
-        textfont={"size": 10}
-    ))
-    
-    fig.update_layout(
-        title='Matriz de Correlação entre Métricas',
-        height=500
-    )
-    
-    return fig
-
-def calculate_poisson_probability(expected: float, actual: int) -> float:
-    """Calcula probabilidade de Poisson para um valor específico"""
-    return (expected ** actual) * np.exp(-expected) / math.factorial(actual)
-
-def generate_poisson_distribution(expected: float, max_value: int = 20) -> go.Figure:
-    """Gera gráfico de distribuição de Poisson"""
-    x_values = list(range(max_value))
-    y_values = [calculate_poisson_probability(expected, x) for x in x_values]
-    
-    fig = go.Figure()
-    fig.add_trace(go.Bar(
-        x=x_values,
-        y=y_values,
-        marker_color='lightblue',
-        name='Probabilidade'
-    ))
-    
-    fig.update_layout(
-        title=f'Distribuição de Poisson (λ = {expected:.2f})',
-        xaxis_title='Número de Eventos',
-        yaxis_title='Probabilidade',
-        height=350
-    )
-    
-    return fig
-
-def calculate_implied_probability(odds: List[float]) -> float:
-    """Calcula probabilidade implícita total das odds"""
-    total = sum(1/odd for odd in odds if odd > 0)
-    margin = (total - 1) * 100
-    return margin
-
-def find_arbitrage_opportunities(odds_home: float, odds_draw: float, odds_away: float) -> Dict:
-    """Detecta oportunidades de arbitragem"""
-    implied_total = (1/odds_home) + (1/odds_draw) + (1/odds_away)
-    
-    if implied_total < 1.0:
-        profit_pct = ((1 / implied_total) - 1) * 100
-        
-        stake_home = (1/odds_home) / implied_total * 100
-        stake_draw = (1/odds_draw) / implied_total * 100
-        stake_away = (1/odds_away) / implied_total * 100
-        
-        return {
-            'exists': True,
-            'profit_pct': profit_pct,
-            'stake_home': stake_home,
-            'stake_draw': stake_draw,
-            'stake_away': stake_away
-        }
-    
-    return {'exists': False}
-
-def calculate_ev(probability: float, odds: float, stake: float) -> float:
-    """Calcula Expected Value (valor esperado)"""
-    win_amount = stake * (odds - 1)
-    lose_amount = -stake
-    
-    ev = (probability * win_amount) + ((1 - probability) * lose_amount)
-    return ev
-
-def calculate_variance(returns: List[float]) -> float:
-    """Calcula variância dos retornos"""
-    if len(returns) < 2:
-        return 0.0
-    return np.var(returns)
-
-def calculate_sortino_ratio(returns: List[float], target_return: float = 0.0) -> float:
-    """Calcula Sortino Ratio (considera apenas downside risk)"""
-    if len(returns) < 2:
-        return 0.0
-    
-    mean_return = np.mean(returns)
-    downside_returns = [r for r in returns if r < target_return]
-    
-    if not downside_returns:
-        return 0.0
-    
-    downside_std = np.std(downside_returns)
-    
-    if downside_std == 0:
-        return 0.0
-    
-    return (mean_return - target_return) / downside_std
-
-def calculate_calmar_ratio(returns: List[float], max_drawdown: float) -> float:
-    """Calcula Calmar Ratio (retorno / max drawdown)"""
-    if max_drawdown == 0:
-        return 0.0
-    
-    mean_return = np.mean(returns) if returns else 0.0
-    return mean_return / (max_drawdown / 100)
-
-def format_percentage(value: float, decimals: int = 1) -> str:
-    """Formata percentual"""
-    return f"{value:.{decimals}f}%"
-
-def format_multiplier(value: float, decimals: int = 2) -> str:
-    """Formata multiplicador"""
-    return f"{value:.{decimals}f}x"
-
-def get_league_emoji(league_name: str) -> str:
-    """Retorna emoji da liga"""
-    emojis = {
-        'Premier League': '🏴󐁧󐁢󐁥󐁮󐁧󐁿',
-        'La Liga': '🇪🇸',
-        'Serie A': '🇮🇹',
-        'Bundesliga': '🇩🇪',
-        'Ligue 1': '🇫🇷',
-        'Championship': '🏴󐁧󐁢󐁥󐁮󐁧󐁿',
-        'Bundesliga 2': '🇩🇪',
-        'Pro League': '🇧🇪',
-        'Super Lig': '🇹🇷',
-        'Premiership': '🏴󐁧󐁢󐁳󐁣󐁴󐁿'
-    }
-    return emojis.get(league_name, '⚽')
-
-def calculate_bet_size_fixed_percentage(bankroll: float, percentage: float) -> float:
-    """Calcula stake usando percentual fixo da banca"""
-    return bankroll * (percentage / 100)
-
-def calculate_bet_size_kelly_fractional(kelly_fraction: float, fraction: float = 0.25) -> float:
-    """Calcula Kelly fracionário (mais conservador)"""
-    return kelly_fraction * fraction
-
-def calculate_break_even_wr(average_odds: float) -> float:
-    """Calcula Win Rate necessário para break-even"""
-    if average_odds <= 1.0:
-        return 100.0
-    return (1 / average_odds) * 100
-
-def estimate_confidence_interval(win_rate: float, sample_size: int, confidence: float = 0.95) -> Tuple[float, float]:
-    """Calcula intervalo de confiança para win rate"""
-    if sample_size == 0:
-        return (0.0, 0.0)
-    
-    p = win_rate / 100
-    z = 1.96 if confidence == 0.95 else 2.576  # 95% ou 99%
-    
-    se = np.sqrt((p * (1 - p)) / sample_size)
-    margin = z * se
-    
-    lower = max(0, (p - margin) * 100)
-    upper = min(100, (p + margin) * 100)
-    
-    return (lower, upper)
-
-def generate_bankroll_projection(initial: float, roi_per_bet: float, n_bets: int) -> List[float]:
-    """Projeta evolução da banca"""
-    bankroll = [initial]
-    
-    for _ in range(n_bets):
-        next_value = bankroll[-1] * (1 + roi_per_bet / 100)
-        bankroll.append(next_value)
-    
-    return bankroll
-
-def calculate_required_roi(initial: float, target: float, n_bets: int) -> float:
-    """Calcula ROI necessário por aposta para atingir meta"""
-    if n_bets == 0 or initial == 0:
-        return 0.0
-    
-    multiplier = target / initial
-    roi_per_bet = (multiplier ** (1 / n_bets) - 1) * 100
-    
-    return roi_per_bet
-
-def calculate_risk_of_ruin(win_rate: float, avg_odds: float, bankroll_units: int = 100) -> float:
-    """Calcula probabilidade de ruína"""
-    if win_rate >= 100 or win_rate <= 0:
-        return 0.0
-    
-    p = win_rate / 100
-    q = 1 - p
-    
-    if avg_odds <= 1.0:
-        return 100.0
-    
-    b = avg_odds - 1
-    
-    # Fórmula simplificada de Risk of Ruin
-    if p * b > q:
-        ror = ((q / (p * b)) ** bankroll_units) * 100
-    else:
-        ror = 100.0
-    
-    return min(100.0, ror)
-
-def generate_monte_carlo_bankroll_simulation(initial: float, bets_per_day: int, days: int, 
-                                             avg_stake_pct: float, win_rate: float, 
-                                             avg_odds: float, n_simulations: int = 1000) -> Dict:
-    """Simulação Monte Carlo de evolução da banca"""
-    final_bankrolls = []
-    
-    for _ in range(n_simulations):
-        bankroll = initial
-        
-        for _ in range(days * bets_per_day):
-            stake = bankroll * (avg_stake_pct / 100)
-            
-            # Simular resultado
-            if np.random.random() < (win_rate / 100):
-                bankroll += stake * (avg_odds - 1)
-            else:
-                bankroll -= stake
-            
-            if bankroll <= 0:
-                bankroll = 0
-                break
-        
-        final_bankrolls.append(bankroll)
-    
-    final_bankrolls = np.array(final_bankrolls)
-    
-    return {
-        'mean': np.mean(final_bankrolls),
-        'median': np.median(final_bankrolls),
-        'std': np.std(final_bankrolls),
-        'min': np.min(final_bankrolls),
-        'max': np.max(final_bankrolls),
-        'p25': np.percentile(final_bankrolls, 25),
-        'p75': np.percentile(final_bankrolls, 75),
-        'prob_profit': (final_bankrolls > initial).mean() * 100,
-        'prob_ruin': (final_bankrolls == 0).mean() * 100
-    }
-
-def analyze_betting_streak(results: List[bool]) -> Dict:
-    """Analisa sequências de vitórias/derrotas"""
-    if not results:
-        return {'max_win_streak': 0, 'max_lose_streak': 0, 'current_streak': 0}
-    
-    max_win = 0
-    max_lose = 0
-    current = 0
-    current_type = None
-    
-    for result in results:
-        if result:  # Vitória
-            if current_type == 'win':
-                current += 1
-            else:
-                current = 1
-                current_type = 'win'
-            max_win = max(max_win, current)
-        else:  # Derrota
-            if current_type == 'lose':
-                current += 1
-            else:
-                current = 1
-                current_type = 'lose'
-            max_lose = max(max_lose, current)
-    
-    return {
-        'max_win_streak': max_win,
-        'max_lose_streak': max_lose,
-        'current_streak': current,
-        'current_type': current_type
-    }
-
-def calculate_edge(true_prob: float, implied_prob: float) -> float:
-    """Calcula edge (vantagem) da aposta"""
-    return true_prob - implied_prob
-
-def should_bet_based_on_kelly(kelly_fraction: float, min_kelly: float = 0.01) -> bool:
-    """Determina se deve apostar baseado em Kelly"""
-    return kelly_fraction >= min_kelly
-
-def calculate_asian_handicap_probability(home_goals: float, away_goals: float, 
-                                        handicap: float) -> float:
-    """Calcula probabilidade de Asian Handicap"""
-    # Simplificado - ajusta gols esperados
-    adjusted_home = home_goals + handicap
-    
-    # Probabilidade de vitória ajustada
-    if adjusted_home > away_goals:
-        return 65.0 + (adjusted_home - away_goals) * 5
-    elif adjusted_home < away_goals:
-        return 35.0 - (away_goals - adjusted_home) * 5
-    else:
-        return 50.0
-
-def format_asian_handicap(handicap: float) -> str:
-    """Formata Asian Handicap"""
-    if handicap > 0:
-        return f"+{handicap:.2f}"
-    return f"{handicap:.2f}"
-
-def calculate_btts_probability(home_goals: float, away_goals: float) -> float:
-    """Calcula probabilidade de Ambos Marcam (BTTS)"""
-    prob_home_scores = 1 - calculate_poisson_probability(home_goals, 0)
-    prob_away_scores = 1 - calculate_poisson_probability(away_goals, 0)
-    
-    return (prob_home_scores * prob_away_scores) * 100
-
-def calculate_clean_sheet_probability(goals_conceded: float) -> float:
-    """Calcula probabilidade de Clean Sheet"""
-    return calculate_poisson_probability(goals_conceded, 0) * 100
-
-def generate_league_comparison_table(stats_db: Dict) -> pd.DataFrame:
-    """Gera tabela comparativa de ligas"""
-    league_stats = defaultdict(lambda: {
-        'cantos': [],
-        'cartoes': [],
-        'gols': [],
-        'times': 0
-    })
-    
-    for team, stats in stats_db.items():
-        league = stats.get('league', 'Desconhecida')
-        league_stats[league]['cantos'].append(stats.get('corners', 5.5))
-        league_stats[league]['cartoes'].append(stats.get('cards', 2.5))
-        league_stats[league]['gols'].append(stats.get('goals_f', 1.5))
-        league_stats[league]['times'] += 1
-    
-    rows = []
-    for league, data in league_stats.items():
-        rows.append({
-            'Liga': league,
-            'Times': data['times'],
-            'Cantos Médios': np.mean(data['cantos']),
-            'Cartões Médios': np.mean(data['cartoes']),
-            'Gols Médios': np.mean(data['gols'])
-        })
-    
-    return pd.DataFrame(rows).sort_values('Cantos Médios', ascending=False)
-
-
-# ============================================================
-# SISTEMA DE ANÁLISE AVANÇADA - MÓDULO COMPLETO
-# ============================================================
-
-class BettingAnalyzer:
-    """Classe para análise avançada de apostas"""
-    
-    def __init__(self, stats_db: Dict, referees: Dict):
-        self.stats_db = stats_db
-        self.referees = referees
-    
-    def analyze_team_form(self, team_name: str, n_games: int = 5) -> Dict:
-        """Analisa forma recente do time"""
-        if team_name not in self.stats_db:
-            return {}
-        
-        stats = self.stats_db[team_name]
-        
-        return {
-            'corners_trend': 'increasing' if stats.get('corners', 5.5) > 5.5 else 'decreasing',
-            'cards_trend': 'increasing' if stats.get('cards', 2.5) > 2.5 else 'decreasing',
-            'offensive': stats.get('goals_f', 1.5) > 1.5,
-            'defensive': stats.get('goals_a', 1.5) < 1.5,
-            'disciplined': stats.get('fouls', 12.0) < 12.5
-        }
-    
-    def compare_head_to_head(self, team1: str, team2: str) -> Dict:
-        """Compara dois times cara a cara"""
-        if team1 not in self.stats_db or team2 not in self.stats_db:
-            return {}
-        
-        stats1 = self.stats_db[team1]
-        stats2 = self.stats_db[team2]
-        
-        return {
-            'corners_advantage': team1 if stats1['corners'] > stats2['corners'] else team2,
-            'cards_advantage': team1 if stats1['cards'] > stats2['cards'] else team2,
-            'offensive_advantage': team1 if stats1['goals_f'] > stats2['goals_f'] else team2,
-            'defensive_advantage': team1 if stats1['goals_a'] < stats2['goals_a'] else team2
-        }
-    
-    def find_best_markets(self, home_team: str, away_team: str, min_prob: float = 70.0) -> List[Dict]:
-        """Encontra melhores mercados para o jogo"""
-        if home_team not in self.stats_db or away_team not in self.stats_db:
-            return []
-        
-        calc = calcular_jogo_v31(self.stats_db[home_team], self.stats_db[away_team], {})
-        
-        markets = []
-        
-        # Analisar cantos
-        if calc['corners']['t'] > 10.5:
-            markets.append({
-                'market': 'Over 10.5 Cantos',
-                'prob': 75.0,
-                'expected': calc['corners']['t'],
-                'type': 'corners'
-            })
-        
-        # Analisar cartões
-        if calc['cards']['t'] > 4.5:
-            markets.append({
-                'market': 'Over 4.5 Cartões',
-                'prob': 72.0,
-                'expected': calc['cards']['t'],
-                'type': 'cards'
-            })
-        
-        return [m for m in markets if m['prob'] >= min_prob]
-    
-    def calculate_confidence_score(self, prediction: Dict) -> float:
-        """Calcula score de confiança da previsão"""
-        base_score = 50.0
-        
-        # Ajustar baseado em diferença entre esperado e linha
-        if 'expected' in prediction and 'line' in prediction:
-            diff = prediction['expected'] - prediction['line']
-            base_score += min(diff * 10, 30)
-        
-        # Ajustar baseado em consistência
-        if 'std' in prediction and prediction['std'] < 2.0:
-            base_score += 10
-        
-        return min(100.0, base_score)
-
-class MarketScanner:
-    """Classe para scanner automatizado de mercados"""
-    
-    def __init__(self, stats_db: Dict, calendar: pd.DataFrame):
-        self.stats_db = stats_db
-        self.calendar = calendar
-    
-    def scan_date(self, date_str: str, filters: Dict) -> List[Dict]:
-        """Escaneia todos os jogos de uma data"""
-        results = []
-        
-        if self.calendar.empty:
-            return results
-        
-        jogos = self.calendar[self.calendar['DtObj'].dt.strftime('%d/%m/%Y') == date_str]
-        
-        for _, jogo in jogos.iterrows():
-            h = normalize_name(jogo['Time_Casa'], list(self.stats_db.keys()))
-            a = normalize_name(jogo['Time_Visitante'], list(self.stats_db.keys()))
-            
-            if h and a and h in self.stats_db and a in self.stats_db:
-                calc = calcular_jogo_v31(self.stats_db[h], self.stats_db[a], {})
-                
-                # Aplicar filtros
-                if filters.get('market_type') in ['corners', 'all']:
-                    if calc['corners']['t'] > filters.get('corners_line', 9.5):
-                        prob = 75 if calc['corners']['t'] > 11.0 else 70
-                        if prob >= filters.get('min_prob', 70):
-                            results.append({
-                                'jogo': f"{h} vs {a}",
-                                'market': f"Over {filters.get('corners_line', 9.5)} Cantos",
-                                'prob': prob,
-                                'expected': calc['corners']['t']
-                            })
-                
-                if filters.get('market_type') in ['cards', 'all']:
-                    if calc['cards']['t'] > filters.get('cards_line', 4.5):
-                        prob = 72 if calc['cards']['t'] > 5.5 else 68
-                        if prob >= filters.get('min_prob', 70):
-                            results.append({
-                                'jogo': f"{h} vs {a}",
-                                'market': f"Over {filters.get('cards_line', 4.5)} Cartões",
-                                'prob': prob,
-                                'expected': calc['cards']['t']
-                            })
-        
-        return results
-    
-    def find_value_bets(self, results: List[Dict], market_odds: Dict) -> List[Dict]:
-        """Identifica value bets"""
-        value_bets = []
-        
-        for result in results:
-            market_key = result['market']
-            if market_key in market_odds:
-                odd_casa = market_odds[market_key]
-                prob_real = result['prob'] / 100
-                
-                value = prob_real * odd_casa
-                
-                if value > 1.0:
-                    value_bets.append({
-                        **result,
-                        'odd_casa': odd_casa,
-                        'value_score': value,
-                        'ev': calculate_ev(prob_real, odd_casa, 100)
-                    })
-        
-        return sorted(value_bets, key=lambda x: x['value_score'], reverse=True)
-
-class PortfolioManager:
-    """Gerenciador de portfólio de apostas"""
-    
-    def __init__(self, initial_bankroll: float):
-        self.bankroll = initial_bankroll
-        self.bets = []
-        self.history = [initial_bankroll]
-    
-    def add_bet(self, stake: float, odds: float, prob: float, description: str):
-        """Adiciona aposta ao portfólio"""
-        self.bets.append({
-            'stake': stake,
-            'odds': odds,
-            'prob': prob,
-            'description': description,
-            'status': 'pending'
-        })
-    
-    def settle_bet(self, index: int, won: bool):
-        """Finaliza uma aposta"""
-        if index < len(self.bets):
-            bet = self.bets[index]
-            
-            if won:
-                profit = bet['stake'] * (bet['odds'] - 1)
-                self.bankroll += profit
-                bet['profit'] = profit
-            else:
-                loss = -bet['stake']
-                self.bankroll += loss
-                bet['profit'] = loss
-            
-            bet['status'] = 'won' if won else 'lost'
-            self.history.append(self.bankroll)
-    
-    def get_statistics(self) -> Dict:
-        """Retorna estatísticas do portfólio"""
-        settled = [b for b in self.bets if b['status'] != 'pending']
-        
-        if not settled:
-            return {}
-        
-        total = len(settled)
-        won = sum(1 for b in settled if b['status'] == 'won')
-        
-        return {
-            'total_bets': total,
-            'won_bets': won,
-            'win_rate': (won / total) * 100 if total > 0 else 0,
-            'total_profit': sum(b.get('profit', 0) for b in settled),
-            'current_bankroll': self.bankroll,
-            'roi': ((self.bankroll - self.history[0]) / self.history[0]) * 100
-        }
-    
-    def calculate_risk_metrics(self) -> Dict:
-        """Calcula métricas de risco"""
-        returns = []
-        for i in range(1, len(self.history)):
-            ret = (self.history[i] / self.history[i-1]) - 1
-            returns.append(ret)
-        
-        if not returns:
-            return {}
-        
-        return {
-            'sharpe': calculate_sharpe_ratio([r + 1 for r in returns]),
-            'max_drawdown': calculate_max_drawdown(self.history),
-            'volatility': np.std(returns) * 100 if len(returns) > 1 else 0,
-            'var_95': np.percentile(returns, 5) * 100 if returns else 0
-        }
-
-class PredictionValidator:
-    """Validador de previsões"""
-    
-    def __init__(self):
-        self.predictions = []
-        self.results = []
-    
-    def add_prediction(self, prediction: Dict):
-        """Adiciona previsão"""
-        self.predictions.append(prediction)
-    
-    def add_result(self, result: Dict):
-        """Adiciona resultado real"""
-        self.results.append(result)
-    
-    def calculate_accuracy(self) -> Dict:
-        """Calcula precisão das previsões"""
-        if len(self.predictions) != len(self.results):
-            return {}
-        
-        correct = 0
-        total = len(self.predictions)
-        
-        errors = []
-        
-        for pred, res in zip(self.predictions, self.results):
-            if 'corners' in pred and 'corners' in res:
-                error = abs(pred['corners'] - res['corners'])
-                errors.append(error)
-                
-                if error <= 1.5:
-                    correct += 1
-        
-        return {
-            'accuracy': (correct / total) * 100 if total > 0 else 0,
-            'mean_error': np.mean(errors) if errors else 0,
-            'rmse': np.sqrt(np.mean([e**2 for e in errors])) if errors else 0
-        }
-
-def generate_betting_report(stats: Dict, bet_results: List[Dict]) -> str:
-    """Gera relatório completo de apostas"""
-    total = len(bet_results)
-    
-    if total == 0:
-        return "Sem apostas para gerar relatório"
-    
-    won = sum(1 for b in bet_results if b.get('ganhou', False))
-    wr = (won / total) * 100
-    
-    total_staked = sum(b.get('stake', 0) for b in bet_results)
-    total_profit = sum(b.get('lucro', 0) for b in bet_results)
-    roi = (total_profit / total_staked) * 100 if total_staked > 0 else 0
-    
-    report = f"""
-📊 RELATÓRIO COMPLETO DE APOSTAS
-{'=' * 50}
-
-📈 ESTATÍSTICAS GERAIS:
-• Total de Apostas: {total}
-• Apostas Ganhas: {won}
-• Apostas Perdidas: {total - won}
-• Win Rate: {wr:.1f}%
-• ROI: {roi:+.1f}%
-
-💰 FINANCEIRO:
-• Total Apostado: {format_currency(total_staked)}
-• Lucro/Prejuízo: {format_currency(total_profit)}
-• Stake Médio: {format_currency(total_staked / total)}
-
-🎯 ANÁLISE:
-{'✅ DESEMPENHO EXCELENTE!' if wr >= 65 and roi > 10 else '⚠️ Revisar estratégia'}
-
-{'=' * 50}
-"""
-    
-    return report
-
-def export_data_to_csv(data: List[Dict], filename: str) -> str:
-    """Exporta dados para CSV"""
-    df = pd.DataFrame(data)
-    filepath = f"./{filename}"
-    df.to_csv(filepath, index=False)
-    return filepath
 
 
 if __name__ == "__main__":
