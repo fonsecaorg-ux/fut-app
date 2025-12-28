@@ -1,11 +1,22 @@
 """
-FutPrevisão V31 MAXIMUM + AI Advisor ULTRA
-CÓDIGO COMPLETO - VERSÃO LIMPA E CORRIGIDA (TAB CONSTRUTOR)
-Versão: 31.6 ULTRA FINAL (CORREÇÃO)
-Data: 28/12/2025
+FutPrevisão V32.1 MAXIMUM + AI Advisor ULTRA
+CÓDIGO COMPLETO - VERSÃO FINAL ESTENDIDA (FULL SOURCE)
+Baseado no Relatório Técnico: Causality Engine, Monte Carlo & NLP
 
-Este arquivo foi limpo de caracteres Unicode ocultos e teve a aba Construtor corrigida.
+Combinando:
+- Estrutura robusta do Diego
+- Interface moderna (Glassmorphism) e Dropdowns
+- Lógica matemática do Relatório Técnico
+- Correções de Sintaxe e Lógica
+
+Autor: Diego & Equipe AI
+Versão: 32.1 ULTRA MAXIMUM
+Data: 28/12/2025
 """
+
+# ==============================================================================
+# 1. IMPORTAÇÕES E CONFIGURAÇÕES INICIAIS
+# ==============================================================================
 
 import streamlit as st
 import pandas as pd
@@ -33,26 +44,33 @@ except ImportError:
 # Diretório base do projeto
 BASE_DIR = Path(__file__).resolve().parent
 
-# ==============================================================================
-# CONFIGURAÇÃO DA PÁGINA
-# ==============================================================================
+# Configuração da Página Streamlit
 st.set_page_config(
-    page_title="FutPrevisão V31 ULTRA",
+    page_title="FutPrevisão V32.1 ULTRA",
     layout="wide",
     page_icon="⚽",
     initial_sidebar_state="expanded",
     menu_items={
         'Get Help': 'https://www.futprevisao.com/help',
-        'About': "# FutPrevisão V31 ULTRA\nSistema Profissional de Análise Esportiva."
+        'About': "# FutPrevisão V32.1 ULTRA\nSistema Profissional de Análise Esportiva."
     }
 )
 
 # ==============================================================================
-# ESTILIZAÇÃO CSS (GLASSMORPHISM)
+# 2. ESTILIZAÇÃO CSS PROFISSIONAL (GLASSMORPHISM & GRADIENTES)
 # ==============================================================================
+
 st.markdown('''
 <style>
-    /* ESTILO GERAL */
+    /* ESTILO GERAL ULTRA PROFISSIONAL */
+    
+    /* ANIMAÇÕES */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* TABS DE NAVEGAÇÃO - GRADIENTE MODERNO */
     .stTabs [data-baseweb="tab-list"] {
         gap: 8px;
         background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
@@ -60,6 +78,7 @@ st.markdown('''
         border-radius: 15px 15px 0 0;
         box-shadow: 0 8px 25px rgba(30, 60, 114, 0.3);
     }
+    
     .stTabs [data-baseweb="tab"] {
         background: rgba(255,255,255,0.1);
         border-radius: 8px 8px 0 0;
@@ -68,108 +87,207 @@ st.markdown('''
         color: #e0e0e0;
         border: 1px solid rgba(255,255,255,0.1);
         border-bottom: none;
-        transition: all 0.3s;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        backdrop-filter: blur(5px);
     }
+    
     .stTabs [data-baseweb="tab"]:hover {
         background: rgba(255,255,255,0.25);
+        transform: translateY(-2px);
         color: #ffffff;
     }
+    
     .stTabs [aria-selected="true"] {
         background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%) !important;
         color: #1a1a1a !important;
         border-color: #FFD700;
         font-weight: 800;
         transform: scale(1.02);
+        box-shadow: 0 -4px 15px rgba(255, 215, 0, 0.3);
     }
-    /* CHATBOT */
+    
+    /* CHATBOT AI ADVISOR - ESTILO BUBBLE */
     div[data-testid="stChatMessage"]:has(div[data-testid="chatAvatarIcon-assistant"]) {
-        background: #f8f9fa;
-        border-radius: 0px 15px 15px 15px;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-radius: 0px 18px 18px 18px;
         padding: 20px;
         border-left: 5px solid #1e3c72;
-        margin-bottom: 10px;
+        box-shadow: 2px 4px 12px rgba(0,0,0,0.08);
+        margin-bottom: 12px;
         color: #2c3e50;
+        animation: fadeIn 0.5s ease;
     }
+    
     div[data-testid="stChatMessage"]:has(div[data-testid="chatAvatarIcon-user"]) {
-        background: #e0f2fe;
-        border-radius: 15px 0px 15px 15px;
+        background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+        border-radius: 18px 0px 18px 18px;
         padding: 20px;
         text-align: right;
-        margin-bottom: 10px;
+        margin-bottom: 12px;
         border-right: 5px solid #0284c7;
+        box-shadow: 2px 4px 12px rgba(0,0,0,0.08);
         color: #0f172a;
+        animation: fadeIn 0.5s ease;
     }
-    /* CARDS */
+    
+    /* CARDS E MÉTRICAS - EFEITO GLASS */
     div[data-testid="metric-container"] {
         background: #ffffff;
         padding: 18px;
         border-radius: 12px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.06);
         border-top: 4px solid #1e3c72;
+        transition: all 0.3s;
     }
+    
+    div[data-testid="metric-container"]:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(30, 60, 114, 0.15);
+    }
+    
+    /* BOTÕES MODERNOS */
+    div.stButton > button {
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: none;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    div.stButton > button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+    }
+    
+    /* EXPANDERS */
+    .streamlit-expanderHeader {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        font-weight: 600;
+        color: #1e3c72;
+    }
+    
+    /* HEADER PRINCIPAL */
     h1 {
         background: linear-gradient(90deg, #1e3c72 0%, #2a5298 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         font-weight: 800;
+        letter-spacing: -1px;
+    }
+    
+    /* ALERTS */
+    .stAlert {
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
 </style>
 ''', unsafe_allow_html=True)
 
 # ==============================================================================
-# CONSTANTES E MAPEAMENTOS
+# 3. MAPEAMENTO, CONSTANTES E LISTAS
 # ==============================================================================
+
+# Mapeamento expandido de nomes de times para normalização
 NAME_MAPPING = {
-    'Man United': 'Manchester United', 'Man Utd': 'Manchester United',
-    'Man City': 'Manchester City', 'Spurs': 'Tottenham',
-    'Wolves': 'Wolverhampton', 'Paris SG': 'PSG',
-    'Nottm Forest': 'Nottingham Forest', 'Newcastle': 'Newcastle United',
-    'West Ham': 'West Ham United', 'Inter': 'Inter Milan', 'Milan': 'AC Milan',
+    'Man United': 'Manchester United', 'Man Utd': 'Manchester United', 'Manchester Utd': 'Manchester United',
+    'Man City': 'Manchester City', 
+    'Spurs': 'Tottenham', 'Tottenham Hotspur': 'Tottenham',
+    'Wolves': 'Wolverhampton', 'Wolverhampton Wanderers': 'Wolverhampton',
+    'Paris SG': 'PSG', 'Paris Saint-Germain': 'PSG',
+    'Nottm Forest': 'Nottingham Forest', 'Nottingham': 'Nottingham Forest',
+    'Sheffield Utd': 'Sheffield United',
+    'Newcastle': 'Newcastle United',
+    'Brighton': 'Brighton & Hove Albion',
+    'West Ham': 'West Ham United',
+    'Inter': 'Inter Milan', 'Milan': 'AC Milan',
     'Ath Madrid': 'Atletico Madrid', 'Ath Bilbao': 'Athletic Club',
     'Betis': 'Real Betis', 'Sociedad': 'Real Sociedad',
     'Dortmund': 'Borussia Dortmund', 'Leverkusen': 'Bayer Leverkusen',
-    'Bayern': 'Bayern Munich', 'Marseille': 'Olympique Marseille',
-    'Lyon': 'Olympique Lyon', 'Monaco': 'AS Monaco', 'Lille': 'LOSC Lille'
+    'Bayern': 'Bayern Munich', 'Gladbach': 'Borussia Monchengladbach',
+    'Frankfurt': 'Eintracht Frankfurt',
+    'Marseille': 'Olympique Marseille', 'Lyon': 'Olympique Lyon',
+    'Monaco': 'AS Monaco', 'Lille': 'LOSC Lille',
+    'Leicester': 'Leicester City', 'Leeds': 'Leeds United'
 }
 
+# Lista completa de mercados para o Construtor Manual
 MERCADOS_DISPONIVEIS = [
     "Selecione...",
     # === GOLS ===
     "Over 0.5 Gols", "Over 1.5 Gols", "Over 2.5 Gols", "Over 3.5 Gols",
-    "Under 2.5 Gols", "Under 1.5 Gols",
+    "Under 2.5 Gols", "Under 1.5 Gols", "Under 3.5 Gols",
     
-    # === ESCANTEIOS - INDIVIDUAIS (Casa/Fora) ===
+    # === ESCANTEIOS - INDIVIDUAIS (Casa) ===
     "Over 2.5 Cantos Casa", "Over 3.5 Cantos Casa", "Over 4.5 Cantos Casa", "Over 5.5 Cantos Casa",
+    
+    # === ESCANTEIOS - INDIVIDUAIS (Fora) ===
     "Over 2.5 Cantos Fora", "Over 3.5 Cantos Fora", "Over 4.5 Cantos Fora", "Over 5.5 Cantos Fora",
     
     # === ESCANTEIOS - TOTAIS ===
-    "Over 7.5 Cantos Total", "Over 8.5 Cantos Total", "Over 9.5 Cantos Total",
+    "Over 7.5 Cantos Total", "Over 8.5 Cantos Total", "Over 9.5 Cantos Total", 
+    "Over 10.5 Cantos Total", "Over 11.5 Cantos Total", "Over 12.5 Cantos Total",
     
-    # === CARTÕES - INDIVIDUAIS (Casa/Fora) ===
+    # === CARTÕES - INDIVIDUAIS (Casa) ===
     "Over 1.5 Cartões Casa", "Over 2.5 Cartões Casa",
+    
+    # === CARTÕES - INDIVIDUAIS (Fora) ===
     "Over 1.5 Cartões Fora", "Over 2.5 Cartões Fora",
     
     # === CARTÕES - TOTAIS ===
-    "Over 2.5 Cartões Total", "Over 3.5 Cartões Total", "Over 4.5 Cartões Total",
+    "Over 2.5 Cartões Total", "Over 3.5 Cartões Total", "Over 4.5 Cartões Total", "Over 5.5 Cartões Total",
     
-    # === RESULTADO ===
-    "Ambos Marcam (BTTS)", "Vitória Casa", "Vitória Fora", "Empate"
+    # === RESULTADO E OUTROS ===
+    "Ambos Marcam (BTTS)", "Vitória Casa", "Vitória Fora", "Empate", 
+    "Dupla Chance Casa/Empate", "Dupla Chance Fora/Empate", "Dupla Chance Casa/Fora"
 ]
 
-PRESSURE_HIGH_THRESHOLD = 6.0
-PRESSURE_MED_THRESHOLD = 4.5
-VIOLENCE_HIGH_THRESHOLD = 12.5
+# Parâmetros do Causality Engine V31 (conforme Relatório)
+PRESSURE_HIGH_THRESHOLD = 6.0  # Chutes no alvo para pressão alta
+PRESSURE_MED_THRESHOLD = 4.5   # Chutes no alvo para pressão média
+VIOLENCE_HIGH_THRESHOLD = 12.5 # Faltas para considerar time violento
+REF_STRICT_THRESHOLD = 4.5     # Média de cartões para árbitro rigoroso
 
 # ==============================================================================
-# FUNÇÕES AUXILIARES
+# 4. FUNÇÕES AUXILIARES E UTILITÁRIOS
 # ==============================================================================
+
+class ChatMemory:
+    """Classe para gerenciar a memória de curto prazo do Chatbot"""
+    def __init__(self):
+        self.context = {
+            'ultimo_time': None,
+            'ultimo_jogo': None,
+            'ultima_prob': None,
+            'ultima_odd': None,
+            'historico_analises': []
+        }
+    
+    def update(self, key: str, value: Any):
+        self.context[key] = value
+        if key == 'analise':
+            self.context['historico_analises'].append(value)
+    
+    def get(self, key: str) -> Any:
+        return self.context.get(key)
+    
+    def clear(self):
+        self.context = {
+            'ultimo_time': None,
+            'ultimo_jogo': None,
+            'ultima_prob': None,
+            'ultima_odd': None,
+            'historico_analises': []
+        }
 
 def find_file(filename: str) -> Optional[str]:
+    """Busca robusta de arquivos em múltiplos diretórios"""
     search_paths = [
         Path('/mnt/project') / filename,
         Path('.') / filename,
         Path('./data') / filename,
-        BASE_DIR / filename
+        BASE_DIR / filename,
+        BASE_DIR / 'data' / filename
     ]
     for path in search_paths:
         if path.exists():
@@ -177,15 +295,29 @@ def find_file(filename: str) -> Optional[str]:
     return None
 
 def normalize_name(name: str, known_teams: List[str]) -> Optional[str]:
+    """Normaliza nomes de times usando fuzzy matching e mapeamento"""
     if not name or not known_teams: return None
     name = str(name).strip()
+    
     if name in NAME_MAPPING:
         target = NAME_MAPPING[name]
         if target in known_teams: return target
-        name = target
+        name = target # Se não achou exato, usa o mapeado para o fuzzy
+        
     if name in known_teams: return name
+    
     matches = get_close_matches(name, known_teams, n=1, cutoff=0.6)
     return matches[0] if matches else None
+
+def clean_team_name(text: str) -> str:
+    """Limpa nome de time vindo do chat NLP"""
+    if not text: return ""
+    text = text.lower().strip()
+    text = re.sub(r'[^\w\s]', '', text)
+    stop_words = {'do', 'da', 'de', 'dos', 'das', 'o', 'a', 'os', 'as', 
+                  'como', 'está', 'esta', 'stats', 'estatistica', 'vs', 'x', 
+                  'contra', 'analise', 'analisar', 'previsao', 'jogo', 'hoje'}
+    return ' '.join([w for w in text.split() if w not in stop_words])
 
 def format_currency(value: float) -> str:
     return f"R$ {value:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
@@ -194,7 +326,16 @@ def get_prob_emoji(prob: float) -> str:
     if prob >= 80: return "🔥"
     elif prob >= 70: return "✅"
     elif prob >= 60: return "⚠️"
-    else: return "📉"
+    else: return "🔻"
+
+def get_league_emoji(league: str) -> str:
+    emojis = {
+        'Premier League': '🏴󠁧󠁢󠁥󠁮󠁧󠁿', 'La Liga': '🇪🇸', 'Serie A': '🇮🇹',
+        'Bundesliga': '🇩🇪', 'Ligue 1': '🇫🇷', 'Championship': '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
+        'Bundesliga 2': '🇩🇪', 'Pro League': '🇧🇪', 'Super Lig': '🇹🇷',
+        'Premiership': '🏴󠁧󠁢󠁳󠁣󠁴󠁿'
+    }
+    return emojis.get(league, '⚽')
 
 def validar_odd(odd: float) -> Tuple[bool, str]:
     if odd < 1.01:
@@ -218,12 +359,15 @@ def validar_stake(stake: float, banca: float, max_percent: float = 10.0) -> Tupl
         return True, f"✅ Stake seguro ({percent:.1f}%)"
 
 # ==============================================================================
-# CARREGAMENTO DE DADOS (ETL)
+# 5. CARREGAMENTO E PROCESSAMENTO DE DADOS (ETL)
 # ==============================================================================
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def load_all_data():
-    """Carrega todos os dados com progress bar"""
+    """
+    Carrega dados, processa estatísticas e retorna DBs.
+    Implementa tratamento de erros robusto para cada arquivo CSV.
+    """
     stats_db = {}
     cal = pd.DataFrame()
     referees = {}
@@ -244,28 +388,38 @@ def load_all_data():
     for league_name, filename in league_files.items():
         filepath = find_file(filename)
         if not filepath: continue
+            
         try:
             df = pd.read_csv(filepath, encoding='utf-8')
             cols = {c: c.strip() for c in df.columns}
             df.rename(columns=cols, inplace=True)
+            
             teams = set(df['HomeTeam'].dropna().unique()) | set(df['AwayTeam'].dropna().unique())
             
             for team in teams:
                 if pd.isna(team): continue
+                
                 h_games = df[df['HomeTeam'] == team]
                 a_games = df[df['AwayTeam'] == team]
                 
-                # Médias
+                # --- MÉTRICAS ROBUSTAS COM FALLBACKS ---
+                # Cantos
                 corners_h = h_games['HC'].mean() if 'HC' in h_games else 5.0
                 corners_a = a_games['AC'].mean() if 'AC' in a_games else 4.0
+                
+                # Cartões (Soma Amarelos + Vermelhos*2)
                 ch = (h_games['HY'].mean() + h_games['HR'].mean()*2) if 'HY' in h_games else 1.8
                 ca = (a_games['AY'].mean() + a_games['AR'].mean()*2) if 'AY' in a_games else 2.2
+                
+                # Faltas & Gols & Chutes
                 fouls_h = h_games['HF'].mean() if 'HF' in h_games else 11.5
                 fouls_a = a_games['AF'].mean() if 'AF' in a_games else 12.5
+                
                 goals_fh = h_games['FTHG'].mean() if 'FTHG' in h_games else 1.4
                 goals_fa = a_games['FTAG'].mean() if 'FTAG' in a_games else 1.1
                 goals_ah = h_games['FTAG'].mean() if 'FTAG' in h_games else 1.0
                 goals_aa = a_games['FTHG'].mean() if 'FTHG' in a_games else 1.5
+                
                 shots_h = h_games['HST'].mean() if 'HST' in h_games else 4.8
                 shots_a = a_games['AST'].mean() if 'AST' in a_games else 3.8
                 
@@ -279,7 +433,7 @@ def load_all_data():
                     'shots_on_target': (shots_h + shots_a) / 2, 'shots_home': shots_h, 'shots_away': shots_a,
                     'games_played': len(h_games) + len(a_games)
                 }
-        except: pass
+        except Exception: pass
 
     # Calendário
     cal_path = find_file('calendario_ligas.csv')
@@ -307,7 +461,7 @@ def load_all_data():
     return stats_db, cal, referees
 
 # ==============================================================================
-# MOTOR DE CÁLCULO E SIMULAÇÃO (V31 ENGINE)
+# 6. MOTOR DE CÁLCULO E SIMULAÇÃO (V31 ENGINE)
 # ==============================================================================
 
 def calcular_poisson(media: float, linha: float) -> float:
@@ -370,7 +524,11 @@ def calcular_jogo_v31(home_stats: Dict, away_stats: Dict, ref_data: Dict) -> Dic
     
     return {
         'corners': {'h': corners_h, 'a': corners_a, 't': corners_total},
+        'corners_home': corners_h, # Adicionado para acesso direto
+        'corners_away': corners_a, # Adicionado para acesso direto
         'cards': {'h': cards_h_proj, 'a': cards_a_proj, 't': cards_total},
+        'cards_home': cards_h_proj, # Adicionado
+        'cards_away': cards_a_proj, # Adicionado
         'goals': {'h': xg_h, 'a': xg_a},
         'corners_total': corners_total,
         'cards_total': cards_total,
@@ -394,86 +552,71 @@ def calcular_probabilidade_mercado(mercado: str, calc: Dict) -> float:
     if mercado == "Selecione...":
         return 0.0
     
-    # Mapeamento de mercados
-    mercado_map = {
-        # GOLS
-        "Over 0.5 Gols": ('total_goals', 0.5),
-        "Over 1.5 Gols": ('total_goals', 1.5),
-        "Over 2.5 Gols": ('total_goals', 2.5),
-        "Over 3.5 Gols": ('total_goals', 3.5),
-        
-        # ESCANTEIOS TOTAIS
-        "Over 7.5 Cantos Total": ('corners_total', 7.5),
-        "Over 8.5 Cantos Total": ('corners_total', 8.5),
-        "Over 9.5 Cantos Total": ('corners_total', 9.5),
-        
-        # ESCANTEIOS CASA
-        "Over 2.5 Cantos Casa": ('corners', 'h', 2.5),
-        "Over 3.5 Cantos Casa": ('corners', 'h', 3.5),
-        "Over 4.5 Cantos Casa": ('corners', 'h', 4.5),
-        "Over 5.5 Cantos Casa": ('corners', 'h', 5.5),
-        
-        # ESCANTEIOS FORA
-        "Over 2.5 Cantos Fora": ('corners', 'a', 2.5),
-        "Over 3.5 Cantos Fora": ('corners', 'a', 3.5),
-        "Over 4.5 Cantos Fora": ('corners', 'a', 4.5),
-        "Over 5.5 Cantos Fora": ('corners', 'a', 5.5),
-        
-        # CARTÕES TOTAIS
-        "Over 2.5 Cartões Total": ('cards_total', 2.5),
-        "Over 3.5 Cartões Total": ('cards_total', 3.5),
-        "Over 4.5 Cartões Total": ('cards_total', 4.5),
-        
-        # CARTÕES CASA
-        "Over 1.5 Cartões Casa": ('cards', 'h', 1.5),
-        "Over 2.5 Cartões Casa": ('cards', 'h', 2.5),
-        
-        # CARTÕES FORA
-        "Over 1.5 Cartões Fora": ('cards', 'a', 1.5),
-        "Over 2.5 Cartões Fora": ('cards', 'a', 2.5),
-    }
+    # Mapeamento de mercados para chaves do dicionário 'calc'
+    # calc[key] ou calc[key][subkey]
     
-    if mercado in mercado_map:
-        val = mercado_map[mercado]
-        if len(val) == 2: # Chave direta (ex: total_goals)
-            return calcular_poisson(calc[val[0]], val[1])
-        elif len(val) == 3: # Chave aninhada (ex: corners -> h)
-            # Acessa calc['corners']['h']
-            media = calc[val[0]][val[1]]
-            return calcular_poisson(media, val[2])
+    if "Over" in mercado:
+        linha = float(re.findall(r'\d+\.5', mercado)[0])
+        
+        if "Cantos Casa" in mercado:
+            return calcular_poisson(calc['corners_home'], linha)
+        elif "Cantos Fora" in mercado:
+            return calcular_poisson(calc['corners_away'], linha)
+        elif "Cantos Total" in mercado:
+            return calcular_poisson(calc['corners_total'], linha)
+            
+        elif "Cartões Casa" in mercado:
+            return calcular_poisson(calc['cards_home'], linha)
+        elif "Cartões Fora" in mercado:
+            return calcular_poisson(calc['cards_away'], linha)
+        elif "Cartões Total" in mercado:
+            return calcular_poisson(calc['cards_total'], linha)
+            
+        elif "Gols" in mercado:
+            return calcular_poisson(calc['total_goals'], linha)
     
     # Casos especiais
     if "Under 2.5 Gols" in mercado:
         return 100 - calcular_poisson(calc['total_goals'], 2.5)
     elif "Under 1.5 Gols" in mercado:
         return 100 - calcular_poisson(calc['total_goals'], 1.5)
+    elif "Under 3.5 Gols" in mercado:
+        return 100 - calcular_poisson(calc['total_goals'], 3.5)
     elif "Ambos Marcam" in mercado:
         return min((calc['xg_home'] * calc['xg_away'] * 40), 92)
     elif "Vitória Casa" in mercado:
-        if calc['xg_home'] > calc['xg_away'] * 1.5:
-            return 65
-        elif calc['xg_home'] > calc['xg_away']:
-            return 55
-        else:
-            return 35
+        if calc['xg_home'] > calc['xg_away'] * 1.5: return 65
+        elif calc['xg_home'] > calc['xg_away']: return 55
+        else: return 35
     elif "Vitória Fora" in mercado:
-        if calc['xg_away'] > calc['xg_home'] * 1.3:
-            return 45
-        elif calc['xg_away'] > calc['xg_home']:
-            return 40
-        else:
-            return 25
+        if calc['xg_away'] > calc['xg_home'] * 1.3: return 45
+        elif calc['xg_away'] > calc['xg_home']: return 40
+        else: return 25
+    elif "Empate" in mercado:
+        return 28.0 # Valor base estatístico
+    elif "Dupla Chance" in mercado:
+        return 75.0 # Valor base
     
     return 0.0
+
+def calcular_kelly(prob: float, odd: float, fracao: float = 0.25) -> float:
+    """Kelly Criterion fracionado conservador"""
+    if prob <= 0 or prob >= 100 or odd <= 1:
+        return 0.0
+    p = prob / 100
+    q = 1 - p
+    b = odd - 1
+    kelly_full = (b * p - q) / b
+    return max(0, kelly_full * fracao)
 
 # ==============================================================================
 # 7. CHATBOT AI ADVISOR ULTRA (NLP AVANÇADO)
 # ==============================================================================
 
-def extrair_entidades(mensagem: str, stats_db: Dict) -> Dict:
+def extrair_entidades(mensagem: str, stats_db: Dict, memoria: ChatMemory) -> Dict:
     """Motor de NLP: Extrai times, mercados e linhas da mensagem"""
     msg_lower = mensagem.lower()
-    entidades = {'times': [], 'mercado': None, 'linha': None}
+    entidades = {'times': [], 'mercado': None, 'linha': None, 'intencao': None}
     
     # Extração de Times (Prioriza compostos)
     known = list(stats_db.keys())
@@ -482,18 +625,30 @@ def extrair_entidades(mensagem: str, stats_db: Dict) -> Dict:
     
     for team in sorted_teams:
         if team.lower() in msg_clean:
-            # Verifica se não é substring de outro
             is_sub = False
             for ft in entidades['times']:
                 if team.lower() in ft.lower(): is_sub = True; break
             if not is_sub:
                 entidades['times'].append(team)
                 msg_clean = msg_clean.replace(team.lower(), "")
+                
+    # Memória
+    if not entidades['times']:
+        ult_time = memoria.get('ultimo_time')
+        if ult_time and ('dele' in msg_lower or 'desse' in msg_lower):
+            entidades['times'].append(ult_time)
+            
+    if entidades['times']:
+        memoria.update('ultimo_time', entidades['times'][0])
     
     # Mercado
     if any(x in msg_lower for x in ['canto', 'escanteio']): entidades['mercado'] = 'cantos'
     elif any(x in msg_lower for x in ['cartao', 'cartão']): entidades['mercado'] = 'cartoes'
     elif any(x in msg_lower for x in ['gol', 'gols', 'over']): entidades['mercado'] = 'gols'
+    
+    # Intenção
+    if any(x in msg_lower for x in ['ranking', 'top', 'melhor']): entidades['intencao'] = 'ranking'
+    elif any(x in msg_lower for x in ['hoje', 'jogos', 'calendario']): entidades['intencao'] = 'calendario'
     
     # Linha
     nums = re.findall(r'\d+\.?\d*', mensagem)
@@ -503,11 +658,11 @@ def extrair_entidades(mensagem: str, stats_db: Dict) -> Dict:
             
     return entidades
 
-def processar_chat_ultra(mensagem: str, stats_db: Dict, cal: pd.DataFrame, refs: Dict) -> str:
+def processar_chat_ultra(mensagem: str, stats_db: Dict, cal: pd.DataFrame, refs: Dict, memoria: ChatMemory) -> str:
     """CÉREBRO DO AI ADVISOR"""
     if not mensagem: return "Olá! Sou o AI Advisor ULTRA. Como posso ajudar?"
     
-    entidades = extrair_entidades(mensagem, stats_db)
+    entidades = extrair_entidades(mensagem, stats_db, memoria)
     times = entidades['times']
     msg_lower = mensagem.lower()
     
@@ -566,7 +721,7 @@ def processar_chat_ultra(mensagem: str, stats_db: Dict, cal: pd.DataFrame, refs:
         return resp
 
     # 3. SCANNER / MELHORES JOGOS
-    elif any(x in msg_lower for x in ['melhor', 'hoje', 'jogos']):
+    elif any(x in msg_lower for x in ['melhor', 'hoje', 'jogos', 'calendario']):
         hoje = datetime.now().strftime('%d/%m/%Y')
         jogos = cal[cal['Data'] == hoje] if not cal.empty else pd.DataFrame()
         if jogos.empty: return f"📅 Sem jogos hoje ({hoje})."
@@ -586,7 +741,7 @@ def processar_chat_ultra(mensagem: str, stats_db: Dict, cal: pd.DataFrame, refs:
         return resp
 
     else:
-        return "🤖 **AI Advisor:** Pergunte sobre jogos ('Arsenal vs Chelsea'), times ('Real Madrid') ou 'Jogos de hoje'."
+        return "🤖 **AI Advisor:** Pergunte sobre confrontos ('Arsenal vs Chelsea'), times ('Real Madrid') ou 'Jogos de hoje'."
 
 # ==============================================================================
 # 8. MÉTODOS FINANCEIROS E GRÁFICOS
@@ -643,6 +798,7 @@ def main():
     if 'bet_results' not in st.session_state: st.session_state.bet_results = []
     if 'bankroll_history' not in st.session_state: st.session_state.bankroll_history = [1000.0]
     if 'chat_history' not in st.session_state: st.session_state.chat_history = []
+    if 'chat_memory' not in st.session_state: st.session_state.chat_memory = ChatMemory()
     
     # 3. SIDEBAR (DASHBOARD)
     with st.sidebar:
@@ -670,7 +826,7 @@ def main():
     col1, col2, col3 = st.columns([1, 5, 2])
     with col1: st.markdown("# ⚽")
     with col2:
-        st.title("FutPrevisão V31 ULTRA")
+        st.title("FutPrevisão V32.1 ULTRA")
         st.markdown("**Professional Sports Analytics System** | _Powered by Causality Engine V31_")
     with col3:
         if not CAL.empty:
@@ -697,9 +853,9 @@ def main():
         with c_col1:
             st.markdown("#### 📅 Seleção Automática")
             if not CAL.empty:
-                dates = sorted(CAL['DtObj'].dt.strftime('%d/%m/%Y').unique())
-                if dates:
-                    data_sel = st.selectbox("📆 Data:", dates)
+                datas = sorted(CAL['DtObj'].dt.strftime('%d/%m/%Y').unique())
+                if datas:
+                    data_sel = st.selectbox("📆 Data:", datas)
                     jogos_dia = CAL[CAL['DtObj'].dt.strftime('%d/%m/%Y') == data_sel]
                     
                     if jogos_dia.empty: st.info("Sem jogos.")
@@ -746,7 +902,8 @@ def main():
                     calc_m = calcular_jogo_v31(STATS[tc], STATS[tv], {})
                     prob_est = calcular_probabilidade_mercado(m_mercado, calc_m)
                     
-                    st.caption(f"🎲 Probabilidade Calculada V31: **{prob_est:.1f}%**")
+                    if prob_est > 0:
+                        st.caption(f"🎲 Probabilidade Calculada V31: **{prob_est:.1f}%**")
                 
                 if st.button("➕ Adicionar Manual", use_container_width=True):
                     if tc != "Selecione..." and tv != "Selecione..." and m_mercado != "Selecione...":
@@ -784,7 +941,7 @@ def main():
             c3.metric("Fair Odd", f"{fair_odd:.2f}")
             c4.metric("EV (Valor)", f"{ev:+.1f}%", delta_color="normal" if ev>0 else "inverse")
             
-            # Botão de Remover (Corrigido)
+            # Botão de Remover
             st.markdown("##### ⚙️ Editar Bilhete")
             idx_remove = st.selectbox(
                 "Remover aposta:",
@@ -983,8 +1140,8 @@ def main():
                 for _, r in CAL[CAL['DtObj'].dt.strftime('%d/%m/%Y')==d_scan].iterrows():
                     h, a = normalize_name(r['Time_Casa'], list(STATS.keys())), normalize_name(r['Time_Visitante'], list(STATS.keys()))
                     if h and a:
-                        c = calcular_jogo_v31(STATS[h], STATS[a], {})
-                        pc = calcular_poisson(c['corners_total'], 9.5)
+                        calc = calcular_jogo_v31(STATS[h], STATS[a], {})
+                        pc = calcular_poisson(calc['corners_total'], 9.5)
                         if pc >= mp: hits.append({'Jogo': f"{h} x {a}", 'M': 'O9.5 C', 'Prob': f"{pc:.1f}%"})
                 if hits: st.dataframe(pd.DataFrame(hits))
                 else: st.warning("Nada encontrado")
@@ -1014,6 +1171,8 @@ def main():
         st.header("🤖 AI Advisor ULTRA")
         st.caption("Powered by Causality Engine V31")
         
+        memoria = st.session_state.chat_memory
+        
         chat_c = st.container()
         with chat_c:
             if not st.session_state.chat_history:
@@ -1028,7 +1187,7 @@ def main():
         if prompt:
             st.session_state.chat_history.append({'role': 'user', 'content': prompt})
             with st.spinner("🧠 Analisando dados..."):
-                resp = processar_chat_ultra(prompt, STATS, CAL, REFS)
+                resp = processar_chat_ultra(prompt, STATS, CAL, REFS, memoria)
             st.session_state.chat_history.append({'role': 'assistant', 'content': resp})
             st.rerun()
 
