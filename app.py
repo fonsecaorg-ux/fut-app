@@ -491,9 +491,13 @@ def calcular_jogo_v31(home_stats: Dict, away_stats: Dict, ref_data: Dict) -> Dic
         'corners': {'h':0, 'a':0, 't':0}, 
         'cards': {'h':0, 'a':0, 't':0}, 
         'goals': {'h':0, 'a':0}, 
-        'corners_total': 0, 
+        'corners_total': 0,
+        'corners_home': 0,  # ← NOVO
+        'corners_away': 0,  # ← NOVO
         'total_goals': 0, 
         'cards_total': 0,
+        'cards_home': 0,  # ← NOVO
+        'cards_away': 0,  # ← NOVO
         'xg_home': 0,
         'xg_away': 0,
         'metadata': {}
@@ -550,7 +554,11 @@ def calcular_jogo_v31(home_stats: Dict, away_stats: Dict, ref_data: Dict) -> Dic
         'cards': {'h': cards_h_proj, 'a': cards_a_proj, 't': cards_total},
         'goals': {'h': xg_h, 'a': xg_a},
         'corners_total': corners_total,
+        'corners_home': corners_h,  # ← NOVO
+        'corners_away': corners_a,  # ← NOVO
         'cards_total': cards_total,
+        'cards_home': cards_h_proj,  # ← NOVO
+        'cards_away': cards_a_proj,  # ← NOVO
         'total_goals': total_goals,
         'xg_home': xg_h,
         'xg_away': xg_a,
