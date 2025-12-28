@@ -678,6 +678,8 @@ def extrair_entidades(msg: str, stats: Dict, memoria: ChatMemory) -> Dict:
         entidades['intencao'] = 'explicacao'
     elif any(x in msg_lower for x in ['tendencia', 'forma', 'ultimos']):
         entidades['intencao'] = 'tendencia'
+    elif any(x in msg_lower for x in ['jogos', 'hoje', 'partidas', 'calendario', 'amanha', 'proximos']):
+        entidades['intencao'] = 'calendario'
     
     # Mercados
     if any(x in msg_lower for x in ['canto', 'escanteio', 'corner']):
@@ -829,6 +831,76 @@ Melhor Produção de Cantos: **{t1 if s1['corners'] > s2['corners'] else t2}** �
             return resp
         else:
             return "ℹ️ Especifique a liga!\n\nEx: 'Top 5 ataques da Premier League'"
+    
+    # ===== CALENDARIO =====
+    if intencao == 'calendario':
+        from datetime import datetime, timedelta
+        
+        hoje = datetime.now()
+        
+        # Detectar período
+        if 'hoje' in msg_lower:
+            data_busca = hoje.strftime('%d/%m/%Y')
+            periodo = "HOJE"
+        elif 'amanha' in msg_lower or 'amanhã' in msg_lower:
+            data_busca = (hoje + timedelta(days=1)).strftime('%d/%m/%Y')
+            periodo = "AMANHÃ"
+        elif 'proximos' in msg_lower or 'próximos' in msg_lower:
+            # Próximos 7 dias
+            resp = f"""📅 **PRÓXIMOS 7 DIAS**\n\n"""
+            
+            if not cal.empty and 'Data' in cal.columns:
+                jogos_encontrados = 0
+                for i in range(7):
+                    data = (hoje + timedelta(days=i)).strftime('%d/%m/%Y')
+                    jogos_dia = cal[cal['Data'] == data]
+                    
+                    if not jogos_dia.empty:
+                        resp += f"**{data}** ({len(jogos_dia)} jogos)\n"
+                        jogos_encontrados += len(jogos_dia)
+                
+                if jogos_encontrados > 0:
+                    resp += f"\n💡 Total: {jogos_encontrados} jogos\n"
+                    resp += "\n📌 Digite uma data para ver detalhes!\nEx: 'jogos de hoje'"
+                    return resp
+            
+            return "❌ Calendário não disponível!"
+        else:
+            # Default: hoje
+            data_busca = hoje.strftime('%d/%m/%Y')
+            periodo = "HOJE"
+        
+        # Buscar jogos
+        if not cal.empty and 'Data' in cal.columns:
+            jogos = cal[cal['Data'] == data_busca]
+            
+            if not jogos.empty:
+                resp = f"""📅 **JOGOS DE {periodo}** ({data_busca})\n\n"""
+                
+                # Agrupar por liga
+                ligas = jogos['Liga'].unique() if 'Liga' in jogos.columns else []
+                
+                for liga in ligas:
+                    jogos_liga = jogos[jogos['Liga'] == liga]
+                    resp += f"**{liga}** ({len(jogos_liga)} jogos)\n"
+                    
+                    for idx, jogo in jogos_liga.iterrows():
+                        casa = jogo.get('Time_Casa', jogo.get('Mandante', '?'))
+                        fora = jogo.get('Time_Visitante', jogo.get('Visitante', '?'))
+                        hora = jogo.get('Hora', '--:--')
+                        
+                        resp += f"  🕐 {hora} | {casa} vs {fora}\n"
+                    
+                    resp += "\n"
+                
+                resp += f"💡 **Total: {len(jogos)} partidas**\n\n"
+                resp += "📊 Para analisar, digite:\n'Analise [time] vs [time]'"
+                
+                return resp
+            else:
+                return f"ℹ️ Nenhum jogo encontrado para {data_busca}\n\nTente: 'próximos jogos' ou 'calendário da semana'"
+        else:
+            return "❌ Calendário não disponível!\n\nVerifique se o arquivo calendario_ligas.csv está carregado."
     
     # ===== ANALISE CONFRONTO =====
     if len(times) >= 2:
