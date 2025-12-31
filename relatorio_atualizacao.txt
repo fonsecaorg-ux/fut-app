@@ -1,0 +1,35 @@
+
+╔═══════════════════════════════════════════════════╗
+║           RELATÓRIO DE ATUALIZAÇÃO                ║
+║           30/12/2025 20:48:21                        ║
+╚═══════════════════════════════════════════════════╝
+
+📊 RESULTADO:
+   ✅ Atualizadas: 10/10
+   ❌ Erros: 0/10
+   💾 Backup: backup_20251230_204804
+
+📅 Data: 30/12/2025
+⏰ Hora: 20:48:21
+
+───────────────────────────────────────────────────────
+
+DETALHES POR LIGA:
+
+✅ Premier_League_25_26.csv                      180 jogos (último: 15/08/2025)
+✅ La_Liga_25_26.csv                             171 jogos (último: 15/08/2025)
+✅ Serie_A_25_26.csv                             166 jogos (último: 23/08/2025)
+✅ Bundesliga_25_26.csv                          135 jogos (último: 22/08/2025)
+✅ Ligue_1_25_26.csv                             144 jogos (último: 15/08/2025)
+✅ Championship_Inglaterra_25_26.csv             286 jogos (último: 08/08/2025)
+✅ Bundesliga_2.csv                              153 jogos (último: 01/08/2025)
+✅ Pro_League_Belgica_25_26.csv                  160 jogos (último: 25/07/2025)
+✅ Super_Lig_Turquia_25_26.csv                   153 jogos (último: 08/08/2025)
+✅ Premiership_Escocia_25_26.csv                 111 jogos (último: 02/08/2025)
+
+───────────────────────────────────────────────────────
+
+💡 PRÓXIMOS PASSOS:
+   1. Verificar CSVs atualizados (opcional)
+   2. Execute: streamlit run futprevisao_v32_1_MAXIMUM.py
+   3. Sistema pronto com dados frescos! 🚀
