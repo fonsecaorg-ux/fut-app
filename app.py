@@ -1,9 +1,9 @@
 """
-🎯 FutPrevisão V32 COMPLETO
-Sistema Integrado de Análise de Apostas Esportivas com Blacklist Científica
+🎯 FutPrevisão V32 COMPLETO + AI ADVISOR
+Sistema Integrado de Análise de Apostas Esportivas com Blacklist Científica + IA
 
 Autor: Diego
-Versão: 32.0 COMPLETE
+Versão: 32.0 COMPLETE + AI
 Data: 30/12/2025
 
 NOVIDADES V32:
@@ -11,6 +11,7 @@ NOVIDADES V32:
 - Análise automática de próximos jogos
 - Sistema de alertas visuais
 - Validação inteligente de apostas
+- AI Advisor integrado
 - Dashboard completo
 """
 
@@ -26,7 +27,7 @@ import os
 # ============================================================
 
 st.set_page_config(
-    page_title="FutPrevisão V32 COMPLETE",
+    page_title="FutPrevisão V32 + AI",
     layout="wide",
     page_icon="⚽",
     initial_sidebar_state="expanded"
@@ -209,7 +210,7 @@ def get_game_warnings(home_team, away_team):
 # FUNÇÕES DE CARREGAMENTO DE DADOS
 # ============================================================
 
-@st.cache_data
+@st.cache_data(ttl=3600)
 def load_league_data(liga):
     """Carrega dados de uma liga específica."""
     
@@ -230,12 +231,8 @@ def load_league_data(liga):
     if liga not in files_map:
         return None
     
-    # Tentar carregar do project
+    # CORRIGIDO: Usar sempre /mnt/project/
     file_path = f'/mnt/project/{files_map[liga]}'
-    
-    if not os.path.exists(file_path):
-        # Tentar uploads
-        file_path = f'/mnt/user-data/uploads/{files_map[liga]}'
     
     if not os.path.exists(file_path):
         return None
@@ -247,10 +244,11 @@ def load_league_data(liga):
         try:
             df = pd.read_csv(file_path, encoding='latin-1')
             return df
-        except:
+        except Exception as e:
+            st.error(f"Erro ao carregar {liga}: {str(e)}")
             return None
 
-@st.cache_data
+@st.cache_data(ttl=3600)
 def load_all_teams_stats():
     """Carrega estatísticas de todos os times de todas as ligas."""
     
@@ -321,7 +319,7 @@ def load_all_teams_stats():
     
     return all_stats
 
-@st.cache_data
+@st.cache_data(ttl=3600)
 def load_calendario():
     """Carrega calendário de jogos."""
     file_path = '/mnt/project/calendario_ligas.csv'
@@ -368,6 +366,103 @@ def calcular_probabilidade_cards(home_cards, away_cards, linha):
     return min(prob_over * 100, 99.9)
 
 # ============================================================
+# AI ADVISOR
+# ============================================================
+
+def gerar_analise_ai(home_team, away_team, home_stats, away_stats, warnings):
+    """Gera análise com IA baseada nos dados."""
+    
+    analise = f"🤖 **AI ADVISOR - Análise de {home_team} vs {away_team}**\n\n"
+    
+    # Análise de risco
+    if warnings['severity'] == 'CRITICAL':
+        analise += "⛔ **ALERTA MÁXIMO**: Este jogo apresenta risco CRÍTICO!\n\n"
+        analise += f"- {warnings['total_alerts']} alertas de blacklist identificados\n"
+        analise += "- **RECOMENDAÇÃO**: NÃO apostar neste jogo\n"
+        analise += "- Probabilidade de lucro: <30%\n\n"
+        
+    elif warnings['severity'] == 'HIGH':
+        analise += "⚠️ **ALTO RISCO**: Jogo com múltiplos alertas\n\n"
+        analise += f"- {warnings['total_alerts']} alertas identificados\n"
+        analise += "- **RECOMENDAÇÃO**: Apostar apenas em totais baixos (Under)\n"
+        analise += "- Evitar apostas individuais nos times blacklist\n\n"
+        
+    elif warnings['severity'] == 'MEDIUM':
+        analise += "ℹ️ **ATENÇÃO**: Jogo com risco moderado\n\n"
+        analise += "- Um time apresenta estatísticas abaixo da média\n"
+        analise += "- **RECOMENDAÇÃO**: Evitar apostas no time blacklist\n"
+        analise += "- Focar no time com estatísticas normais\n\n"
+        
+    else:
+        analise += "✅ **JOGO SEGURO**: Nenhum alerta de blacklist\n\n"
+        analise += "- Ambos os times têm estatísticas dentro do esperado\n"
+        analise += "- **RECOMENDAÇÃO**: Jogo adequado para apostas\n\n"
+    
+    # Análise de escanteios
+    analise += "**📊 Análise de Escanteios:**\n"
+    
+    total_corners = home_stats.get('corners_home', 0) + away_stats.get('corners_away', 0)
+    
+    if warnings['skip_corners']:
+        analise += f"- Total esperado: {total_corners:.1f} escanteios\n"
+        analise += "- ❌ **NÃO RECOMENDADO**: Time(s) na blacklist\n"
+        analise += "- Alternativa: Under ou apostas defensivas\n\n"
+    else:
+        analise += f"- Total esperado: {total_corners:.1f} escanteios\n"
+        
+        if total_corners >= 10.5:
+            analise += "- ✅ EXCELENTE para Over 9.5 ou Over 10.5\n"
+        elif total_corners >= 9.5:
+            analise += "- ✅ BOM para Over 8.5 ou Over 9.5\n"
+        else:
+            analise += "- ⚠️ Total moderado - preferir linhas baixas\n"
+        
+        analise += "\n"
+    
+    # Análise de cartões
+    analise += "**🟨 Análise de Cartões:**\n"
+    
+    total_cards = home_stats.get('cards', 0) + away_stats.get('cards', 0)
+    
+    if warnings['skip_cards']:
+        analise += f"- Total esperado: {total_cards:.1f} cartões\n"
+        analise += "- ❌ **NÃO RECOMENDADO**: Times muito disciplinados\n"
+        analise += "- Probabilidade baixa de Over\n\n"
+    else:
+        analise += f"- Total esperado: {total_cards:.1f} cartões\n"
+        
+        if total_cards >= 5.0:
+            analise += "- ✅ EXCELENTE para Over 4.5\n"
+        elif total_cards >= 4.0:
+            analise += "- ✅ BOM para Over 3.5\n"
+        else:
+            analise += "- ⚠️ Total moderado - cuidado com Over alto\n"
+        
+        analise += "\n"
+    
+    # Recomendação final
+    analise += "**💡 Recomendação Final:**\n"
+    
+    if warnings['severity'] == 'CRITICAL':
+        analise += "- ❌ **EVITAR ESTE JOGO**\n"
+        analise += "- Risco muito alto\n"
+        analise += "- Buscar outras oportunidades\n"
+    elif warnings['severity'] == 'HIGH':
+        analise += "- ⚠️ Apostar com MUITO CUIDADO\n"
+        analise += "- Preferir Under ou totais baixos\n"
+        analise += "- Stake reduzido (1-2% da banca)\n"
+    elif warnings['severity'] == 'MEDIUM':
+        analise += "- ℹ️ Analisar contexto adicional\n"
+        analise += "- Evitar apostas no time blacklist\n"
+        analise += "- Stake normal (2-3% da banca)\n"
+    else:
+        analise += "- ✅ JOGO ADEQUADO para apostas\n"
+        analise += "- Estatísticas favoráveis\n"
+        analise += "- Stake normal ou aumentado (3-5% da banca)\n"
+    
+    return analise
+
+# ============================================================
 # INTERFACE PRINCIPAL
 # ============================================================
 
@@ -390,8 +485,8 @@ def main():
         """, unsafe_allow_html=True)
     
     # Header
-    st.title("⚽ FutPrevisão V32 COMPLETE")
-    st.markdown("**Sistema Integrado com Blacklist Científica** | 1.659 jogos analisados | 60 times blacklist")
+    st.title("⚽ FutPrevisão V32 COMPLETE + AI")
+    st.markdown("**Sistema Integrado com Blacklist Científica + AI Advisor** | 1.659 jogos analisados | 60 times blacklist")
     
     # Sidebar
     with st.sidebar:
@@ -415,7 +510,7 @@ def main():
     
     if page == "🏠 Home":
         
-        st.header("🎯 Bem-vindo ao FutPrevisão V32")
+        st.header("🎯 Bem-vindo ao FutPrevisão V32 + AI")
         
         col1, col2, col3 = st.columns(3)
         
@@ -433,11 +528,12 @@ def main():
         
         st.markdown("---")
         
-        st.subheader("🆕 Novidades V32")
+        st.subheader("🆕 Novidades V32 + AI")
         
         st.success("✅ **Blacklist Científica**: 60 times identificados com base em 1.659 jogos")
         st.success("✅ **Alertas Automáticos**: Sistema verifica riscos automaticamente")
         st.success("✅ **Análise de Próximos Jogos**: Scanner inteligente de oportunidades")
+        st.success("✅ **AI Advisor**: Análises e recomendações com inteligência artificial")
         st.success("✅ **Validação Inteligente**: Bloqueia apostas arriscadas")
         
         st.markdown("---")
@@ -462,7 +558,7 @@ def main():
     
     elif page == "🎯 Scanner de Jogos":
         
-        st.header("🎯 Scanner de Jogos com Blacklist")
+        st.header("🎯 Scanner de Jogos com Blacklist + AI")
         
         # Carregar stats
         with st.spinner("Carregando estatísticas..."):
@@ -555,6 +651,15 @@ def main():
                 st.write(f"**Faltas:** {away_stats.get('fouls', 0):.2f}/jogo")
                 st.write(f"**Gols feitos:** {away_stats.get('goals_for', 0):.2f}/jogo")
                 st.write(f"**Gols sofridos:** {away_stats.get('goals_against', 0):.2f}/jogo")
+            
+            st.markdown("---")
+            
+            # AI ADVISOR
+            st.subheader("🤖 AI Advisor - Análise Inteligente")
+            
+            with st.spinner("IA analisando o jogo..."):
+                analise_ia = gerar_analise_ai(home_team, away_team, home_stats, away_stats, result)
+                st.info(analise_ia)
             
             st.markdown("---")
             
@@ -831,7 +936,7 @@ def main():
     
     # Footer
     st.markdown("---")
-    st.caption("FutPrevisão V32 COMPLETE | Desenvolvido por Diego | Dezembro 2025")
+    st.caption("FutPrevisão V32 COMPLETE + AI | Desenvolvido por Diego | Dezembro 2025")
 
 # ============================================================
 # EXECUTAR
