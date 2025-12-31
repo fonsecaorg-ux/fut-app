@@ -1,16 +1,16 @@
 """
-FutPrevisão V33.0 FUSION (V31 + Blacklist V32)
+FutPrevisão V33.3 MAXIMUM + ROBÔ DE TIPS
 CÓDIGO COMPLETO - VERSÃO FINAL INTEGRADA
-Baseado no Relatório Técnico: Causality Engine, Monte Carlo & NLP + Blacklist
+Baseado no Relatório Técnico: Causality Engine, Monte Carlo & NLP + Blacklist + Robô Diário
 
-Combinando:
-- Estrutura robusta V31 (Construtor, AI, Hedges)
-- Módulo Blacklist V32 (Análise de times Under)
-- Correções de Encoding e Chaves
+Novidades V33.3:
+- Nova Aba 11: Robô de Tips Diárias
+- Analisa jogos de uma data específica
+- Sugere APOSTAR (Alta volatilidade) ou EVITAR (Jogo morno)
 
 Autor: Diego & Equipe AI
-Versão: 33.0 FUSION
-Data: 31/12/2024
+Versão: 33.3 ULTRA MAXIMUM
+Data: 01/01/2026
 """
 
 # ==============================================================================
@@ -45,7 +45,7 @@ BASE_DIR = Path(__file__).resolve().parent
 
 # Configuração da Página Streamlit
 st.set_page_config(
-    page_title="FutPrevisão V33 FUSION",
+    page_title="FutPrevisão V33.3 MAX",
     layout="wide",
     page_icon="⚽",
     initial_sidebar_state="expanded"
@@ -340,11 +340,18 @@ def get_prob_emoji(prob: float) -> str:
     else: return "🔻"
 
 def get_league_emoji(league: str) -> str:
+    # SUBSTITUÍDO BANDEIRAS POR TEXTO SEGURO
     emojis = {
-        'Premier League': "", 'La Liga': '🇪🇸', 'Serie A': '🇮🇹',
-        'Bundesliga': '🇩🇪', 'Ligue 1': '🇫🇷', 'Championship': "",
-        'Bundesliga 2': '🇩🇪', 'Pro League': '🇧🇪', 'Super Lig': '🇹🇷',
-        'Premiership': ""
+        'Premier League': '[ENG]', 
+        'La Liga': '[ESP]', 
+        'Serie A': '[ITA]',
+        'Bundesliga': '[GER]', 
+        'Ligue 1': '[FRA]', 
+        'Championship': '[ENG2]',
+        'Bundesliga 2': '[GER2]', 
+        'Pro League': '[BEL]', 
+        'Super Lig': '[TUR]',
+        'Premiership': '[SCO]'
     }
     return emojis.get(league, '⚽')
 
@@ -376,8 +383,7 @@ def validar_stake(stake: float, banca: float, max_percent: float = 10.0) -> Tupl
 @st.cache_data(ttl=3600, show_spinner=False)
 def load_all_data():
     """
-    Carrega dados e processa estatísticas.
-    Usa 'utf-8-sig' para compatibilidade com CSVs.
+    Carrega dados e processa estatísticas (Stats DB).
     """
     stats_db = {}
     cal = pd.DataFrame()
@@ -469,6 +475,39 @@ def load_all_data():
             
     return stats_db, cal, referees
 
+@st.cache_data(ttl=3600)
+def carregar_dados_robo():
+    """
+    Função dedicada ao Robô: Carrega todos os CSVs e retorna um único DataFrame bruto com coluna 'Date'.
+    """
+    arquivos = [
+        'Championship_Inglaterra_25_26.csv', 'Premier_League_25_26.csv',
+        'La_Liga_25_26.csv', 'Serie_A_25_26.csv', 'Pro_League_Belgica_25_26.csv',
+        'Super_Lig_Turquia_25_26.csv', 'Bundesliga_2.csv', 'Ligue_1_25_26.csv',
+        'Bundesliga_25_26.csv', 'Premiership_Escocia_25_26.csv'
+    ]
+    
+    dfs = []
+    for arq in arquivos:
+        filepath = find_file(arq)
+        if not filepath: continue
+        try:
+            df = pd.read_csv(filepath, encoding='utf-8-sig')
+            df.columns = [c.strip() for c in df.columns]
+            df['Liga'] = arq.replace('.csv', '').replace('_25_26', '') # Nome simples da liga
+            dfs.append(df)
+        except: pass
+    
+    if not dfs: return pd.DataFrame()
+    
+    df_final = pd.concat(dfs, ignore_index=True)
+    
+    # Converter data com segurança
+    if 'Date' in df_final.columns:
+        df_final['Date'] = pd.to_datetime(df_final['Date'], dayfirst=True, errors='coerce')
+    
+    return df_final
+
 # ==============================================================================
 # 6. MOTOR DE CÁLCULO E SIMULAÇÃO (V31 ENGINE)
 # ==============================================================================
@@ -515,7 +554,6 @@ def calcular_jogo_v31(home_stats: Dict, away_stats: Dict, ref_data: Dict) -> Dic
     # Cartões
     fouls_h = home_stats.get('fouls_home', 11.0)
     fouls_a = away_stats.get('fouls_away', 12.0)
-    
     viol_h = 1.1 if fouls_h > VIOLENCE_HIGH_THRESHOLD else 1.0
     viol_a = 1.1 if fouls_a > VIOLENCE_HIGH_THRESHOLD else 1.0
     
@@ -594,7 +632,7 @@ def sugerir_mercados_hedge_inteligente(bilhete_principal: List[Dict], jogo: str,
     if not stats_casa or not stats_fora:
         return []
     
-    mercados_atuais = [b['market_display'] for b in bilhete_principal if b['jogo'] == jogo]
+    mercados_atuais = [b.get('market_display', b['mercado']) for b in bilhete_principal if b['jogo'] == jogo]
     sugestoes = []
     
     # 1. ESCANTEIOS
@@ -634,6 +672,54 @@ def calcular_kelly(prob: float, odd: float, fracao: float = 0.25) -> float:
     b = odd - 1
     return max(0, ((b * p - q) / b) * fracao)
 
+def analisar_robo_diario(df_robo, data_selecionada, stats_db):
+    """
+    Lógica do Robô Tips do Dia:
+    APOSTAR: Cantos Totais > 9.5 E Cartões > 3.5
+    EVITAR: Cantos Totais < 8.5 OU Cartões < 2.5
+    """
+    jogos = df_robo[df_robo['Date'] == pd.to_datetime(data_selecionada)]
+    resultados = []
+    
+    for _, row in jogos.iterrows():
+        h = normalize_name(row['HomeTeam'], list(stats_db.keys()))
+        a = normalize_name(row['AwayTeam'], list(stats_db.keys()))
+        
+        if h and a and h in stats_db and a in stats_db:
+            # Pega as médias históricas do DB
+            s_h = stats_db[h]
+            s_a = stats_db[a]
+            
+            # Soma simples das médias (Projeção Rápida)
+            proj_cantos = s_h['corners'] + s_a['corners']
+            proj_cartoes = s_h['cards'] + s_a['cards']
+            
+            # Regras
+            recomendacao = "OBSERVAR"
+            cor = "orange"
+            motivo = "Stats medianos"
+            
+            if proj_cantos > 9.5 and proj_cartoes > 3.5:
+                recomendacao = "🔥 APOSTAR"
+                cor = "green"
+                motivo = "Alta tendência de Cantos e Cartões"
+            elif proj_cantos < 8.5 or proj_cartoes < 2.5:
+                recomendacao = "⛔ EVITAR"
+                cor = "red"
+                motivo = "Baixa probabilidade (Jogo morno)"
+            
+            resultados.append({
+                'Liga': row.get('Liga', '-'),
+                'Jogo': f"{h} x {a}",
+                'Cantos': proj_cantos,
+                'Cartões': proj_cartoes,
+                'Rec': recomendacao,
+                'Cor': cor,
+                'Motivo': motivo
+            })
+            
+    return pd.DataFrame(resultados)
+
 # ==============================================================================
 # 7. CHATBOT AI ADVISOR ULTRA (NLP AVANÇADO)
 # ==============================================================================
@@ -648,18 +734,22 @@ def extrair_entidades(mensagem: str, stats_db: Dict, memoria: ChatMemory) -> Dic
     
     for team in sorted_teams:
         if team.lower() in msg_clean:
-            entidades['times'].append(team)
-            msg_clean = msg_clean.replace(team.lower(), "")
-            memoria.update('ultimo_time', team)
-            if len(entidades['times']) >= 2: break
-            
+            is_sub = False
+            for ft in entidades['times']:
+                if team.lower() in ft.lower(): is_sub = True; break
+            if not is_sub:
+                entidades['times'].append(team)
+                msg_clean = msg_clean.replace(team.lower(), "")
+                
     if not entidades['times']:
         ult = memoria.get('ultimo_time')
         if ult and ('dele' in msg_lower or 'desse' in msg_lower): entidades['times'].append(ult)
             
-    if any(x in msg_lower for x in ['canto']): entidades['mercado'] = 'cantos'
-    elif any(x in msg_lower for x in ['cartao']): entidades['mercado'] = 'cartoes'
-    elif any(x in msg_lower for x in ['gol']): entidades['mercado'] = 'gols'
+    if entidades['times']: memoria.update('ultimo_time', entidades['times'][0])
+    
+    if any(x in msg_lower for x in ['canto', 'escanteio']): entidades['mercado'] = 'cantos'
+    elif any(x in msg_lower for x in ['cartao', 'cartão']): entidades['mercado'] = 'cartoes'
+    elif any(x in msg_lower for x in ['gol', 'gols']): entidades['mercado'] = 'gols'
     
     nums = re.findall(r'\d+\.?\d*', msg)
     if nums:
@@ -787,6 +877,8 @@ def validar_jogos_bilhete(jogos_parsed: List[Dict], stats_db: Dict) -> List[Dict
 def main():
     # 1. CARREGAMENTO INICIAL DE DADOS
     STATS, CAL, REFS = load_all_data()
+    # Carregar dados do Robô separadamente para ter datas e ligas
+    DF_ROBO = carregar_dados_robo()
     
     # 2. Inicialização de Estado
     if 'current_ticket' not in st.session_state: st.session_state.current_ticket = []
@@ -821,7 +913,7 @@ def main():
     col1, col2, col3 = st.columns([1, 5, 2])
     with col1: st.markdown("# ⚽")
     with col2:
-        st.title("FutPrevisão V33 ULTRA")
+        st.title("FutPrevisão V33.3 ULTRA")
         st.markdown("**Professional Sports Analytics System** | _Powered by Causality Engine V31_")
     with col3:
         if not CAL.empty:
@@ -833,7 +925,7 @@ def main():
     # 5. TABS
     tabs = st.tabs([
         "🎫 Construtor", "🛡️ Hedges", "🎲 Simulador", "📊 Métricas", 
-        "🎨 Viz", "📝 Registro", "🔍 Scanner", "📋 Importar", "🤖 AI Advisor", "⛔ Blacklist"
+        "🎨 Viz", "📝 Registro", "🔍 Scanner", "📋 Importar", "🤖 AI Advisor", "⛔ Blacklist", "🤖 Robô Tips"
     ])
     
     # ========================================
@@ -1239,6 +1331,49 @@ def main():
                 st.dataframe(df_b_cd, use_container_width=True)
             else:
                 st.info("Blacklist de cartões vazia.")
+
+    # ========================================
+    # TAB 11: ROBÔ TIPS DIÁRIAS (NOVA)
+    # ========================================
+    with tabs[10]:
+        st.header("🤖 Robô Tips do Dia (V33.3)")
+        st.caption("Analisa jogos da data e sugere apostar em jogos movimentados ou evitar jogos 'mornos'.")
+        
+        if not DF_ROBO.empty:
+            datas = sorted(DF_ROBO['Date'].dropna().unique(), reverse=True)
+            if datas:
+                d_escolhida = st.selectbox("📅 Escolha a Data:", datas)
+                
+                if st.button("🚀 Analisar Jogos do Dia"):
+                    res_robo = analisar_robo_diario(DF_ROBO, d_escolhida, STATS)
+                    
+                    if not res_robo.empty:
+                        st.success(f"Analisamos {len(res_robo)} jogos!")
+                        
+                        # Filtros rápidos
+                        filtro = st.radio("Filtrar por:", ["Todos", "🔥 APOSTAR", "⛔ EVITAR"])
+                        
+                        df_show = res_robo
+                        if filtro == "🔥 APOSTAR":
+                            df_show = res_robo[res_robo['Rec'].str.contains("APOSTAR")]
+                        elif filtro == "⛔ EVITAR":
+                            df_show = res_robo[res_robo['Rec'].str.contains("EVITAR")]
+                            
+                        if not df_show.empty:
+                            for _, row in df_show.iterrows():
+                                with st.expander(f"{row['Rec']} | {row['Jogo']} ({row['Liga']})"):
+                                    c1, c2, c3 = st.columns(3)
+                                    c1.metric("Cantos Esp.", f"{row['Cantos']:.1f}")
+                                    c2.metric("Cartões Esp.", f"{row['Cartões']:.1f}")
+                                    c3.markdown(f"**Motivo:** :{row['Cor']}[{row['Motivo']}]")
+                        else:
+                            st.info("Nenhum jogo encontrado com esse filtro.")
+                    else:
+                        st.warning("Nenhum jogo encontrado nesta data com dados suficientes.")
+            else:
+                st.warning("Sem datas disponíveis no banco de dados.")
+        else:
+            st.error("Erro ao carregar dados do Robô. Verifique os arquivos CSV.")
 
 if __name__ == "__main__":
     main()
