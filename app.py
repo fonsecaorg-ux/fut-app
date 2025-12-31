@@ -1,16 +1,16 @@
 """
-FutPrevisão V32.3 MAXIMUM + AI Advisor ULTRA
-CÓDIGO COMPLETO - VERSÃO FINAL (FIX CONSTRUTOR & HEDGE INTELIGENTE)
-Baseado no Relatório Técnico e Solicitações Específicas
+FutPrevisão FUSION V33 (V31 + V32 Blacklist)
+CÓDIGO COMPLETO - VERSÃO FINAL INTEGRADA
+Baseado no Relatório Técnico: Causality Engine, Monte Carlo & NLP + Blacklist Científica
 
-Correções e Melhorias:
-1. Construtor: Mercados detalhados (Casa/Fora/Total) e correção de KeyError.
-2. Hedge: Lógica "Super Inteligente" (Data-Driven, Prioridade Cantos/Cartões, Sem Gols).
-3. Estrutura: Mantidas todas as funcionalidades e linhas originais.
+Combinando:
+- Estrutura robusta V31 (Construtor, AI, Hedges)
+- Módulo Blacklist V32 (Análise de times Under)
+- Correções de Encoding
 
 Autor: Diego & Equipe AI
-Versão: 32.3 ULTRA MAXIMUM
-Data: 28/12/2025
+Versão: 33.0 FUSION
+Data: 31/12/2024
 """
 
 # ==============================================================================
@@ -45,14 +45,10 @@ BASE_DIR = Path(__file__).resolve().parent
 
 # Configuração da Página Streamlit
 st.set_page_config(
-    page_title="FutPrevisão V32.3 ULTRA",
+    page_title="FutPrevisão V33 FUSION",
     layout="wide",
     page_icon="⚽",
-    initial_sidebar_state="expanded",
-    menu_items={
-        'Get Help': 'https://www.futprevisao.com/help',
-        'About': "# FutPrevisão V32.3 ULTRA\nSistema Profissional de Análise Esportiva."
-    }
+    initial_sidebar_state="expanded"
 )
 
 # ==============================================================================
@@ -158,23 +154,6 @@ st.markdown('''
         box-shadow: 0 6px 16px rgba(0,0,0,0.12);
     }
     
-    /* EXPANDERS */
-    .streamlit-expanderHeader {
-        background-color: #f8f9fa;
-        border-radius: 8px;
-        font-weight: 600;
-        color: #1e3c72;
-    }
-    
-    /* HEADER PRINCIPAL */
-    h1 {
-        background: linear-gradient(90deg, #1e3c72 0%, #2a5298 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        font-weight: 800;
-        letter-spacing: -1px;
-    }
-    
     /* ALERTS */
     .stAlert {
         border-radius: 10px;
@@ -210,34 +189,45 @@ NAME_MAPPING = {
     'Leicester': 'Leicester City', 'Leeds': 'Leeds United'
 }
 
-# Lista completa de mercados para o Construtor Manual (CORRIGIDA COM ASPAS E ITENS SOLICITADOS)
+# Lista completa de mercados para o Construtor Manual
 MERCADOS_DISPONIVEIS = [
     "Selecione...",
-    # === ESCANTEIOS - INDIVIDUAIS (Casa) ===
-    "Over 2.5 Cantos Casa", "Over 3.5 Cantos Casa", "Over 4.5 Cantos Casa", "Over 5.5 Cantos Casa",
-    
-    # === ESCANTEIOS - INDIVIDUAIS (Fora) ===
-    "Over 2.5 Cantos Fora", "Over 3.5 Cantos Fora", "Over 4.5 Cantos Fora", "Over 5.5 Cantos Fora",
-    
-    # === ESCANTEIOS - TOTAIS ===
+    # === ESCANTEIOS ===
     "Over 7.5 Cantos Total", "Over 8.5 Cantos Total", "Over 9.5 Cantos Total", 
+    "Over 10.5 Cantos Total", "Over 11.5 Cantos Total", "Over 12.5 Cantos Total",
+    "Over 3.5 Cantos Casa", "Over 4.5 Cantos Casa", "Over 5.5 Cantos Casa",
+    "Over 2.5 Cantos Fora", "Over 3.5 Cantos Fora", "Over 4.5 Cantos Fora",
     
-    # === CARTÕES - INDIVIDUAIS (Casa) ===
+    # === CARTÕES ===
+    "Over 2.5 Cartões Total", "Over 3.5 Cartões Total", "Over 4.5 Cartões Total", "Over 5.5 Cartões Total",
     "Over 1.5 Cartões Casa", "Over 2.5 Cartões Casa",
-    
-    # === CARTÕES - INDIVIDUAIS (Fora) ===
     "Over 1.5 Cartões Fora", "Over 2.5 Cartões Fora",
     
-    # === CARTÕES - TOTAIS ===
-    "Over 2.5 Cartões Total", "Over 3.5 Cartões Total", "Over 4.5 Cartões Total",
-    
-    # === GOLS (Apenas para referência, o Hedge ignorará) ===
-    "Over 0.5 Gols", "Over 1.5 Gols", "Over 2.5 Gols", "Ambos Marcam (BTTS)",
+    # === GOLS ===
+    "Over 0.5 Gols", "Over 1.5 Gols", "Over 2.5 Gols", "Over 3.5 Gols",
+    "Under 2.5 Gols", "Under 1.5 Gols", "Under 3.5 Gols",
+    "Ambos Marcam (BTTS)", 
     
     # === RESULTADO ===
     "Vitória Casa", "Vitória Fora", "Empate", 
     "Dupla Chance Casa/Empate", "Dupla Chance Fora/Empate", "Dupla Chance Casa/Fora"
 ]
+
+# 🆕 BLACKLIST CIENTÍFICA V32 (Times com médias muito baixas - EVITAR OVER)
+BLACKLIST_CORNERS = {
+    'Wolves': 2.89, 'Sunderland': 3.61, 'Burnley': 3.78, 'Crystal Palace': 3.78,
+    'Elche': 3.06, 'Mallorca': 3.29, 'Osasuna': 3.35, 'Levante': 3.38, 
+    'Oviedo': 3.82, 'Girona': 3.88,
+    'Parma': 3.19, 'Cremonese': 3.24, 'Pisa': 3.35, 'Sassuolo': 3.47,
+    'Cagliari': 3.55, 'Udinese': 3.74, 'Empoli': 3.77,
+    'Strasbourg': 3.39, 'Lorient': 3.44, 'Metz': 3.50, 'Montpellier': 3.82,
+    'Heidenheim': 3.55, 'Darmstadt': 3.61
+}
+
+BLACKLIST_CARDS = {
+    'Arsenal': 1.45, 'Man City': 1.52, 'Liverpool': 1.63, 'Bayern Munich': 1.35,
+    'Dortmund': 1.48, 'Inter Milan': 1.55, 'PSG': 1.42, 'Real Madrid': 1.60
+}
 
 # Parâmetros do Causality Engine V31
 PRESSURE_HIGH_THRESHOLD = 6.0  
@@ -292,7 +282,7 @@ def find_file(filename: str) -> Optional[str]:
     return None
 
 def normalize_name(name: str, known_teams: List[str]) -> Optional[str]:
-    """Normaliza nomes de times usando fuzzy matching"""
+    """Normaliza nomes de times usando fuzzy matching e mapeamento"""
     if not name or not known_teams: return None
     name = str(name).strip()
     
@@ -307,7 +297,7 @@ def normalize_name(name: str, known_teams: List[str]) -> Optional[str]:
     return matches[0] if matches else None
 
 def clean_team_name(text: str) -> str:
-    """Limpa nome de time vindo do chat"""
+    """Limpa nome de time vindo do chat NLP"""
     if not text: return ""
     text = text.lower().strip()
     text = re.sub(r'[^\w\s]', '', text)
@@ -361,7 +351,10 @@ def validar_stake(stake: float, banca: float, max_percent: float = 10.0) -> Tupl
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def load_all_data():
-    """Carrega dados e processa estatísticas"""
+    """
+    Carrega dados e processa estatísticas.
+    Usa 'utf-8-sig' para compatibilidade com CSVs.
+    """
     stats_db = {}
     cal = pd.DataFrame()
     referees = {}
@@ -384,7 +377,8 @@ def load_all_data():
         if not filepath: continue
             
         try:
-            df = pd.read_csv(filepath, encoding='utf-8')
+            # CORREÇÃO V32: utf-8-sig
+            df = pd.read_csv(filepath, encoding='utf-8-sig')
             cols = {c: c.strip() for c in df.columns}
             df.rename(columns=cols, inplace=True)
             
@@ -396,7 +390,7 @@ def load_all_data():
                 h_games = df[df['HomeTeam'] == team]
                 a_games = df[df['AwayTeam'] == team]
                 
-                # --- MÉTRICAS ROBUSTAS COM FALLBACKS ---
+                # --- MÉTRICAS ---
                 corners_h = h_games['HC'].mean() if 'HC' in h_games else 5.0
                 corners_a = a_games['AC'].mean() if 'AC' in a_games else 4.0
                 
@@ -430,7 +424,7 @@ def load_all_data():
     cal_path = find_file('calendario_ligas.csv')
     if cal_path:
         try:
-            cal = pd.read_csv(cal_path, encoding='utf-8')
+            cal = pd.read_csv(cal_path, encoding='utf-8-sig')
             if 'Data' in cal.columns:
                 cal['DtObj'] = pd.to_datetime(cal['Data'], dayfirst=True, errors='coerce')
         except: pass
@@ -439,7 +433,7 @@ def load_all_data():
     ref_path = find_file('arbitros_5_ligas_2025_2026.csv')
     if ref_path:
         try:
-            refs_df = pd.read_csv(ref_path, encoding='utf-8')
+            refs_df = pd.read_csv(ref_path, encoding='utf-8-sig')
             for _, row in refs_df.iterrows():
                 avg = row.get('Media_Cartoes_Por_Jogo', 4.0)
                 referees[row['Arbitro']] = {
@@ -472,8 +466,6 @@ def calcular_poisson(media: float, linha: float) -> float:
 def calcular_jogo_v31(home_stats: Dict, away_stats: Dict, ref_data: Dict) -> Dict:
     """
     CAUSALITY ENGINE V31 - NÚCLEO DO SISTEMA
-    Implementa a lógica 'Causa -> Efeito'.
-    RETORNA TODAS AS CHAVES PLANAS PARA EVITAR KEYERROR.
     """
     if not home_stats or not away_stats:
         return {'corners': {'h':0,'a':0,'t':0}, 'cards': {'h':0,'a':0,'t':0}, 'goals': {'h':0,'a':0}, 
@@ -481,24 +473,25 @@ def calcular_jogo_v31(home_stats: Dict, away_stats: Dict, ref_data: Dict) -> Dic
                 'corners_home': 0, 'corners_away': 0, 'cards_home': 0, 'cards_away': 0,
                 'xg_home':0, 'xg_away':0}
 
-    # Cantos
+    # Escanteios
     base_h = home_stats.get('corners_home', 5.0)
     base_a = away_stats.get('corners_away', 4.0)
     shots_h = home_stats.get('shots_home', 4.5)
     shots_a = away_stats.get('shots_away', 3.5)
     
-    press_h = 1.20 if shots_h > 6.0 else 1.10 if shots_h > 4.5 else 1.0
-    press_a = 1.15 if shots_a > 5.0 else 1.05 if shots_a > 4.0 else 1.0
+    press_h = 1.15 if shots_h > PRESSURE_HIGH_THRESHOLD else 1.05 if shots_h > PRESSURE_MED_THRESHOLD else 1.0
+    press_a = 1.10 if shots_a > PRESSURE_MED_THRESHOLD else 1.0
     
-    corners_h = base_h * press_h * 1.12
-    corners_a = base_a * press_a * 0.88
+    corners_h = base_h * press_h * 1.10
+    corners_a = base_a * press_a * 0.90
     corners_total = corners_h + corners_a
     
     # Cartões
     fouls_h = home_stats.get('fouls_home', 11.0)
     fouls_a = away_stats.get('fouls_away', 12.0)
-    viol_h = 1.12 if fouls_h > 12.5 else 1.0
-    viol_a = 1.12 if fouls_a > 12.5 else 1.0
+    
+    viol_h = 1.1 if fouls_h > VIOLENCE_HIGH_THRESHOLD else 1.0
+    viol_a = 1.1 if fouls_a > VIOLENCE_HIGH_THRESHOLD else 1.0
     
     ref_avg = ref_data.get('avg_cards', 4.0) if ref_data else 4.0
     cards_h_base = home_stats.get('cards_home', 1.8)
@@ -514,7 +507,6 @@ def calcular_jogo_v31(home_stats: Dict, away_stats: Dict, ref_data: Dict) -> Dic
     xg_a = (away_stats['goals_f_away'] / league_avg) * (home_stats['goals_a_home'] / league_avg) * league_avg
     total_goals = xg_h + xg_a
     
-    # RETORNO ROBUSTO E PLANO (FIX KEYERROR)
     return {
         'corners': {'h': corners_h, 'a': corners_a, 't': corners_total},
         'cards': {'h': cards_h_proj, 'a': cards_a_proj, 't': cards_total},
@@ -546,27 +538,24 @@ def calcular_probabilidade_mercado(mercado: str, calc: Dict) -> float:
     if mercado == "Selecione...": return 0.0
     
     if "Over" in mercado:
-        linha = float(re.findall(r'\d+\.5', mercado)[0])
-        
-        if "Cantos Casa" in mercado: return calcular_poisson(calc['corners_home'], linha)
-        elif "Cantos Fora" in mercado: return calcular_poisson(calc['corners_away'], linha)
-        elif "Cantos Total" in mercado: return calcular_poisson(calc['corners_total'], linha)
+        try:
+            linha = float(re.findall(r'\d+\.5', mercado)[0])
             
-        elif "Cartões Casa" in mercado: return calcular_poisson(calc['cards_home'], linha)
-        elif "Cartões Fora" in mercado: return calcular_poisson(calc['cards_away'], linha)
-        elif "Cartões Total" in mercado: return calcular_poisson(calc['cards_total'], linha)
-            
-        elif "Gols" in mercado: return calcular_poisson(calc['total_goals'], linha)
+            if "Cantos Casa" in mercado: return calcular_poisson(calc['corners_home'], linha)
+            elif "Cantos Fora" in mercado: return calcular_poisson(calc['corners_away'], linha)
+            elif "Cantos Total" in mercado: return calcular_poisson(calc['corners_total'], linha)
+                
+            elif "Cartões Casa" in mercado: return calcular_poisson(calc['cards_home'], linha)
+            elif "Cartões Fora" in mercado: return calcular_poisson(calc['cards_away'], linha)
+            elif "Cartões Total" in mercado: return calcular_poisson(calc['cards_total'], linha)
+                
+            elif "Gols" in mercado: return calcular_poisson(calc['total_goals'], linha)
+        except: return 0.0
         
     return 0.0
 
 def sugerir_mercados_hedge_inteligente(bilhete_principal: List[Dict], jogo: str, stats: Dict, calc: Dict) -> List[Dict]:
-    """
-    HEDGE SUPER INTELIGENTE (NOVO RECURSO)
-    - Analisa dados reais do jogo
-    - Prioriza Cantos > Cartões > Dupla Chance
-    - Ignora Gols
-    """
+    """HEDGE SUPER INTELIGENTE (SEM GOLS, PRIORIDADE CANTOS/CARTÕES)"""
     try:
         time_casa, time_fora = jogo.split(' vs ')
     except:
@@ -578,50 +567,38 @@ def sugerir_mercados_hedge_inteligente(bilhete_principal: List[Dict], jogo: str,
     if not stats_casa or not stats_fora:
         return []
     
-    # Mercados já escolhidos para não repetir
     mercados_atuais = [b['market_display'] for b in bilhete_principal if b['jogo'] == jogo]
     sugestoes = []
     
-    # 1. ESCANTEIOS (Prioridade Máxima)
-    # Casa
+    # 1. ESCANTEIOS
     if stats_casa.get('corners_home', 0) > 4.5:
         prob = calcular_poisson(calc['corners_home'], 4.5)
         if prob > 65 and "Over 4.5 Cantos Casa" not in mercados_atuais:
             sugestoes.append({'mercado': "Over 4.5 Cantos Casa", 'prob': prob, 'tipo': 'Cantos', 'analise': f"{time_casa} forte em casa"})
             
-    # Fora
     if stats_fora.get('corners_away', 0) > 3.5:
         prob = calcular_poisson(calc['corners_away'], 3.5)
         if prob > 65 and "Over 3.5 Cantos Fora" not in mercados_atuais:
             sugestoes.append({'mercado': "Over 3.5 Cantos Fora", 'prob': prob, 'tipo': 'Cantos', 'analise': f"{time_fora} ativo fora"})
             
-    # Total
     prob_total = calcular_poisson(calc['corners_total'], 8.5)
     if prob_total > 70 and "Over 8.5 Cantos Total" not in mercados_atuais:
         sugestoes.append({'mercado': "Over 8.5 Cantos Total", 'prob': prob_total, 'tipo': 'Cantos', 'analise': "Jogo aberto"})
 
-    # 2. CARTÕES (Prioridade Média)
+    # 2. CARTÕES
     prob_card = calcular_poisson(calc['cards_total'], 3.5)
     if prob_card > 70 and "Over 3.5 Cartões Total" not in mercados_atuais:
         sugestoes.append({'mercado': "Over 3.5 Cartões Total", 'prob': prob_card, 'tipo': 'Cartões', 'analise': "Jogo pegado"})
 
-    # 3. DUPLA CHANCE (Último Recurso)
+    # 3. DUPLA CHANCE (Só se < 2 sugestões)
     if len(sugestoes) < 2:
         if calc['xg_home'] > calc['xg_away']:
             sugestoes.append({'mercado': "Dupla Chance Casa/Empate", 'prob': 75.0, 'tipo': 'DC', 'analise': "Favorito Casa"})
         else:
             sugestoes.append({'mercado': "Dupla Chance Fora/Empate", 'prob': 70.0, 'tipo': 'DC', 'analise': "Visitante forte"})
             
-    # Ordenar por probabilidade
     sugestoes.sort(key=lambda x: x['prob'], reverse=True)
-    return sugestoes[:3] # Retorna top 3
-
-def calcular_kelly(prob: float, odd: float, fracao: float = 0.25) -> float:
-    if prob <= 0 or prob >= 100 or odd <= 1: return 0.0
-    p = prob / 100
-    q = 1 - p
-    b = odd - 1
-    return max(0, ((b * p - q) / b) * fracao)
+    return sugestoes[:3]
 
 # ==============================================================================
 # 7. CHATBOT AI ADVISOR ULTRA (NLP AVANÇADO)
@@ -637,20 +614,27 @@ def extrair_entidades(mensagem: str, stats_db: Dict, memoria: ChatMemory) -> Dic
     
     for team in sorted_teams:
         if team.lower() in msg_clean:
-            entidades['times'].append(team)
-            msg_clean = msg_clean.replace(team.lower(), "")
-            memoria.update('ultimo_time', team)
-            if len(entidades['times']) >= 2: break
-            
+            is_sub = False
+            for ft in entidades['times']:
+                if team.lower() in ft.lower(): is_sub = True; break
+            if not is_sub:
+                entidades['times'].append(team)
+                msg_clean = msg_clean.replace(team.lower(), "")
+                
     if not entidades['times']:
         ult = memoria.get('ultimo_time')
         if ult and ('dele' in msg_lower or 'desse' in msg_lower): entidades['times'].append(ult)
             
-    if any(x in msg_lower for x in ['canto']): entidades['mercado'] = 'cantos'
-    elif any(x in msg_lower for x in ['cartao']): entidades['mercado'] = 'cartoes'
-    elif any(x in msg_lower for x in ['gol']): entidades['mercado'] = 'gols'
+    if entidades['times']: memoria.update('ultimo_time', entidades['times'][0])
     
-    nums = re.findall(r'\d+\.?\d*', msg)
+    if any(x in msg_lower for x in ['canto', 'escanteio']): entidades['mercado'] = 'cantos'
+    elif any(x in msg_lower for x in ['cartao', 'cartão']): entidades['mercado'] = 'cartoes'
+    elif any(x in msg_lower for x in ['gol', 'gols']): entidades['mercado'] = 'gols'
+    
+    if any(x in msg_lower for x in ['ranking', 'top']): entidades['intencao'] = 'ranking'
+    elif any(x in msg_lower for x in ['hoje', 'jogos']): entidades['intencao'] = 'calendario'
+    
+    nums = re.findall(r'\d+\.?\d*', mensagem)
     if nums:
         for n in nums:
             if float(n) < 20: entidades['linha'] = float(n); break
@@ -810,7 +794,7 @@ def main():
     col1, col2, col3 = st.columns([1, 5, 2])
     with col1: st.markdown("# ⚽")
     with col2:
-        st.title("FutPrevisão V32.2 ULTRA")
+        st.title("FutPrevisão V32.3 ULTRA")
         st.markdown("**Professional Sports Analytics System** | _Powered by Causality Engine V31_")
     with col3:
         if not CAL.empty:
@@ -822,7 +806,7 @@ def main():
     # 5. TABS
     tabs = st.tabs([
         "🎫 Construtor", "🛡️ Hedges", "🎲 Simulador", "📊 Métricas", 
-        "🎨 Viz", "📝 Registro", "🔍 Scanner", "📋 Importar", "🤖 AI Advisor"
+        "🎨 Viz", "📝 Registro", "🔍 Scanner", "📋 Importar", "🤖 AI Advisor", "⛔ Blacklist"
     ])
     
     # ========================================
@@ -883,6 +867,7 @@ def main():
                 if tc != "Selecione..." and tv != "Selecione..." and m_mercado != "Selecione...":
                     calc_m = calcular_jogo_v31(STATS[tc], STATS[tv], {})
                     prob_est = calcular_probabilidade_mercado(m_mercado, calc_m)
+                    
                     if prob_est > 0:
                         st.caption(f"🎲 Probabilidade Calculada V31: **{prob_est:.1f}%**")
                 
@@ -936,10 +921,10 @@ def main():
                 st.rerun()
 
     # ========================================
-    # TAB 2: HEDGES MAXIMUM (COMPLETO)
+    # TAB 2: HEDGES MAXIMUM (CORRIGIDO)
     # ========================================
     with tabs[1]:
-        st.header("🛡️ Sistema de Hedges e Proteção")
+        st.header("🛡️ Hedges Super Inteligentes")
         
         # 1. Obter o bilhete do estado
         bilhete = st.session_state.current_ticket
@@ -955,39 +940,43 @@ def main():
             col2.metric("Odd do Bilhete", f"{odd_total:.2f}")
             retorno_max = stake * odd_total
             
-            st.markdown("### 🤖 Hedges Inteligentes (Recomendados)")
+            st.markdown("### 🤖 Hedges Recomendados (Data-Driven)")
             
-            # Se houver apenas 1 jogo no bilhete, podemos sugerir hedge específico
+            # Lógica para sugestão de hedges
             if len(bilhete) == 1:
                 jogo_selecionado = bilhete[0]['jogo']
-                st.info(f"Analisando hedge para: **{jogo_selecionado}**...")
+                st.info(f"Analisando estatísticas reais para hedge de: **{jogo_selecionado}**...")
                 
-                # Chama a função inteligente
-                if 'h' in locals() and 'a' in locals(): # Se veio do loop anterior ou extrair do string
-                    # Tentar recuperar times do string
-                    try:
-                        h_h, a_h = jogo_selecionado.split(" vs ")
+                try:
+                    # Recupera dados estatísticos reais
+                    h_h, a_h = jogo_selecionado.split(" vs ")
+                    if h_h in STATS and a_h in STATS:
+                        # Roda motor V31 para este jogo
                         calc_hedge = calcular_jogo_v31(STATS[h_h], STATS[a_h], {})
+                        
+                        # Chama a função inteligente
                         sugestoes = sugerir_mercados_hedge_inteligente(bilhete, jogo_selecionado, STATS, calc_hedge)
                         
                         if sugestoes:
+                            cols = st.columns(len(sugestoes))
                             for i, sug in enumerate(sugestoes):
-                                with st.expander(f"💡 Sugestão {i+1}: {sug['mercado']} (Prob {sug['prob']:.1f}%)"):
-                                    st.write(f"**Análise:** {sug['analise']}")
-                                    st.info("Este mercado estatisticamente cobre o risco do principal sem conflitar.")
+                                with cols[i]:
+                                    with st.container(border=True):
+                                        st.markdown(f"**{sug['tipo']}**")
+                                        st.write(f"✅ {sug['mercado']}")
+                                        st.write(f"📊 Prob Real: {sug['prob']:.1f}%")
+                                        st.caption(f"💡 {sug['analise']}")
                         else:
-                            st.warning("Não encontramos hedges estatísticos de alta probabilidade para este jogo. Considere Dupla Chance.")
-                    except:
-                        pass
+                            st.warning("Não encontramos hedges estatísticos de alta probabilidade (>70%) para este jogo.")
+                except Exception as e:
+                    st.error(f"Erro ao calcular hedge: {e}")
             
             st.markdown("---")
-            st.markdown("### 🛠️ Estratégias Matemáticas")
             
-            # HEDGE 1: SMART
-            with st.expander("🛡️ 1. Smart Protection (Zebra)", expanded=True):
+            # Calculadora Tradicional (Fallback)
+            with st.expander("🧮 Calculadora de Hedge Manual", expanded=False):
                 st.write("Cobre o prejuízo se a aposta principal perder.")
                 odd_hedge = st.number_input("Odd da Contra-Aposta (Zebra):", 2.0, 100.0, 3.5)
-                # Cálculo: Stake necessário na zebra para cobrir (Stake princ + Stake zebra)
                 stake_hedge = stake / (odd_hedge - 1)
                 
                 c1, c2 = st.columns(2)
@@ -998,30 +987,6 @@ def main():
                     st.success(f"✅ Hedge Viável! Lucro se Principal bater: {format_currency(retorno_max - (stake + stake_hedge))}")
                 else:
                     st.error("🚫 Hedge Inviável (Custo supera retorno).")
-
-            # HEDGE 2: PARTIAL
-            with st.expander("⚖️ 2. Partial Protection (50%)"):
-                st.write("Protege metade do stake principal.")
-                stake_partial = (stake * 0.5) / (odd_hedge - 1)
-                st.metric("Apostar na Zebra", format_currency(stake_partial))
-                st.info(f"Se Principal perder e Zebra ganhar, você recupera 50% do investimento.")
-
-            # HEDGE 3: ARBITRAGEM
-            with st.expander("💎 3. Guaranteed Profit (Dutching)"):
-                # Probabilidade Implícita Total
-                imp_prob = (1/odd_total) + (1/odd_hedge)
-                if imp_prob < 1:
-                    st.success(f"💎 ARBITRAGEM DETECTADA! Margem: {imp_prob*100:.1f}%")
-                    # Stakes para lucro igual
-                    inv_total = stake + stake_hedge # Exemplo base
-                    s1 = (inv_total / odd_total) / imp_prob
-                    s2 = (inv_total / odd_hedge) / imp_prob
-                    st.write(f"Para investir {format_currency(inv_total)} no total:")
-                    st.write(f"- Na Principal (@{odd_total:.2f}): {format_currency(s1)}")
-                    st.write(f"- Na Zebra (@{odd_hedge:.2f}): {format_currency(s2)}")
-                    st.write(f"Lucro Garantido: {format_currency(inv_total/imp_prob - inv_total)}")
-                else:
-                    st.warning(f"Sem oportunidade de arbitragem (Prob > 100%: {imp_prob*100:.1f}%)")
 
     # ========================================
     # TAB 3: SIMULADOR MONTE CARLO
@@ -1198,6 +1163,31 @@ def main():
                 resp = processar_chat_ultra(prompt, STATS, CAL, REFS, st.session_state.chat_memory)
             st.session_state.chat_history.append({'role': 'assistant', 'content': resp})
             st.rerun()
+
+    # ========================================
+    # TAB 10: BLACKLIST (NOVA)
+    # ========================================
+    with tabs[9]:
+        st.header("⛔ Blacklist Científica (V32)")
+        st.caption("Evite apostar 'Over' nestes times - Eles têm as menores médias estatísticas.")
+        
+        tb1, tb2 = st.tabs(["📉 Cantos (Under)", "🟨 Cartões (Under)"])
+        
+        with tb1:
+            if BLACKLIST_CORNERS:
+                df_b_c = pd.DataFrame(list(BLACKLIST_CORNERS.items()), columns=['Time', 'Média'])
+                df_b_c = df_b_c.sort_values('Média')
+                st.dataframe(df_b_c, use_container_width=True)
+            else:
+                st.info("Blacklist de cantos vazia.")
+                
+        with tb2:
+            if BLACKLIST_CARDS:
+                df_b_cd = pd.DataFrame(list(BLACKLIST_CARDS.items()), columns=['Time', 'Média'])
+                df_b_cd = df_b_cd.sort_values('Média')
+                st.dataframe(df_b_cd, use_container_width=True)
+            else:
+                st.info("Blacklist de cartões vazia.")
 
 if __name__ == "__main__":
     main()
