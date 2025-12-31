@@ -341,10 +341,10 @@ def get_prob_emoji(prob: float) -> str:
 
 def get_league_emoji(league: str) -> str:
     emojis = {
-        'Premier League': '🏴󠁧󠁢󠁥󠁮󠁧󠁿', 'La Liga': '🇪🇸', 'Serie A': '🇮🇹',
-        'Bundesliga': '🇩🇪', 'Ligue 1': '🇫🇷', 'Championship': '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
+        'Premier League': "🏴󠁧󠁢󠁥󠁮󠁧󠁿", 'La Liga': '🇪🇸', 'Serie A': '🇮🇹',
+        'Bundesliga': '🇩🇪', 'Ligue 1': '🇫🇷', 'Championship': "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
         'Bundesliga 2': '🇩🇪', 'Pro League': '🇧🇪', 'Super Lig': '🇹🇷',
-        'Premiership': '🏴󠁧󠁢󠁳󠁣󠁴󠁿'
+        'Premiership': "🏴󠁧󠁢󠁳󠁣󠁴󠁿"
     }
     return emojis.get(league, '⚽')
 
